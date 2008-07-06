@@ -1,0 +1,44 @@
+[Main\STText]
+count=28
+line0="// "
+line1="// "
+line2=""
+line3="// Global Variables"
+line4="var Vnom: integer;"
+line5=""
+line6="procedure Control;"
+line7="//var teta, ref: double;"
+line8="//begin"
+line9="//  SetAxisWRef(1, 0, -250.0/180*pi);"
+line10="//  SetAxisWRef(1, 1, 250.0/180*pi);"
+line11="var numpont,i,indice: integer;"
+line12="  estado: taxisstate;"
+line13="begin"
+line14=" indice := getaxisindex(0,'16',0);"
+line15=" estado.Pos := 0;"
+line16=" estado.vel := 0;"
+line17=" for i :=0 to indice do"
+line18="    SetAxisStateRef(0,i,estado);"
+line19=" numpont := CountAxisWayPoints(0,1);"
+line20=" writeln(inttostr(numpont));"
+line21="end;"
+line22=""
+line23="procedure Initialize;"
+line24="begin"
+line25="  Vnom := 50;"
+line26="end;"
+line27=""
+
+[Main]
+ActiveTab=1
+MessagesHeight=100
+ProjectAuthor=
+ProjectComments=
+SaveOnRun=1
+
+[FEditor]
+top=498
+left=166
+height=522
+width=775
+

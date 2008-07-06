@@ -1,0 +1,117 @@
+<?xml version="1.0" ?>
+<scene>
+
+  <robot>
+    <ID name='SubZero'/>
+    <pos x='1' y='0' z='0.5'/>
+    <rot_deg x='0' y='0' z='0'/>
+
+    <body file='Bioloid2.xml'/>
+  </robot>
+<!--
+  <robot>
+    <ID name='SubZero'/>
+    <pos x='1.5' y='0' z='0.5'/>
+    <rot_deg x='0' y='0' z='0'/>
+
+    <body file='Bioloid2.xml'/>
+  </robot>
+
+  <robot>
+    <ID name='SubZero'/>
+    <pos x='2' y='0' z='0.5'/>
+    <rot_deg x='0' y='0' z='0'/>
+
+    <body file='Bioloid2.xml'/>
+  </robot>
+
+  <robot>
+    <ID name='SubZero'/>
+    <pos x='2.5' y='0' z='0.5'/>
+    <rot_deg x='0' y='0' z='0'/>
+
+    <body file='Bioloid2.xml'/>
+  </robot>
+-->
+
+  <robot>
+    <ID name='Omni3'/>
+    <pos x='0' y='0' z='0'/>
+    <rot_deg x='0' y='0' z='0'/>
+
+    <body file='Omni3.xml'/>
+  </robot>
+
+<!--
+  <robot>
+    <ID name='Classic'/>
+    <pos x='0' y='-1' z='0'/>
+    <rot_deg x='0' y='0' z='0'/>
+
+    <body file='Differential2.xml'/>
+  </robot>
+-->
+  <robot>
+    <ID name='Conveyor Belt'/>
+    <pos x='0' y='-1' z='0'/>
+    <rot_deg x='0' y='0' z='0'/>
+
+    <body file='Belt.xml'/>
+  </robot>
+
+  <things file='things.xml'/>
+
+  <ball>
+    <radius value='0.1'/>
+    <mass value='0.3'/>
+    <pos x='1' y='1' z='1'/>
+  </ball>
+
+  <obstacles file='obstacles.xml'/>
+
+  <track file='track.xml'/>
+
+</scene>
+
+
+<!--
+
+<?xml version="1.0" ?>
+<scene>
+  <robot>
+    <ID name='Omni3'/>
+    <pos x='0' y='0' z='0'/>
+    <rot_deg x='0' y='0' z='0'/>
+
+    <body file='Omni3.xml'/>
+  </robot>
+
+  <robot>
+    <ID name='Classic'/>
+    <pos x='1' y='0' z='0.5'/>
+    <rot_deg x='0' y='0' z='90'/>
+
+    <body file='Differential2.xml'/>
+  </robot>
+
+  <robot>
+    <ID name='SubZero'/>
+    <pos x='1' y='1' z='0.5'/>
+    <rot_deg x='0' y='0' z='90'/>
+
+    <body file='Bioloid2.xml'/>
+  </robot>
+  <ball>
+    <radius value='0.1'/>
+    <mass value='0.3'/>
+    <pos x='1' y='1' z='1'/>
+  </ball>
+
+  <obstacles file='obstacles.xml'/>
+
+  <track file='track.xml'/>
+
+</scene>
+
+-->
+
