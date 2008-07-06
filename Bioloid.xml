@@ -1,0 +1,308 @@
+<?xml version="1.0" ?>
+<robot>
+  <kind value='humanoid'/>
+
+  <solids> <!-- bones-->
+
+    <cuboid> <!-- bone-->
+      <ID value='6'/>
+      <pos x='-0.040' y='0' z='0.010'/>
+      <size x='0.082' y='0.102' z='0.137'/>
+      <mass value='0.635'/>
+      <desc Pt='Tronco'/>
+      <desc Eng='Trunk'/>
+      <color_rgb r='0' g='0' b='128'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='1'/>
+      <pos x='-0.035' y='0.033' z='-0.240'/>
+      <size x='0.070' y='0.038' z='0.049'/>
+      <mass value='0.143'/>
+      <desc Pt='Perna Esq'/>
+      <desc Eng='Left Leg'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='2'/>
+      <pos x='-0.035' y='0.040' z='-0.280'/>
+      <size x='0.100' y='0.060' z='0.043'/>
+      <mass value='0.039'/>
+      <desc Pt='Pe Esq'/>
+      <desc Eng='Left Foot'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='4'/>
+      <pos x='-0.035' y='-0.033' z='-0.240'/>
+      <size x='0.070' y='0.038' z='0.049'/>
+      <mass value='0.143'/>
+      <desc Pt='Perna Dta'/>
+      <desc Eng='Right Leg'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='5'/>
+      <pos x='-0.035' y='-0.040' z='-0.280'/>
+      <size x='0.100' y='0.060' z='0.043'/>
+      <mass value='0.039'/>
+      <desc Pt='Pe Dto'/>
+      <desc Eng='Right Foot'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='7'/>
+      <pos x='-0.030' y='0.033' z='-0.120'/>
+      <size x='0.030' y='0.048' z='0.090'/>
+      <mass value='0.173'/>
+      <desc Pt='Coxa Esq L'/>
+      <desc Eng='Left L Thigh'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='8'/>
+      <pos x='-0.030' y='-0.033' z='-0.120'/>
+      <size x='0.030' y='0.048' z='0.090'/>
+      <mass value='0.173'/>
+      <desc Pt='Coxa Dta L'/>
+      <desc Eng='Right L Thigh'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='11'/>
+      <pos x='-0.020' y='0.078' z='0'/>
+      <size x='0.038' y='0.032' z='0.060'/>
+      <mass value='0.080'/>
+      <desc Pt='Braco Esq'/>
+      <desc Eng='Left arm'/>
+    </cuboid>
+    <cuboid>
+      <ID value='12'/>
+      <pos x='-0.020' y='-0.078' z='0'/>
+      <size x='0.038' y='0.032' z='0.060'/>
+      <mass value='0.080'/>
+      <desc Pt='Braco Dto'/>
+      <desc Eng='Right Arm'/>
+    </cuboid>
+    <cuboid>
+      <ID value='13'/>
+      <pos x='-0.020' y='0.078' z='0.043'/>
+      <size x='0.050' y='0.034' z='0.038'/>
+      <mass value='0.012'/>
+      <desc Pt='Dumm Braco Esq'/>
+      <desc Eng='Dummy Left Arm'/>
+    </cuboid>
+    <cuboid>
+      <ID value='14'/>
+      <pos x='-0.020' y='-0.078' z='0.043'/>
+      <size x='0.050' y='0.034' z='0.038'/>
+      <mass value='0.012'/>
+      <desc Pt='Dumm Braco Dto'/>
+      <desc Eng='Dummy Roght Arm'/>
+    </cuboid>
+    <cuboid>
+      <ID value='15'/>
+      <pos x='-0.020' y='0.078' z='-0.074'/>
+      <size x='0.037' y='0.032' z='0.126'/>
+      <mass value='0.082'/>
+      <desc Pt='AnteBraco Esq'/>
+      <desc Eng='Left Forearm'/>
+    </cuboid>
+    <cuboid>
+      <ID value='16'/>
+      <pos x='-0.020' y='-0.078' z='-0.074'/>
+      <size x='0.037' y='0.032' z='0.126'/>
+      <mass value='0.082'/>
+      <desc Pt='AnteBraco Dto'/>
+      <desc Eng='Right Forearm'/>
+    </cuboid>
+    <cuboid>
+      <ID value='17'/>
+      <pos x='-0.030' y='0.033' z='-0.200'/>
+      <size x='0.049' y='0.047' z='0.101'/>
+      <mass value='0.077'/>
+      <desc Pt='Joelho Esq'/>
+      <desc Eng='Left Knee'/>
+    </cuboid>
+    <cuboid>
+      <ID value='18'/>
+      <pos x='-0.030' y='-0.033' z='-0.200'/>
+      <size x='0.049' y='0.047' z='0.101'/>
+      <mass value='0.087'/>
+      <desc Pt='Joelho Dto'/>
+      <desc Eng='Right Knee'/>
+    </cuboid>
+    <cuboid>
+      <ID value='19'/>
+      <pos x='-0.020' y='0' z='0.115'/>    <!-- z=110 -->
+      <size x='0.030' y='0.030' z='0.040'/>
+      <mass value='0.100'/>
+      <desc Pt='Cabeca'/>
+      <desc Eng='Head'/>
+    </cuboid>
+  </solids>
+
+  <articulations>
+    <default>
+      <motor ri='0.5' ki='1.2e-3' vmax='9' imax='1' active='1'/>
+      <gear ratio='100'/>
+      <friction bv='1e-5' fc='1e-3' coulomblimit='1e-2'/>
+      <encoder ppr='1000' mean='0' stdev='0'/>
+      <controller mode='state' kp='1' ki='0.2' kd='0.1' kf='0.05' active='1' period='10'/>
+    </default>
+    <joint>
+      <ID value='0'/>
+      <pos x='-0.039' y='0.030' z='-0.170'/>
+      <axis x='0' y='1' z='0'/>
+      <connect B1='7' B2='17'/>
+      <limits Min='-98' Max='32'/>
+      <type value='Hinge'/>
+      <desc Pt='Joelho Esq'/>
+      <desc Eng='Left Knee'/>
+    </joint>
+    <joint>
+      <ID value='1'/>
+      <pos x='-0.027' y='0.030' z='-0.247'/>
+      <axis x='0' y='1' z='0'/>
+      <connect B1='17' B2='1'/>
+      <limits Min='-10' Max='125'/>
+      <type value='Hinge'/>
+      <desc Pt='Pe Esq Frt'/>
+      <desc Eng='Left Front Foot'/>
+    </joint>
+    <joint>
+      <ID value='2'/>
+      <pos x='-0.039' y='-0.030' z='-0.170'/>
+      <axis x='0' y='1' z='0'/>
+      <connect B1='8' B2='18'/>
+      <limits Min='-98' Max='32'/>
+      <type value='Hinge'/>
+      <desc Pt='Joelho Dto'/>
+      <desc Eng='Right Knee'/>
+    </joint>
+    <joint>
+      <ID value='3'/>
+      <pos x='-0.027' y='-0.030' z='-0.247'/>
+      <axis x='0' y='1' z='0'/>
+      <connect B1='18' B2='4'/>
+      <limits Min='-10' Max='125'/>
+      <type value='Hinge'/>
+      <desc Pt='Pe Dto Frt'/>
+      <desc Eng='Right Front Foot'/>
+    </joint>
+    <joint>
+      <ID value='6'/>
+      <pos x='-0.022' y='0.030' z='-0.247'/>
+      <axis x='1' y='0' z='0'/>
+      <connect B1='1' B2='2'/>
+      <limits Min='-30' Max='100'/>
+      <type value='Hinge'/>
+      <desc Pt='Pe Esq Lat'/>
+      <desc Eng='Left Lat Foot'/>
+    </joint>
+    <joint>
+      <ID value='7'/>
+      <pos x='-0.022' y='-0.030' z='-0.247'/>
+      <axis x='1' y='0' z='0'/>
+      <connect B1='4' B2='5'/>
+      <limits Min='-30' Max='100'/>
+      <type value='Hinge'/>
+      <desc Pt='Pe Dto Lat'/>
+      <desc Eng='Right Lat Foot'/>
+    </joint>
+    <joint>
+      <ID value='8'/>
+      <pos x='-0.055' y='0.032' z='-0.103'/>
+      <axis x='1' y='0' z='0'/>      <!-- lateral-->
+      <axis2 x='0' y='0' z='1'/>     <!-- rotação-->
+      <connect B1='6' B2='7'/>
+      <limits Min='-16' Max='53'/>     <!-- lateral-->
+      <limits2 Min='-75' Max='11'/>    <!-- rotação-->
+      <type value='Universal'/>
+      <desc Pt='Anca Esq Lat/Rot'/>
+      <desc Eng='Left Lat/Rot Buttock'/>
+    </joint>
+    <joint>
+      <ID value='9'/>
+      <pos x='-0.055' y='-0.032' z='-0.103'/>
+      <axis x='1' y='0' z='0'/>      <!-- lateral-->
+      <axis2 x='0' y='0' z='1'/>     <!-- rotação-->
+      <connect B1='6' B2='8'/>
+      <limits Min='-16' Max='53'/>     <!-- lateral-->
+      <limits2 Min='-75' Max='11'/>    <!-- rotação-->
+      <type value='Universal'/>
+      <desc Pt='Anca Dta Lat/Rot'/>
+      <desc Eng='Right Lat/Rot Buttock'/>
+    </joint>
+    <joint>
+      <ID value='10'/>
+      <pos x='-0.043' y='0.033' z='0.053'/>
+      <axis x='0' y='1' z='0'/>
+      <connect B1='6' B2='13'/>
+      <limits Min='-120' Max='120'/>
+      <type value='Hinge'/>
+      <desc Pt='Braco Esq Frt'/>
+      <desc Eng='Left Front Arm'/>
+    </joint>
+    <joint>
+      <ID value='11'/>
+      <pos x='-0.031' y='0.079' z='0.036'/>
+      <axis x='1' y='0' z='0'/>
+      <connect B1='13' B2='11'/>
+      <limits Min='-10' Max='160'/>
+      <type value='Hinge'/>
+      <desc Pt='Braco Esq Lat'/>
+      <desc Eng='Left Lat Arm'/>
+    </joint>
+    <joint>
+      <ID value='12'/>
+      <pos x='-0.043' y='-0.033' z='0.053'/>
+      <axis x='0' y='1' z='0'/>
+      <connect B1='6' B2='14'/>
+      <limits Min='-120' Max='120'/>
+      <type value='Hinge'/>
+      <desc Pt='Braco Dto Frt'/>
+      <desc Eng='Right Front Arm'/>
+    </joint>
+    <joint>
+      <ID value='13'/>
+      <pos x='-0.031' y='-0.079' z='0.036'/>
+      <axis x='1' y='0' z='0'/>
+      <connect B1='14' B2='12'/>
+      <limits Min='-10' Max='160'/>
+      <type value='Hinge'/>
+      <desc Pt='Braco Dto Lat'/>
+      <desc Eng='Right Lat Arm'/>
+    </joint>
+    <joint>
+      <ID value='14'/>
+      <pos x='-0.031' y='0.079' z='-0.038'/>
+      <axis x='1' y='0' z='0'/>
+      <connect B1='11' B2='15'/>
+      <limits Min='-90' Max='90'/>
+      <type value='Hinge'/>
+      <desc Pt='Cotovelo Esq'/>
+      <desc Eng='Left Elbow'/>
+    </joint>
+    <joint>
+      <ID value='15'/>
+      <pos x='-0.031' y='-0.079' z='-0.038'/>
+      <axis x='1' y='0' z='0'/>
+      <connect B1='12' B2='16'/>
+      <limits Min='-90' Max='90'/>
+      <type value='Hinge'/>
+      <desc Pt='Cotovelo Dto'/>
+      <desc Eng='Right Elbow'/>
+    </joint>
+    <joint>
+      <ID value='16'/>
+      <pos x='-0.010' y='0' z='0.056'/>
+      <axis x='0' y='0' z='1'/>
+      <connect B1='6' B2='19'/>
+      <limits Min='-150' Max='150'/>
+      <type value='Hinge'/>
+      <desc Pt='Pescoco'/>
+      <desc Eng='Neck'/>
+    </joint>
+  </articulations>
+</robot>

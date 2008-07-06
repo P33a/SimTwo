@@ -1,0 +1,61 @@
+<?xml version="1.0" ?>
+<joint_waypoints>
+  <state ID='1' final_time='1'>
+    <!-- default value for axis is axis='1' -->
+    <joint ID='0' axis='1' theta='0' w='0'/>
+    <joint ID='1' axis='1' theta='0' w='0'/>
+    <joint ID='2' theta='0' w='0'/>
+    <joint ID='3' theta='0' w='0'/>
+    <joint ID='4' theta='0' w='0'/>
+    <joint ID='5' theta='0' w='0'/>
+    <joint ID='6' theta='0' w='0'/>
+    <joint ID='7' theta='0' w='0'/>
+    <joint ID='8' theta='0' w='0'/>
+    <joint ID='9' theta='0' w='0'/>
+    <joint ID='10' theta='0' w='0'/>
+    <joint ID='11' theta='0' w='0'/>
+    <joint ID='12' theta='0' w='0'/>
+    <joint ID='13' theta='0' w='0'/>
+    <joint ID='14' theta='0' w='0'/>
+    <joint ID='15' theta='0' w='0'/>
+    <joint ID='16' theta='90' w='0'/>
+  </state>
+  <state ID='2' final_time='2'>
+    <joint ID='0' theta='0' w='0'/>
+    <joint ID='1' theta='0' w='0'/>
+    <joint ID='2' theta='0' w='0'/>
+    <joint ID='3' theta='0' w='0'/>
+    <joint ID='4' theta='0' w='0'/>
+    <joint ID='5' theta='0' w='0'/>
+    <joint ID='6' theta='0' w='0'/>
+    <joint ID='7' theta='0' w='0'/>
+    <joint ID='8' theta='0' w='0'/>
+    <joint ID='9' theta='0' w='0'/>
+    <joint ID='10' theta='0' w='0'/>
+    <joint ID='11' theta='0' w='0'/>
+    <joint ID='12' theta='0' w='0'/>
+    <joint ID='13' theta='0' w='0'/>
+    <joint ID='14' theta='0' w='0'/>
+    <joint ID='15' theta='0' w='0'/>
+    <joint ID='16' theta='10' w='0'/>
+  </state>
+  <state ID='3' final_time='3'>
+    <joint ID='0' theta='0' w='0'/>
+    <joint ID='1' theta='0' w='0'/>
+    <joint ID='2' theta='0' w='0'/>
+    <joint ID='3' theta='0' w='0'/>
+    <joint ID='4' theta='0' w='0'/>
+    <joint ID='5' theta='0' w='0'/>
+    <joint ID='6' theta='0' w='0'/>
+    <joint ID='7' theta='0' w='0'/>
+    <joint ID='8' theta='0' w='0'/>
+    <joint ID='9' theta='0' w='0'/>
+    <joint ID='10' theta='0' w='0'/>
+    <joint ID='11' theta='0' w='0'/>
+    <joint ID='12' theta='0' w='0'/>
+    <joint ID='13' theta='0' w='0'/>
+    <joint ID='14' theta='0' w='0'/>
+    <joint ID='15' theta='0' w='0'/>
+    <joint ID='16' theta='45' w='0'/>
+  </state>
+</joint_waypoints>

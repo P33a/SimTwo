@@ -1,0 +1,22 @@
+x Ruído nos Sensores IR
+Texturas e x cores nos objectos
+x Log e Gráficos
+
+x Comunicação via udp
+x sensores de IR
+- Sonares
+x Motores
+x Cliente UDP
+
+x... Controlo da camera
+x Load Maze.xml
+x Novo Icon
+x Obstaculos
+
+x Elementos extra no robot
+x load da configuração do robot
+- sistema de desenhar pistas (simone)
+- Sensor de branco no chão (simone)
+- Controlo por script (simone)
+
+x Feedforward no PID
