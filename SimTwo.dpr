@@ -16,7 +16,8 @@ uses
   ODERobotsPublished in 'ODERobotsPublished.pas',
   uPSI_ODERobotsPublished in 'uPSI_ODERobotsPublished.pas',
   ProjConfig in 'ProjConfig.pas',
-  Utils in 'Utils.pas';
+  Utils in 'Utils.pas',
+  WayPointsEdit in 'WayPointsEdit.pas' {FWayPointsEdit};
 
 {$R *.res}
 
@@ -30,5 +31,6 @@ begin
   Application.CreateForm(TFChart, FChart);
   Application.CreateForm(TFLog, FLog);
   Application.CreateForm(TFRemoteControl, FRemoteControl);
+  Application.CreateForm(TFWayPointsEdit, FWayPointsEdit);
   Application.Run;
 end.

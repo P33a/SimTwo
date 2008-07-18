@@ -1123,27 +1123,51 @@ end;
 procedure TWorld_ODE.SaveJointWayPointsToXML(XMLFile: string; r: integer);
 var XML: IXMLDocument;
     root, node, prop: IXMLElement;
-    wp_idx, j: integer;
+    PI: IXMLProcessingInstruction;
+    wp_idx, j, axis_idx: integer;
+    eps: double;
 begin
   if (r < 0) or (r >= Robots.Count) then exit;
   if Robots[r].Axes.Count = 0 then exit;
 
-
   XML := CreateXMLDoc;
-//  XML.DocumentElement := XML.CreateElement('joint_waypoints');
-//  XML.DocumentElement.SetAttribute('attr', 'value');
+  //PI := XML.CreateProcessingInstruction('xml', 'version="1.0" encoding="UTF-8"');
+  PI := XML.CreateProcessingInstruction('xml', 'version="1.0"');
+  XML.InsertBefore(PI, XML.DocumentElement);
+
   root := XML.CreateElement('joint_waypoints');
   XML.DocumentElement := root;
-  for wp_idx := 0 to Robots[r].Axes[0].WayPoints.Count -1 do begin
+  for wp_idx := 0 to Robots[r].AxesWayPointsIDs.Count - 1 do begin
+    //  <state ID='1' final_time='1'>
     node := XML.CreateElement('state');
-    //Robots[r].Axes[0].WayPoints[wp_idx].
-    //node.SetAttribute('ID', Robots[r].WayPoints[wp_idx].);
+    node.SetAttribute('ID', Robots[r].AxesWayPointsIDs[wp_idx]);
+    node.SetAttribute('final_time', format('%g',[Robots[r].Axes[0].WayPoints[wp_idx].t]));
     root.AppendChild(node);
+
+    eps := 1e-8;
     for j := 0 to Robots[r].Axes.Count -1 do begin
-      //  <joint ID='0' axis='1' theta='0' w='0'/>
-      prop := XML.CreateElement('joint');
-      prop.SetAttribute('ID', Robots[r].Axes[j].ParentLink.ID);
-      node.AppendChild(prop);
+      with Robots[r].Axes[j] do begin
+        if wp_idx > 0 then begin
+          if (abs(WayPoints[wp_idx - 1].pos - WayPoints[wp_idx].pos) < eps) and
+             (abs(WayPoints[wp_idx - 1].speed - WayPoints[wp_idx].speed) < eps) then continue;
+        end;
+        //  <joint ID='0' axis='1' theta='0' w='0'/>
+        prop := XML.CreateElement('joint');
+        prop.SetAttribute('ID', ParentLink.ID);
+
+        // Find which axis is this
+        axis_idx := 0;
+        while axis_idx < MaxAxis do begin
+          if ParentLink.Axis[axis_idx] = Robots[r].Axes[j] then break;
+          inc(axis_idx);
+        end;
+        if axis_idx <> 0 then
+          prop.SetAttribute('axis', format('%d',[axis_idx + 1]));
+
+        prop.SetAttribute('theta', format('%g',[radtodeg(WayPoints[wp_idx].pos)]));
+        prop.SetAttribute('w', format('%g',[radtodeg(WayPoints[wp_idx].speed)]));
+        node.AppendChild(prop);
+      end;
     end;
   end;
   XML.Save('Test.xml'{XMLFile}, ofIndent);
@@ -1153,8 +1177,8 @@ procedure TWorld_ODE.LoadJointWayPointsFromXML(XMLFile: string; r: integer);
 var XML: IXMLDocument;
     root, node, prop: IXMLNode;
     ang, speed, final_time: double;
-    trajID, i, j, axis_idx: integer;
-    jointID: string;
+    i, j, axis_idx: integer;
+    jointID, trajID: string;
     NewPoint: TAxisTraj;
     way_point_idx: integer;
 begin
@@ -1175,7 +1199,7 @@ begin
   while node <> nil do begin
     if node.NodeName = 'state' then begin
 
-      trajID := GetNodeAttrInt(node, 'ID', -1);
+      trajID := GetNodeAttrStr(node, 'ID', '');
       final_time := GetNodeAttrReal(node, 'final_time', 0);
 
       prop := node.FirstChild;
@@ -1206,43 +1230,33 @@ begin
         prop := prop.NextSibling;
       end;
 
+      WorldODE.Robots[r].AxesWayPointsIDs.Add(trajID);
       // insert the remaining points that weren't specified in this state
-      for i := 0 to Robots[r].Links.Count -1 do begin
-        for j := 0 to MaxAxis -1 do begin
-          if Robots[r].Links[i].Axis[j] = nil then
+      for i := 0 to Robots[r].Axes.Count -1 do begin
+        way_point_idx := Robots[r].Axes[i].WayPoints.Count -1;
+        if (way_point_idx >= 0) then begin
+          if abs(Robots[r].Axes[i].WayPoints[way_point_idx].t - final_time) < 1e-5 then
             continue;
-          way_point_idx := Robots[r].Links[i].Axis[j].WayPoints.Count -1;
-          if (way_point_idx >= 0) then begin
-            if abs(Robots[r].Links[i].Axis[j].WayPoints[way_point_idx].t - final_time) < 1e-5 then
-              continue;
 
-            ang := Robots[r].Links[i].Axis[j].WayPoints[way_point_idx].pos;
-            speed := Robots[r].Links[i].Axis[j].WayPoints[way_point_idx].speed;
-          end else begin
-            ang := 0;
-            speed := 0;
-          end;
-          // Create and insert the point
-          NewPoint := TAxisTraj.Create;
-          NewPoint.pos := ang;
-          NewPoint.speed := speed;
-          NewPoint.t := final_time;
-          Robots[r].Links[i].Axis[j].WayPoints.Add(NewPoint)
+          ang := Robots[r].Axes[i].WayPoints[way_point_idx].pos;
+          speed := Robots[r].Axes[i].WayPoints[way_point_idx].speed;
+        end else begin
+          ang := 0;
+          speed := 0;
         end;
+        // Create and insert the point
+        NewPoint := TAxisTraj.Create;
+        NewPoint.pos := ang;
+        NewPoint.speed := speed;
+        NewPoint.t := final_time;
+        Robots[r].Axes[i].WayPoints.Add(NewPoint)
       end;
-
     end;
 
     node := node.NextSibling;
   end;
 
-  FParams.ComboWayPointName.Clear;
-  for j := 0 to Robots[r].Links[0].Axis[0].WayPoints.Count -1 do begin
-    with Robots[r].Links[0].Axis[0].WayPoints[j] do
-      FParams.ComboWayPointName.AddItem(format('%.2f:',[t]),nil);
-  end;
-  if FParams.ComboWayPointName.Items.Count > 0 then
-    FParams.ComboWayPointName.ItemIndex := 0;
+  FParams.ComboWayPointNameUpdate(Robots[r]);
 
   for i := 0 to Robots[r].Links.Count -1 do begin
     for j := 0 to Robots[r].Links[i].Axis[0].WayPoints.Count -1 do begin

@@ -100,8 +100,8 @@ type
   end;
 
   TAxisTraj = class
-    pos, speed, t: double;
   public
+    pos, speed, t: double;
     constructor Create;
     destructor Destroy; override;
   end;
