@@ -734,8 +734,8 @@ begin
   //  Path := ExtractFilePath(aFile)
   //else
 
-{
-    Path := ExtractFilePath(ParamStr(0));
+
+  Path := ExtractFilePath(ParamStr(0));
   Path := Path + FileName;
   try
     F := TFileStream.Create(Path, fmOpenRead or fmShareDenyWrite);
@@ -749,7 +749,7 @@ begin
   finally
     f.Free;
   end;
-  Result := True;}
+  Result := True;
 end;
 
 procedure TFEditor.PSScriptBreakpoint(Sender: TObject;

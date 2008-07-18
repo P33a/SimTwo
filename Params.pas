@@ -28,8 +28,6 @@ type
     EditTargetFPS: TEdit;
     BSetFPS: TButton;
     UDPServer: TIdUDPServer;
-    Label8: TLabel;
-    EditRemoteIP: TEdit;
     BEditScript: TButton;
     BTest: TButton;
     RGCamera: TRadioGroup;
@@ -54,7 +52,6 @@ type
     Label1: TLabel;
     Label4: TLabel;
     Label6: TLabel;
-    Label13: TLabel;
     Label19: TLabel;
     Label20: TLabel;
     Label21: TLabel;
@@ -67,9 +64,6 @@ type
     Label23: TLabel;
     Label25: TLabel;
     Label26: TLabel;
-    Label27: TLabel;
-    Label28: TLabel;
-    Label29: TLabel;
     Label2: TLabel;
     Label3: TLabel;
     Label5: TLabel;
@@ -79,9 +73,6 @@ type
     Label32: TLabel;
     Label33: TLabel;
     Label34: TLabel;
-    Label35: TLabel;
-    Label36: TLabel;
-    Label37: TLabel;
     EditMotUnom: TEdit;
     EditMotSpeedRef: TEdit;
     CBIO1: TCheckBox;
@@ -105,9 +96,6 @@ type
     EditOdo3: TEdit;
     EditU3: TEdit;
     CBPIDsActive: TCheckBox;
-    EditRobotX: TEdit;
-    EditRobotY: TEdit;
-    EditRobotTeta: TEdit;
     EditIR0: TEdit;
     EditIR1: TEdit;
     EditIR2: TEdit;
@@ -116,18 +104,12 @@ type
     EditIR5: TEdit;
     EditIR6: TEdit;
     EditIR7: TEdit;
-    EditRobotSetX: TEdit;
-    EditRobotSetY: TEdit;
-    EditRobotSetTeta: TEdit;
-    BSetPosition: TButton;
     EditDebug: TEdit;
     SGJoints: TStringGrid;
     EditJointTeta: TEdit;
     Label38: TLabel;
     EditJointTetaRef: TEdit;
     BSetJointTetaRef: TButton;
-    Label39: TLabel;
-    EditRobotSetZ: TEdit;
     BFreeze: TButton;
     BStep: TButton;
     CBIRNoise: TCheckBox;
@@ -138,6 +120,30 @@ type
     Label40: TLabel;
     EditDefaultFriction: TEdit;
     BPhysicsSet: TButton;
+    EditRemoteIP: TEdit;
+    Label8: TLabel;
+    Label28: TLabel;
+    BSetPosition: TButton;
+    EditRobotX: TEdit;
+    Label27: TLabel;
+    Label35: TLabel;
+    EditRobotSetX: TEdit;
+    EditRobotSetY: TEdit;
+    Label36: TLabel;
+    EditRobotY: TEdit;
+    Label29: TLabel;
+    Label13: TLabel;
+    EditRobotTeta: TEdit;
+    Label39: TLabel;
+    EditRobotSetZ: TEdit;
+    EditRobotSetTeta: TEdit;
+    Label37: TLabel;
+    BSetAll: TButton;
+    BSetJointWayPointTeta: TButton;
+    Label41: TLabel;
+    ComboWayPointName: TComboBox;
+    BWayPointEdit: TButton;
+    BJointWayPointsSave: TButton;
     procedure CBShadowsClick(Sender: TObject);
     procedure CBVsyncClick(Sender: TObject);
     procedure BSetFPSClick(Sender: TObject);
@@ -166,6 +172,9 @@ type
     procedure CBHotCPUClick(Sender: TObject);
     procedure CBFreezeClick(Sender: TObject);
     procedure BPhysicsSetClick(Sender: TObject);
+    procedure BSetJointWayPointTetaClick(Sender: TObject);
+    procedure BSetAllClick(Sender: TObject);
+    procedure BJointWayPointsSaveClick(Sender: TObject);
   private
     procedure FillEditArray(ProtoName: string;
       var EditArray: array of TEdit);
@@ -307,12 +316,13 @@ end;
 
 
 procedure TFParams.ShowRobotState;
-var i, idx: integer;
+var i, idx, wp_idx: integer;
     //str: string;
     theta: double;
 begin
   idx := LBRobots.ItemIndex;
   if (idx < 0) or (idx >= WorldODE.Robots.Count) then exit;
+  wp_idx := ComboWayPointName.ItemIndex;
 
   for i := low(EditsU) to high(EditsU) do begin
     if WorldODE.Robots[idx].Links.Count > i then begin
@@ -359,6 +369,8 @@ begin
       SGJoints.Cells[1,i+1] := Axes[i].ParentLink.description;
       SGJoints.Cells[2,i+1] := format('%.1f',[theta]);
       SGJoints.Cells[3,i+1] := format('%.1f',[radtodeg(Axes[i].ref.theta)]);
+      if wp_idx >= 0 then
+        SGJoints.Cells[4,i+1] := format('%.1f',[radtodeg(Axes[i].WayPoints[wp_idx].pos)]);
 
       if i+1 = SGJoints.Selection.Top then begin
         EditJointTeta.Text := SGJoints.Cells[2,i+1];
@@ -395,6 +407,12 @@ end;
 procedure TFParams.FormCreate(Sender: TObject);
 begin
   Edit4.Text := inttostr(sizeof(TSolidLink));
+  SGJoints.Cells[0,0] := 'ID';
+  SGJoints.Cells[1,0] := 'Description';
+  SGJoints.Cells[2,0] := 'Pos';
+  SGJoints.Cells[3,0] := 'Ref';
+  SGJoints.Cells[4,0] := 'WP';
+
 end;
 
 procedure TFParams.FormShow(Sender: TObject);
@@ -562,6 +580,42 @@ end;
 procedure TFParams.BPhysicsSetClick(Sender: TObject);
 begin
   WorldODE.default_n_mu := strtofloatdef(EditDefaultFriction.Text, WorldODE.default_n_mu);
+end;
+
+procedure TFParams.BSetJointWayPointTetaClick(Sender: TObject);
+var r, i, wp_idx: integer;
+begin
+  r := LBRobots.ItemIndex;
+  if (r < 0) or (r >= WorldODE.Robots.Count) then exit;
+
+  i := SGJoints.Selection.Top - 1;
+  if (i < 0) or (i >= WorldODE.Robots[r].Axes.Count) then exit;
+
+  wp_idx := ComboWayPointName.ItemIndex;
+  if (wp_idx < 0) then exit;
+
+  WorldODE.Robots[r].Axes[i].WayPoints[wp_idx].pos := degtorad(strtofloatdef(EditJointTetaRef.Text, 0));
+end;
+
+procedure TFParams.BSetAllClick(Sender: TObject);
+var r, i, wp_idx: integer;
+begin
+  r := LBRobots.ItemIndex;
+  if (r < 0) or (r >= WorldODE.Robots.Count) then exit;
+
+  wp_idx := ComboWayPointName.ItemIndex;
+  if (wp_idx < 0) then exit;
+
+  for i:= 0 to WorldODE.Robots[r].Axes.Count-1 do begin
+    WorldODE.Robots[r].Axes[i].ref.theta := WorldODE.Robots[r].Axes[i].WayPoints[wp_idx].pos;
+  end;
+end;
+
+procedure TFParams.BJointWayPointsSaveClick(Sender: TObject);
+var r: integer;
+begin
+  r := LBRobots.ItemIndex;
+  SaveJointWayPoints(r, EditLoadJointPoints.Text);
 end;
 
 end.

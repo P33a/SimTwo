@@ -16,6 +16,7 @@ const
 //  MaxIrSensors = 8;
   MaxJointSamples = 256;
   MaxKeyVals = 8;
+  MaxAxis = 3;
 
 const MaxDim = 8;
 
@@ -149,7 +150,7 @@ type
     Odo: TOdoState;
     ref: TAxisInputs;
     torque: double;
-    old_speed: double;
+    speed_lambda, filt_speed: double;
   private
   public
     constructor Create;
@@ -187,7 +188,7 @@ type
     joint: TdJointID;
     GLObj: TGLBaseSceneObject;
     //Axis, Axis2: TAxis;
-    Axis: array[0..2] of TAxis;
+    Axis: array[0..MaxAxis-1] of TAxis;
     ID: string;
     description: string;
   public
@@ -299,6 +300,7 @@ type
     Solids: TSolidList;
     Links: TSolidLinkList;
     Axes: TAxisList; // TAxisList does not owns the axis
+    AxesWayPointsIDs: TStringlist;
 
     MainBody: TSolid;
     Shells: TSolidList;
@@ -339,6 +341,7 @@ begin
   Solids := TSolidList.Create;
   Shells := TSolidList.Create;
   Axes := TAxisList.Create;
+  AxesWayPointsIDs := TStringList.Create;
   Links := TSolidLinkList.Create;
   Wheels := TWheelList.Create;
   IRSensors := TSensorList.Create;
@@ -350,6 +353,7 @@ destructor TRobot.Destroy;
 begin
   IRSensors.ClearAll;
   IRSensors.Free;
+  AxesWayPointsIDs.Free;
   //Axes.ClearAll; // TAxisList does not owns the axis
   Axes.Free;
   Wheels.ClearAll;
@@ -585,6 +589,7 @@ constructor TAxis.Create;
 begin
   TrajectPoints := TAxisTrajList.Create;
   WayPoints := TAxisTrajList.Create;
+  speed_lambda := 0.9;
 end;
 
 destructor TAxis.Destroy;
@@ -649,7 +654,6 @@ begin
 end;
 
 function TAxis.GetSpeed: double;
-var lambda: double;
 begin
 
   result := 0;
@@ -664,10 +668,8 @@ begin
   end else if dJointGetType(ParentLink.joint) = ord(dJointTypeSlider) then begin
     result := dJointGetSliderPositionRate(ParentLink.joint);
   end;
-  //exit;
-  lambda := 0;
-  result := (1 - lambda)* result + lambda * old_speed;
-  old_speed := result;
+  //lambda := 0.9;
+  filt_speed := (1 - speed_lambda)* result + speed_lambda * filt_speed;
   //TODO more Joint types
 end;
 

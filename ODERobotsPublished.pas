@@ -14,6 +14,7 @@ type
   TAxisState = record
     pos: double;
     vel: double;
+    Im: double;
   end;
 
   TState2D = record
@@ -58,22 +59,23 @@ function GetSolidTheta(R, i: integer): double;
 function GetAxisOdo(R, i: integer): integer;
 
 function GetAxisState(R, i: integer): TAxisState;
-function GetAxisTheta(R, i: integer): double;
-function GetAxisW(R, i: integer): double;
+function GetAxisPos(R, i: integer): double;
+function GetAxisSpeed(R, i: integer): double;
+function GetAxisI(R, i: integer): double;
 
 function GetAxisStateRef(R, i: integer): TAxisState;
-function GetAxisThetaRef(R, i: integer): double;
-function GetAxisWRef(R, i: integer): double;
+function GetAxisPosRef(R, i: integer): double;
+function GetAxisSpeedRef(R, i: integer): double;
 
 procedure SetAxisStateRef(R, i: integer; aState: TAxisState);
-procedure SetAxisThetaRef(R, i: integer; aTheta: double);
-procedure SetAxisWRef(R, i: integer; aW: double);
+procedure SetAxisPosRef(R, i: integer; aPos: double);
+procedure SetAxisSpeedRef(R, i: integer; aSpeed: double);
 
-function GetAxisThetaDeg(R, i: integer): double;
-function GetAxisWDeg(R, i: integer): double;
+function GetAxisPosDeg(R, i: integer): double;
+function GetAxisSpeedDeg(R, i: integer): double;
 
-function GetAxisThetaRefDeg(R, i: integer): double;
-function GetAxisWRefDeg(R, i: integer): double;
+function GetAxisPosRefDeg(R, i: integer): double;
+function GetAxisSpeedRefDeg(R, i: integer): double;
 
 function Deg(angle: double): double;
 function Rad(angle: double): double;
@@ -81,6 +83,7 @@ function Rad(angle: double): double;
 function GetAxisIndex(R: integer; ID: string; i: integer): integer;
 
 procedure LoadJointWayPoints(r: integer; JointPointsFileName: string);
+procedure SaveJointWayPoints(r: integer; JointPointsFileName: string);
 function CountAxisWayPoints(R, i: integer): integer;
 function GetAxisWayPoint(R, i, idx: integer): TAxisPoint;
 
@@ -97,11 +100,11 @@ procedure ClearAxisTrajPoints(R, i: integer; LP: TAxisPoint);
 getsolidindex
 getsolidmass
 
-function GetLinkWayPointTheta(R, i, j: integer): double;
+function GetLinkWayPointPos(R, i, j: integer): double;
 function GetLinkWayPointTime(R, i, j: integer): double;
 function GetLinkWayPointW(R, i, j: integer): double;
 
-function GetLinkTrajPointTheta(R, i, j: integer): double;
+function GetLinkTrajPointPos(R, i, j: integer): double;
 function GetLinkTrajPointTime(R, i, j: integer): double;
 function GetLinkTrajPointW(R, i, j: integer): double;
 }
@@ -421,26 +424,35 @@ function GetAxisState(R, i: integer): TAxisState;
 begin
   result.pos := 0;
   result.vel := 0;
+  result.Im := 0;
 
   if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
   with WorldODE.Robots[R] do begin
     if (i < 0) or (i >= Axes.Count) then exit;
     with WorldODE.Robots[r].Axes[i] do begin
       result.pos := GetPos();
-      result.vel := GetSpeed();
+      //result.vel := GetSpeed();
+      result.vel := filt_speed;
+      result.Im := Motor.Im;
     end;
   end;
 end;
 
-function GetAxisTheta(R, i: integer): double;
+function GetAxisPos(R, i: integer): double;
 begin
   result := GetAxisState(R, i).pos;
 end;
 
-function GetAxisW(R, i: integer): double;
+function GetAxisSpeed(R, i: integer): double;
 begin
   result := GetAxisState(R, i).vel;
 end;
+
+function GetAxisI(R, i: integer): double;
+begin
+  result := GetAxisState(R, i).Im;
+end;
+
 
 function GetAxisStateRef(R, i: integer): TAxisState;
 begin
@@ -458,13 +470,13 @@ begin
 end;
 
 
-function GetAxisThetaRef(R, i: integer): double;
+function GetAxisPosRef(R, i: integer): double;
 begin
   result := GetAxisStateRef(R, i).pos;
 end;
 
 
-function GetAxisWRef(R, i: integer): double;
+function GetAxisSpeedRef(R, i: integer): double;
 begin
   result := GetAxisStateRef(R, i).vel;
 end;
@@ -483,48 +495,48 @@ begin
 end;
 
 
-procedure SetAxisThetaRef(R, i: integer; aTheta: double);
+procedure SetAxisPosRef(R, i: integer; aPos: double);
 begin
   if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
   with WorldODE.Robots[R] do begin
     if (i < 0) or (i >= Axes.Count) then exit;
     with WorldODE.Robots[r].Axes[i] do begin
-      ref.theta := aTheta;
+      ref.theta := aPos;
     end;
   end;
 end;
 
 
-procedure SetAxisWRef(R, i: integer; aW: double);
+procedure SetAxisSpeedRef(R, i: integer; aSpeed: double);
 begin
   if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
   with WorldODE.Robots[R] do begin
     if (i < 0) or (i >= Axes.Count) then exit;
     with WorldODE.Robots[r].Axes[i] do begin
-      ref.w := aW;
+      ref.w := aSpeed;
     end;
   end;
 end;
 
 
-function GetAxisThetaDeg(R, i: integer): double;
+function GetAxisPosDeg(R, i: integer): double;
 begin
-  result := RadToDeg(GetAxisTheta(R,i));
+  result := RadToDeg(GetAxisPos(R,i));
 end;
 
-function GetAxisWDeg(R, i: integer): double;
+function GetAxisSpeedDeg(R, i: integer): double;
 begin
-  result := RadToDeg(GetAxisW(R,i));
+  result := RadToDeg(GetAxisSpeed(R,i));
 end;
 
-function GetAxisThetaRefDeg(R, i: integer): double;
+function GetAxisPosRefDeg(R, i: integer): double;
 begin
-  result := RadToDeg(GetAxisThetaRef(R,i));
+  result := RadToDeg(GetAxisPosRef(R,i));
 end;
 
-function GetAxisWRefDeg(R, i: integer): double;
+function GetAxisSpeedRefDeg(R, i: integer): double;
 begin
-  result := RadToDeg(GetAxisWRef(R,i));
+  result := RadToDeg(GetAxisSpeedRef(R,i));
 end;
 
 
@@ -546,6 +558,15 @@ begin
   end;
   // Load new ones
   WorldODE.LoadJointWayPointsFromXML(JointPointsFileName, r);
+end;
+
+
+procedure SaveJointWayPoints(r: integer; JointPointsFileName: string);
+var i: integer;
+begin
+  if (r < 0) or (r >= WorldODE.Robots.Count) then exit;
+
+  WorldODE.SaveJointWayPointsToXML(JointPointsFileName, r);
 end;
 
 
@@ -679,7 +700,7 @@ end;
 
 
 {
-function GetLinkWayPointTheta(R, i, j: integer): double;
+function GetLinkWayPointPos(R, i, j: integer): double;
 begin
   result := 0;
   if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
