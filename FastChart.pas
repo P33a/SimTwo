@@ -195,10 +195,11 @@ begin
       sub_nonde:=AddChild(node, WorldODE.Robots[r].Axes[i].ParentLink.description);
       sub_nonde.Data:=nil;
       //FillRobotLinksStateTreeView(num, i,sub_nonde,tree);
-      FillTreeViewItem(r, i, 'theta', @GetAxisThetaDeg, sub_nonde, tree);
-      FillTreeViewItem(r, i, 'W', @GetAxisWDeg, sub_nonde, tree);
-      FillTreeViewItem(r, i, 'theta ref', @GetAxisThetaRefDeg, sub_nonde, tree);
-      FillTreeViewItem(r, i, 'W ref', @GetAxisWRefDeg, sub_nonde, tree);
+      FillTreeViewItem(r, i, 'Pos', @GetAxisPosDeg, sub_nonde, tree);
+      FillTreeViewItem(r, i, 'Speed', @GetAxisSpeedDeg, sub_nonde, tree);
+      FillTreeViewItem(r, i, 'I', @GetAxisI, sub_nonde, tree);
+      FillTreeViewItem(r, i, 'Pos ref', @GetAxisPosRefDeg, sub_nonde, tree);
+      FillTreeViewItem(r, i, 'Speed ref', @GetAxisSpeedRefDeg, sub_nonde, tree);
     end;
   end;
 end;

@@ -14,6 +14,9 @@ object FParams: TFParams
   Scaled = False
   OnCreate = FormCreate
   OnShow = FormShow
+  DesignSize = (
+    273
+    652)
   PixelsPerInch = 96
   TextHeight = 13
   object PageControl: TPageControl
@@ -22,20 +25,85 @@ object FParams: TFParams
     Width = 273
     Height = 621
     ActivePage = TabControl
+    Anchors = [akLeft, akTop, akBottom]
     TabOrder = 0
     object TabControl: TTabSheet
       Caption = 'Control'
-      object Label8: TLabel
-        Left = 132
-        Top = 142
-        Width = 14
+      DesignSize = (
+        265
+        593)
+      object Label28: TLabel
+        Left = 124
+        Top = 18
+        Width = 69
         Height = 13
-        Caption = 'IP:'
+        Caption = 'Robot Position'
+      end
+      object Label27: TLabel
+        Left = 124
+        Top = 40
+        Width = 10
+        Height = 13
+        Caption = 'X:'
+      end
+      object Label35: TLabel
+        Left = 196
+        Top = 40
+        Width = 10
+        Height = 13
+        Caption = 'X:'
+      end
+      object Label36: TLabel
+        Left = 196
+        Top = 60
+        Width = 10
+        Height = 13
+        Caption = 'Y:'
+      end
+      object Label29: TLabel
+        Left = 124
+        Top = 60
+        Width = 10
+        Height = 13
+        Caption = 'Y:'
+      end
+      object Label13: TLabel
+        Left = 124
+        Top = 80
+        Width = 9
+        Height = 13
+        Caption = 'q:'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'Symbol'
+        Font.Style = []
+        ParentFont = False
+      end
+      object Label39: TLabel
+        Left = 196
+        Top = 80
+        Width = 10
+        Height = 13
+        Caption = 'Z:'
+      end
+      object Label37: TLabel
+        Left = 196
+        Top = 100
+        Width = 9
+        Height = 13
+        Caption = 'q:'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'Symbol'
+        Font.Style = []
+        ParentFont = False
       end
       object RGControlBlock: TRadioGroup
         Left = 0
         Top = 100
-        Width = 121
+        Width = 113
         Height = 65
         Caption = 'Control Block'
         ItemIndex = 0
@@ -46,40 +114,31 @@ object FParams: TFParams
         TabOrder = 0
         OnClick = RGControlBlockClick
       end
-      object EditRemoteIP: TEdit
-        Left = 154
-        Top = 138
-        Width = 109
-        Height = 21
-        TabOrder = 1
-        Text = '127.0.0.1'
-        OnChange = EditRemoteIPChange
-      end
       object BEditScript: TButton
-        Left = 204
-        Top = 104
+        Left = 200
+        Top = 144
         Width = 59
         Height = 21
         Caption = 'Edit Script'
-        TabOrder = 2
+        TabOrder = 1
         OnClick = BEditScriptClick
       end
       object BTest: TButton
-        Left = 142
-        Top = 104
+        Left = 138
+        Top = 144
         Width = 59
         Height = 21
         Caption = 'Test'
-        TabOrder = 3
+        TabOrder = 2
         OnClick = BTestClick
       end
       object LBRobots: TListBox
         Left = 0
         Top = 0
-        Width = 121
+        Width = 113
         Height = 97
         ItemHeight = 13
-        TabOrder = 4
+        TabOrder = 3
         OnClick = LBRobotsClick
       end
       object PGRobots: TPageControl
@@ -88,7 +147,8 @@ object FParams: TFParams
         Width = 261
         Height = 425
         ActivePage = TabAxis
-        TabOrder = 5
+        Anchors = [akLeft, akTop, akBottom]
+        TabOrder = 4
         object TabRobot: TTabSheet
           Caption = 'Robot'
           object Label1: TLabel
@@ -111,19 +171,6 @@ object FParams: TFParams
             Width = 56
             Height = 13
             Caption = 'General I/O'
-          end
-          object Label13: TLabel
-            Left = 16
-            Top = 212
-            Width = 9
-            Height = 13
-            Caption = 'q:'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -11
-            Font.Name = 'Symbol'
-            Font.Style = []
-            ParentFont = False
           end
           object Label19: TLabel
             Left = 8
@@ -209,27 +256,6 @@ object FParams: TFParams
             Height = 13
             Caption = 'U3:'
           end
-          object Label27: TLabel
-            Left = 16
-            Top = 164
-            Width = 10
-            Height = 13
-            Caption = 'X:'
-          end
-          object Label28: TLabel
-            Left = 16
-            Top = 144
-            Width = 69
-            Height = 13
-            Caption = 'Robot Position'
-          end
-          object Label29: TLabel
-            Left = 16
-            Top = 188
-            Width = 10
-            Height = 13
-            Caption = 'Y:'
-          end
           object Label2: TLabel
             Left = 184
             Top = 168
@@ -293,39 +319,12 @@ object FParams: TFParams
             Height = 13
             Caption = 'Sensors:'
           end
-          object Label35: TLabel
-            Left = 96
-            Top = 164
-            Width = 10
+          object Label8: TLabel
+            Left = 16
+            Top = 366
+            Width = 14
             Height = 13
-            Caption = 'X:'
-          end
-          object Label36: TLabel
-            Left = 96
-            Top = 184
-            Width = 10
-            Height = 13
-            Caption = 'Y:'
-          end
-          object Label37: TLabel
-            Left = 96
-            Top = 224
-            Width = 9
-            Height = 13
-            Caption = 'q:'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -11
-            Font.Name = 'Symbol'
-            Font.Style = []
-            ParentFont = False
-          end
-          object Label39: TLabel
-            Left = 96
-            Top = 204
-            Width = 10
-            Height = 13
-            Caption = 'Z:'
+            Caption = 'IP:'
           end
           object EditMotUnom: TEdit
             Left = 120
@@ -522,36 +521,12 @@ object FParams: TFParams
             TabOrder = 22
             OnClick = CBPIDsActiveClick
           end
-          object EditRobotX: TEdit
-            Left = 32
-            Top = 160
-            Width = 50
-            Height = 21
-            TabOrder = 23
-            Text = '0'
-          end
-          object EditRobotY: TEdit
-            Left = 32
-            Top = 184
-            Width = 50
-            Height = 21
-            TabOrder = 24
-            Text = '0'
-          end
-          object EditRobotTeta: TEdit
-            Left = 32
-            Top = 208
-            Width = 50
-            Height = 21
-            TabOrder = 25
-            Text = '0'
-          end
           object EditIR0: TEdit
             Left = 208
             Top = 164
             Width = 41
             Height = 21
-            TabOrder = 26
+            TabOrder = 23
             Text = '0'
           end
           object EditIR1: TEdit
@@ -559,7 +534,7 @@ object FParams: TFParams
             Top = 184
             Width = 41
             Height = 21
-            TabOrder = 27
+            TabOrder = 24
             Text = '0'
           end
           object EditIR2: TEdit
@@ -567,7 +542,7 @@ object FParams: TFParams
             Top = 204
             Width = 41
             Height = 21
-            TabOrder = 28
+            TabOrder = 25
             Text = '0'
           end
           object EditIR3: TEdit
@@ -575,7 +550,7 @@ object FParams: TFParams
             Top = 224
             Width = 41
             Height = 21
-            TabOrder = 29
+            TabOrder = 26
             Text = '0'
           end
           object EditIR4: TEdit
@@ -583,7 +558,7 @@ object FParams: TFParams
             Top = 244
             Width = 41
             Height = 21
-            TabOrder = 30
+            TabOrder = 27
             Text = '0'
           end
           object EditIR5: TEdit
@@ -591,7 +566,7 @@ object FParams: TFParams
             Top = 264
             Width = 41
             Height = 21
-            TabOrder = 31
+            TabOrder = 28
             Text = '0'
           end
           object EditIR6: TEdit
@@ -599,7 +574,7 @@ object FParams: TFParams
             Top = 284
             Width = 41
             Height = 21
-            TabOrder = 32
+            TabOrder = 29
             Text = '0'
           end
           object EditIR7: TEdit
@@ -607,48 +582,7 @@ object FParams: TFParams
             Top = 304
             Width = 41
             Height = 21
-            TabOrder = 33
-            Text = '0'
-          end
-          object EditRobotSetX: TEdit
-            Left = 112
-            Top = 160
-            Width = 50
-            Height = 21
-            TabOrder = 34
-            Text = '0'
-          end
-          object EditRobotSetY: TEdit
-            Left = 112
-            Top = 180
-            Width = 50
-            Height = 21
-            TabOrder = 35
-            Text = '0'
-          end
-          object EditRobotSetTeta: TEdit
-            Left = 112
-            Top = 220
-            Width = 50
-            Height = 21
-            TabOrder = 36
-            Text = '0'
-          end
-          object BSetPosition: TButton
-            Left = 112
-            Top = 138
-            Width = 50
-            Height = 18
-            Caption = 'Set'
-            TabOrder = 37
-            OnClick = BSetPositionClick
-          end
-          object EditRobotSetZ: TEdit
-            Left = 112
-            Top = 200
-            Width = 50
-            Height = 21
-            TabOrder = 38
+            TabOrder = 30
             Text = '0'
           end
           object CBIRNoise: TCheckBox
@@ -658,16 +592,28 @@ object FParams: TFParams
             Height = 17
             Caption = 'IR Noise'
             State = cbGrayed
-            TabOrder = 39
+            TabOrder = 31
             OnClick = CBIRNoiseClick
+          end
+          object EditRemoteIP: TEdit
+            Left = 36
+            Top = 362
+            Width = 109
+            Height = 21
+            TabOrder = 32
+            Text = '127.0.0.1'
+            OnChange = EditRemoteIPChange
           end
         end
         object TabAxis: TTabSheet
           Caption = 'Axis'
           ImageIndex = 1
+          DesignSize = (
+            253
+            397)
           object Label38: TLabel
-            Left = 4
-            Top = 34
+            Left = 0
+            Top = 62
             Width = 9
             Height = 13
             Caption = 'q:'
@@ -678,12 +624,19 @@ object FParams: TFParams
             Font.Style = []
             ParentFont = False
           end
-          object SGJoints: TStringGrid
+          object Label41: TLabel
             Left = 0
-            Top = 68
+            Top = 32
+            Width = 50
+            Height = 13
+            Caption = 'WayPoint:'
+          end
+          object SGJoints: TStringGrid
+            Left = 4
+            Top = 84
             Width = 253
-            Height = 329
-            ColCount = 4
+            Height = 313
+            Anchors = [akLeft, akTop, akBottom]
             DefaultColWidth = 61
             DefaultRowHeight = 14
             FixedCols = 0
@@ -691,80 +644,190 @@ object FParams: TFParams
             Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSelect]
             TabOrder = 0
             ColWidths = (
-              41
+              31
               89
-              49
-              50)
+              38
+              36
+              35)
           end
           object EditJointTeta: TEdit
-            Left = 16
-            Top = 30
-            Width = 49
+            Left = 10
+            Top = 58
+            Width = 45
             Height = 21
             TabOrder = 1
           end
           object EditJointTetaRef: TEdit
-            Left = 68
-            Top = 30
-            Width = 49
+            Left = 58
+            Top = 58
+            Width = 45
             Height = 21
             TabOrder = 2
             Text = '0'
           end
           object BSetJointTetaRef: TButton
-            Left = 120
-            Top = 30
+            Left = 108
+            Top = 58
             Width = 45
             Height = 21
-            Caption = 'Set'
+            Caption = 'Set Ref'
             TabOrder = 3
             OnClick = BSetJointTetaRefClick
           end
           object EditLoadJointPoints: TEdit
             Left = 0
             Top = 4
-            Width = 189
+            Width = 153
             Height = 21
             TabOrder = 4
             Text = 'JointWayPoints.xml'
           end
           object BLoadJointWayPoints: TButton
-            Left = 192
+            Left = 204
             Top = 4
-            Width = 57
+            Width = 45
             Height = 21
             Caption = 'Load'
             TabOrder = 5
             OnClick = BLoadJointWayPointsClick
           end
+          object BSetAll: TButton
+            Left = 204
+            Top = 58
+            Width = 45
+            Height = 21
+            Caption = 'Set All'
+            TabOrder = 6
+            OnClick = BSetAllClick
+          end
+          object BSetJointWayPointTeta: TButton
+            Left = 156
+            Top = 58
+            Width = 45
+            Height = 21
+            Caption = 'Set WP'
+            TabOrder = 7
+            OnClick = BSetJointWayPointTetaClick
+          end
+          object ComboWayPointName: TComboBox
+            Left = 52
+            Top = 28
+            Width = 145
+            Height = 21
+            Style = csDropDownList
+            ItemHeight = 13
+            TabOrder = 8
+          end
+          object BWayPointEdit: TButton
+            Left = 204
+            Top = 28
+            Width = 45
+            Height = 21
+            Caption = 'Edit'
+            TabOrder = 9
+          end
+          object BJointWayPointsSave: TButton
+            Left = 156
+            Top = 4
+            Width = 45
+            Height = 21
+            Caption = 'Save'
+            TabOrder = 10
+            OnClick = BJointWayPointsSaveClick
+          end
         end
       end
       object BFreeze: TButton
-        Left = 142
-        Top = 80
+        Left = 138
+        Top = 120
         Width = 59
         Height = 21
         Caption = 'Freeze'
-        TabOrder = 6
+        TabOrder = 5
         OnClick = BFreezeClick
       end
       object BStep: TButton
-        Left = 204
-        Top = 80
+        Left = 200
+        Top = 120
         Width = 59
         Height = 21
         Caption = 'Step'
-        TabOrder = 7
+        TabOrder = 6
         OnClick = BStepClick
       end
       object CBFreeze: TCheckBox
-        Left = 128
+        Left = 124
         Top = 0
         Width = 65
         Height = 17
         Caption = 'Freeze'
-        TabOrder = 8
+        TabOrder = 7
         OnClick = CBFreezeClick
+      end
+      object BSetPosition: TButton
+        Left = 212
+        Top = 14
+        Width = 45
+        Height = 18
+        Caption = 'Set'
+        TabOrder = 8
+        OnClick = BSetPositionClick
+      end
+      object EditRobotX: TEdit
+        Left = 140
+        Top = 36
+        Width = 45
+        Height = 21
+        TabOrder = 9
+        Text = '0'
+      end
+      object EditRobotSetX: TEdit
+        Left = 212
+        Top = 36
+        Width = 45
+        Height = 21
+        TabOrder = 10
+        Text = '0'
+      end
+      object EditRobotSetY: TEdit
+        Left = 212
+        Top = 56
+        Width = 45
+        Height = 21
+        TabOrder = 11
+        Text = '0'
+      end
+      object EditRobotY: TEdit
+        Left = 140
+        Top = 56
+        Width = 45
+        Height = 21
+        TabOrder = 12
+        Text = '0'
+      end
+      object EditRobotTeta: TEdit
+        Left = 140
+        Top = 76
+        Width = 45
+        Height = 21
+        TabOrder = 13
+        Text = '0'
+      end
+      object EditRobotSetZ: TEdit
+        Left = 212
+        Top = 76
+        Width = 45
+        Height = 21
+        TabOrder = 14
+        Text = '0'
+      end
+      object EditRobotSetTeta: TEdit
+        Left = 212
+        Top = 96
+        Width = 45
+        Height = 21
+        TabOrder = 15
+        Text = '0'
       end
     end
     object TabGraphics: TTabSheet
@@ -1043,6 +1106,7 @@ object FParams: TFParams
     Top = 628
     Width = 269
     Height = 21
+    Anchors = [akLeft, akBottom]
     TabOrder = 1
     Text = 'EditDebug'
   end
@@ -1070,13 +1134,14 @@ object FParams: TFParams
       'CBIRNoise.Checked'
       'RGControlBlock.ItemIndex'
       'CBFreeze.Checked'
+      'EditDefaultFriction.Text'
       'EditRobotSetTeta.Text'
       'EditRobotSetX.Text'
       'EditRobotSetY.Text'
       'EditRobotSetZ.Text'
-      'EditDefaultFriction.Text')
+      'EditRemoteIP.Text')
     StoredValues = <>
-    Left = 224
-    Top = 128
+    Left = 60
+    Top = 48
   end
 end

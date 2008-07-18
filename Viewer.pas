@@ -90,6 +90,7 @@ type
 //    procedure AxisGLSetPosition(axis: Taxis);
   public
     procedure LoadJointWayPointsFromXML(XMLFile: string; r: integer);
+    procedure SaveJointWayPointsToXML(XMLFile: string; r: integer);
     procedure SetCameraTarget(r: integer);
 
     procedure CreatePickJoint(Solid: TSolid; anchor_x, anchor_y, anchor_z: double);
@@ -170,7 +171,7 @@ implementation
 
 {$R *.dfm}
 
-uses ODEGL, Params, Editor, FastChart, RemoteControl, utils, Log;
+uses ODEGL, Params, Editor, FastChart, RemoteControl, utils, Log, StdCtrls;
 
 
 
@@ -320,6 +321,7 @@ begin
   if not PID.active then exit;
 
   ek := ref - yk;
+  //if abs(ek) < degtorad(1) then exit;
   ewk := refw - ywk;
   mk := PID.Kp * ek + PID.Kd * ewk;
 
@@ -381,6 +383,8 @@ begin
   Solid.Geom := dCreateBox(space, L, W, H);
   dGeomSetBody(Solid.Geom, Solid.Body);
   Solid.Geom.data := Solid;
+
+//  dBodySetDamping(Solid.Body, 1e-1, 1e-1);
 
   Solid.GLObj := TGLSceneObject(ODEScene.AddNewChild(TGLCube));
 
@@ -1116,6 +1120,35 @@ begin
 end;
 
 
+procedure TWorld_ODE.SaveJointWayPointsToXML(XMLFile: string; r: integer);
+var XML: IXMLDocument;
+    root, node, prop: IXMLElement;
+    wp_idx, j: integer;
+begin
+  if (r < 0) or (r >= Robots.Count) then exit;
+  if Robots[r].Axes.Count = 0 then exit;
+
+
+  XML := CreateXMLDoc;
+//  XML.DocumentElement := XML.CreateElement('joint_waypoints');
+//  XML.DocumentElement.SetAttribute('attr', 'value');
+  root := XML.CreateElement('joint_waypoints');
+  XML.DocumentElement := root;
+  for wp_idx := 0 to Robots[r].Axes[0].WayPoints.Count -1 do begin
+    node := XML.CreateElement('state');
+    //Robots[r].Axes[0].WayPoints[wp_idx].
+    //node.SetAttribute('ID', Robots[r].WayPoints[wp_idx].);
+    root.AppendChild(node);
+    for j := 0 to Robots[r].Axes.Count -1 do begin
+      //  <joint ID='0' axis='1' theta='0' w='0'/>
+      prop := XML.CreateElement('joint');
+      prop.SetAttribute('ID', Robots[r].Axes[j].ParentLink.ID);
+      node.AppendChild(prop);
+    end;
+  end;
+  XML.Save('Test.xml'{XMLFile}, ofIndent);
+end;
+
 procedure TWorld_ODE.LoadJointWayPointsFromXML(XMLFile: string; r: integer);
 var XML: IXMLDocument;
     root, node, prop: IXMLNode;
@@ -1123,6 +1156,7 @@ var XML: IXMLDocument;
     trajID, i, j, axis_idx: integer;
     jointID: string;
     NewPoint: TAxisTraj;
+    way_point_idx: integer;
 begin
   if (r < 0) or (r >= Robots.Count) then exit;
 
@@ -1153,7 +1187,7 @@ begin
         if prop.NodeName = 'joint' then begin
           jointID := GetNodeAttrStr(prop, 'ID', '-1');
           axis_idx := GetNodeAttrInt(prop, 'axis', axis_idx) - 1;
-          ang := GetNodeAttrReal(prop, 'theta', ang);
+          ang := DegToRad(GetNodeAttrReal(prop, 'theta', ang));
           speed := GetNodeAttrReal(prop, 'w', speed);
 
           i :=  Robots[r].Links.IndexOf(jointID);
@@ -1172,10 +1206,43 @@ begin
         prop := prop.NextSibling;
       end;
 
+      // insert the remaining points that weren't specified in this state
+      for i := 0 to Robots[r].Links.Count -1 do begin
+        for j := 0 to MaxAxis -1 do begin
+          if Robots[r].Links[i].Axis[j] = nil then
+            continue;
+          way_point_idx := Robots[r].Links[i].Axis[j].WayPoints.Count -1;
+          if (way_point_idx >= 0) then begin
+            if abs(Robots[r].Links[i].Axis[j].WayPoints[way_point_idx].t - final_time) < 1e-5 then
+              continue;
+
+            ang := Robots[r].Links[i].Axis[j].WayPoints[way_point_idx].pos;
+            speed := Robots[r].Links[i].Axis[j].WayPoints[way_point_idx].speed;
+          end else begin
+            ang := 0;
+            speed := 0;
+          end;
+          // Create and insert the point
+          NewPoint := TAxisTraj.Create;
+          NewPoint.pos := ang;
+          NewPoint.speed := speed;
+          NewPoint.t := final_time;
+          Robots[r].Links[i].Axis[j].WayPoints.Add(NewPoint)
+        end;
+      end;
+
     end;
 
     node := node.NextSibling;
   end;
+
+  FParams.ComboWayPointName.Clear;
+  for j := 0 to Robots[r].Links[0].Axis[0].WayPoints.Count -1 do begin
+    with Robots[r].Links[0].Axis[0].WayPoints[j] do
+      FParams.ComboWayPointName.AddItem(format('%.2f:',[t]),nil);
+  end;
+  if FParams.ComboWayPointName.Items.Count > 0 then
+    FParams.ComboWayPointName.ItemIndex := 0;
 
   for i := 0 to Robots[r].Links.Count -1 do begin
     for j := 0 to Robots[r].Links[i].Axis[0].WayPoints.Count -1 do begin
@@ -1996,11 +2063,13 @@ begin
               end;
 
               cmPIDSpeed: begin
-                ref.volts := CalcPID(Motor.Controller, ref.w, w);
+                //ref.volts := CalcPID(Motor.Controller, ref.w, w);
+                ref.volts := CalcPID(Motor.Controller, ref.w, filt_speed);
               end;
 
               cmState: begin
-                ref.volts := CalcPD(Motor.Controller, ref.theta, ref.w, theta, w);
+                //ref.volts := CalcPD(Motor.Controller, ref.theta, ref.w, theta, w);
+                ref.volts := CalcPD(Motor.Controller, ref.theta, ref.w, theta, filt_speed);
               end;
             end;
             ticks := 0;
@@ -2591,7 +2660,7 @@ end;
 // Sensores sem ser num robot
 // Zona morta no PID
 // PDI para controlar o robot
-// Eliminar backefm
+// xxx Eliminar backefm
 // ----- Visualizar joints
 // ----- passar ids para texto
 // alternate globject
