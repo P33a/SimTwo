@@ -553,6 +553,7 @@ var i: integer;
 begin
   if (r < 0) or (r >= WorldODE.Robots.Count) then exit;
   // clear actual waypoints
+  WorldODE.Robots[r].AxesWayPointsIDs.Clear;
   for i := 0 to WorldODE.Robots[r].Axes.Count-1 do begin
     WorldODE.Robots[r].Axes[i].WayPoints.ClearAll
   end;

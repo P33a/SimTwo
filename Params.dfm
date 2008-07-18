@@ -712,19 +712,11 @@ object FParams: TFParams
           object ComboWayPointName: TComboBox
             Left = 52
             Top = 28
-            Width = 145
+            Width = 149
             Height = 21
             Style = csDropDownList
             ItemHeight = 13
             TabOrder = 8
-          end
-          object BWayPointEdit: TButton
-            Left = 204
-            Top = 28
-            Width = 45
-            Height = 21
-            Caption = 'Edit'
-            TabOrder = 9
           end
           object BJointWayPointsSave: TButton
             Left = 156
@@ -732,8 +724,17 @@ object FParams: TFParams
             Width = 45
             Height = 21
             Caption = 'Save'
-            TabOrder = 10
+            TabOrder = 9
             OnClick = BJointWayPointsSaveClick
+          end
+          object BWayPointEdit: TButton
+            Left = 204
+            Top = 28
+            Width = 45
+            Height = 21
+            Caption = 'Edit'
+            TabOrder = 10
+            OnClick = BWayPointEditClick
           end
         end
       end

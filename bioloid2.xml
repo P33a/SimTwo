@@ -170,7 +170,7 @@
       <!--<friction bv='5e-3' fc='1e-5' coulomblimit='1e-2'/>-->
       <encoder ppr='1000' mean='0' stdev='0'/>
 <!--	   <controller mode='pidposition' kp='25' ki='0.1' kd='10' kf='0.5' ysat='10' active='1' period='10'/> -->
-      <controller mode='state' kp='15' ki='0' kd='0.2' kf='0.05' active='1' period='10'/>
+      <controller mode='state' kp='8' ki='0' kd='0.2' kf='0.05' active='1' period='10'/>
 <!--	   <controller mode='state' kp='1' ki='0.2' kd='0.1' kf='0.05' active='1' period='10'/>   -->
     </default>
     <joint>

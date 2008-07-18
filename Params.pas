@@ -142,8 +142,8 @@ type
     BSetJointWayPointTeta: TButton;
     Label41: TLabel;
     ComboWayPointName: TComboBox;
-    BWayPointEdit: TButton;
     BJointWayPointsSave: TButton;
+    BWayPointEdit: TButton;
     procedure CBShadowsClick(Sender: TObject);
     procedure CBVsyncClick(Sender: TObject);
     procedure BSetFPSClick(Sender: TObject);
@@ -175,6 +175,7 @@ type
     procedure BSetJointWayPointTetaClick(Sender: TObject);
     procedure BSetAllClick(Sender: TObject);
     procedure BJointWayPointsSaveClick(Sender: TObject);
+    procedure BWayPointEditClick(Sender: TObject);
   private
     procedure FillEditArray(ProtoName: string;
       var EditArray: array of TEdit);
@@ -187,6 +188,7 @@ type
     procedure FillLBLinks(LB: TListBox; r: integer);
     procedure ShowRobotState;
     procedure ShowRobotRemState(r: integer);
+    procedure ComboWayPointNameUpdate(robot: TRobot);
 //    procedure ShowIRValues;
   end;
 
@@ -198,7 +200,7 @@ implementation
 
 {$R *.dfm}
 
-uses Viewer, Editor, FastChart, ODERobotsPublished;
+uses Viewer, Editor, FastChart, ODERobotsPublished, WayPointsEdit, ProjConfig;
 
 procedure TFParams.BSetFPSClick(Sender: TObject);
 var fps: integer;
@@ -406,13 +408,14 @@ end;
 
 procedure TFParams.FormCreate(Sender: TObject);
 begin
+  FormStorage.IniFileName := GetIniFineName;
+
   Edit4.Text := inttostr(sizeof(TSolidLink));
   SGJoints.Cells[0,0] := 'ID';
   SGJoints.Cells[1,0] := 'Description';
   SGJoints.Cells[2,0] := 'Pos';
   SGJoints.Cells[3,0] := 'Ref';
   SGJoints.Cells[4,0] := 'WP';
-
 end;
 
 procedure TFParams.FormShow(Sender: TObject);
@@ -617,6 +620,27 @@ begin
   r := LBRobots.ItemIndex;
   SaveJointWayPoints(r, EditLoadJointPoints.Text);
 end;
+
+procedure TFParams.BWayPointEditClick(Sender: TObject);
+begin
+  FWayPointsEdit.showmodal;
+end;
+
+procedure TFParams.ComboWayPointNameUpdate(robot: TRobot);
+var i: integer;
+begin
+  ComboWayPointName.Clear;
+  if Robot.Axes.Count > 0 then begin
+    for i := 0 to Robot.AxesWayPointsIDs.Count -1 do begin
+      with Robot.Axes[0].WayPoints[i] do
+        FParams.ComboWayPointName.AddItem(format('%.2f: %s',[t, Robot.AxesWayPointsIDs[i]]),nil);
+    end;
+  end;
+
+  if FParams.ComboWayPointName.Items.Count > 0 then
+    FParams.ComboWayPointName.ItemIndex := 0;
+end;
+
 
 end.
 
