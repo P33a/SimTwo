@@ -170,7 +170,8 @@
       <!--<friction bv='5e-3' fc='1e-5' coulomblimit='1e-2'/>-->
       <encoder ppr='1000' mean='0' stdev='0'/>
 <!--	   <controller mode='pidposition' kp='25' ki='0.1' kd='10' kf='0.5' ysat='10' active='1' period='10'/> -->
-      <controller mode='state' kp='8' ki='0' kd='0.2' kf='0.05' active='1' period='10'/>
+      <controller mode='state' kp='8' ki='0' kd='0.02' kf='0.05' active='1' period='10'/>
+      <spring k='0' zeropos='0'/>
 <!--	   <controller mode='state' kp='1' ki='0.2' kd='0.1' kf='0.05' active='1' period='10'/>   -->
     </default>
     <joint>
@@ -353,8 +354,8 @@
       <type value='Hinge'/>
       <desc Pt='Pescoco'/>
       <desc Eng='Neck'/>
-      <motor ri='0.5' ki='1e-3' vmax='9' imax='0.1' active='1'/>
-      <controller mode='state' kp='2' ki='0.5' kd='0.05' kf='0.0' active='1' period='10'/>
+      <!--<motor ri='0.5' ki='1e-3' vmax='9' imax='0.1' active='1'/>
+      <controller mode='state' kp='2' ki='0.5' kd='0.05' kf='0.0' active='1' period='10'/>-->
     </joint>
   </articulations>
 </robot>

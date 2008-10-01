@@ -468,6 +468,7 @@ object FEditor: TFEditor
     Top = 36
   end
   object FindDialog: TFindDialog
+    OnFind = FindDialogFind
     Left = 352
     Top = 36
   end
@@ -606,5 +607,9 @@ object FEditor: TFEditor
       ShortCut = 16449
       OnClick = PopUpClearAllClick
     end
+  end
+  object SynEditSearch: TSynEditSearch
+    Left = 352
+    Top = 64
   end
 end

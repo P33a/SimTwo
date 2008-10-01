@@ -19,7 +19,7 @@ type
 type
   TWorld_ODE = class
     //SampleCount: integer;
-    Ode_dt: double;
+    Ode_dt, TimeFactor: double;
     OdeScene: TGLBaseSceneObject;
     world: PdxWorld;
     space: PdxSpace;
@@ -159,6 +159,7 @@ type
   end;
 
 procedure ReadFrictionFromXMLNode(var Friction: TFriction; const prop: IXMLNode);
+procedure ReadSpringFromXMLNode(var Spring: TSpring; const prop: IXMLNode);
 procedure ReadMotorFromXMLNode(var Motor: TMotor; const prop: IXMLNode);
 
 var
@@ -301,12 +302,12 @@ begin
 
   ek := ref - yk;
   dek := ek - PID.ek_1;
-  PID.Sek := PID.Sek + dek;
+  PID.Sek := PID.Sek + ek;
   mk := PID.Kp * ek + PID.Ki * PID.Sek + PID.Kd * dek + PID.Kf * ref;
 
   // Anti Windup
   if abs(mk) >= PID.y_sat then begin
-    PID.Sek := PID.Sek - dek;
+    PID.Sek := PID.Sek - ek;
     mk := max(-PID.y_sat, min(PID.y_sat, mk));
   end;
 
@@ -323,7 +324,7 @@ begin
   ek := ref - yk;
   //if abs(ek) < degtorad(1) then exit;
   ewk := refw - ywk;
-  mk := PID.Kp * ek + PID.Kd * ewk;
+  mk := PID.Kp * ek + PID.Kd * ewk + PID.Kf * ref;
 
   result := mk;
 end;
@@ -908,6 +909,7 @@ var JointNode, prop: IXMLNode;
     newLink: TSolidLink;
     newAxis: TAxis;
     Friction, DefFriction: TFriction;
+    Spring, DefSpring: TSpring;
     Motor, DefMotor: TMotor;
     descr: string;
 begin
@@ -950,6 +952,11 @@ begin
     CoulombLimit := 1e-2;
   end;
 
+  with DefSpring do begin
+    K := 0;
+    ZeroPos := 0;
+  end;
+
   JointNode := root.FirstChild;
   while JointNode <> nil do begin
     if (JointNode.NodeName = 'joint') or (JointNode.NodeName = 'default') then begin //'joint'
@@ -969,6 +976,7 @@ begin
       newLink := nil;
       motor := DefMotor;
       Friction := DefFriction;
+      Spring := DefSpring;
 
       while prop <> nil do begin
         if prop.NodeName = 'pos' then begin
@@ -1019,6 +1027,7 @@ begin
           IDValue := GetNodeAttrStr(prop, 'value', IDValue);
         end;
         ReadFrictionFromXMLNode(Friction, prop);
+        ReadSpringFromXMLNode(Spring, prop);
         ReadMotorFromXMLNode(Motor, prop);
         prop := prop.NextSibling;
       end;
@@ -1026,6 +1035,7 @@ begin
       if JointNode.NodeName = 'default' then begin
         // Set the new default Link parameters
         DefFriction := Friction;
+        DefSpring := Spring;
         DefMotor := Motor;
         DefaGL := aGL;
       end else begin
@@ -1065,6 +1075,7 @@ begin
               Robot.Axes.Add(newAxis);
               newAxis.ParentLink := newLink;
               newAxis.Friction := Friction;
+              newAxis.Spring := Spring;
               newAxis.Motor := Motor;
               newLink.Axis[1] := newAxis;
 
@@ -1079,6 +1090,7 @@ begin
             Robot.Axes.Add(newAxis);
             newAxis.ParentLink := newLink;
             newAxis.Friction := Friction;
+            newAxis.Spring := Spring;
             newAxis.Motor := Motor;
             newLink.Axis[0] := newAxis;
 
@@ -1423,6 +1435,17 @@ begin
     end;
   end;
 end;
+
+procedure ReadSpringFromXMLNode(var Spring: TSpring; const prop: IXMLNode);
+begin
+  with Spring do begin
+    if prop.NodeName = 'spring' then begin
+      K := GetNodeAttrReal(prop, 'k', K);
+      ZeroPos := degtorad(GetNodeAttrReal(prop, 'zeropos', ZeroPos));
+    end;
+  end;
+end;
+
 
 procedure ReadMotorFromXMLNode(var Motor: TMotor; const prop: IXMLNode);
 var str: string;
@@ -1868,6 +1891,7 @@ constructor TWorld_ODE.create;
 begin
   default_n_mu := 0.95;
   Ode_dt := 1/1000;
+  TimeFactor := 1;
   ODEEnable := False;
   PhysTime := 0;
   OdeScene := FViewer.GLShadowVolume;
@@ -1891,7 +1915,7 @@ begin
 
 //  dWorldSetCFM(world, 1e-5);
   dWorldSetCFM(world, 1e-5);
-//  dWorldSetERP(world, 1e-1);
+  dWorldSetERP(world, 0.1);
 
   //Floor
   dCreatePlane(space, 0, 0, 1, 0);
@@ -2013,20 +2037,9 @@ begin
     mx := x;
   end;
 
-  if WorldODE.PickSolid = nil then begin
-    GLSceneViewerPick(x, y);
-  end;
-
-{  if WorldODE.PickSolid <> nil then with WorldODE do begin
-    vs :=  GLSceneViewer.Buffer.ScreenToVector(x, GLSceneViewer.Buffer.ViewPort.Height - y);
-    NormalizeVector(Vs);
-    scalevector(Vs, PickDist);
-    AddVector(Vs, GLSceneViewer.Buffer.Camera.Position.AsVector);
-    WorldODE.movePickJoint(vs[0], vs[1], vs[2]);
-//    FParams.EditDebug3.Text := format('%.2f,%.2f,%.2f', [vs[0], vs[1], vs[2]]);
-  end else begin
-    GLSceneViewerPick(x, y);
-  end;}
+//  if WorldODE.PickSolid = nil then begin
+//    GLSceneViewerPick(x, y);
+//  end;
 
 end;
 
@@ -2063,7 +2076,7 @@ procedure AxisTorqueModel(axis: TAxis; Theta, w: double; var T: double);
 var duty, Tq, old_Im: double;
     max_delta_Im: double;
 begin
-  max_delta_Im := 0.1; // A/ms
+  max_delta_Im := 0.15; // A/ms
   with Axis do begin
     // If active use PID controller
     if Motor.active then begin
@@ -2099,6 +2112,7 @@ begin
       end else begin
         duty := 0;
       end;
+
       old_Im := Motor.Im;
       if Motor.Ri <> 0 then begin
         Motor.Im := (Motor.voltage - w * Motor.GearRatio * Motor.Ki) / Motor.Ri;
@@ -2114,6 +2128,7 @@ begin
         // this limit is dependent on the current sensor placement
         // Here is assumed that it is only active on the "on" time of the PWM
         Motor.Im := max(-Motor.Imax / duty, min(Motor.Imax / duty, Motor.Im));
+        //Motor.Im := max(-Motor.Imax, min(Motor.Imax, Motor.Im));
       end;
     end else begin
       Motor.Im := 0;
@@ -2122,7 +2137,7 @@ begin
     Tq := Friction.Fc * sign(w);
     // Limit it to avoid instability
     Tq := max(-Friction.CoulombLimit * abs(w), min(Friction.CoulombLimit * abs(w), Tq));
-    T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Tq;
+    T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Tq - Spring.K * diffangle(Theta, Spring.ZeroPos);
   end;
 end;
 
@@ -2298,7 +2313,7 @@ begin
     QueryPerformanceCounter(t_start);
 
     // while WorldODE.physTime < newtime do begin
-    newFixedTime := WorldODE.physTime + GLCadencer.FixedDeltaTime;
+    newFixedTime := WorldODE.physTime + GLCadencer.FixedDeltaTime * WorldODE.TimeFactor;
     while WorldODE.physTime < newFixedTime do begin
 
       {if Focused then begin
@@ -2313,9 +2328,9 @@ begin
       // Higher level controller (subsampled)
       for r := 0 to WorldODE.Robots.Count-1 do begin
         with WorldODE.Robots[r] do begin
-          inc(SamplesCount);
-          if SamplesCount > DecPeriodSamples then begin
-            SamplesCount := 0;
+          SecondsCount := SecondsCount + WorldODE.Ode_dt;
+          if SecondsCount > DecPeriod then begin
+            SecondsCount := SecondsCount - DecPeriod;
 
             if Focused then begin
               // Keyboard injection defaults to zero
@@ -2394,6 +2409,8 @@ begin
             //if not active then continue; //TODO
             theta := Axes[i].GetPos();
             w := Axes[i].GetSpeed();
+
+            //AxisTorqueModel(Axes[i], Theta, Axes[i].filt_speed, Tq);
             AxisTorqueModel(Axes[i], Theta, w, Tq);
             // Apply it to the axis
             Axes[i].AddTorque(Tq);
@@ -2667,21 +2684,21 @@ end;
 
 
 // TODO
-// ----- Agarrar objectos com o rato e levantá-los
-// ----- SetRobotPosition
+// -Agarrar objectos com o rato e levantá-los-
+// -SetRobotPosition-
 // trails  (2D( height), 3D (offset), length, color, tolerance)
 // Things.xml e scriptable
 // Sensores sem ser num robot
 // Zona morta no PID
 // PDI para controlar o robot
 // xxx Eliminar backefm
-// ----- Visualizar joints
-// ----- passar ids para texto
+// -Visualizar joints-
+// -passar ids para texto-
 // alternate globject
 // Calcular centro de gravidade
-// -- Passadeiras (falta controlar a velocidade delas, falta uma textura ou tecnica que indique o movimento)
-// Possiblidade de acertar váriosa referencias de uma vez
+// -Passadeiras- (falta controlar a velocidade delas, falta uma textura ou tecnica que indique o movimento)
+// -Possiblidade de acertar váriosa referencias de uma vez-
 // Controlo integral na realimentaçao de estado
-// memorizar o nome do ficheiro de joint states
+// -memorizar o nome do ficheiro de joint states-
 // Materiais { surface }
 // Surfaces
