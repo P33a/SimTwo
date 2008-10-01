@@ -33,6 +33,10 @@ type
     CoulombLimit: double;
   end;
 
+  TSpring = record
+    K, ZeroPos: double;
+  end;
+
   TMotController = record
     Ki, Kd, Kp, Kf: double;
     Sek, ek_1: double;
@@ -145,6 +149,7 @@ type
     ParentLink: TSolidLink;
     GLObj: TGLBaseSceneObject;
     Friction: TFriction;
+    Spring: TSpring;
     Motor: TMotor;
     TrajectPoints, WayPoints: TAxisTrajList;
     Odo: TOdoState;
@@ -307,7 +312,8 @@ type
     Wheels: TWheelList;
     IRSensors: TSensorList;
     Kind: TRobotKind;
-    SamplesCount, DecPeriodSamples: integer;
+    //SamplesCount, DecPeriodSamples: integer;
+    SecondsCount, DecPeriod: double;
     Name: string;
     ForceMoved: boolean;
   public
@@ -345,8 +351,8 @@ begin
   Links := TSolidLinkList.Create;
   Wheels := TWheelList.Create;
   IRSensors := TSensorList.Create;
-  SamplesCount := 0;
-  DecPeriodSamples := 40;
+  SecondsCount := 0;
+  DecPeriod := 0.04;
 end;
 
 destructor TRobot.Destroy;
@@ -589,7 +595,7 @@ constructor TAxis.Create;
 begin
   TrajectPoints := TAxisTrajList.Create;
   WayPoints := TAxisTrajList.Create;
-  speed_lambda := 0.9;
+  speed_lambda := 0.95;
 end;
 
 destructor TAxis.Destroy;
@@ -655,7 +661,6 @@ end;
 
 function TAxis.GetSpeed: double;
 begin
-
   result := 0;
   if dJointGetType(ParentLink.joint) = ord(dJointTypeHinge) then begin
     result := dJointGetHingeAngleRate(ParentLink.joint);
@@ -675,6 +680,7 @@ end;
 
 procedure TAxis.AddTorque(Tq: Double);
 begin
+  torque := Tq;
   if dJointGetType(ParentLink.joint) = ord(dJointTypeHinge) then begin
     dJointAddHingeTorque(ParentLink.joint, Tq);
   end else if dJointGetType(ParentLink.joint) = ord(dJointTypeUniversal) then begin

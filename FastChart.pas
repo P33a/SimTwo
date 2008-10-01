@@ -191,13 +191,18 @@ begin
 
     node:=AddChild(root,'Axes');
     node.Data:=nil;
-    for i := 0 to WorldODE.Robots[r].Axes.Count -1 do begin
+    for i := 0 to WorldODE.Robots[r].Axes.Count - 1 do begin
       sub_nonde:=AddChild(node, WorldODE.Robots[r].Axes[i].ParentLink.description);
       sub_nonde.Data:=nil;
       //FillRobotLinksStateTreeView(num, i,sub_nonde,tree);
       FillTreeViewItem(r, i, 'Pos', @GetAxisPosDeg, sub_nonde, tree);
       FillTreeViewItem(r, i, 'Speed', @GetAxisSpeedDeg, sub_nonde, tree);
+      FillTreeViewItem(r, i, 'T', @GetAxisTorque, sub_nonde, tree);
+
       FillTreeViewItem(r, i, 'I', @GetAxisI, sub_nonde, tree);
+      FillTreeViewItem(r, i, 'U', @GetAxisU, sub_nonde, tree);
+      FillTreeViewItem(r, i, 'Power', @GetAxisUIPower, sub_nonde, tree);
+      //FillTreeViewItem(r, i, 'Mech Power', @GetAxisTWPower, sub_nonde, tree);
       FillTreeViewItem(r, i, 'Pos ref', @GetAxisPosRefDeg, sub_nonde, tree);
       FillTreeViewItem(r, i, 'Speed ref', @GetAxisSpeedRefDeg, sub_nonde, tree);
     end;

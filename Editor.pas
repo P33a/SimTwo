@@ -8,7 +8,8 @@ uses
   SynMemo, ExtCtrls, ComCtrls, SynEditTypes,
   Menus, SynEditPrint, ShellAPI, IniFiles, math, uPSComponent, uPSUtils, uPSRuntime,
   SynCompletionProposal, uPSComponent_Default, uPSComponent_StdCtrls,
-  uPSComponent_Controls, uPSComponent_Forms, rxPlacemnt, ProjConfig;
+  uPSComponent_Controls, uPSComponent_Forms, rxPlacemnt, ProjConfig,
+  SynEditMiscClasses, SynEditSearch;
 
 
 type
@@ -85,6 +86,7 @@ type
     CBSaveOnRun: TCheckBox;
     PopupMenuOutput: TPopupMenu;
     PopUpClearAll: TMenuItem;
+    SynEditSearch: TSynEditSearch;
     procedure SynEditSTMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
     procedure SynEditSTStatusChange(Sender: TObject;
@@ -123,6 +125,7 @@ type
     procedure SynEditSTGutterClick(Sender: TObject; Button: TMouseButton;
       X, Y, Line: Integer; Mark: TSynEditMark);
     procedure PopUpClearAllClick(Sender: TObject);
+    procedure FindDialogFind(Sender: TObject);
   private
     procedure writeLn(S: string);
     { Private declarations }
@@ -652,7 +655,7 @@ end;
 
 
 procedure TFEditor.PSScript_Execute(Sender: TPSScript);
-var pScriptArray: PIFTypeRec;
+//var pScriptArray: PIFTypeRec;
 //    i: integer;
 //    Comp: TComponent;
 begin
@@ -798,7 +801,7 @@ begin
 end;
 
 procedure TFEditor.FormShow(Sender: TObject);
-var i: integer;
+var //i: integer;
     s: string;
 begin
   s := FormStorage.ReadString('LastProjectName','');
@@ -838,6 +841,29 @@ begin
   if PopupMenuOutput.PopupComponent is TMemo then begin
     TMemo(PopupMenuOutput.PopupComponent).Lines.Clear;
   end;
+end;
+
+procedure TFEditor.FindDialogFind(Sender: TObject);
+var SynSearchOptions: TSynSearchOptions;
+begin
+  SynEditST.SearchEngine := SynEditSearch;
+  SynSearchOptions := [];
+  if not (frDown in FindDialog.Options) then
+    SynSearchOptions := SynSearchOptions + [ssoBackwards];
+  if (frWholeWord in FindDialog.Options) then
+    SynSearchOptions := SynSearchOptions + [ssoWholeWord];
+  if (frMatchCase in FindDialog.Options) then
+    SynSearchOptions := SynSearchOptions + [ssoMatchCase];
+  SynEditST.SearchReplace(FindDialog.FindText, '', SynSearchOptions)
+
+//  TFindOption = (frDown, frFindNext, frHideMatchCase, frHideWholeWord,
+//    frHideUpDown, frMatchCase, frDisableMatchCase, frDisableUpDown,
+//    frDisableWholeWord, frReplace, frReplaceAll, frWholeWord, frShowHelp);
+
+//  TSynSearchOption = (ssoMatchCase, ssoWholeWord, ssoBackwards,
+//    ssoEntireScope, ssoSelectedOnly, ssoReplace, ssoReplaceAll, ssoPrompt);
+
+//  FindDialog.Options
 end;
 
 end.

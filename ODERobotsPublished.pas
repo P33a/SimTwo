@@ -14,6 +14,8 @@ type
   TAxisState = record
     pos: double;
     vel: double;
+    Torque: double;
+    Vm: double;
     Im: double;
   end;
 
@@ -27,6 +29,11 @@ type
     x: double;
     y: double;
     z: double;
+  end;
+
+  TSpringDef = record
+    K: double;
+    ZeroPos: double;
   end;
 
 
@@ -61,11 +68,17 @@ function GetAxisOdo(R, i: integer): integer;
 function GetAxisState(R, i: integer): TAxisState;
 function GetAxisPos(R, i: integer): double;
 function GetAxisSpeed(R, i: integer): double;
+function GetAxisTorque(R, i: integer): double;
 function GetAxisI(R, i: integer): double;
+function GetAxisU(R, i: integer): double;
+function GetAxisUIPower(R, i: integer): double;
+function GetAxisTWPower(R, i: integer): double;
 
 function GetAxisStateRef(R, i: integer): TAxisState;
 function GetAxisPosRef(R, i: integer): double;
 function GetAxisSpeedRef(R, i: integer): double;
+
+procedure SetAxisSpring(R, i: integer; k, ZeroPos: double);
 
 procedure SetAxisStateRef(R, i: integer; aState: TAxisState);
 procedure SetAxisPosRef(R, i: integer; aPos: double);
@@ -425,6 +438,8 @@ begin
   result.pos := 0;
   result.vel := 0;
   result.Im := 0;
+  result.Vm := 0;
+  result.Torque := 0;
 
   if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
   with WorldODE.Robots[R] do begin
@@ -434,6 +449,8 @@ begin
       //result.vel := GetSpeed();
       result.vel := filt_speed;
       result.Im := Motor.Im;
+      result.Vm := Motor.voltage;
+      result.Torque := torque;
     end;
   end;
 end;
@@ -448,11 +465,20 @@ begin
   result := GetAxisState(R, i).vel;
 end;
 
+function GetAxisTorque(R, i: integer): double;
+begin
+  result := GetAxisState(R, i).Torque;
+end;
+
 function GetAxisI(R, i: integer): double;
 begin
   result := GetAxisState(R, i).Im;
 end;
 
+function GetAxisU(R, i: integer): double;
+begin
+  result := GetAxisState(R, i).Vm;
+end;
 
 function GetAxisStateRef(R, i: integer): TAxisState;
 begin
@@ -479,6 +505,34 @@ end;
 function GetAxisSpeedRef(R, i: integer): double;
 begin
   result := GetAxisStateRef(R, i).vel;
+end;
+
+
+function GetAxisSpring(R, i: integer): TSpringDef;
+begin
+  Result.K := 0;
+  Result.ZeroPos := 0;
+  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
+  with WorldODE.Robots[R] do begin
+    if (i < 0) or (i >= Axes.Count) then exit;
+    with WorldODE.Robots[r].Axes[i] do begin
+      result.k := Axes[i].Spring.K;
+      result.ZeroPos := Axes[i].Spring.ZeroPos;
+    end;
+  end;
+end;
+
+
+procedure SetAxisSpring(R, i: integer; k, ZeroPos: double);
+begin
+  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
+  with WorldODE.Robots[R] do begin
+    if (i < 0) or (i >= Axes.Count) then exit;
+    with WorldODE.Robots[r].Axes[i] do begin
+      Spring.K := k;
+      Spring.ZeroPos := ZeroPos;
+    end;
+  end;
 end;
 
 
@@ -537,6 +591,16 @@ end;
 function GetAxisSpeedRefDeg(R, i: integer): double;
 begin
   result := RadToDeg(GetAxisSpeedRef(R,i));
+end;
+
+function GetAxisUIPower(R, i: integer): double;
+begin
+  result := GetAxisU(R,i) * GetAxisI(R,i);
+end;
+
+function GetAxisTWPower(R, i: integer): double;
+begin
+  result := GetAxisTorque(R,i) * GetAxisSpeed(R,i);
 end;
 
 

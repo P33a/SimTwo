@@ -1083,6 +1083,27 @@ object FParams: TFParams
         Height = 13
         Caption = 'Default Frition:'
       end
+      object Label42: TLabel
+        Left = 4
+        Top = 32
+        Width = 75
+        Height = 13
+        Caption = 'ODE Time Step:'
+      end
+      object Label43: TLabel
+        Left = 132
+        Top = 32
+        Width = 21
+        Height = 13
+        Caption = '(ms)'
+      end
+      object Label44: TLabel
+        Left = 4
+        Top = 56
+        Width = 59
+        Height = 13
+        Caption = 'Time Speed:'
+      end
       object EditDefaultFriction: TEdit
         Left = 84
         Top = 4
@@ -1099,6 +1120,22 @@ object FParams: TFParams
         Caption = 'Set'
         TabOrder = 1
         OnClick = BPhysicsSetClick
+      end
+      object EditOde_dt: TEdit
+        Left = 84
+        Top = 28
+        Width = 45
+        Height = 21
+        TabOrder = 2
+        Text = '1'
+      end
+      object EditTimeSpeed: TEdit
+        Left = 84
+        Top = 52
+        Width = 45
+        Height = 21
+        TabOrder = 3
+        Text = '1'
       end
     end
   end
@@ -1140,9 +1177,12 @@ object FParams: TFParams
       'EditRobotSetX.Text'
       'EditRobotSetY.Text'
       'EditRobotSetZ.Text'
-      'EditRemoteIP.Text')
+      'EditRemoteIP.Text'
+      'EditOde_dt.Text'
+      'EditTimeSpeed.Text'
+      'PageControl.ActivePage')
     StoredValues = <>
-    Left = 60
-    Top = 48
+    Left = 236
+    Top = 60
   end
 end

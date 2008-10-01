@@ -144,6 +144,11 @@ type
     ComboWayPointName: TComboBox;
     BJointWayPointsSave: TButton;
     BWayPointEdit: TButton;
+    Label42: TLabel;
+    EditOde_dt: TEdit;
+    Label43: TLabel;
+    Label44: TLabel;
+    EditTimeSpeed: TEdit;
     procedure CBShadowsClick(Sender: TObject);
     procedure CBVsyncClick(Sender: TObject);
     procedure BSetFPSClick(Sender: TObject);
@@ -210,7 +215,6 @@ begin
     FViewer.GLCadencer.FixedDeltaTime := 1/fps;
     //FViewer.GLCadencer.MinDeltaTime := FViewer.GLCadencer.FixedDeltaTime;
     //FViewer.GLCadencer.MaxDeltaTime := FViewer.GLCadencer.FixedDeltaTime;
-    //dt := FViewer.GLCadencer.FixedDeltaTime;
   end;
 end;
 
@@ -427,6 +431,7 @@ begin
   FillEditArray('EditOdo', EditsOdo);
   FillEditArray('EditIR', EditsIR);
   CBIRNoiseClick(Sender);
+  BPhysicsSetClick(Sender);
 end;
 
 procedure TFParams.FillEditArray(ProtoName: string; var EditArray: array of TEdit);
@@ -583,6 +588,8 @@ end;
 procedure TFParams.BPhysicsSetClick(Sender: TObject);
 begin
   WorldODE.default_n_mu := strtofloatdef(EditDefaultFriction.Text, WorldODE.default_n_mu);
+  WorldODE.Ode_dt := strtofloatdef(EditOde_dt.Text, WorldODE.Ode_dt * 1E3) * 1E-3;
+  WorldODE.TimeFactor := strtofloatdef(EditTimeSpeed.Text, WorldODE.TimeFactor);
 end;
 
 procedure TFParams.BSetJointWayPointTetaClick(Sender: TObject);
