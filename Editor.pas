@@ -312,7 +312,6 @@ begin
       for i := 0 to PSScript.Exec.GlobalVarNames.Count -1 do begin
         tp := NewTPSVariantIFC(PSScript.Exec.GetGlobalVar(i), false);
         var_name := PSScript.Exec.GlobalVarNames[i];
-        //if pos(var_name, 'Y1;Y2;R1;R2;U;Xe')<>0 then continue;
         txt := format('%s: %s',[ var_name , PSVariantToString(tp,'')]);
         LBVariables.Items.Add(txt);
       end;
@@ -435,7 +434,8 @@ end;
 
 procedure TFEditor.MenuCompileClick(Sender: TObject);
 begin
-  compile;
+  if not compile then exit;
+  SynEditST.Refresh;
 end;
 
 procedure TFEditor.FormCreate(Sender: TObject);
