@@ -58,7 +58,7 @@ type
     GearRatio: double;
     Encoder: TEncoder;
     Controller: TMotController;
-    voltage: double;
+    voltage, PowerDrain, EnergyDrain: double;
     active: boolean;
   end;
 

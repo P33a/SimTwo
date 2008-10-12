@@ -1182,7 +1182,7 @@ begin
       end;
     end;
   end;
-  XML.Save('Test.xml'{XMLFile}, ofIndent);
+  XML.Save(XMLFile, ofIndent);
 end;
 
 procedure TWorld_ODE.LoadJointWayPointsFromXML(XMLFile: string; r: integer);
@@ -2133,6 +2133,10 @@ begin
     end else begin
       Motor.Im := 0;
     end;
+    Motor.PowerDrain := Motor.Im * Motor.voltage * WorldODE.Ode_dt;
+    if Motor.PowerDrain > 0 then begin
+      Motor.EnergyDrain := Motor.EnergyDrain + Motor.PowerDrain;
+    end;
     // coulomb friction
     Tq := Friction.Fc * sign(w);
     // Limit it to avoid instability
@@ -2684,21 +2688,15 @@ end;
 
 
 // TODO
-// -Agarrar objectos com o rato e levantá-los-
-// -SetRobotPosition-
 // trails  (2D( height), 3D (offset), length, color, tolerance)
 // Things.xml e scriptable
 // Sensores sem ser num robot
 // Zona morta no PID
 // PDI para controlar o robot
 // xxx Eliminar backefm
-// -Visualizar joints-
-// -passar ids para texto-
 // alternate globject
 // Calcular centro de gravidade
 // -Passadeiras- (falta controlar a velocidade delas, falta uma textura ou tecnica que indique o movimento)
-// -Possiblidade de acertar váriosa referencias de uma vez-
 // Controlo integral na realimentaçao de estado
-// -memorizar o nome do ficheiro de joint states-
 // Materiais { surface }
 // Surfaces

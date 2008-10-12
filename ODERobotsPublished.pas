@@ -36,6 +36,15 @@ type
     ZeroPos: double;
   end;
 
+  TMotorControllerPars = record
+    Ki: double;
+    Kd: double;
+    Kp: double;
+    Kf: double;
+  end;
+
+
+procedure SetRobotPos(R: integer; x, y, z, teta: double);
 
 function GetRobotPos2D(R: integer): TState2D;
 function GetRobotVel2D(R: integer): TState2D;
@@ -77,6 +86,12 @@ function GetAxisTWPower(R, i: integer): double;
 function GetAxisStateRef(R, i: integer): TAxisState;
 function GetAxisPosRef(R, i: integer): double;
 function GetAxisSpeedRef(R, i: integer): double;
+
+function GetAxisEnergy(R, i: integer): double;
+procedure ResetAxisEnergy(R, i: integer);
+
+procedure SetMotorControllerPars(R, i: integer; nKi, nKd, nKp, nKf: double);
+function GetMotorControllerPars(R, i: integer): TMotorControllerPars;
 
 procedure SetAxisSpring(R, i: integer; k, ZeroPos: double);
 
@@ -161,6 +176,12 @@ end;
 function Rad(angle: double): double;
 begin
   Result := DegToRad(angle);
+end;
+
+procedure SetRobotPos(R: integer; x, y, z, teta: double);
+begin
+  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
+  WorldODE.Robots[R].SetXYZTeta(x, y, z, teta);
 end;
 
 
@@ -523,6 +544,39 @@ begin
 end;
 
 
+function GetAxisEnergy(R, i: integer): double;
+begin
+  Result := 0;
+  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
+  with WorldODE.Robots[R] do begin
+    if (i < 0) or (i >= Axes.Count) then exit;
+    result := WorldODE.Robots[r].Axes[i].Motor.EnergyDrain;
+  end;
+end;
+
+
+function GetMotorControllerPars(R, i: integer): TMotorControllerPars;
+begin
+  with result do begin
+    Ki := 0;
+    Kd := 0;
+    Kp := 0;
+    Kf := 0;
+  end;
+
+  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
+  with WorldODE.Robots[R] do begin
+    if (i < 0) or (i >= Axes.Count) then exit;
+    with WorldODE.Robots[r].Axes[i] do begin
+      result.Ki := Axes[i].Motor.Controller.Ki;
+      result.Kd := Axes[i].Motor.Controller.Kd;
+      result.Kp := Axes[i].Motor.Controller.Kp;
+      result.Kf := Axes[i].Motor.Controller.Kf;
+    end;
+  end;
+end;
+
+
 procedure SetAxisSpring(R, i: integer; k, ZeroPos: double);
 begin
   if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
@@ -535,6 +589,30 @@ begin
   end;
 end;
 
+
+procedure ResetAxisEnergy(R, i: integer);
+begin
+  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
+  with WorldODE.Robots[R] do begin
+    if (i < 0) or (i >= Axes.Count) then exit;
+    WorldODE.Robots[r].Axes[i].Motor.EnergyDrain := 0;
+  end;
+end;
+
+
+procedure SetMotorControllerPars(R, i: integer; nKi, nKd, nKp, nKf: double);
+begin
+  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
+  with WorldODE.Robots[R] do begin
+    if (i < 0) or (i >= Axes.Count) then exit;
+    with WorldODE.Robots[r].Axes[i].Motor.Controller do begin
+      Ki := nKi;
+      Kd := nKd;
+      Kp := nKp;
+      Kf := nKf;
+    end;
+  end;
+end;
 
 procedure SetAxisStateRef(R, i: integer; aState: TAxisState);
 begin
@@ -595,7 +673,13 @@ end;
 
 function GetAxisUIPower(R, i: integer): double;
 begin
-  result := GetAxisU(R,i) * GetAxisI(R,i);
+  result := 0;
+  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
+  with WorldODE.Robots[R] do begin
+    if (i < 0) or (i >= Axes.Count) then exit;
+    result := WorldODE.Robots[r].Axes[i].Motor.PowerDrain;
+  end;
+//  result := GetAxisU(R,i) * GetAxisI(R,i);
 end;
 
 function GetAxisTWPower(R, i: integer): double;
