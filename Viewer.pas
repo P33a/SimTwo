@@ -322,9 +322,16 @@ begin
   if not PID.active then exit;
 
   ek := ref - yk;
+  PID.Sek := PID.Sek + ek;
   //if abs(ek) < degtorad(1) then exit;
   ewk := refw - ywk;
-  mk := PID.Kp * ek + PID.Kd * ewk + PID.Kf * ref;
+  mk := PID.Ki * PID.Sek + PID.Kp * ek + PID.Kd * ewk + PID.Kf * ref;
+
+  // Anti Windup
+ { if abs(mk) >= PID.y_sat then begin
+    PID.Sek := PID.Sek - ek;
+    mk := max(-PID.y_sat, min(PID.y_sat, mk));
+  end;}
 
   result := mk;
 end;
@@ -1673,7 +1680,8 @@ begin
       dMULTIPLY0_333(Ryx, Ry, Rx);
       dMULTIPLY0_333(R, Rz, Ryx);
 
-      dGeomSetRotation(newShell.Geom, R);
+      dGeomSetOffsetRotation(newShell.Geom, R);
+
       with newShell.GLObj as TGLCube do begin
         Material.FrontProperties.Diffuse.SetColor(colorR, colorG, colorB);
       end;
@@ -2140,7 +2148,8 @@ begin
     // coulomb friction
     Tq := Friction.Fc * sign(w);
     // Limit it to avoid instability
-    Tq := max(-Friction.CoulombLimit * abs(w), min(Friction.CoulombLimit * abs(w), Tq));
+    if Friction.CoulombLimit >= 0 then
+      Tq := max(-Friction.CoulombLimit * abs(w), min(Friction.CoulombLimit * abs(w), Tq));
     T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Tq - Spring.K * diffangle(Theta, Spring.ZeroPos);
   end;
 end;

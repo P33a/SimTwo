@@ -1,14 +1,21 @@
 <?xml version="1.0" ?>
 <scene>
 
-  <robot>
+<!--  <robot>
     <ID name='SubZero'/>
     <pos x='1' y='0' z='0.5'/>
     <rot_deg x='0' y='0' z='0'/>
 
     <body file='Bioloid2.xml'/>
-  </robot>
+  </robot>-->
 
+  <robot>
+    <ID name='belt'/>
+    <pos x='1.5' y='0' z='1.5'/>
+    <rot_deg x='0' y='0' z='0'/>
+
+    <body file='Belt.xml'/>
+  </robot>
 
 <!--
   <robot>
