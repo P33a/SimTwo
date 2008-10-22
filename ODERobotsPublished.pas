@@ -43,6 +43,11 @@ type
     Kf: double;
   end;
 
+  TFrictionDef = record
+    Bv: double;
+    Fc: double;
+    CoulombLimit: double;
+  end;
 
 procedure SetRobotPos(R: integer; x, y, z, teta: double);
 
@@ -92,6 +97,13 @@ procedure ResetAxisEnergy(R, i: integer);
 
 procedure SetMotorControllerPars(R, i: integer; nKi, nKd, nKp, nKf: double);
 function GetMotorControllerPars(R, i: integer): TMotorControllerPars;
+
+procedure SetMotorActive(R, i: integer; nState: boolean);
+function IsMotorActive(R, i: integer): boolean;
+
+procedure SetFrictionDef(R, i: integer; nBv, nFc, nCoulombLimit: double);
+function GetFrictionDef(R, i: integer): TFrictionDef;
+
 
 procedure SetAxisSpring(R, i: integer; k, ZeroPos: double);
 
@@ -554,6 +566,36 @@ begin
   end;
 end;
 
+function GetFrictionDef(R, i: integer): TFrictionDef;
+begin
+  with result do begin
+    Bv := 0;
+    Fc := 0;
+    CoulombLimit := 0;
+  end;
+
+  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
+  with WorldODE.Robots[R] do begin
+    if (i < 0) or (i >= Axes.Count) then exit;
+    with WorldODE.Robots[r].Axes[i] do begin
+      result.Bv := Axes[i].Friction.Bv;
+      result.Fc := Axes[i].Friction.Fc;
+      result.CoulombLimit := Axes[i].Friction.CoulombLimit;
+    end;
+  end;
+end;
+
+function IsMotorActive(R, i: integer): boolean;
+begin
+  result := false;
+  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
+  with WorldODE.Robots[R] do begin
+    if (i < 0) or (i >= Axes.Count) then exit;
+    with WorldODE.Robots[r].Axes[i] do begin
+      result := Axes[i].Motor.active;
+    end;
+  end;
+end;
 
 function GetMotorControllerPars(R, i: integer): TMotorControllerPars;
 begin
@@ -599,6 +641,28 @@ begin
   end;
 end;
 
+procedure SetFrictionDef(R, i: integer; nBv, nFc, nCoulombLimit: double);
+begin
+  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
+  with WorldODE.Robots[R] do begin
+    if (i < 0) or (i >= Axes.Count) then exit;
+    with WorldODE.Robots[r].Axes[i].Friction do begin
+      Bv := nBv;
+      Fc := nFc;
+      CoulombLimit := nCoulombLimit;
+    end;
+  end;
+end;
+
+
+procedure SetMotorActive(R, i: integer; nState: boolean);
+begin
+  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
+  with WorldODE.Robots[R] do begin
+    if (i < 0) or (i >= Axes.Count) then exit;
+    WorldODE.Robots[r].Axes[i].Motor.active := nState;
+  end;
+end;
 
 procedure SetMotorControllerPars(R, i: integer; nKi, nKd, nKp, nKf: double);
 begin
@@ -679,7 +743,7 @@ begin
     if (i < 0) or (i >= Axes.Count) then exit;
     result := WorldODE.Robots[r].Axes[i].Motor.PowerDrain;
   end;
-//  result := GetAxisU(R,i) * GetAxisI(R,i);
+//result := GetAxisU(R,i) * GetAxisI(R,i);
 end;
 
 function GetAxisTWPower(R, i: integer): double;
