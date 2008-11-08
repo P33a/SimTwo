@@ -8,7 +8,7 @@ uses
   GLShadowPlane, VectorGeometry, GLGeomObjects, ExtCtrls, ComCtrls,
   GLBitmapFont, GLWindowsFont, keyboard, GLTexture, math, GLSpaceText, Remote,
   GLShadowVolume, GLSkydome, GLGraph, OmniXML, OmniXMLUtils, Contnrs, ODERobots,
-  rxPlacemnt, ProjConfig, GLHUDObjects;
+  rxPlacemnt, ProjConfig, GLHUDObjects, Menus;
 
 type
   TRGBfloat = record
@@ -130,6 +130,10 @@ type
     FormStorage: TFormStorage;
     GLLinesXY: TGLLines;
     GLHUDTextObjName: TGLHUDText;
+    PopupMenu: TPopupMenu;
+    MenuConfig: TMenuItem;
+    MenuChart: TMenuItem;
+    MenuEditor: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure GLSceneViewerMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -144,6 +148,9 @@ type
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure GLSceneViewerMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure MenuChartClick(Sender: TObject);
+    procedure MenuConfigClick(Sender: TObject);
+    procedure MenuEditorClick(Sender: TObject);
   private
     { Private declarations }
     OldPick : TGLCustomSceneObject;
@@ -2629,6 +2636,21 @@ begin
 end;
 
 
+
+procedure TFViewer.MenuChartClick(Sender: TObject);
+begin
+  FChart.show;
+end;
+
+procedure TFViewer.MenuConfigClick(Sender: TObject);
+begin
+  FParams.Show;
+end;
+
+procedure TFViewer.MenuEditorClick(Sender: TObject);
+begin
+  FEditor.Show;
+end;
 
 end.
 

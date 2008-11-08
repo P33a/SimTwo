@@ -30,8 +30,9 @@ object FViewer: TFViewer
     Buffer.AmbientColor.Color = {9A99993E9A99993E9A99993E0000803F}
     Buffer.ContextOptions = [roDoubleBuffer, roStencilBuffer, roRenderToWindow]
     Buffer.AntiAliasing = aa2x
-    FieldOfView = 150.611511230468800000
+    FieldOfView = 150.611511230468700000
     Align = alClient
+    PopupMenu = PopupMenu
     OnMouseDown = GLSceneViewerMouseDown
     OnMouseMove = GLSceneViewerMouseMove
     OnMouseUp = GLSceneViewerMouseUp
@@ -8378,5 +8379,20 @@ object FViewer: TFViewer
       'GLDummyCamPos.Position')
     StoredValues = <>
     Top = 120
+  end
+  object PopupMenu: TPopupMenu
+    Top = 152
+    object MenuConfig: TMenuItem
+      Caption = '&Config'
+      OnClick = MenuConfigClick
+    end
+    object MenuChart: TMenuItem
+      Caption = 'Char&t'
+      OnClick = MenuChartClick
+    end
+    object MenuEditor: TMenuItem
+      Caption = '&Editor'
+      OnClick = MenuEditorClick
+    end
   end
 end
