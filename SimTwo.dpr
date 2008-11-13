@@ -12,7 +12,6 @@ uses
   RemoteControl in 'RemoteControl.pas' {FRemoteControl},
   Remote in 'Remote.pas',
   ODERobots in 'ODERobots.pas',
-  Log in 'Log.pas' {FLog},
   ODERobotsPublished in 'ODERobotsPublished.pas',
   uPSI_ODERobotsPublished in 'uPSI_ODERobotsPublished.pas',
   ProjConfig in 'ProjConfig.pas',
@@ -29,7 +28,6 @@ begin
   Application.CreateForm(TFParams, FParams);
   Application.CreateForm(TFEditor, FEditor);
   Application.CreateForm(TFChart, FChart);
-  Application.CreateForm(TFLog, FLog);
   Application.CreateForm(TFRemoteControl, FRemoteControl);
   Application.CreateForm(TFWayPointsEdit, FWayPointsEdit);
   Application.Run;
