@@ -179,7 +179,7 @@ implementation
 
 {$R *.dfm}
 
-uses ODEGL, Params, Editor, FastChart, RemoteControl, utils, Log, StdCtrls;
+uses ODEGL, Params, Editor, FastChart, RemoteControl, utils, StdCtrls;
 
 
 
@@ -272,13 +272,13 @@ begin
         dBodyVectorToWorld(b1, 1, 0, 0, n_fdir1);
         n_mu2 := 0.9;
         n_mu := 0.9;
-        n_motion1 := 0.5;
+        n_motion1 := TSolid(o1.data).BeltSpeed;
     end else if (o2.data <> nil) and (TSolid(o2.data).kind = skMotorBelt) then begin
         n_mode := n_mode or cardinal(dContactMu2 or dContactFDir1 or dContactMotion1);
         dBodyVectorToWorld(b2, 1, 0, 0, n_fdir1);
         n_mu2 := 0.9;
         n_mu := 0.9;
-        n_motion1 := 0.5;
+        n_motion1 := TSolid(o2.data).BeltSpeed;
     end;
 
     for i := 0 to n-1 do begin
@@ -559,12 +559,12 @@ procedure TWorld_ODE.CreateHingeJoint(var Link: TSolidLink; Solid1, Solid2: TSol
 begin
   Link.joint:= dJointCreateHinge(world, nil);
   dJointAttach(Link.joint, Solid1.body, Solid2.body);
-  dJointSetHingeAnchor (Link.joint, anchor_x, anchor_y, anchor_z);
-  dJointSetHingeAxis (Link.joint, axis_x, axis_y, axis_z);
+  dJointSetHingeAnchor(Link.joint, anchor_x, anchor_y, anchor_z);
+  dJointSetHingeAxis(Link.joint, axis_x, axis_y, axis_z);
 //  JointGLCreate(idx);
 
 //  dJointSetHingeParam (joint[idx], dParamStopERP, );
-  dJointSetHingeParam (Link.joint, dParamStopCFM, 1e-5);
+  dJointSetHingeParam(Link.joint, dParamStopCFM, 1e-5);
 end;
 
 procedure TWorld_ODE.SetHingeLimits(var Link: TSolidLink; LimitMin, LimitMax: double);
@@ -578,11 +578,11 @@ procedure TWorld_ODE.CreateSliderJoint(var Link: TSolidLink; Solid1, Solid2: TSo
 begin
   Link.joint:= dJointCreateSlider(world, nil);
   dJointAttach(Link.joint, Solid1.body, Solid2.body);
-  //dJointSetHingeAnchor (Link.joint, anchor_x, anchor_y, anchor_z);
-  dJointSetSliderAxis (Link.joint, axis_x, axis_y, axis_z);
+  //dJointSetHingeAnchor(Link.joint, anchor_x, anchor_y, anchor_z);
+  dJointSetSliderAxis(Link.joint, axis_x, axis_y, axis_z);
 
 //  dJointSetHingeParam (joint[idx], dParamStopERP, );
-  dJointSetSliderParam (Link.joint, dParamStopCFM, 1e-5);
+  dJointSetSliderParam(Link.joint, dParamStopCFM, 1e-5);
 end;
 
 procedure TWorld_ODE.SetSliderLimits(var Link: TSolidLink; LimitMin, LimitMax: double);
@@ -1062,11 +1062,20 @@ begin
             if Robot.Solids[i].ID = LinkBody1 then SolidIndex1 := i;
             if Robot.Solids[i].ID = LinkBody2 then SolidIndex2 := i;
           end;
-                                     // ID = 0 mean the world TODO: use a bettter name
-          if ((SolidIndex1 <> -1) or (LinkBody1 = '0')) and (SolidIndex2 <> -1) then begin
-            if LinkBody1 = '0' then Solid1 := Environment
-            else Solid1 := Robot.Solids[SolidIndex1];
-            Solid2 := Robot.Solids[SolidIndex2];
+
+          // ID = 0 mean the world TODO: use a bettter name
+          if (((SolidIndex1 <> -1) or (LinkBody1 = '0')) and (SolidIndex2 <> -1)) or
+             (((SolidIndex2 <> -1) or (LinkBody2 = '0')) and (SolidIndex1 <> -1)) then begin
+            if LinkBody1 = '0' then begin
+              Solid1 := Robot.Solids[SolidIndex2];
+              Solid2 := Environment;
+            end else if LinkBody2 = '0' then begin
+              Solid1 := Robot.Solids[SolidIndex1];
+              Solid2 := Environment;
+            end else begin
+              Solid1 := Robot.Solids[SolidIndex1];
+              Solid2 := Robot.Solids[SolidIndex2];
+            end;
             newLink := TSolidLink.Create;
             Robot.Links.Add(newLink);
 
@@ -2724,10 +2733,9 @@ end;
 // Sensores sem ser num robot
 // Zona morta no PID
 // PDI para controlar o robot
-// xxx Eliminar backefm
 // alternate globject
 // Calcular centro de gravidade
-// -Passadeiras- (falta controlar a velocidade delas, falta uma textura ou tecnica que indique o movimento)
+// -Passadeiras- (falta controlar a aceleração delas, falta uma textura ou tecnica que indique o movimento)
 // Controlo integral na realimentaçao de estado
 // Materiais { surface }
 // Surfaces

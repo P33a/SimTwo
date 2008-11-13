@@ -10,6 +10,15 @@
   </robot>-->
 
   <robot>
+    <ID name='arm'/>
+    <pos x='0' y='0' z='0.5'/>
+    <rot_deg x='0' y='0' z='0'/>
+
+    <body file='Arm.xml'/>
+  </robot>
+
+
+  <robot>
     <ID name='belt'/>
     <pos x='1.5' y='0' z='1.5'/>
     <rot_deg x='0' y='0' z='0'/>

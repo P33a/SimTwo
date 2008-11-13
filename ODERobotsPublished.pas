@@ -104,6 +104,8 @@ function IsMotorActive(R, i: integer): boolean;
 procedure SetFrictionDef(R, i: integer; nBv, nFc, nCoulombLimit: double);
 function GetFrictionDef(R, i: integer): TFrictionDef;
 
+procedure SetBeltSpeed(R, i: integer; nSpeed: double);
+function GetBeltSpeed(R, i: integer): double;
 
 procedure SetAxisSpring(R, i: integer; k, ZeroPos: double);
 
@@ -192,7 +194,6 @@ end;
 
 procedure SetRobotPos(R: integer; x, y, z, teta: double);
 begin
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
   WorldODE.Robots[R].SetXYZTeta(x, y, z, teta);
 end;
 
@@ -204,7 +205,6 @@ begin
   result.y := 0;
   result.angle := 0;
 
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
   with WorldODE.Robots[R] do begin
     if MainBody = nil then exit;
     if MainBody.Body = nil then exit;
@@ -225,7 +225,6 @@ begin
   result.y := 0;
   result.angle := 0;
 
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
   with WorldODE.Robots[R] do begin
     if MainBody = nil then exit;
     if MainBody.Body = nil then exit;
@@ -239,8 +238,6 @@ end;
 
 function GetSolidIndex(R: integer; ID: string): integer;
 begin
-  result := -1;
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
   result := WorldODE.Robots[R].Solids.IndexFromID(ID);
 end;
 
@@ -250,14 +247,10 @@ var mass: TdMass;
 begin
   result := 0;
 
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Solids.Count) then exit;
-    with Solids[i] do begin
-      if Body = nil then exit;
-      dBodyGetMass(MainBody.Body, mass);
-      Result := mass.mass;
-    end;
+  with WorldODE.Robots[R].Solids[i] do begin
+    if Body = nil then exit;
+    dBodyGetMass(Body, mass);
+    Result := mass.mass;
   end;
 end;
 
@@ -268,17 +261,13 @@ begin
   result.y := 0;
   result.z := 0;
 
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Solids.Count) then exit;
-    with Solids[i] do begin
-      if Body = nil then exit;
-      dBodyGetMass(MainBody.Body, mass);
+  with WorldODE.Robots[R].Solids[i] do begin
+    if Body = nil then exit;
+    dBodyGetMass(Body, mass);
 
-      Result.x := mass.c[0];
-      Result.y := mass.c[1];
-      Result.z := mass.c[2];
-    end;
+    Result.x := mass.c[0];
+    Result.y := mass.c[1];
+    Result.z := mass.c[2];
   end;
 end;
 
@@ -290,16 +279,12 @@ begin
   result.y := 0;
   result.z := 0;
 
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Solids.Count) then exit;
-    with Solids[i] do begin
-      if Body = nil then exit;
-      v1 := dBodyGetPosition(MainBody.Body)^;
-      Result.x := v1[0];
-      Result.y := v1[1];
-      Result.z := v1[2];
-    end;
+  with WorldODE.Robots[R].Solids[i] do begin
+    if Body = nil then exit;
+    v1 := dBodyGetPosition(Body)^;
+    Result.x := v1[0];
+    Result.y := v1[1];
+    Result.z := v1[2];
   end;
 end;
 
@@ -310,16 +295,12 @@ begin
   result.y := 0;
   result.z := 0;
 
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Solids.Count) then exit;
-    with Solids[i] do begin
-      if Body = nil then exit;
-      v1 := dBodyGetLinearVel(MainBody.Body)^;
-      Result.x := v1[0];
-      Result.y := v1[1];
-      Result.z := v1[2];
-    end;
+  with WorldODE.Robots[R].Solids[i] do begin
+    if Body = nil then exit;
+    v1 := dBodyGetLinearVel(Body)^;
+    Result.x := v1[0];
+    Result.y := v1[1];
+    Result.z := v1[2];
   end;
 end;
 
@@ -327,7 +308,6 @@ function GetRobotX(R: integer): double;
 var v1: TdVector3;
 begin
   result := 0;
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
   with WorldODE.Robots[R] do begin
     if MainBody = nil then exit;
     if MainBody.Body = nil then exit;
@@ -340,7 +320,6 @@ function GetRobotY(R: integer): double;
 var v1: TdVector3;
 begin
   result := 0;
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
   with WorldODE.Robots[R] do begin
     if MainBody = nil then exit;
     if MainBody.Body = nil then exit;
@@ -354,7 +333,6 @@ function GetRobotTheta(R: integer): double;
 var v1, v2: TdVector3;
 begin
   result := 0;
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
   with WorldODE.Robots[R] do begin
     if MainBody = nil then exit;
     if MainBody.Body = nil then exit;
@@ -369,7 +347,6 @@ function GetRobotVx(R: integer): double;
 var v1: TdVector3;
 begin
   result := 0;
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
   with WorldODE.Robots[R] do begin
     if MainBody = nil then exit;
     if MainBody.Body = nil then exit;
@@ -382,7 +359,6 @@ function GetRobotVy(R: integer): double;
 var v1: TdVector3;
 begin
   result := 0;
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
   with WorldODE.Robots[R] do begin
     if MainBody = nil then exit;
     if MainBody.Body = nil then exit;
@@ -396,7 +372,6 @@ function GetRobotW(R: integer): double;
 var v1: TdVector3;
 begin
   result := 0;
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
   with WorldODE.Robots[R] do begin
     if MainBody = nil then exit;
     if MainBody.Body = nil then exit;
@@ -410,14 +385,10 @@ function GetSolidX(R, i: integer): double;
 var v1: TdVector3;
 begin
   result := 0;
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Solids.Count) then exit;
-    with Solids[i] do begin
-      if Body = nil then exit;
-      v1 := dBodyGetPosition(Body)^;
-      Result := v1[0];
-    end;
+  with WorldODE.Robots[R].Solids[i] do begin
+    if Body = nil then exit;
+    v1 := dBodyGetPosition(Body)^;
+    Result := v1[0];
   end;
 end;
 
@@ -425,14 +396,10 @@ function GetSolidY(R, i: integer): double;
 var v1: TdVector3;
 begin
   result := 0;
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Solids.Count) then exit;
-    with Solids[i] do begin
-      if Body = nil then exit;
-      v1 := dBodyGetPosition(Body)^;
-      Result := v1[1];
-    end;
+  with WorldODE.Robots[R].Solids[i] do begin
+    if Body = nil then exit;
+    v1 := dBodyGetPosition(Body)^;
+    Result := v1[1];
   end;
 end;
 
@@ -440,51 +407,30 @@ function GetSolidTheta(R, i: integer): double;
 var v1, v2: TdVector3;
 begin
   result := 0;
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Solids.Count) then exit;
-    with Solids[i] do begin
-      if Body = nil then exit;
-      v1 := dBodyGetPosition(Body)^;
-      dBodyGetRelPointPos(Body, 1,0,0, v2);
-      Result := atan2(v2[1]-v1[1], v2[0]-v1[0]);
-    end;
+  with WorldODE.Robots[R].Solids[i] do begin
+    if Body = nil then exit;
+    v1 := dBodyGetPosition(Body)^;
+    dBodyGetRelPointPos(Body, 1,0,0, v2);
+    Result := atan2(v2[1]-v1[1], v2[0]-v1[0]);
   end;
 end;
 
 
 function GetAxisOdo(R, i: integer): integer;
 begin
-  result := 0;
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Axes.Count) then exit;
-    with WorldODE.Robots[r].Axes[i] do begin
-      result := Odo.Value;
-    end;
-  end;
+  result := WorldODE.Robots[r].Axes[i].Odo.Value;
 end;
 
 
 function GetAxisState(R, i: integer): TAxisState;
 begin
-  result.pos := 0;
-  result.vel := 0;
-  result.Im := 0;
-  result.Vm := 0;
-  result.Torque := 0;
-
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Axes.Count) then exit;
-    with WorldODE.Robots[r].Axes[i] do begin
-      result.pos := GetPos();
-      //result.vel := GetSpeed();
-      result.vel := filt_speed;
-      result.Im := Motor.Im;
-      result.Vm := Motor.voltage;
-      result.Torque := torque;
-    end;
+  with WorldODE.Robots[r].Axes[i] do begin
+    result.pos := GetPos();
+    //result.vel := GetSpeed();
+    result.vel := filt_speed;
+    result.Im := Motor.Im;
+    result.Vm := Motor.voltage;
+    result.Torque := torque;
   end;
 end;
 
@@ -515,16 +461,9 @@ end;
 
 function GetAxisStateRef(R, i: integer): TAxisState;
 begin
-  result.pos := 0;
-  result.vel := 0;
-
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Axes.Count) then exit;
-    with WorldODE.Robots[r].Axes[i] do begin
-      result.pos := Axes[i].ref.theta;
-      result.vel := Axes[i].ref.w;
-    end;
+  with WorldODE.Robots[r].Axes[i] do begin
+    result.pos := ref.theta;
+    result.vel := ref.w;
   end;
 end;
 
@@ -543,175 +482,114 @@ end;
 
 function GetAxisSpring(R, i: integer): TSpringDef;
 begin
-  Result.K := 0;
-  Result.ZeroPos := 0;
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Axes.Count) then exit;
-    with WorldODE.Robots[r].Axes[i] do begin
-      result.k := Axes[i].Spring.K;
-      result.ZeroPos := Axes[i].Spring.ZeroPos;
-    end;
+  with WorldODE.Robots[r].Axes[i] do begin
+    result.k := Spring.K;
+    result.ZeroPos := Spring.ZeroPos;
   end;
 end;
 
 
 function GetAxisEnergy(R, i: integer): double;
 begin
-  Result := 0;
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Axes.Count) then exit;
-    result := WorldODE.Robots[r].Axes[i].Motor.EnergyDrain;
-  end;
+  result := WorldODE.Robots[r].Axes[i].Motor.EnergyDrain;
 end;
 
 function GetFrictionDef(R, i: integer): TFrictionDef;
 begin
-  with result do begin
-    Bv := 0;
-    Fc := 0;
-    CoulombLimit := 0;
-  end;
-
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Axes.Count) then exit;
-    with WorldODE.Robots[r].Axes[i] do begin
-      result.Bv := Axes[i].Friction.Bv;
-      result.Fc := Axes[i].Friction.Fc;
-      result.CoulombLimit := Axes[i].Friction.CoulombLimit;
-    end;
+  with WorldODE.Robots[r].Axes[i] do begin
+    result.Bv := Friction.Bv;
+    result.Fc := Friction.Fc;
+    result.CoulombLimit := Friction.CoulombLimit;
   end;
 end;
 
+function GetBeltSpeed(R, i: integer): double;
+begin
+  result := WorldODE.Robots[r].Solids[i].BeltSpeed;
+end;
+
+
 function IsMotorActive(R, i: integer): boolean;
 begin
-  result := false;
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Axes.Count) then exit;
-    with WorldODE.Robots[r].Axes[i] do begin
-      result := Axes[i].Motor.active;
-    end;
-  end;
+  result := WorldODE.Robots[R].Axes[i].Motor.active;
 end;
 
 function GetMotorControllerPars(R, i: integer): TMotorControllerPars;
 begin
-  with result do begin
-    Ki := 0;
-    Kd := 0;
-    Kp := 0;
-    Kf := 0;
-  end;
-
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Axes.Count) then exit;
-    with WorldODE.Robots[r].Axes[i] do begin
-      result.Ki := Axes[i].Motor.Controller.Ki;
-      result.Kd := Axes[i].Motor.Controller.Kd;
-      result.Kp := Axes[i].Motor.Controller.Kp;
-      result.Kf := Axes[i].Motor.Controller.Kf;
-    end;
+  with WorldODE.Robots[r].Axes[i].Motor.Controller do begin
+    result.Ki := Ki;
+    result.Kd := Kd;
+    result.Kp := Kp;
+    result.Kf := Kf;
   end;
 end;
 
 
 procedure SetAxisSpring(R, i: integer; k, ZeroPos: double);
 begin
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Axes.Count) then exit;
-    with WorldODE.Robots[r].Axes[i] do begin
-      Spring.K := k;
-      Spring.ZeroPos := ZeroPos;
-    end;
+  with WorldODE.Robots[r].Axes[i] do begin
+    Spring.K := k;
+    Spring.ZeroPos := ZeroPos;
   end;
 end;
 
 
 procedure ResetAxisEnergy(R, i: integer);
 begin
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Axes.Count) then exit;
-    WorldODE.Robots[r].Axes[i].Motor.EnergyDrain := 0;
-  end;
+  WorldODE.Robots[r].Axes[i].Motor.EnergyDrain := 0;
 end;
+
 
 procedure SetFrictionDef(R, i: integer; nBv, nFc, nCoulombLimit: double);
 begin
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Axes.Count) then exit;
-    with WorldODE.Robots[r].Axes[i].Friction do begin
-      Bv := nBv;
-      Fc := nFc;
-      CoulombLimit := nCoulombLimit;
-    end;
+  with WorldODE.Robots[r].Axes[i].Friction do begin
+    Bv := nBv;
+    Fc := nFc;
+    CoulombLimit := nCoulombLimit;
   end;
+end;
+
+
+procedure SetBeltSpeed(R, i: integer; nSpeed: double);
+begin
+  WorldODE.Robots[r].Solids[i].BeltSpeed := nSpeed;
 end;
 
 
 procedure SetMotorActive(R, i: integer; nState: boolean);
 begin
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Axes.Count) then exit;
-    WorldODE.Robots[r].Axes[i].Motor.active := nState;
-  end;
+  WorldODE.Robots[r].Axes[i].Motor.active := nState;
 end;
+
 
 procedure SetMotorControllerPars(R, i: integer; nKi, nKd, nKp, nKf: double);
 begin
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Axes.Count) then exit;
-    with WorldODE.Robots[r].Axes[i].Motor.Controller do begin
-      Ki := nKi;
-      Kd := nKd;
-      Kp := nKp;
-      Kf := nKf;
-    end;
+  with WorldODE.Robots[r].Axes[i].Motor.Controller do begin
+    Ki := nKi;
+    Kd := nKd;
+    Kp := nKp;
+    Kf := nKf;
   end;
 end;
 
 procedure SetAxisStateRef(R, i: integer; aState: TAxisState);
 begin
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Axes.Count) then exit;
-    with WorldODE.Robots[r].Axes[i] do begin
-      ref.theta := aState.pos;
-      ref.w := aState.vel;
-    end;
+  with WorldODE.Robots[r].Axes[i] do begin
+    ref.theta := aState.pos;
+    ref.w := aState.vel;
   end;
 end;
 
 
 procedure SetAxisPosRef(R, i: integer; aPos: double);
 begin
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Axes.Count) then exit;
-    with WorldODE.Robots[r].Axes[i] do begin
-      ref.theta := aPos;
-    end;
-  end;
+  WorldODE.Robots[r].Axes[i].ref.theta := aPos;
 end;
 
 
 procedure SetAxisSpeedRef(R, i: integer; aSpeed: double);
 begin
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Axes.Count) then exit;
-    with WorldODE.Robots[r].Axes[i] do begin
-      ref.w := aSpeed;
-    end;
-  end;
+  WorldODE.Robots[r].Axes[i].ref.w := aSpeed;
 end;
 
 
@@ -737,13 +615,7 @@ end;
 
 function GetAxisUIPower(R, i: integer): double;
 begin
-  result := 0;
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Axes.Count) then exit;
-    result := WorldODE.Robots[r].Axes[i].Motor.PowerDrain;
-  end;
-//result := GetAxisU(R,i) * GetAxisI(R,i);
+  result := WorldODE.Robots[r].Axes[i].Motor.PowerDrain;
 end;
 
 function GetAxisTWPower(R, i: integer): double;
@@ -754,8 +626,6 @@ end;
 
 function GetAxisIndex(R: integer; ID: string; i: integer): integer;
 begin
-  result := -1;
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
   result := WorldODE.Robots[R].Axes.IndexFromAxisID(ID, i);
 end;
 
@@ -763,7 +633,6 @@ end;
 procedure LoadJointWayPoints(r: integer; JointPointsFileName: string);
 var i: integer;
 begin
-  if (r < 0) or (r >= WorldODE.Robots.Count) then exit;
   // clear actual waypoints
   WorldODE.Robots[r].AxesWayPointsIDs.Clear;
   for i := 0 to WorldODE.Robots[r].Axes.Count-1 do begin
@@ -775,82 +644,41 @@ end;
 
 
 procedure SaveJointWayPoints(r: integer; JointPointsFileName: string);
-var i: integer;
 begin
-  if (r < 0) or (r >= WorldODE.Robots.Count) then exit;
-
   WorldODE.SaveJointWayPointsToXML(JointPointsFileName, r);
 end;
 
 
 function CountAxisWayPoints(R, i: integer): integer;
 begin
-  result := 0;
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Axes.Count) then exit;
-    with WorldODE.Robots[r].Axes[i] do begin
-      result := Axes[i].WayPoints.Count;
-    end;
-  end;
+  result := WorldODE.Robots[r].Axes[i].WayPoints.Count;
 end;
 
 
 function GetAxisWayPoint(R, i, idx: integer): TAxisPoint;
 begin
-  with result do begin
-    pos := 0;
-    speed := 0;
-    final_time := 0;
-  end;
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Axes.Count) then exit;
-    with WorldODE.Robots[r].Axes[i] do begin
-      if (idx < 0) or (idx >= Axes[i].WayPoints.Count) then exit;
-      with result do begin
-        pos := Axes[i].WayPoints[idx].pos;
-        speed := Axes[i].WayPoints[idx].speed;
-        final_time := Axes[i].WayPoints[idx].t;
-      end;
-    end;
+  with WorldODE.Robots[r].Axes[i].WayPoints[idx] do begin
+    result.pos := pos;
+    result.speed := speed;
+    result.final_time := t;
   end;
 end;
 
 function GetAxisTrajPoint(R, i, idx: integer): TAxisPoint;
 begin
-  with result do begin
-    pos := 0;
-    speed := 0;
-    final_time := 0;
-  end;
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Axes.Count) then exit;
-    with WorldODE.Robots[r].Axes[i] do begin
-      if (idx < 0) or (idx >= Axes[i].TrajectPoints.Count) then exit;
-      with result do begin
-        pos := Axes[i].TrajectPoints[idx].pos;
-        speed := Axes[i].TrajectPoints[idx].speed;
-        final_time := Axes[i].TrajectPoints[idx].t;
-      end;
-    end;
+  with WorldODE.Robots[r].Axes[i].TrajectPoints[idx] do begin
+    result.pos := pos;
+    result.speed := speed;
+    result.final_time := t;
   end;
 end;
 
 procedure SetAxisTrajPoint(R, i, idx: integer; LP: TAxisPoint);
 begin
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Axes.Count) then exit;
-    with WorldODE.Robots[r].Axes[i] do begin
-      if (idx < 0) or (idx >= Axes[i].TrajectPoints.Count) then exit;
-      with Axes[i].TrajectPoints[idx] do begin
-        pos := LP.pos;
-        speed := LP.speed;
-        t := LP.final_time;
-      end;
-    end;
+  with WorldODE.Robots[r].Axes[i].TrajectPoints[idx] do begin
+    pos := LP.pos;
+    speed := LP.speed;
+    t := LP.final_time;
   end;
 end;
 
@@ -858,57 +686,35 @@ end;
 procedure AddAxisTrajPoint(R, i: integer; LP: TAxisPoint);
 var AxisTraj: TAxisTraj;
 begin
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Axes.Count) then exit;
-    with WorldODE.Robots[r].Axes[i] do begin
-      //if (idx < 0) or (idx >= Axes[i].TrajectPoints.Count) then exit;
-      AxisTraj := TAxisTraj.Create;
-      with AxisTraj do begin
-        pos := LP.pos;
-        speed := LP.speed;
-        t := LP.final_time;
-      end;
-      Axes[i].TrajectPoints.Add(AxisTraj);
+  with WorldODE.Robots[r].Axes[i] do begin
+    AxisTraj := TAxisTraj.Create;
+    with AxisTraj do begin
+      pos := LP.pos;
+      speed := LP.speed;
+      t := LP.final_time;
     end;
+    TrajectPoints.Add(AxisTraj);
   end;
 end;
 
 
 procedure DelAxisTrajPoint(R, i, idx: integer);
 begin
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Axes.Count) then exit;
-    with WorldODE.Robots[r].Axes[i] do begin
-      if (idx < 0) or (idx >= Axes[i].TrajectPoints.Count) then exit;
-      Axes[i].TrajectPoints.Remove(Axes[i].TrajectPoints[idx]);
-    end;
+  with WorldODE.Robots[r].Axes[i] do begin
+    if (idx < 0) or (idx >= TrajectPoints.Count) then exit;
+    TrajectPoints.Remove(TrajectPoints[idx]);
   end;
 end;
 
 
 function CountAxisTrajPoints(R, i: integer): integer;
 begin
-  result := 0;
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Axes.Count) then exit;
-    with WorldODE.Robots[r].Axes[i] do begin
-      result := Axes[i].TrajectPoints.Count;
-    end;
-  end;
+  result := WorldODE.Robots[r].Axes[i].TrajectPoints.Count;
 end;
 
 procedure ClearAxisTrajPoints(R, i: integer; LP: TAxisPoint);
 begin
-  if (R < 0) or (R >= WorldODE.Robots.Count) then exit;
-  with WorldODE.Robots[R] do begin
-    if (i < 0) or (i >= Axes.Count) then exit;
-    with WorldODE.Robots[r].Axes[i] do begin
-      Axes[i].TrajectPoints.ClearAll;
-    end;
-  end;
+  WorldODE.Robots[r].Axes[i].TrajectPoints.ClearAll;
 end;
 
 

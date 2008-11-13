@@ -69,9 +69,18 @@ var
 implementation
 
 
-uses Params, ODERobotsPublished, Log, Viewer, ODERobots;
+uses Params, ODERobotsPublished, Viewer, ODERobots;
 
 {$R *.dfm}
+
+
+function RandColor(i: integer): TColor;
+begin
+  RandSeed:=i;
+  random(256);
+  result:=random(128) or (random(128) shl 8) or (random(128) shl 16);
+end;
+
 
 procedure TFChart.FormSave(ProjMemIni : TMemIniFile);
 begin

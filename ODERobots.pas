@@ -67,6 +67,7 @@ type
     Geom : PdxGeom;
     GLObj: TGLSceneObject;
     kind: integer;
+    BeltSpeed: double;
     ParSurface, MaxParSurface : TdSurfaceParameters;
     ID: string;
     description: string;
@@ -470,7 +471,7 @@ end;
 
 constructor TSolid.Create;
 begin
-
+  BeltSpeed := 0.5;
 end;
 
 destructor TSolid.Destroy;

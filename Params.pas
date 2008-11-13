@@ -370,11 +370,18 @@ begin
 
   with WorldODE.Robots[idx] do begin
     for i := 0 to Axes.Count -1 do begin
-      theta := radtodeg(Axes[i].GetPos);
       SGJoints.Cells[0,i+1] := Axes[i].ParentLink.ID;
       SGJoints.Cells[1,i+1] := Axes[i].ParentLink.description;
+
+      if dJointGetType(Axes[i].ParentLink.joint) = ord(dJointTypeHinge) then begin
+        theta := radtodeg(Axes[i].GetPos);
+        SGJoints.Cells[3,i+1] := format('%.1f',[radtodeg(Axes[i].ref.theta)]);
+      end else if dJointGetType(Axes[i].ParentLink.joint) = ord(dJointTypeSlider) then begin
+        theta := Axes[i].GetPos;
+        SGJoints.Cells[3,i+1] := format('%.1f',[Axes[i].ref.theta]);
+      end;
       SGJoints.Cells[2,i+1] := format('%.1f',[theta]);
-      SGJoints.Cells[3,i+1] := format('%.1f',[radtodeg(Axes[i].ref.theta)]);
+
       if wp_idx >= 0 then
         SGJoints.Cells[4,i+1] := format('%.1f',[radtodeg(Axes[i].WayPoints[wp_idx].pos)]);
 
@@ -494,7 +501,13 @@ begin
   i := SGJoints.Selection.Top - 1;
   if (i < 0) or (i >= WorldODE.Robots[r].Axes.Count) then exit;
 
-  WorldODE.Robots[r].Axes[i].ref.theta := degtorad(strtofloatdef(EditJointTetaRef.Text, 0));
+  with WorldODE.Robots[r].Axes[i] do begin
+    if dJointGetType(ParentLink.joint) = ord(dJointTypeHinge) then begin
+      ref.theta := degtorad(strtofloatdef(EditJointTetaRef.Text, 0));
+    end else if dJointGetType(ParentLink.joint) = ord(dJointTypeSlider) then begin
+      ref.theta := strtofloatdef(EditJointTetaRef.Text, 0);
+    end;
+  end;
 end;
 
 procedure TFParams.LBRobotsClick(Sender: TObject);
@@ -549,7 +562,7 @@ begin
 end;
 
 procedure TFParams.BLoadJointWayPointsClick(Sender: TObject);
-var r, i: integer;
+var r: integer;
 begin
   r := LBRobots.ItemIndex;
   LoadJointWayPoints(r, EditLoadJointPoints.Text);
