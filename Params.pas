@@ -38,9 +38,6 @@ type
     Label10: TLabel;
     Label11: TLabel;
     Label12: TLabel;
-    BCamXMLRead: TButton;
-    BXamXMLWrite: TButton;
-    Edit4: TEdit;
     MemoCameraConfig: TMemo;
     EditDebug3: TEdit;
     MemoDebug: TMemo;
@@ -149,6 +146,11 @@ type
     Label43: TLabel;
     Label44: TLabel;
     EditTimeSpeed: TEdit;
+    SGConf: TStringGrid;
+    EditGridX: TEdit;
+    EditGridY: TEdit;
+    EditGridZ: TEdit;
+    BSGConfSet: TButton;
     procedure CBShadowsClick(Sender: TObject);
     procedure CBVsyncClick(Sender: TObject);
     procedure BSetFPSClick(Sender: TObject);
@@ -161,7 +163,6 @@ type
     procedure EditRemoteIPChange(Sender: TObject);
     procedure RGControlBlockClick(Sender: TObject);
     procedure BTestClick(Sender: TObject);
-    procedure BXamXMLWriteClick(Sender: TObject);
     procedure UDPServerUDPRead(Sender: TObject; AData: TStream;
       ABinding: TIdSocketHandle);
     procedure CBPIDsActiveClick(Sender: TObject);
@@ -181,9 +182,17 @@ type
     procedure BSetAllClick(Sender: TObject);
     procedure BJointWayPointsSaveClick(Sender: TObject);
     procedure BWayPointEditClick(Sender: TObject);
+    procedure SGConfSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
+    procedure BSGConfSetClick(Sender: TObject);
+    procedure SGConfDblClick(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure EditGridKeyPress(Sender: TObject; var Key: Char);
   private
     procedure FillEditArray(ProtoName: string;
       var EditArray: array of TEdit);
+    procedure SGConfRowToVar(SGRow: longword);
+    procedure VarToSGConfRow(SGRow: longword);
     { Private declarations }
   public
     EditsU, EditsI, EditsOdo : array[0..3] of TEdit;
@@ -205,7 +214,7 @@ implementation
 
 {$R *.dfm}
 
-uses Viewer, Editor, FastChart, ODERobotsPublished, WayPointsEdit, ProjConfig;
+uses Viewer, Editor, FastChart, ODERobotsPublished, WayPointsEdit, ProjConfig, utils;
 
 procedure TFParams.BSetFPSClick(Sender: TObject);
 var fps: integer;
@@ -302,11 +311,6 @@ begin
       exit;
     end;
   end;
-end;
-
-procedure TFParams.BXamXMLWriteClick(Sender: TObject);
-begin
-  edit4.Text := GetListValue(MemoCameraConfig.Lines, 'Camera.position');
 end;
 
 procedure TFParams.UDPServerUDPRead(Sender: TObject; AData: TStream;  ABinding: TIdSocketHandle);
@@ -421,7 +425,6 @@ procedure TFParams.FormCreate(Sender: TObject);
 begin
   FormStorage.IniFileName := GetIniFineName;
 
-  Edit4.Text := inttostr(sizeof(TSolidLink));
   SGJoints.Cells[0,0] := 'ID';
   SGJoints.Cells[1,0] := 'Description';
   SGJoints.Cells[2,0] := 'Pos';
@@ -430,6 +433,7 @@ begin
 end;
 
 procedure TFParams.FormShow(Sender: TObject);
+var i: integer;
 begin
   FillLBRobots(LBRobots);
   if LBRobots.Count>0 then LBRobots.ItemIndex := 0;
@@ -439,6 +443,16 @@ begin
   FillEditArray('EditIR', EditsIR);
   CBIRNoiseClick(Sender);
   BPhysicsSetClick(Sender);
+  try
+    LoadGridFromfile(SGConf, 'params.cfg');
+  except
+    on E: Exception do
+    Showmessage(E.Message);
+  end;
+  for i := 1 to SGConf.RowCount-1 do begin
+    SGConfRowToVar(i);
+    VarToSGConfRow(i);
+  end;
 end;
 
 procedure TFParams.FillEditArray(ProtoName: string; var EditArray: array of TEdit);
@@ -661,6 +675,69 @@ begin
     FParams.ComboWayPointName.ItemIndex := 0;
 end;
 
+
+procedure TFParams.SGConfSelectCell(Sender: TObject; ACol, ARow: Integer;
+  var CanSelect: Boolean);
+begin
+//  EditGridX.Text := SGConf.Cells[1, Arow];
+//  EditGridY.Text := SGConf.Cells[2, Arow];
+//  EditGridZ.Text := SGConf.Cells[3, Arow];
+end;
+
+procedure TFParams.SGConfRowToVar(SGRow: longword);
+var varname: string;
+begin
+  varname := SGConf.Cells[0, SGRow];
+  if varname = 'Camera.Position' then begin
+    FViewer.GLDummyCamPos.Position.SetPoint(GetVectorFromGrid(SGConf, 'Camera.Position', FViewer.GLDummyCamPos.Position.AsAffineVector));
+  end else if varname = 'Light.Position' then begin
+    FViewer.GLLightSource.Position.SetPoint(GetVectorFromGrid(SGConf, 'Light.Position', FViewer.GLLightSource.Position.AsAffineVector));
+  end;
+end;
+
+procedure TFParams.VarToSGConfRow(SGRow: longword);
+var varname: string;
+begin
+  varname := SGConf.Cells[0, SGRow];
+  if varname = 'Camera.Position' then begin
+    WriteVectorToGrid(SGConf, 'Camera.Position', FViewer.GLDummyCamPos.Position.AsAffineVector);
+  end else if varname = 'Light.Position' then begin
+    WriteVectorToGrid(SGConf, 'Light.Position', FViewer.GLLightSource.Position.AsAffineVector);
+  end;
+end;
+
+
+procedure TFParams.BSGConfSetClick(Sender: TObject);
+begin
+  SGConf.Cells[1, SGConf.Row] := EditGridX.Text;
+  SGConf.Cells[2, SGConf.Row] := EditGridY.Text;
+  SGConf.Cells[3, SGConf.Row] := EditGridZ.Text;
+  SGConfRowToVar(SGConf.Row);
+end;
+
+procedure TFParams.SGConfDblClick(Sender: TObject);
+begin
+//  VarToSGConfRow(SGConf.Row);
+  EditGridX.Text := SGConf.Cells[1, SGConf.Row];
+  EditGridY.Text := SGConf.Cells[2, SGConf.Row];
+  EditGridZ.Text := SGConf.Cells[3, SGConf.Row];
+end;
+
+procedure TFParams.FormDestroy(Sender: TObject);
+begin
+  try
+     SaveGridTofile(SGConf, 'params.cfg');
+  except
+    on E: Exception do
+    Showmessage(E.Message);
+  end;
+end;
+
+procedure TFParams.EditGridKeyPress(Sender: TObject; var Key: Char);
+begin
+//  EditGridX.Text := inttostr(ord(key));
+  if key = #13 then BSGConfSetClick(FParams);
+end;
 
 end.
 

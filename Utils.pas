@@ -2,10 +2,18 @@ unit Utils;
 
 interface
 
-uses Classes,sysutils,Math,graphics;
+uses Classes, sysutils, Math, graphics, Grids, VectorGeometry;
 
 //function strtofloatDef(s: string; def: double): double;
 procedure ParseString(s,sep: string; sl: TStrings);
+procedure LoadGridFromfile(SG: TStringGrid; fname: string);
+procedure SaveGridTofile(SG: TStringGrid; fname: string);
+procedure WriteVectorToGrid(SG: TStringGrid; vname: string; wval: TAffineVector);
+
+function GetStringFromGrid(SG: TStringGrid; vname: string; icol: longword; defval: string = ''): string;
+function GetFloatFromGrid(SG: TStringGrid; vname: string; icol: longword; defval: Double = 0): Double;
+function GetVectorFromGrid(SG: TStringGrid; vname: string; defval: TAffineVector): TAffineVector;
+
 
 function FMod(x,d: double): double;
 function DiffAngle(a1,a2: double): double;
@@ -31,7 +39,7 @@ function InternalProductCosine(v1x,v1y,v2x,v2y: double): double;
 
 function NormalizeAngle(ang: double): double;
 
-procedure DrawCovElipse(x,y,cov_x,cov_y, cov_xy: double; n: integer; CNV: TCanvas);
+//procedure DrawCovElipse(x,y,cov_x,cov_y, cov_xy: double; n: integer; CNV: TCanvas);
 procedure RotateCov( const incov_x,incov_y,incov_xy: double; out cov_x,cov_y, cov_xy: double; teta: double);
 
 
@@ -46,7 +54,7 @@ function DecompressString(src: string): string;
 
 implementation
 
-uses ZLib;
+uses ZLib, StrUtils;
 
 function CompressString(src: string): string;
 var outbuf: pointer;
@@ -95,6 +103,114 @@ begin
   if last<=length(s) then
     sl.add(copy(s,last,length(s)-last+1));
 end;
+
+procedure LoadGridFromfile(SG: TStringGrid; fname: string);
+var SL: TStringList;
+    i, icol, tabpos, ntp: integer;
+    s, sub: string;
+begin
+  sub := #9;
+  SL := TStringList.Create;
+  try
+    SL.LoadFromFile(fname);
+    for i:=0 to SL.Count-1 do begin
+      if i >= SG.RowCount then break;
+      icol := 0;
+      ntp := 1;
+      tabpos := 1;
+      while ntp <> 0 do begin
+        ntp := PosEx(sub, SL.Strings[i], tabpos);
+        if ntp = 0 then begin
+          s := copy(SL.Strings[i], tabpos, length(SL.Strings[i]) - tabpos + 1);
+        end else begin
+          s := copy(SL.Strings[i], tabpos, ntp - tabpos);
+        end;
+        tabpos := ntp + 1;
+        if icol >= SG.colCount then break;
+        SG.Cells[icol, i] := trim(s);
+        inc(icol);
+      end;
+    end;
+  finally
+    SL.Free;
+  end;
+end;
+
+procedure SaveGridTofile(SG: TStringGrid; fname: string);
+var SL: TStringList;
+    i, icol: integer;
+    s, sub: string;
+begin
+  sub := #9;
+  SL := TStringList.Create;
+  try
+    for i:=0 to SG.RowCount-1 do begin
+      s := SG.Cells[0, i];
+      for iCol:=1 to SG.ColCount-1 do begin
+        s := s + sub + SG.Cells[icol, i];
+      end;
+      SL.Add(s);
+    end;
+    SL.SaveToFile(fname);
+  finally
+    SL.Free;
+  end;
+end;
+
+
+procedure WriteVectorToGrid(SG: TStringGrid; vname: string; wval: TAffineVector);
+var i: integer;
+begin
+  if 4 >= SG.RowCount then exit;
+  for i := 0  to SG.RowCount-1 do begin
+    if SG.Cells[0, i] = vname then begin
+      SG.Cells[1, i] := format('%.5g',[wval[0]]);
+      SG.Cells[2, i] := format('%.5g',[wval[1]]);
+      SG.Cells[3, i] := format('%.5g',[wval[2]]);
+      exit;
+    end;
+  end;
+end;
+
+
+function GetVectorFromGrid(SG: TStringGrid; vname: string; defval: TAffineVector): TAffineVector;
+var i: integer;
+begin
+  result := defval;
+  if 4 >= SG.RowCount then exit;
+  for i := 0  to SG.RowCount-1 do begin
+    if SG.Cells[0, i] = vname then begin
+      result[0] := strTofloatdef(SG.Cells[1, i], result[0]);
+      result[1] := strTofloatdef(SG.Cells[2, i], result[1]);
+      result[2] := strTofloatdef(SG.Cells[3, i], result[2]);
+      exit;
+    end;
+  end;
+end;
+
+function GetStringFromGrid(SG: TStringGrid; vname: string; icol: longword; defval: string = ''): string;
+var i: integer;
+begin
+  result := defval;
+  if integer(icol) >= SG.RowCount then exit;
+  for i := 0  to SG.RowCount-1 do begin
+    if SG.Cells[0, i] = vname then begin
+      result := SG.Cells[icol, i];
+      exit;
+    end;
+  end;
+end;
+
+function GetIntFromGrid(SG: TStringGrid; vname: string; icol: longword; defval: integer = -1): integer;
+begin
+  result := StrToIntDef(GetStringFromGrid(SG, vname, icol, ''), defval);
+end;
+
+function GetFloatFromGrid(SG: TStringGrid; vname: string; icol: longword; defval: Double = 0): Double;
+begin
+  result := StrToFloatDef(GetStringFromGrid(SG, vname, icol, ''), defval);
+end;
+
 
 // ---------------------------------------------------------
 //     Math functions
@@ -263,7 +379,7 @@ begin
   else result:=a-Pi;
 end;
 
-
+{
 procedure DrawCovElipse(x,y,cov_x,cov_y, cov_xy: double; n: integer; CNV: TCanvas);
 var i,x1,y1: integer;
     xr,yr: double;
@@ -291,7 +407,7 @@ begin
     end;
   end;
 end;
-
+}
 
 procedure RotateCov( const incov_x,incov_y,incov_xy: double; out cov_x,cov_y, cov_xy: double; teta: double);
 var ce,se,t1,t3,t5,t6: double;
