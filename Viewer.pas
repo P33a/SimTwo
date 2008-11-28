@@ -60,7 +60,7 @@ type
 
     procedure UpdateOdometry(var Link: TSolidLink);
     procedure CreateWheel(Robot: TRobot; Wheel: TWheel; const Pars: TWheelPars; const wFriction: TFriction; const wMotor: TMotor);
-    procedure CreateIRSensor(Robot: TRobot; IRSensor: TSensor; posX, posY, posZ,
+    procedure CreateIRSensor(motherbody: PdxBody; IRSensor: TSensor; posX, posY, posZ,
       IR_teta, IR_length, InitialWidth, FinalWidth: double);
 
     procedure LoadObstaclesFromXML(XMLFile: string);
@@ -454,6 +454,37 @@ begin
 end;
 
 
+procedure TWorld_ODE.CreateSolidBall(var Solid: TSolid; bmass, posX, posY, posZ, c_radius: double);
+var m: TdMass;
+begin
+  Solid.kind := skDefault;
+  Solid.Body := dBodyCreate(world);
+  dBodySetPosition(Solid.Body, posX, posY, posZ);
+
+  dMassSetSphereTotal(m, bmass, c_radius);
+  dBodySetMass(Solid.Body, @m);
+
+  Solid.Geom := dCreateSphere(space, c_radius);
+  dGeomSetBody(Solid.Geom, Solid.Body);
+  Solid.Geom.data := Solid;
+
+  Solid.GLObj := TGLSceneObject(ODEScene.AddNewChild(TGLSphere));
+
+  with (Solid.GLObj as TGLSphere) do begin
+    TagObject := Solid;
+    Radius := c_radius;
+    //Material.FrontProperties.Diffuse.AsWinColor := clyellow;
+    Material.MaterialLibrary := FViewer.GLMaterialLibrary;
+    //Material.LibMaterialName := 'LibMaterialBumps';
+    //Material.LibMaterialName := 'LibMaterialFeup';
+  end;
+  (OdeScene as TGLShadowVolume).Occluders.AddCaster(Solid.GLObj);
+
+  //PositionSceneObject(Solid.GLObj, Solid.Geom);
+end;
+
+
+
 procedure TWorld_ODE.CreateShellBox(var Solid: TSolid; motherbody: PdxBody; posX, posY, posZ, L, W, H: double);
 begin
   Solid.kind := skDefault;
@@ -482,16 +513,16 @@ begin
 end;
 
 
-procedure TWorld_ODE.CreateIRSensor(Robot: TRobot; IRSensor: TSensor; posX, posY, posZ: double; IR_teta, IR_length, InitialWidth, FinalWidth: double);
-var R: TdMatrix3;
+procedure TWorld_ODE.CreateIRSensor(motherbody: PdxBody; IRSensor: TSensor; posX, posY, posZ: double; IR_teta, IR_length, InitialWidth, FinalWidth: double);
+//var R: TdMatrix3;
 begin
   IRSensor.Geom := dCreateRay(space, IR_length);
-  dGeomSetBody(IRSensor.Geom, Robot.MainBody.Body);
+  dGeomSetBody(IRSensor.Geom, motherbody);
   IRSensor.Geom.data := IRSensor;
 
-  dRFromAxisAndAngle(R, -sin(IR_teta), cos(IR_teta), 0, pi/2);
-  dGeomSetOffsetRotation(IRSensor.Geom, R);
-  dGeomSetOffsetPosition(IRSensor.Geom, posX, posY, posZ);
+//  dRFromAxisAndAngle(R, -sin(IR_teta), cos(IR_teta), 0, pi/2);
+//  dGeomSetOffsetRotation(IRSensor.Geom, R);
+//  dGeomSetOffsetPosition(IRSensor.Geom, posX, posY, posZ);
   IRSensor.GLObj := TGLSceneObject(ODEScene.AddNewChild(TGLCylinder));
 
   with (IRSensor.GLObj as TGLCylinder) do begin
@@ -753,13 +784,16 @@ begin
   // The cylinder is created with its axis vertical (Z alligned)
   CreateSolidCylinder(newTyre, Pars.mass, wdx, wdy, Pars.Radius, Pars.Radius, Pars.Width);
   newTyre.SetRotation(-sin(Pars.Angle), cos(Pars.Angle), 0, pi/2);
+  newTyre.MovePosition(Pars.offsetX, Pars.offsetY, Pars.offsetZ);
   newTyre.SetZeroState();
 
   if Pars.omni then newTyre.kind := skOmniWheel;
 
   newLink := TSolidLink.Create;
   Robot.Links.Add(newLink);
-  CreateHingeJoint(newLink, newTyre, Robot.MainBody, wdx, wdy, Pars.Radius, -wdx, -wdy, 0);
+  CreateHingeJoint(newLink, newTyre, Robot.MainBody,
+                   Pars.offsetX + wdx, Pars.offsetY + wdy, Pars.offsetZ + Pars.Radius,
+                   -wdx, -wdy, 0);
 
   newLink.ID := inttostr(Robot.Links.Count);
   newLink.description := 'Wheel' + newLink.ID;
@@ -794,7 +828,8 @@ end;}
 //procedure TWorld_ODE.LoadSolidsFromXML(Robot: TRobot; const root: IXMLNode);
 procedure TWorld_ODE.LoadSolidsFromXML(SolidList: TSolidList; const root: IXMLNode);
 var bone, prop: IXMLNode;
-    sizeX, sizeY, sizeZ, posX, posY, posZ, angX, angY, angZ, mass: double;
+    radius, sizeX, sizeY, sizeZ, posX, posY, posZ, angX, angY, angZ, mass: double;
+    BuoyantMass: double;
     colorR, colorG, colorB: double;
     ID: string;
     R, Rx, Ry, Rz, Ryx: TdMatrix3;
@@ -807,10 +842,12 @@ begin
 
   bone := root.FirstChild;
   while bone <> nil do begin
-    if pos(bone.NodeName, 'cuboid, cylinder, belt') <> 0 then begin // 'bone'
+    if pos(bone.NodeName, 'cuboid, cylinder, sphere, belt') <> 0 then begin // 'bone'
       prop := bone.FirstChild;
       // default values
       mass := 1;  ID := '-1';
+      BuoyantMass := 0;
+      radius := 1;
       sizeX := 1; sizeY := 1; sizeZ := 1;
       posX := 0; posY := 0; posZ := 0;
       angX := 0; angY := 0; angZ := 0;
@@ -818,6 +855,12 @@ begin
       TextureName := ''; TextureScale := 1;
       descr := bone.NodeName + inttostr(SolidList.Count);
       while prop <> nil do begin
+        if prop.NodeName = 'buoyant' then begin
+          BuoyantMass := GetNodeAttrReal(prop, 'mass', BuoyantMass);
+        end;
+        if prop.NodeName = 'radius' then begin
+          radius := GetNodeAttrReal(prop, 'value', radius);
+        end;
         if prop.NodeName = 'size' then begin
           sizeX := GetNodeAttrReal(prop, 'x', sizeX);
           sizeY := GetNodeAttrReal(prop, 'y', sizeY);
@@ -862,6 +905,8 @@ begin
         newBone.description := descr;
         if (bone.NodeName = 'cuboid') or (bone.NodeName = 'belt') then begin
           CreateSolidBox(newBone, mass, posX, posY, posZ, sizeX, sizeY, sizeZ);
+        end else if bone.NodeName = 'sphere' then begin
+          CreateSolidBall(newBone, mass, posX, posY, posZ, radius);
         end else if bone.NodeName = 'cylinder' then begin
           CreateSolidCylinder(newBone, mass, posX, posY, posZ, sizeX, sizeZ);
           if TextureName <> '' then begin
@@ -870,6 +915,8 @@ begin
         end;
         if bone.NodeName = 'belt' then newBone.kind := skMotorBelt;
 
+        if BuoyantMass <> 0 then dBodySetGravityMode(newBone.Body, 0);
+        
         dRFromAxisAndAngle(Rz, 0, 0, 1, angZ);
         dRFromAxisAndAngle(Ry, 0, 1, 0, angY);
         dRFromAxisAndAngle(Rx, 1, 0, 0, angX);
@@ -1219,6 +1266,9 @@ var XML: IXMLDocument;
 begin
   if (r < 0) or (r >= Robots.Count) then exit;
 
+  ang := 0;
+  speed := 0;
+
 {  XML:=CreateXMLDoc;
   XML.Load(XMLFile);
   if XML.ParseError.Reason<>'' then begin
@@ -1387,6 +1437,10 @@ var sensor, prop: IXMLNode;
     colorR, colorG, colorB: double;
     R, Rx, Ry, Rz, Ryx: TdMatrix3;
     newIRSensor: TSensor;
+
+    MotherSolidId: string;
+    MotherSolid: TSolid;
+    SolidIdx: integer;
 begin
   if root = nil then exit;
 
@@ -1394,6 +1448,7 @@ begin
   while sensor <> nil do begin
     if (sensor.NodeName = 'IR') or (sensor.NodeName = 'IRSharp') then begin
       // default values
+      MotherSolidId := '';
       SLen := 0.8; SInitialWidth := 0.01; SFinalWidth := 0.015;
       with Noise do begin
         var_k := 0; var_d := 0; offset := 0; gain := 1; active := false;
@@ -1404,6 +1459,9 @@ begin
 
       prop := sensor.FirstChild;
       while prop <> nil do begin
+        if prop.NodeName = 'solid' then begin
+          MotherSolidId := GetNodeAttrStr(prop, 'id', MotherSolidId);
+        end;
         if prop.NodeName = 'beam' then begin
           SLen := GetNodeAttrReal(prop, 'length', SLen);
           SInitialWidth := GetNodeAttrReal(prop, 'initial_width', SInitialWidth);
@@ -1439,7 +1497,25 @@ begin
       if sensor.NodeName = 'IRSharp' then newIRSensor.kind := skIRSharp;
       newIRSensor.Noise := Noise;
       Robot.IRSensors.Add(newIRSensor);
-      CreateIRSensor(Robot, newIRSensor, posX, posY, posZ, angZ, SLen, SInitialWidth, SFinalWidth);
+
+      SolidIdx := Robot.Solids.IndexFromID(MotherSolidId);
+      if SolidIdx = -1 then  begin
+        MotherSolid := Robot.MainBody;
+      end else begin
+        MotherSolid := Robot.Solids[SolidIdx];
+      end;
+      CreateIRSensor(MotherSolid.Body, newIRSensor, posX, posY, posZ, angZ, SLen, SInitialWidth, SFinalWidth);
+
+      dRFromAxisAndAngle(Rz, 0, 0, 1, angZ);
+      dRFromAxisAndAngle(Ry, 0, 1, 0, angY + pi/2);
+      dRFromAxisAndAngle(Rx, 1, 0, 0, angX);
+
+      dMULTIPLY0_333(Ryx, Ry, Rx);
+      dMULTIPLY0_333(R, Rz, Ryx);
+
+      dGeomSetOffsetRotation(newIRSensor.Geom, R);
+      dGeomSetOffsetPosition(newIRSensor.Geom, posX, posY, posZ);
+
       newIRSensor.SetColor(colorR, colorG, colorB);
     end;
 
@@ -1510,7 +1586,8 @@ end;
 
 procedure TWorld_ODE.LoadWheelsFromXML(Robot: TRobot; const root: IXMLNode);
 var wheelnode, prop: IXMLNode;
-    posX, posY, posZ, angX, angY, angZ: double;
+    //offX, offY, offZ,
+    angX, angY, angZ: double;
     //R, Rx, Ry, Rz, Ryx: TdMatrix3;
     newWheel: TWheel;
     Pars, DefPars: TWheelPars;
@@ -1522,6 +1599,9 @@ begin
 
   // Initialize default parameters
   with DefPars do begin
+    offsetX := 0;
+    offsetY := 0;
+    offsetZ := 0;
     Radius := 0.09;
     Width := 0.03;
     mass := 0.13;
@@ -1583,7 +1663,7 @@ begin
   while wheelnode <> nil do begin
     if (wheelnode.NodeName = 'wheel') or (wheelnode.NodeName = 'default') then begin
       // default values
-      posX := 0; posY := 0; posZ := 0;
+      //offX := 0; offY := 0; offZ := 0;
       angX := 0; angY := 0; angZ := 0;
       Pars := DefPars;
       Friction := DefFriction;
@@ -1607,11 +1687,18 @@ begin
 
         ReadMotorFromXMLNode(Motor, prop);
 
+        if prop.NodeName = 'offset' then begin
+          Pars.offsetX := GetNodeAttrReal(prop, 'x', Pars.offsetX);
+          Pars.offsetY := GetNodeAttrReal(prop, 'y', Pars.offsetY);
+          Pars.offsetZ := GetNodeAttrReal(prop, 'z', Pars.offsetZ);
+        end;
+
         if prop.NodeName = 'axis' then begin
           angX := degToRad(GetNodeAttrReal(prop, 'x', angX));
           angY := degToRad(GetNodeAttrReal(prop, 'y', angY));
           angZ := degToRad(GetNodeAttrReal(prop, 'angle', angZ));
         end;
+
         if prop.NodeName = 'color_rgb' then begin
           RGB.R := GetNodeAttrInt(prop, 'r', 128)/255;
           RGB.G := GetNodeAttrInt(prop, 'g', 128)/255;
@@ -1648,6 +1735,9 @@ var ShellNode, prop: IXMLNode;
     colorR, colorG, colorB: double;
     R, Rx, Ry, Rz, Ryx: TdMatrix3;
     newShell: TSolid;
+    MotherSolidId: string;
+    MotherSolid: TSolid;
+    SolidIdx: integer;
 begin
   if root = nil then exit;
 
@@ -1660,7 +1750,11 @@ begin
       posX := 0; posY := 0; posZ := 0;
       angX := 0; angY := 0; angZ := 0;
       colorR := 128/255; colorG := 128/255; colorB := 128/255;
+      MotherSolidId := '';
       while prop <> nil do begin
+        if prop.NodeName = 'solid' then begin
+          MotherSolidId := GetNodeAttrStr(prop, 'id', MotherSolidId);
+        end;
         if prop.NodeName = 'size' then begin
           sizeX := GetNodeAttrReal(prop, 'x', sizeX);
           sizeY := GetNodeAttrReal(prop, 'y', sizeY);
@@ -1687,7 +1781,14 @@ begin
       newShell := TSolid.Create;
       Robot.Shells.Add(newShell);
       newShell.description := 'Shell';
-      CreateShellBox(newShell, Robot.MainBody.Body, posX, posY, posZ, sizeX, sizeY, sizeZ);
+
+      SolidIdx := Robot.Solids.IndexFromID(MotherSolidId);
+      if SolidIdx = -1 then  begin
+        MotherSolid := Robot.MainBody;
+      end else begin
+        MotherSolid := Robot.Solids[SolidIdx];
+      end;
+      CreateShellBox(newShell, MotherSolid.Body, posX, posY, posZ, sizeX, sizeY, sizeZ);
 
       dRFromAxisAndAngle(Rz, 0, 0, 1, angZ);
       dRFromAxisAndAngle(Ry, 0, 1, 0, angY);
@@ -1714,11 +1815,6 @@ procedure TWorld_ODE.LoadThingsFromXML(XMLFile: string);
 var XML: IXMLDocument;
     root: IXMLNode;
 begin
-{  XML:=CreateXMLDoc;
-  XML.Load(XMLFile);
-  if XML.ParseError.Reason<>'' then begin
-    exit;
-  end;}
   XML := LoadXML(XMLFile);
   if XML = nil then exit;
 
@@ -1727,13 +1823,8 @@ begin
   if root = nil then exit;
   LoadSolidsFromXML(Things, root);
 end;
-{
-  <ball>
-    <radius value='0.3'/>
-    <mass value='0.3'/>
-    <pos x='1' y='0' z='1'/>
-  </ball>
-}
+
+
 procedure TWorld_ODE.LoadSceneFromXML(XMLFile: string);
 var XML: IXMLDocument;
     root, objNode, prop: IXMLNode;
@@ -2018,7 +2109,7 @@ begin
   WorldODE := TWorld_ODE.create;
   //WorldODE.SampleCount := 0;
   WorldODE.ODEEnable := True;
-  GLCadencer.enabled := true;
+  //GLCadencer.enabled := true;
 
   GLHUDTextObjName.Text := '';
 end;
@@ -2166,7 +2257,8 @@ begin
     // Limit it to avoid instability
     if Friction.CoulombLimit >= 0 then
       Tq := max(-Friction.CoulombLimit * abs(w), min(Friction.CoulombLimit * abs(w), Tq));
-    T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Tq - Spring.K * diffangle(Theta, Spring.ZeroPos);
+    //T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Tq - Spring.K * diffangle(Theta, Spring.ZeroPos);
+    T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Tq - Spring.K * (Theta - Spring.ZeroPos);
   end;
 end;
 
@@ -2584,6 +2676,8 @@ begin
 
   MakeFullyVisible();
   UpdateGLScene;
+
+  GLCadencer.enabled := true;
 end;
 
 procedure TFViewer.TimerTimer(Sender: TObject);
@@ -2612,38 +2706,6 @@ procedure TFViewer.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   FEditor.FormCloseQuery(Sender, CanClose);
 end;
-
-procedure TWorld_ODE.CreateSolidBall(var Solid: TSolid; bmass, posX, posY,
-  posZ, c_radius: double);
-var m: TdMass;
-begin
-  Solid.kind := skDefault;
-  Solid.Body := dBodyCreate(world);
-  dBodySetPosition(Solid.Body, posX, posY, posZ);
-
-  dMassSetSphereTotal(m, bmass, c_radius);
-  dBodySetMass(Solid.Body, @m);
-
-  Solid.Geom := dCreateSphere(space, c_radius);
-  dGeomSetBody(Solid.Geom, Solid.Body);
-  Solid.Geom.data := Solid;
-
-  Solid.GLObj := TGLSceneObject(ODEScene.AddNewChild(TGLSphere));
-
-  with (Solid.GLObj as TGLSphere) do begin
-    TagObject := Solid;
-    Radius := c_radius;
-    //Material.FrontProperties.Diffuse.AsWinColor := clyellow;
-    Material.MaterialLibrary := FViewer.GLMaterialLibrary;
-    //Material.LibMaterialName := 'LibMaterialBumps';
-    //Material.LibMaterialName := 'LibMaterialFeup';
-  end;
-  (OdeScene as TGLShadowVolume).Occluders.AddCaster(Solid.GLObj);
-
-  //PositionSceneObject(Solid.GLObj, Solid.Geom);
-  //if Solid.GLObj is TGLCylinder then Solid.GLObj.pitch(90);}
-end;
-
 
 
 procedure TFViewer.MenuChartClick(Sender: TObject);

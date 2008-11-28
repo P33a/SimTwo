@@ -13,6 +13,7 @@ object FParams: TFParams
   OldCreateOrder = False
   Scaled = False
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnShow = FormShow
   DesignSize = (
     273
@@ -24,7 +25,7 @@ object FParams: TFParams
     Top = 0
     Width = 273
     Height = 621
-    ActivePage = TabControl
+    ActivePage = TabGraphics
     Anchors = [akLeft, akTop, akBottom]
     TabOrder = 0
     object TabControl: TTabSheet
@@ -834,6 +835,9 @@ object FParams: TFParams
     object TabGraphics: TTabSheet
       Caption = 'Graphics'
       ImageIndex = 1
+      DesignSize = (
+        265
+        593)
       object Label24: TLabel
         Left = 4
         Top = 8
@@ -957,7 +961,7 @@ object FParams: TFParams
         Width = 45
         Height = 21
         TabOrder = 8
-        Text = '25'
+        Text = '60'
       end
       object BSetFPS: TButton
         Left = 125
@@ -970,7 +974,7 @@ object FParams: TFParams
       end
       object RGCamera: TRadioGroup
         Left = 0
-        Top = 196
+        Top = 192
         Width = 109
         Height = 93
         Caption = 'Camera'
@@ -1007,42 +1011,72 @@ object FParams: TFParams
         TabOrder = 13
         Text = '1'
       end
-      object BCamXMLRead: TButton
-        Left = 4
-        Top = 452
-        Width = 75
-        Height = 25
-        Caption = 'Read'
-        TabOrder = 14
-      end
-      object BXamXMLWrite: TButton
-        Left = 184
-        Top = 452
-        Width = 75
-        Height = 25
-        Caption = 'Write'
-        TabOrder = 15
-        OnClick = BXamXMLWriteClick
-      end
-      object Edit4: TEdit
-        Left = 4
-        Top = 480
-        Width = 121
-        Height = 21
-        TabOrder = 16
-        Text = 'Edit4'
-      end
       object MemoCameraConfig: TMemo
         Left = 4
-        Top = 308
+        Top = 296
         Width = 257
-        Height = 89
+        Height = 61
         Lines.Strings = (
           'Camera.Position = [1 1 3]'
           'Camera.OffSet = [0 0 0]'
           'Target.Position = [1 1 3]'
           'Target.OffSet = [0 0 0]')
+        TabOrder = 14
+        Visible = False
+      end
+      object SGConf: TStringGrid
+        Left = 0
+        Top = 384
+        Width = 261
+        Height = 209
+        Anchors = [akLeft, akTop, akBottom]
+        ColCount = 4
+        DefaultColWidth = 50
+        DefaultRowHeight = 14
+        FixedCols = 0
+        RowCount = 128
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSelect]
+        TabOrder = 15
+        OnDblClick = SGConfDblClick
+        OnSelectCell = SGConfSelectCell
+        ColWidths = (
+          87
+          50
+          50
+          50)
+      end
+      object EditGridX: TEdit
+        Left = 48
+        Top = 360
+        Width = 70
+        Height = 21
+        TabOrder = 16
+        OnKeyPress = EditGridKeyPress
+      end
+      object EditGridY: TEdit
+        Left = 119
+        Top = 360
+        Width = 70
+        Height = 21
         TabOrder = 17
+        OnKeyPress = EditGridKeyPress
+      end
+      object EditGridZ: TEdit
+        Left = 190
+        Top = 360
+        Width = 70
+        Height = 21
+        TabOrder = 18
+        OnKeyPress = EditGridKeyPress
+      end
+      object BSGConfSet: TButton
+        Left = 0
+        Top = 360
+        Width = 40
+        Height = 21
+        Caption = 'Set'
+        TabOrder = 19
+        OnClick = BSGConfSetClick
       end
     end
     object TabDebug: TTabSheet

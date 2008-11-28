@@ -71,12 +71,14 @@ type
     ParSurface, MaxParSurface : TdSurfaceParameters;
     ID: string;
     description: string;
+//    Buoyancy: TdVector3;
     ZeroPosition: TdVector3;
     ZeroRotation: TdMatrix3;
   public
     constructor Create;
     destructor Destroy; override;
     procedure SetPosition(posX, posY, posZ: double);
+    procedure MovePosition(dX, dY, dZ: double);
     procedure SetRotation(axisX, axisY, axisZ, rot_angle: double);  overload;
     procedure SetRotation(R: TdMatrix3); overload;
     procedure SetZeroState;
@@ -223,6 +225,7 @@ type
 
 
   TWheelPars = record
+    offsetX, offsetY, offsetZ: double;
     Radius, Width, mass, CenterDist, Angle: double;
     omni: boolean;
   end;
@@ -548,6 +551,13 @@ begin
   result := dBodyGetRotation(Body)^;
 end;
 
+procedure TSolid.MovePosition(dX, dY, dZ: double);
+var Vpos: TdVector3;
+begin
+  Vpos := dBodyGetPosition(Body)^;
+  dBodySetPosition(Body, Vpos[0] + dX, Vpos[1] + dY, Vpos[2] + dZ);
+end;
+
 procedure TSolid.SetColor(R, G, B, A: single);
 begin
   if GLObj = nil then exit;
@@ -619,7 +629,9 @@ begin
       dJointGetUniversalAnchor2(ParentLink.joint, result);
     end;
   end else if dJointGetType(ParentLink.joint) = ord(dJointTypeSlider) then begin
-    ZeroMemory(@(result[0]), sizeof(result));
+    //ZeroMemory(@(result[0]), sizeof(result));
+    result := dBodyGetPosition(dJointGetBody(ParentLink.joint,0))^;
+
   end;
   //TODO more Joint types
 end;
