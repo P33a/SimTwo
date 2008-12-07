@@ -392,7 +392,7 @@ object FEditor: TFEditor
       end
       object MenuStop: TMenuItem
         Caption = '&Stop'
-        ShortCut = 121
+        ShortCut = 16507
         OnClick = MenuStopClick
       end
       object MenuTest: TMenuItem

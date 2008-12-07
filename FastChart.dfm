@@ -48,6 +48,8 @@ object FChart: TFChart
     Title.Text.Strings = (
       'TChart')
     Title.Visible = False
+    BottomAxis.AxisValuesFormat = '##,##0.####'
+    LeftAxis.AxisValuesFormat = '#,##0.#####'
     View3D = False
     View3DWalls = False
     TabOrder = 0

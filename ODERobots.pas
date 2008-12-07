@@ -71,7 +71,9 @@ type
     ParSurface, MaxParSurface : TdSurfaceParameters;
     ID: string;
     description: string;
-//    Buoyancy: TdVector3;
+    //Buoyancy: TdVector3;
+    BuoyantMass, Volume, Drag: double;
+    Ax, Ay, Az: double;
     ZeroPosition: TdVector3;
     ZeroRotation: TdMatrix3;
   public
@@ -631,7 +633,8 @@ begin
   end else if dJointGetType(ParentLink.joint) = ord(dJointTypeSlider) then begin
     //ZeroMemory(@(result[0]), sizeof(result));
     result := dBodyGetPosition(dJointGetBody(ParentLink.joint,0))^;
-
+  end else if dJointGetType(ParentLink.joint) = ord(dJointTypeFixed) then begin
+    result := dBodyGetPosition(dJointGetBody(ParentLink.joint,0))^;
   end;
   //TODO more Joint types
 end;
@@ -649,6 +652,9 @@ begin
   end else if dJointGetType(ParentLink.joint) = ord(dJointTypeSlider) then begin
     dJointGetSliderAxis(ParentLink.joint, result);
     //ZeroMemory(@(result[0]), sizeof(result));
+  end else if dJointGetType(ParentLink.joint) = ord(dJointTypeFixed) then begin
+    ZeroMemory(@(result[0]), sizeof(result));
+    result[2] := 1; //TODO set the direction to the vector from one solid to the other
   end;
   //TODO more Joint types
 end;
