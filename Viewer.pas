@@ -25,6 +25,7 @@ type
     space: PdxSpace;
     contactgroup: TdJointGroupID;
     default_n_mu: double;
+    AirDensity: double;
 
     Environment: TSolid;
     Robots: TRobotList;
@@ -55,6 +56,8 @@ type
 
     procedure CreateHingeJoint(var Link: TSolidLink; Solid1, Solid2: TSolid;
       anchor_x, anchor_y, anchor_z, axis_x, axis_y, axis_z: double);
+    procedure SetHingeLimits(var Link: TSolidLink; LimitMin, LimitMax: double);
+
     procedure CreateBoxObstacle(var Obstacle: TSolid; sizeX, sizeY, sizeZ, posX, posY, posZ: double);
     procedure CreateShellBox(var Solid: TSolid; motherbody: PdxBody; posX, posY, posZ, L, W, H: double);
 
@@ -67,13 +70,12 @@ type
     procedure LoadIRSensorsFromXML(Robot: TRobot; const root: IXMLNode);
     //procedure LoadHumanoidJointsFromXML(Robot: TRobot; XMLFile: string);
     procedure LoadLinksFromXML(Robot: TRobot; const root: IXMLNode);
+
     procedure CreateUniversalJoint(var Link: TSolidLink; Solid1,
       Solid2: TSolid; anchor_x, anchor_y, anchor_z, axis_x, axis_y, axis_z,
       axis2_x, axis2_y, axis2_z: double);
     procedure SetUniversalLimits(var Link: TSolidLink; LimitMin, LimitMax,
       Limit2Min, Limit2Max: double);
-    procedure SetHingeLimits(var Link: TSolidLink; LimitMin,
-      LimitMax: double);
     procedure LoadSolidsFromXML(SolidList: TSolidList; const root: IXMLNode);
 //    procedure CreateBall(bmass, radius, posX, posY, posZ: double);
     procedure LoadWheelsFromXML(Robot: TRobot; const root: IXMLNode);
@@ -86,6 +88,7 @@ type
       LimitMax: double);
     procedure UpdatePickJoint;
     procedure LoadThingsFromXML(XMLFile: string);
+    procedure CreateFixedJoint(var Link: TSolidLink; Solid1,  Solid2: TSolid);
 //    procedure AxisGLCreate(axis: Taxis; aRadius, aHeight: double);
 //    procedure AxisGLSetPosition(axis: Taxis);
   public
@@ -255,14 +258,14 @@ begin
         dBodyVectorToWorld(b1, 0, 0, 1, n_fdir1);
         //n_fdir1 := Vector3Cross(contact[0].geom.normal, n_fdir1);
         //dNormalize3(n_fdir1);
-        n_mu2 := 2;
+        n_mu2 := 1;
         n_mu := 0.001;
     end else if (o2.data <> nil) and (TSolid(o2.data).kind = skOmniWheel) then begin
         n_mode := n_mode or cardinal(dContactMu2 or dContactFDir1);
         dBodyVectorToWorld(b2, 0, 0, 1, n_fdir1);
         //n_fdir1 := Vector3Cross(contact[0].geom.normal, n_fdir1);
         //dNormalize3(n_fdir1);
-        n_mu2 := 2;
+        n_mu2 := 1;
         n_mu := 0.001;
     end;
 
@@ -288,7 +291,6 @@ begin
         mu2 := n_mu2;
         contact[i].fdir1 := n_fdir1;
 
-        //soft_cfm := 0.2;
         soft_cfm := 0.001;
         bounce := 0.1;
         bounce_vel := 0.2;
@@ -399,6 +401,10 @@ begin
   dGeomSetBody(Solid.Geom, Solid.Body);
   Solid.Geom.data := Solid;
 
+  Solid.Volume := L * W * H;
+  Solid.Ax := W * H;
+  Solid.Ay := L * H;
+  Solid.Az := L * W;
 //  dBodySetDamping(Solid.Body, 1e-1, 1e-1);
 
   Solid.GLObj := TGLSceneObject(ODEScene.AddNewChild(TGLCube));
@@ -431,6 +437,7 @@ begin
   dGeomSetBody(Solid.Geom, Solid.Body);
   Solid.Geom.data := Solid;
 
+  Solid.Volume :=  Pi* sqr(c_radius) * c_length;
 //  dRFromAxisAndAngle(R,1,0,0,pi/2);
 //  dGeomSetOffsetRotation(Solid.Geom, R);
 //  dBodySetRotation(Solid.Body, R);
@@ -468,6 +475,7 @@ begin
   dGeomSetBody(Solid.Geom, Solid.Body);
   Solid.Geom.data := Solid;
 
+  Solid.Volume :=  4/3 * Pi * sqr(c_radius) * c_radius;
   Solid.GLObj := TGLSceneObject(ODEScene.AddNewChild(TGLSphere));
 
   with (Solid.GLObj as TGLSphere) do begin
@@ -620,6 +628,16 @@ procedure TWorld_ODE.SetSliderLimits(var Link: TSolidLink; LimitMin, LimitMax: d
 begin
   dJointSetSliderParam(Link.joint, dParamLoStop, LimitMin);
   dJointSetSliderParam(Link.joint, dParamHiStop, LimitMax);
+end;
+
+procedure TWorld_ODE.CreateFixedJoint(var Link: TSolidLink; Solid1, Solid2: TSolid);
+begin
+  Link.joint:= dJointCreateFixed(world, nil);
+  dJointAttach(Link.joint, Solid1.body, Solid2.body);
+  dJointSetFixed(Link.joint);
+
+//  dJointSetHingeParam (joint[idx], dParamStopERP, );
+//  dJointSetF Param(Link.joint, dParamStopCFM, 1e-5);
 end;
 
 
@@ -829,7 +847,7 @@ end;}
 procedure TWorld_ODE.LoadSolidsFromXML(SolidList: TSolidList; const root: IXMLNode);
 var bone, prop: IXMLNode;
     radius, sizeX, sizeY, sizeZ, posX, posY, posZ, angX, angY, angZ, mass: double;
-    BuoyantMass: double;
+    BuoyantMass, Drag: double;
     colorR, colorG, colorB: double;
     ID: string;
     R, Rx, Ry, Rz, Ryx: TdMatrix3;
@@ -847,6 +865,7 @@ begin
       // default values
       mass := 1;  ID := '-1';
       BuoyantMass := 0;
+      Drag := 0;
       radius := 1;
       sizeX := 1; sizeY := 1; sizeZ := 1;
       posX := 0; posY := 0; posZ := 0;
@@ -855,6 +874,9 @@ begin
       TextureName := ''; TextureScale := 1;
       descr := bone.NodeName + inttostr(SolidList.Count);
       while prop <> nil do begin
+        if prop.NodeName = 'drag' then begin
+          Drag := GetNodeAttrReal(prop, 'coefficient', Drag);
+        end;
         if prop.NodeName = 'buoyant' then begin
           BuoyantMass := GetNodeAttrReal(prop, 'mass', BuoyantMass);
         end;
@@ -915,8 +937,12 @@ begin
         end;
         if bone.NodeName = 'belt' then newBone.kind := skMotorBelt;
 
-        if BuoyantMass <> 0 then dBodySetGravityMode(newBone.Body, 0);
-        
+        newBone.BuoyantMass := BuoyantMass;
+        if BuoyantMass <> 0 then begin
+          dBodySetGravityMode(newBone.Body, 0);
+        end;
+        newBone.Drag := Drag;
+
         dRFromAxisAndAngle(Rz, 0, 0, 1, angZ);
         dRFromAxisAndAngle(Ry, 0, 1, 0, angY);
         dRFromAxisAndAngle(Rx, 1, 0, 0, angX);
@@ -1135,6 +1161,10 @@ begin
             if LinkType ='Slider' then begin
               CreateSliderJoint(newLink, Solid1, Solid2, axisX,axisY,axisZ);
               SetSliderLimits(newLink, LimitMin, LimitMax);
+            end;
+
+            if LinkType ='Fixed' then begin
+              CreateFixedJoint(newLink, Solid1, Solid2);
             end;
 
             if LinkType ='Universal' then begin
@@ -2004,6 +2034,7 @@ end;
 
 constructor TWorld_ODE.create;
 begin
+  AirDensity := 1.293; //kg/m3
   default_n_mu := 0.95;
   Ode_dt := 1/1000;
   TimeFactor := 1;
@@ -2423,7 +2454,7 @@ procedure TFViewer.GLCadencerProgress(Sender: TObject; const deltaTime, newTime:
 var theta, w, Tq: double;
     i, r: integer;
     t_start, t_end: int64;
-    v1, v2: TdVector3;
+    v1, v2, f1: TdVector3;
     txt: string;
     vs: TVector;
     Curpos: TPoint;
@@ -2484,23 +2515,23 @@ begin
             if Fparams.RGControlBlock.ItemIndex = 0 then begin
               if r = Fparams.LBRobots.ItemIndex then begin
                 for i := 0 to WorldODE.Robots[r].Wheels.Count-1 do begin
-                  RemControl.u[i] := Keyvals[i] * Wheels[i].Axle.Axis[0].Motor.Vmax;
-                  RemControl.Wref[i] := Keyvals[i]*30; //TODO: angular speed constant
+                  Wheels[i].Axle.Axis[0].ref.volts := Keyvals[i] * Wheels[i].Axle.Axis[0].Motor.Vmax;
+                  Wheels[i].Axle.Axis[0].ref.w := Keyvals[i]*30; //TODO: angular speed constant
                 end;
               end;
             end else if Fparams.RGControlBlock.ItemIndex = 1 then begin  // Script controller
               FEditor.RunOnce;
             end else if Fparams.RGControlBlock.ItemIndex = 2 then begin  // LAN controller
               Fparams.UDPServer.SendBuffer(Fparams.EditRemoteIP.Text, 9801, RemState, sizeof(RemState));
+              // Copy Remote Control values to Wheel Structs
+              for i := 0 to Wheels.Count-1 do begin
+                Wheels[i].Axle.Axis[0].ref.volts := RemControl.u[i];
+                Wheels[i].Axle.Axis[0].ref.w := RemControl.Wref[i];
+                //FParams.Edit4.Text := inttostr(round(WorldODE.Robots[r].Wheels[i].Axle.Axis.ref.volts));
+              end;
             end;
             //Sleep(1);
 
-            // Copy Remote Control values to Wheel Structs
-            for i := 0 to Wheels.Count-1 do begin
-              Wheels[i].Axle.Axis[0].ref.volts := RemControl.u[i];
-              Wheels[i].Axle.Axis[0].ref.w := RemControl.Wref[i];
-              //FParams.Edit4.Text := inttostr(round(WorldODE.Robots[r].Wheels[i].Axle.Axis.ref.volts));
-            end;
 
             // Default Remote Control values is zero
             ZeroMemory(@RemControl,sizeof(RemControl));
@@ -2539,7 +2570,7 @@ begin
         end;
 
         // Robot Main Body extra Frictions
-        if (WorldODE.Robots[r].MainBody <> nil) and
+        {if (WorldODE.Robots[r].MainBody <> nil) and
            (WorldODE.Robots[r].MainBody.Body <> nil) then begin
           // Robot Body Linear Friction
           v2 := Vector3ScalarMul(WorldODE.Robots[r].MainBody.Body.lvel, -1e-2);
@@ -2548,6 +2579,43 @@ begin
           // Robot Body Angular Friction
           v1 := Vector3ScalarMul(WorldODE.Robots[r].MainBody.Body.avel, -1e-2);
           dBodyAddTorque(WorldODE.Robots[r].MainBody.Body, v1[0], v1[1], v1[2]);
+        end;}
+
+        // Drag
+        for i:=0 to WorldODE.Robots[r].Solids.Count-1 do begin
+          with WorldODE.Robots[r].Solids[i] do begin
+            if Drag <> 0 then begin
+               v1 := dBodyGetLinearVel(Body)^;
+               dBodyVectorFromWorld(Body, v1[0], v1[1], v1[2], v2);
+               v1[0] := -0.5 * WorldODE.AirDensity * v2[0] * abs(v2[0])* Ax * Drag;
+               v1[1] := -0.5 * WorldODE.AirDensity * v2[1] * abs(v2[1])* Ay * Drag;
+               v1[2] := -0.5 * WorldODE.AirDensity * v2[2] * abs(v2[2])* Az * Drag;
+               dBodyAddRelForce(Body, v1[0], v1[1], v1[2]);
+               //dBodyVectorToWorld(Body, v1[0], v1[1], v1[2], v2);
+               //dBodyAddForce(Body, -v2[0], -v2[1], -v2[2]);
+               v1 := dBodyGetAngularVel(Body)^;
+               dBodyVectorFromWorld(Body, v1[0], v1[1], v1[2], v2);
+               v1[0] := -0.5 * WorldODE.AirDensity * v2[0] * abs(v2[0])* Ax * Drag;
+               v1[1] := -0.5 * WorldODE.AirDensity * v2[1] * abs(v2[1])* Ay * Drag;
+               v1[2] := -0.5 * WorldODE.AirDensity * v2[2] * abs(v2[2])* Az * Drag;
+               dBodyAddRelTorque(Body, v1[0], v1[1], v1[2]);
+            end;
+          end;
+        end;
+
+        // Buoyancy
+        dWorldGetGravity(WorldODE.world, v1);
+        dNormalize3(v1);
+        for i:=0 to WorldODE.Robots[r].Solids.Count-1 do begin
+          with WorldODE.Robots[r].Solids[i] do begin
+            if BuoyantMass <> 0 then begin
+               v2 := Vector3ScalarMul(v1, BuoyantMass);
+               //v2 := Vector3ScalarMul(v1, BuoyantMass * Volume);
+               //v2 := Vector3ScalarMul(v1, BuoyantMass );
+               //FParams.EditDebug3.text := format('%g',[Volume]);
+               dBodyAddForce(Body, v2[0], v2[1], v2[2]);
+            end;
+          end;
         end;
 
         // Reset IR sensors
@@ -2795,9 +2863,13 @@ end;
 // Sensores sem ser num robot
 // Zona morta no PID
 // PDI para controlar o robot
-// alternate globject
 // Calcular centro de gravidade
 // -Passadeiras- (falta controlar a aceleração delas, falta uma textura ou tecnica que indique o movimento)
 // Controlo integral na realimentaçao de estado
 // Materiais { surface }
 // Surfaces
+// Drag
+// Thrusters
+// alternate globject
+
+

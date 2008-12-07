@@ -9,6 +9,8 @@
     <body file='Bioloid2.xml'/>
   </robot>-->
 
+
+<!--
   <robot>
     <ID name='arm'/>
     <pos x='0' y='0' z='0.5'/>
@@ -25,8 +27,6 @@
 
     <body file='Belt.xml'/>
   </robot>
-
-<!--
   <robot>
     <ID name="Maneta" />
     <pos x="2" y="-1" z="0.5" />
@@ -34,13 +34,6 @@
     <body file="Maneta1.xml" />
   </robot>
 
-  <robot>
-    <ID name='SubZero'/>
-    <pos x='1.5' y='0' z='0.5'/>
-    <rot_deg x='0' y='0' z='0'/>
-
-    <body file='Bioloid2.xml'/>
-  </robot>
 
   <robot>
     <ID name='SubZero'/>
@@ -58,13 +51,6 @@
     <body file='Bioloid2.xml'/>
   </robot>
 -->
-  <robot>
-    <ID name='Omni3'/>
-    <pos x='0' y='0' z='0'/>
-    <rot_deg x='0' y='0' z='0'/>
-
-    <body file='Omni3.xml'/>
-  </robot>
 
   <robot>
     <ID name='Classic'/>

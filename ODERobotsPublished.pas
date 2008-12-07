@@ -75,7 +75,12 @@ function GetRobotW(R: integer): double;
 
 function GetSolidX(R, i: integer): double;
 function GetSolidY(R, i: integer): double;
+function GetSolidZ(R, i: integer): double;
 function GetSolidTheta(R, i: integer): double;
+
+function GetSolidVx(R, i: integer): double;
+function GetSolidVy(R, i: integer): double;
+function GetSolidVz(R, i: integer): double;
 
 function GetAxisOdo(R, i: integer): integer;
 
@@ -112,6 +117,7 @@ procedure SetAxisSpring(R, i: integer; k, ZeroPos: double);
 procedure SetAxisStateRef(R, i: integer; aState: TAxisState);
 procedure SetAxisPosRef(R, i: integer; aPos: double);
 procedure SetAxisSpeedRef(R, i: integer; aSpeed: double);
+procedure SetAxisVoltageRef(R, i: integer; aVoltage: double);
 
 function GetAxisPosDeg(R, i: integer): double;
 function GetAxisSpeedDeg(R, i: integer): double;
@@ -403,6 +409,17 @@ begin
   end;
 end;
 
+function GetSolidZ(R, i: integer): double;
+var v1: TdVector3;
+begin
+  result := 0;
+  with WorldODE.Robots[R].Solids[i] do begin
+    if Body = nil then exit;
+    v1 := dBodyGetPosition(Body)^;
+    Result := v1[2];
+  end;
+end;
+
 function GetSolidTheta(R, i: integer): double;
 var v1, v2: TdVector3;
 begin
@@ -412,6 +429,40 @@ begin
     v1 := dBodyGetPosition(Body)^;
     dBodyGetRelPointPos(Body, 1,0,0, v2);
     Result := atan2(v2[1]-v1[1], v2[0]-v1[0]);
+  end;
+end;
+
+function GetSolidVx(R, i: integer): double;
+var v1: TdVector3;
+begin
+  result := 0;
+  with WorldODE.Robots[R].Solids[i] do begin
+    if Body = nil then exit;
+    v1 := dBodyGetLinearVel(Body)^;
+    Result := v1[0];
+  end;
+end;
+
+
+function GetSolidVy(R, i: integer): double;
+var v1: TdVector3;
+begin
+  result := 0;
+  with WorldODE.Robots[R].Solids[i] do begin
+    if Body = nil then exit;
+    v1 := dBodyGetLinearVel(Body)^;
+    Result := v1[1];
+  end;
+end;
+
+function GetSolidVz(R, i: integer): double;
+var v1: TdVector3;
+begin
+  result := 0;
+  with WorldODE.Robots[R].Solids[i] do begin
+    if Body = nil then exit;
+    v1 := dBodyGetLinearVel(Body)^;
+    Result := v1[2];
   end;
 end;
 
@@ -590,6 +641,11 @@ end;
 procedure SetAxisSpeedRef(R, i: integer; aSpeed: double);
 begin
   WorldODE.Robots[r].Axes[i].ref.w := aSpeed;
+end;
+
+procedure SetAxisVoltageRef(R, i: integer; aVoltage: double);
+begin
+  WorldODE.Robots[r].Axes[i].ref.volts := aVoltage;
 end;
 
 

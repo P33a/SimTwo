@@ -197,6 +197,8 @@ begin
     FillTreeViewItem(r, 0, 'x', @GetSolidX, node, tree);
     FillTreeViewItem(r, 0, 'y', @GetSolidY, node, tree);
     FillTreeViewItem(r, 0, 'theta', @GetSolidTheta, node, tree);
+    FillTreeViewItem(r, 0, 'Vx', @GetSolidVx, node, tree);
+    FillTreeViewItem(r, 0, 'Vy', @GetSolidVy, node, tree);
 
     node:=AddChild(root,'Axes');
     node.Data:=nil;
