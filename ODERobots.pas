@@ -12,18 +12,18 @@ const
   //ODE world constants
   MAX_CONTACTS = 8;
 
-  //MaxWheels = 4;
-//  MaxIrSensors = 8;
   MaxJointSamples = 256;
   MaxKeyVals = 8;
   MaxAxis = 3;
 
 const MaxDim = 8;
 
-const
+{const
   skDefault   = 0;
   skOmniWheel = 1;
-  skMotorBelt = 2;
+  skMotorBelt = 2;}
+type
+  TSolidKind = (skDefault, skOmniWheel, skMotorBelt, skPropeller);
 
 type
   TControlMode = (cmPIDPosition, cmPIDSpeed, cmState);
@@ -53,7 +53,7 @@ type
   end;
 
   TMotor = record
-    Ri, Ki, Vmax, Imax: double;
+    Ri, Li, Ki, Vmax, Imax: double;
     Im: double;
     GearRatio: double;
     Encoder: TEncoder;
@@ -65,13 +65,12 @@ type
   TSolid = class
     Body: PdxBody;
     Geom : PdxGeom;
-    GLObj: TGLSceneObject;
-    kind: integer;
+    GLObj, AltGLObj: TGLSceneObject;
+    kind: TSolidKind;
     BeltSpeed: double;
     ParSurface, MaxParSurface : TdSurfaceParameters;
     ID: string;
     description: string;
-    //Buoyancy: TdVector3;
     BuoyantMass, Volume, Drag: double;
     Ax, Ay, Az: double;
     ZeroPosition: TdVector3;

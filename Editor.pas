@@ -145,10 +145,15 @@ type
     procedure FormLoad(ProjMemIni: TMemIniFile);
     procedure FormSave(ProjMemIni: TMemIniFile);
     procedure UpdateStatusLine;
+
+    function ReadComPort: string;
+    procedure WriteComPort(s: string);
   end;
+
 
 var
   FEditor: TFEditor;
+
 
 implementation
 
@@ -614,6 +619,11 @@ begin
   Sender.AddMethod(Self, @RotateAndTranslate, 'function RotateAndTranslate(var rx,ry: double; px,py,tx,ty,teta: double): double');
   Sender.AddMethod(Self, @RotateAroundPoint, 'function RotateAroundPoint(var rx,ry: double; px,py,cx,cy,teta: double): double');
   Sender.AddMethod(Self, @TFEditor.Writeln, 'procedure WriteLn(S: string)');
+  // Fuction with strig parameters work only in this case: as TFEditor members !!!???
+  Sender.AddMethod(Self, @TFEditor.ReadComPort, 'function ReadComPort: string;');
+  Sender.AddMethod(Self, @TFEditor.WriteComPort, 'procedure WriteComPort(s: string);');
+//function IsKeyDown(vk : TVirtualKeyCode) : Boolean;
+//  Sender.AddMethod(Self, @IsKeyDown, 'function IsKeyDown(c : Char) : Boolean');
 
 //  Sender.AddMethod(Self, @IsKeyDown, 'function IsKeyDown(c : Char) : Boolean');
 
@@ -864,6 +874,18 @@ begin
 //    ssoEntireScope, ssoSelectedOnly, ssoReplace, ssoReplaceAll, ssoPrompt);
 
 //  FindDialog.Options
+end;
+
+procedure TFEditor.WriteComPort(s: string);
+begin
+  FParams.ComPort.WriteStr(s);
+end;
+
+function TFEditor.ReadComPort: string;
+begin
+  with FParams.ComPort do begin
+    ReadStr(result, InputCount);
+  end;
 end;
 
 end.

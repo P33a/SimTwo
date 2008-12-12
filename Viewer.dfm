@@ -74,7 +74,8 @@ object FViewer: TFViewer
           item
             Caster = GLSphere_Ball
           end>
-        Options = [svoCacheSilhouettes, svoScissorClips, svoDesignVisible]
+        Capping = svcDefault
+        Options = [svoScissorClips]
         object GLSphere_Ball: TGLSphere
           Position.Coordinates = {00000000000000000000C03F0000803F}
           Visible = False
@@ -652,6 +653,10 @@ object FViewer: TFViewer
       Text = 'ObjectName'
       Alignment = taLeftJustify
       Layout = tlTop
+    end
+    object GLFreeFormTest: TGLFreeForm
+      Position.Coordinates = {00000000000000000000803F0000803F}
+      Scale.Coordinates = {CDCCCC3DCDCCCC3DCDCCCC3D00000000}
     end
     object GLCamera: TGLCamera
       DepthOfView = 1000.000000000000000000
@@ -9942,5 +9947,9 @@ object FViewer: TFViewer
       Caption = '&Editor'
       OnClick = MenuEditorClick
     end
+  end
+  object GLMaterialLibrary3ds: TGLMaterialLibrary
+    Left = 40
+    Top = 88
   end
 end
