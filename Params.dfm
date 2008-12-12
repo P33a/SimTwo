@@ -25,7 +25,7 @@ object FParams: TFParams
     Top = 0
     Width = 273
     Height = 621
-    ActivePage = TabDebug
+    ActivePage = TabPhysics
     Anchors = [akLeft, akTop, akBottom]
     TabOrder = 0
     object TabControl: TTabSheet
@@ -605,6 +605,24 @@ object FParams: TFParams
             Text = '127.0.0.1'
             OnChange = EditRemoteIPChange
           end
+          object CBGLObject: TCheckBox
+            Left = 8
+            Top = 4
+            Width = 97
+            Height = 17
+            Caption = 'GL Object'
+            Checked = True
+            State = cbChecked
+            TabOrder = 33
+          end
+          object CBAltGLObject: TCheckBox
+            Left = 120
+            Top = 4
+            Width = 97
+            Height = 17
+            Caption = 'Alt GL Object'
+            TabOrder = 34
+          end
         end
         object TabAxis: TTabSheet
           Caption = 'Axis'
@@ -1172,6 +1190,76 @@ object FParams: TFParams
         Text = '1'
       end
     end
+    object TabIO: TTabSheet
+      Caption = 'I/O'
+      ImageIndex = 4
+      object Panel1: TPanel
+        Left = 0
+        Top = 4
+        Width = 265
+        Height = 89
+        Alignment = taLeftJustify
+        BevelOuter = bvLowered
+        TabOrder = 0
+        object Label45: TLabel
+          Left = 8
+          Top = 9
+          Width = 48
+          Height = 13
+          Caption = 'Com Port:'
+        end
+        object BComConf: TButton
+          Left = 188
+          Top = 6
+          Width = 69
+          Height = 21
+          Caption = 'Configure'
+          TabOrder = 0
+          OnClick = BComConfClick
+        end
+        object CBComOpen: TCheckBox
+          Left = 64
+          Top = 8
+          Width = 45
+          Height = 17
+          Caption = 'Open'
+          TabOrder = 1
+          OnClick = CBComOpenClick
+        end
+        object BComWrite: TButton
+          Left = 8
+          Top = 34
+          Width = 44
+          Height = 21
+          Caption = 'Write'
+          TabOrder = 2
+          OnClick = BComWriteClick
+        end
+        object BComRead: TButton
+          Left = 8
+          Top = 62
+          Width = 44
+          Height = 21
+          Caption = 'Read'
+          TabOrder = 3
+          OnClick = BComReadClick
+        end
+        object EditComRead: TEdit
+          Left = 64
+          Top = 62
+          Width = 197
+          Height = 21
+          TabOrder = 4
+        end
+        object EditComWrite: TEdit
+          Left = 64
+          Top = 34
+          Width = 197
+          Height = 21
+          TabOrder = 5
+        end
+      end
+    end
   end
   object EditDebug: TEdit
     Left = 4
@@ -1187,7 +1275,6 @@ object FParams: TFParams
     DefaultPort = 9800
     OnUDPRead = UDPServerUDPRead
     Left = 240
-    Top = 4
   end
   object FormStorage: TFormStorage
     IniSection = 'Config'
@@ -1218,5 +1305,20 @@ object FParams: TFParams
     StoredValues = <>
     Left = 236
     Top = 60
+  end
+  object ComPort: TComPort
+    BaudRate = br115200
+    Port = 'COM1'
+    Parity.Bits = prNone
+    StopBits = sbOneStopBit
+    DataBits = dbEight
+    Events = []
+    FlowControl.OutCTSFlow = False
+    FlowControl.OutDSRFlow = False
+    FlowControl.ControlDTR = dtrDisable
+    FlowControl.ControlRTS = rtsDisable
+    FlowControl.XonXoffOut = False
+    FlowControl.XonXoffIn = False
+    Left = 208
   end
 end

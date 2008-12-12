@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls, ExtCtrls, GLWin32Viewer, GLcontext, Math,
   IdBaseComponent, IdComponent, IdUDPBase, IdUDPServer, IdSocketHandle, ODERobots, OdeImport,
-  rxPlacemnt, Grids, GLCadencer;
+  rxPlacemnt, Grids, GLCadencer, CPort;
 
 type
   TFParams = class(TForm)
@@ -151,6 +151,18 @@ type
     EditGridY: TEdit;
     EditGridZ: TEdit;
     BSGConfSet: TButton;
+    CBGLObject: TCheckBox;
+    CBAltGLObject: TCheckBox;
+    ComPort: TComPort;
+    TabIO: TTabSheet;
+    Panel1: TPanel;
+    Label45: TLabel;
+    BComConf: TButton;
+    CBComOpen: TCheckBox;
+    BComWrite: TButton;
+    BComRead: TButton;
+    EditComRead: TEdit;
+    EditComWrite: TEdit;
     procedure CBShadowsClick(Sender: TObject);
     procedure CBVsyncClick(Sender: TObject);
     procedure BSetFPSClick(Sender: TObject);
@@ -188,6 +200,10 @@ type
     procedure SGConfDblClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure EditGridKeyPress(Sender: TObject; var Key: Char);
+    procedure BComConfClick(Sender: TObject);
+    procedure CBComOpenClick(Sender: TObject);
+    procedure BComReadClick(Sender: TObject);
+    procedure BComWriteClick(Sender: TObject);
   private
     procedure FillEditArray(ProtoName: string;
       var EditArray: array of TEdit);
@@ -206,15 +222,17 @@ type
 //    procedure ShowIRValues;
   end;
 
+
 var
   FParams: TFParams;
   dt: double;
+
 
 implementation
 
 {$R *.dfm}
 
-uses Viewer, Editor, FastChart, ODERobotsPublished, WayPointsEdit, ProjConfig, utils;
+uses JPeg, GLFile3DS, Viewer, Editor, FastChart, ODERobotsPublished, WayPointsEdit, ProjConfig, utils;
 
 procedure TFParams.BSetFPSClick(Sender: TObject);
 var fps: integer;
@@ -545,6 +563,8 @@ begin
       SGJoints.Cells[1,i+1] := Axes[i].ParentLink.description;
     end;
   end;
+  // Update Robot Tab
+  
 end;
 
 procedure TFParams.BFreezeClick(Sender: TObject);
@@ -737,6 +757,67 @@ procedure TFParams.EditGridKeyPress(Sender: TObject; var Key: Char);
 begin
 //  EditGridX.Text := inttostr(ord(key));
   if key = #13 then BSGConfSetClick(FParams);
+end;
+
+procedure TFParams.BComConfClick(Sender: TObject);
+begin
+  ComPort.ShowSetupDialog;
+end;
+
+procedure TFParams.CBComOpenClick(Sender: TObject);
+begin
+  if CBComOpen.Checked then begin
+    if not ComPort.Connected then begin
+      try
+        ComPort.open;
+      except
+        on E: exception do begin
+          CBComOpen.Checked := false;
+          showmessage(E.Message);
+        end;
+      end;
+    end;
+  end else begin
+    ComPort.Close;
+  end;
+end;
+
+
+function ReadComPort: string;
+begin
+  with FParams.ComPort do begin
+    try
+      ReadStr(result, InputCount);
+    except
+      on E: exception do begin
+        showmessage(E.Message);
+      end;
+    end;
+  end;
+end;
+
+
+procedure WriteComPort(s: string);
+begin
+  try
+    FParams.ComPort.WriteStr(s);
+    //FParams.EditComRead.Text := s;
+  except
+    on E: exception do begin
+      showmessage(E.Message);
+    end;
+  end;
+end;
+
+
+procedure TFParams.BComReadClick(Sender: TObject);
+begin
+  EditComRead.Text := ReadComPort;
+end;
+
+procedure TFParams.BComWriteClick(Sender: TObject);
+begin
+  WriteComPort(EditComWrite.Text);
 end;
 
 end.

@@ -8,7 +8,7 @@ uses
   GLShadowPlane, VectorGeometry, GLGeomObjects, ExtCtrls, ComCtrls,
   GLBitmapFont, GLWindowsFont, keyboard, GLTexture, math, GLSpaceText, Remote,
   GLShadowVolume, GLSkydome, GLGraph, OmniXML, OmniXMLUtils, Contnrs, ODERobots,
-  rxPlacemnt, ProjConfig, GLHUDObjects, Menus;
+  rxPlacemnt, ProjConfig, GLHUDObjects, Menus, GLVectorFileObjects;
 
 type
   TRGBfloat = record
@@ -137,6 +137,8 @@ type
     MenuConfig: TMenuItem;
     MenuChart: TMenuItem;
     MenuEditor: TMenuItem;
+    GLMaterialLibrary3ds: TGLMaterialLibrary;
+    GLFreeFormTest: TGLFreeForm;
     procedure FormCreate(Sender: TObject);
     procedure GLSceneViewerMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -171,6 +173,8 @@ type
 procedure ReadFrictionFromXMLNode(var Friction: TFriction; const prop: IXMLNode);
 procedure ReadSpringFromXMLNode(var Spring: TSpring; const prop: IXMLNode);
 procedure ReadMotorFromXMLNode(var Motor: TMotor; const prop: IXMLNode);
+
+procedure RFromZYXRotRel(var R: TdMatrix3; angX, angY, angZ: TDreal);
 
 var
   FViewer: TFViewer;
@@ -300,6 +304,18 @@ begin
       dJointAttach(c, dGeomGetBody(contact[i].geom.g1), dGeomGetBody(contact[i].geom.g2));
     end;
   end;
+end;
+
+
+procedure RFromZYXRotRel(var R: TdMatrix3; angX, angY, angZ: TDreal);
+var Rx, Ry, Rz, Ryx: TdMatrix3;
+begin
+  dRFromAxisAndAngle(Rz, 0, 0, 1, angZ);
+  dRFromAxisAndAngle(Ry, 0, 1, 0, angY);
+  dRFromAxisAndAngle(Rx, 1, 0, 0, angX);
+
+  dMULTIPLY0_333(Ryx, Ry, Rx);
+  dMULTIPLY0_333(R, Rz, Ryx);
 end;
 
 
@@ -661,9 +677,7 @@ begin
   dJointSetUniversalParam(Link.joint, dParamHiStop, DegToRad(LimitMax));
 
   dJointSetUniversalParam(Link.joint, dParamLoStop2, DegToRad(Limit2Min));
-
   dJointSetUniversalParam(Link.joint, dParamHiStop2, DegToRad(Limit2Max));
-
 end;
 
 procedure TWorld_ODE.CreatePickJoint(Solid: TSolid; anchor_x, anchor_y, anchor_z: double);
@@ -850,20 +864,24 @@ var bone, prop: IXMLNode;
     BuoyantMass, Drag: double;
     colorR, colorG, colorB: double;
     ID: string;
-    R, Rx, Ry, Rz, Ryx: TdMatrix3;
+    R: TdMatrix3;
     newBone: TSolid;
     descr: string;
     TextureName: string;
     TextureScale: double;
+    MeshFile: string;
+    MeshScale: double;
 begin
   if root = nil then exit;
 
   bone := root.FirstChild;
   while bone <> nil do begin
-    if pos(bone.NodeName, 'cuboid, cylinder, sphere, belt') <> 0 then begin // 'bone'
+    if pos(bone.NodeName, 'cuboid, cylinder, sphere, belt, propeller') <> 0 then begin // 'bone'
       prop := bone.FirstChild;
       // default values
       mass := 1;  ID := '-1';
+      MeshFile := '';
+      MeshScale := 1;
       BuoyantMass := 0;
       Drag := 0;
       radius := 1;
@@ -874,6 +892,10 @@ begin
       TextureName := ''; TextureScale := 1;
       descr := bone.NodeName + inttostr(SolidList.Count);
       while prop <> nil do begin
+        if prop.NodeName = 'mesh' then begin
+          MeshFile := GetNodeAttrStr(prop, 'file', MeshFile);
+          MeshScale := GetNodeAttrReal(prop, 'scale', MeshScale);
+        end;
         if prop.NodeName = 'drag' then begin
           Drag := GetNodeAttrReal(prop, 'coefficient', Drag);
         end;
@@ -925,7 +947,7 @@ begin
         SolidList.Add(newBone);
         newBone.ID := ID;
         newBone.description := descr;
-        if (bone.NodeName = 'cuboid') or (bone.NodeName = 'belt') then begin
+        if (bone.NodeName = 'cuboid') or (bone.NodeName = 'belt') or (bone.NodeName = 'propeller')then begin
           CreateSolidBox(newBone, mass, posX, posY, posZ, sizeX, sizeY, sizeZ);
         end else if bone.NodeName = 'sphere' then begin
           CreateSolidBall(newBone, mass, posX, posY, posZ, radius);
@@ -936,6 +958,22 @@ begin
           end;
         end;
         if bone.NodeName = 'belt' then newBone.kind := skMotorBelt;
+        if bone.NodeName = 'propeller' then newBone.kind := skPropeller;
+
+        if MeshFile <> '' then begin
+
+          newBone.AltGLObj := TGLSceneObject(ODEScene.AddNewChild(TGLFreeForm));
+          with (newBone.AltGLObj as TGLFreeForm) do begin
+            TagObject := newBone;
+            MaterialLibrary := FViewer.GLMaterialLibrary3ds;
+            LoadFromFile(MeshFile);
+            Scale.x := MeshScale;
+            Scale.y := MeshScale;
+            Scale.z := MeshScale;
+          end;
+          PositionSceneObject(newBone.AltGLObj, newBone.Geom);
+          (OdeScene as TGLShadowVolume).Occluders.AddCaster(newBone.AltGLObj);
+        end;
 
         newBone.BuoyantMass := BuoyantMass;
         if BuoyantMass <> 0 then begin
@@ -943,14 +981,9 @@ begin
         end;
         newBone.Drag := Drag;
 
-        dRFromAxisAndAngle(Rz, 0, 0, 1, angZ);
-        dRFromAxisAndAngle(Ry, 0, 1, 0, angY);
-        dRFromAxisAndAngle(Rx, 1, 0, 0, angX);
-
-        dMULTIPLY0_333(Ryx, Ry, Rx);
-        dMULTIPLY0_333(R, Rz, Ryx);
-
+        RFromZYXRotRel(R, angX, angY, AngZ);
         dBodySetRotation(newBone.Body, R);
+
         newBone.SetZeroState();
         newBone.SetColor(colorR, colorG, colorB);
         //PositionSceneObject(newBone.GLObj, newBone.Geom);
@@ -988,7 +1021,7 @@ var JointNode, prop: IXMLNode;
     Limit2Min, Limit2Max: double;
     LinkBody1, LinkBody2: string;
     LinkType: string;
-    colorR, colorG, colorB: double;
+    //colorR, colorG, colorB: double;
     SolidIndex1, SolidIndex2: integer;
     Solid1, Solid2: TSolid;
     i: integer;
@@ -1012,7 +1045,8 @@ begin
     Encoder.PPR := 1000;
     Encoder.NoiseMean := 0;
     Encoder.NoiseStDev := -1;
-    Ri := 0.3;
+    Ri := 1;
+    Li := 0;
     Ki := 1.4e-2;
     Imax := 4;
     Vmax := 24;
@@ -1053,13 +1087,13 @@ begin
       axisX := 1; axisY := 0; axisZ := 0;
       axis2X := 0; axis2Y := 0; axis2Z := 1;
       aGL := DefaGL;
-      LimitMin:= 0; LimitMax := 0;
-      Limit2Min:= 0; Limit2Max := 0;
+      LimitMin:= -360; LimitMax := 360;
+      Limit2Min:= -360; Limit2Max := 360;
       LinkBody1 := '-1'; LinkBody2 := '-1';
       LinkType :=' ';
       descr := '';
       IDvalue := '-1';
-      colorR := 128/255; colorG := 128/255; colorB := 128/255;
+      //colorR := 128/255; colorG := 128/255; colorB := 128/255;
       newLink := nil;
       motor := DefMotor;
       Friction := DefFriction;
@@ -1099,11 +1133,11 @@ begin
           aGL.height := GetNodeAttrReal(prop, 'height', aGL.height);
           aGL.Color := StrToIntDef('$'+GetNodeAttrStr(prop, 'rgb24', inttohex(aGL.color,6)), aGL.color);
         end;
-        if prop.NodeName = 'color_rgb' then begin
+        {if prop.NodeName = 'color_rgb' then begin
           colorR := GetNodeAttrInt(prop, 'r', 128)/255;
           colorG := GetNodeAttrInt(prop, 'g', 128)/255;
           colorB := GetNodeAttrInt(prop, 'b', 128)/255;
-        end;
+        end;}
         if prop.NodeName = 'type' then begin
           LinkType := GetNodeAttrStr(prop, 'value', LinkType);
         end;
@@ -1390,7 +1424,7 @@ var XML: IXMLDocument;
     root, obstacle, prop: IXMLNode;
     sizeX, sizeY, sizeZ, posX, posY, posZ, angX, angY, angZ: double;
     colorR, colorG, colorB: double;
-    R, Rx, Ry, Rz, Ryx: TdMatrix3;
+    R: TdMatrix3;
     NewObstacle: TSolid;
 begin
 {  XML:=CreateXMLDoc;
@@ -1442,14 +1476,9 @@ begin
       NewObstacle.description := format('Obstacle at (%.1f, %.1f, %.1f)',[posX, posY, posZ]);
       CreateBoxObstacle(NewObstacle, sizeX, sizeY, sizeZ, posX, posY, posZ);
 
-      dRFromAxisAndAngle(Rz, 0, 0, 1, angZ);
-      dRFromAxisAndAngle(Ry, 0, 1, 0, angY);
-      dRFromAxisAndAngle(Rx, 1, 0, 0, angX);
-
-      dMULTIPLY0_333(Ryx, Ry, Rx);
-      dMULTIPLY0_333(R, Rz, Ryx);
-
+      RFromZYXRotRel(R, angX, angY, AngZ);
       dGeomSetRotation(NewObstacle.Geom, R);
+
       NewObstacle.SetColor(colorR, colorG, colorB);
       PositionSceneObject(NewObstacle.GLObj, NewObstacle.Geom);
     end;
@@ -1465,7 +1494,7 @@ var sensor, prop: IXMLNode;
     SLen, SInitialWidth, SFinalWidth, posX, posY, posZ, angX, angY, angZ: double;
     Noise: TSensorNoise;
     colorR, colorG, colorB: double;
-    R, Rx, Ry, Rz, Ryx: TdMatrix3;
+    R: TdMatrix3;
     newIRSensor: TSensor;
 
     MotherSolidId: string;
@@ -1536,13 +1565,7 @@ begin
       end;
       CreateIRSensor(MotherSolid.Body, newIRSensor, posX, posY, posZ, angZ, SLen, SInitialWidth, SFinalWidth);
 
-      dRFromAxisAndAngle(Rz, 0, 0, 1, angZ);
-      dRFromAxisAndAngle(Ry, 0, 1, 0, angY + pi/2);
-      dRFromAxisAndAngle(Rx, 1, 0, 0, angX);
-
-      dMULTIPLY0_333(Ryx, Ry, Rx);
-      dMULTIPLY0_333(R, Rz, Ryx);
-
+      RFromZYXRotRel(R, angX, angY + pi/2, AngZ);
       dGeomSetOffsetRotation(newIRSensor.Geom, R);
       dGeomSetOffsetPosition(newIRSensor.Geom, posX, posY, posZ);
 
@@ -1582,6 +1605,7 @@ begin
   with Motor do begin
     if prop.NodeName = 'motor' then begin
       Ri := GetNodeAttrReal(prop, 'ri', Ri);
+      Li := GetNodeAttrReal(prop, 'li', Li);
       Ki := GetNodeAttrReal(prop, 'ki', Ki);
       Vmax := GetNodeAttrReal(prop, 'vmax', Vmax);
       Imax := GetNodeAttrReal(prop, 'imax', Imax);
@@ -1644,7 +1668,8 @@ begin
     Encoder.PPR := 1000;
     Encoder.NoiseMean := 0;
     Encoder.NoiseStDev := -1;
-    Ri := 0.3;
+    Ri := 1;
+    Li := 0;
     Ki := 1.4e-2;
     Imax := 4;
     Vmax := 24;
@@ -1763,7 +1788,7 @@ procedure TWorld_ODE.LoadShellsFromXML(Robot: TRobot; const root: IXMLNode);
 var ShellNode, prop: IXMLNode;
     sizeX, sizeY, sizeZ, posX, posY, posZ, angX, angY, angZ: double;
     colorR, colorG, colorB: double;
-    R, Rx, Ry, Rz, Ryx: TdMatrix3;
+    R: TdMatrix3;
     newShell: TSolid;
     MotherSolidId: string;
     MotherSolid: TSolid;
@@ -1820,13 +1845,7 @@ begin
       end;
       CreateShellBox(newShell, MotherSolid.Body, posX, posY, posZ, sizeX, sizeY, sizeZ);
 
-      dRFromAxisAndAngle(Rz, 0, 0, 1, angZ);
-      dRFromAxisAndAngle(Ry, 0, 1, 0, angY);
-      dRFromAxisAndAngle(Rx, 1, 0, 0, angX);
-
-      dMULTIPLY0_333(Ryx, Ry, Rx);
-      dMULTIPLY0_333(R, Rz, Ryx);
-
+      RFromZYXRotRel(R, angX, angY, AngZ);
       dGeomSetOffsetRotation(newShell.Geom, R);
 
       with newShell.GLObj as TGLCube do begin
@@ -1970,9 +1989,10 @@ end;
 
 function TWorld_ODE.LoadRobotFromXML(XMLFile: string): TRobot;
 var XML: IXMLDocument;
-    root, objNode, prop: IXMLNode;
+    root, objNode: IXMLNode;
     newRobot: TRobot;
     str: string;
+    //KeysUNom, KeysSpeedNom: double;
 begin
   result := nil;
 {  XML:=CreateXMLDoc;
@@ -2003,6 +2023,10 @@ begin
       else if lowercase(str)='humanoid' then newRobot.Kind := rkHumanoid
       else if lowercase(str)='belt' then newRobot.Kind := rkConveyorBelt;
     end;
+
+{    if objNode.NodeName = 'keycontrol' then begin
+      str := GetNodeAttr(objNode, 'u_nom', '');
+    end;}
 
     if objNode.NodeName = 'solids' then begin
       LoadSolidsFromXML(newRobot.Solids, objNode);
@@ -2173,8 +2197,6 @@ end;
 
 procedure TFViewer.GLSceneViewerMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
-var vs, CamPos, hitPoint: TVector;
-    hit: boolean;
 begin
   if [ssleft, ssCtrl] <= shift then begin
     GLScene.CurrentGLCamera.MoveAroundTarget(my-y,mx-x);
@@ -2218,8 +2240,8 @@ begin
   result := pick;
 end;
 
-procedure AxisTorqueModel(axis: TAxis; Theta, w: double; var T: double);
-var duty, Tq, old_Im: double;
+procedure AxisTorqueModel(axis: TAxis; Theta, w, dt: double; var T: double);
+var duty, Tq, old_Im, dI: double;
     max_delta_Im: double;
 begin
   max_delta_Im := 0.15; // A/ms
@@ -2261,10 +2283,31 @@ begin
 
       old_Im := Motor.Im;
       if Motor.Ri <> 0 then begin
-        Motor.Im := (Motor.voltage - w * Motor.GearRatio * Motor.Ki) / Motor.Ri;
+        if Motor.Li/Motor.Ri < dt then begin
+          Motor.Im := (Motor.voltage - w * Motor.GearRatio * Motor.Ki) / Motor.Ri;
+        end else begin
+          dI := dt / Motor.Li * (Motor.voltage - w * Motor.GearRatio * Motor.Ki - Motor.Ri* Motor.Im);
+          Motor.Im := Motor.Im + dI;
+        end;
       end else begin
-        Motor.Im := Motor.Imax;
+        if Motor.Li <> 0 then begin
+          dI := dt / Motor.Li * (Motor.voltage - w * Motor.GearRatio * Motor.Ki);
+          Motor.Im := Motor.Im + dI;
+        end else begin
+          Motor.Im := Motor.Imax;
+        end;
       end;
+
+{      if Motor.Li = 0 then begin
+        if Motor.Ri <> 0 then begin
+          Motor.Im := (Motor.voltage - w * Motor.GearRatio * Motor.Ki) / Motor.Ri;
+        end else begin
+          Motor.Im := Motor.Imax;
+        end;
+      end else begin
+        dI := dt / Motor.Li * (Motor.voltage - w * Motor.GearRatio * Motor.Ki - Motor.Ri* Motor.Im);
+        Motor.Im := Motor.Im + dI;
+      end;}
 
       if Motor.Im > old_Im + max_delta_Im then Motor.Im := old_Im + max_delta_Im;
       if Motor.Im < old_Im - max_delta_Im then Motor.Im := old_Im - max_delta_Im;
@@ -2349,12 +2392,12 @@ begin
           v := 1 / iv
         else continue;
         var_v := Noise.var_d * measure + Noise.var_k;
-        m := - Noise.gain / sqr(iv);
-        if m <> 0 then
-          var_dist := var_v / sqr(m)
-        else continue;
-
-        measure := measure + RandG(0, sqrt(var_dist));
+        //m := - Noise.gain / sqr(iv);
+        m := - Noise.gain * sqr(v);
+        if m <> 0 then begin
+          var_dist := var_v / sqr(m);
+          measure := measure + RandG(0, sqrt(var_dist));
+        end;
 
       end;
     end;
@@ -2422,9 +2465,14 @@ begin
 
         // Solids
         for i := 0 to Solids.Count-1 do begin
-          if Solids[i].GLObj = nil then continue;
-          PositionSceneObject(Solids[i].GLObj, Solids[i].Geom);
-          if Solids[i].GLObj is TGLCylinder then Solids[i].GLObj.pitch(90);
+          if Solids[i].GLObj <> nil then begin
+            PositionSceneObject(Solids[i].GLObj, Solids[i].Geom);
+            if Solids[i].GLObj is TGLCylinder then Solids[i].GLObj.pitch(90);
+          end;
+
+          if Solids[i].AltGLObj <> nil then begin
+            PositionSceneObject(Solids[i].AltGLObj, Solids[i].Geom);
+          end;
         end;
 
         // Axis
@@ -2454,8 +2502,8 @@ procedure TFViewer.GLCadencerProgress(Sender: TObject; const deltaTime, newTime:
 var theta, w, Tq: double;
     i, r: integer;
     t_start, t_end: int64;
-    v1, v2, f1: TdVector3;
-    txt: string;
+    v1, v2: TdVector3;
+//    txt: string;
     vs: TVector;
     Curpos: TPoint;
     newFixedTime: double;
@@ -2563,7 +2611,7 @@ begin
             w := Axes[i].GetSpeed();
 
             //AxisTorqueModel(Axes[i], Theta, Axes[i].filt_speed, Tq);
-            AxisTorqueModel(Axes[i], Theta, w, Tq);
+            AxisTorqueModel(Axes[i], Theta, w, WorldODE.Ode_dt ,Tq);
             // Apply it to the axis
             Axes[i].AddTorque(Tq);
           end;
@@ -2591,14 +2639,20 @@ begin
                v1[1] := -0.5 * WorldODE.AirDensity * v2[1] * abs(v2[1])* Ay * Drag;
                v1[2] := -0.5 * WorldODE.AirDensity * v2[2] * abs(v2[2])* Az * Drag;
                dBodyAddRelForce(Body, v1[0], v1[1], v1[2]);
-               //dBodyVectorToWorld(Body, v1[0], v1[1], v1[2], v2);
-               //dBodyAddForce(Body, -v2[0], -v2[1], -v2[2]);
+                  //dBodyVectorToWorld(Body, v1[0], v1[1], v1[2], v2);
+                  //dBodyAddForce(Body, -v2[0], -v2[1], -v2[2]);
                v1 := dBodyGetAngularVel(Body)^;
                dBodyVectorFromWorld(Body, v1[0], v1[1], v1[2], v2);
                v1[0] := -0.5 * WorldODE.AirDensity * v2[0] * abs(v2[0])* Ax * Drag;
                v1[1] := -0.5 * WorldODE.AirDensity * v2[1] * abs(v2[1])* Ay * Drag;
                v1[2] := -0.5 * WorldODE.AirDensity * v2[2] * abs(v2[2])* Az * Drag;
-               dBodyAddRelTorque(Body, v1[0], v1[1], v1[2]);
+
+               dBodyVectorToWorld(Body, v1[0], v1[1], v1[2], v2);
+               v2[0] := max(-100,min(100,v2[0]));
+               v2[1] := max(-100,min(100,v2[1]));
+               v2[2] := max(-100,min(100,v2[2]));
+               dBodyAddTorque(Body, v2[0], v2[1], v2[2]);
+               //dBodyAddRelTorque(Body, v1[0], v1[1], v1[2]);
             end;
           end;
         end;
@@ -2617,6 +2671,18 @@ begin
             end;
           end;
         end;
+
+        // Thrusters
+        for i:=0 to WorldODE.Robots[r].Solids.Count-1 do begin
+          with WorldODE.Robots[r].Solids[i] do begin
+            if kind = skPropeller then begin
+               v1 := dBodyGetAngularVel(Body)^;
+               dBodyVectorFromWorld(Body, v1[0], v1[1], v1[2], v2);
+               dBodyAddRelForce(Body, 0.01*v2[0], 0, 0);
+            end;
+          end;
+        end;
+
 
         // Reset IR sensors
         for i:=0 to WorldODE.Robots[r].IRSensors.Count-1 do begin
@@ -2667,11 +2733,6 @@ begin
     UpdateGLScene;
 
     // Update Camera Position
-   { if WorldODE.PickSolid <> nil then begin
-      GLDummyCamPosRel.MoveTo(GLShadowVolume);
-      GLDummyTargetCamRel.MoveTo(GLShadowVolume);
-    end;}
-
     UpdateCamPos(FParams.RGCamera.ItemIndex);
 
     with FParams do begin
@@ -2729,9 +2790,14 @@ procedure TFViewer.FormMouseWheel(Sender: TObject; Shift: TShiftState;
   WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
 begin
   //Mouse wheel zoom + -
-  GLScene.CurrentGLCamera.AdjustDistanceToTarget(Power(1.1, WheelDelta / 120));
-  GLDummyCamPos.Position := GLScene.CurrentGLCamera.Position;
-  UpdateCamPos(FParams.RGCamera.ItemIndex);
+  if (WorldODE.PickSolid = nil) or (WorldODE.PickJoint = nil ) then begin
+    GLScene.CurrentGLCamera.AdjustDistanceToTarget(Power(1.1, WheelDelta / 120));
+    GLDummyCamPos.Position := GLScene.CurrentGLCamera.Position;
+    UpdateCamPos(FParams.RGCamera.ItemIndex);
+  //Mouse wheel object distance + -
+  end else with WorldODE do begin
+    PickDist := PickDist * Power(1.1, WheelDelta / 120);
+  end;
 end;
 
 procedure TFViewer.FormShow(Sender: TObject);
@@ -2794,7 +2860,7 @@ end;
 end.
 
 
-
+{
 procedure TFMain.GLCadencerProgress(Sender: TObject; const deltaTime, newTime: Double);
 var acttime: Dword;
     dteta,droR,droL,dsR,dsL: double;
@@ -2854,7 +2920,7 @@ begin
     GLSceneViewer.ResetPerformanceMonitor;
     LastCadencerTime:=ActTime;
   end;
-end;
+end;}
 
 
 // TODO
@@ -2862,14 +2928,13 @@ end;
 // Things.xml e scriptable
 // Sensores sem ser num robot
 // Zona morta no PID
-// PDI para controlar o robot
 // Calcular centro de gravidade
 // -Passadeiras- (falta controlar a aceleração delas, falta uma textura ou tecnica que indique o movimento)
-// Controlo integral na realimentaçao de estado
 // Materiais { surface }
 // Surfaces
-// Drag
-// Thrusters
-// alternate globject
+// Thrusters + turbulence
+// alternate globject For TSolids only
+// world wind
+// Shell sphere
 
 
