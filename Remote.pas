@@ -35,7 +35,8 @@ type
   TRemControl = packed record
     U: packed array[0..MaxRemWheels-1] of single;
     Wref: packed array[0..MaxRemWheels-1] of single;
-    kick1, kick2, flags: byte;
+    num, kick1, kick2, flags: byte;
+    x,y,z,teta: single;
   end;
 
 

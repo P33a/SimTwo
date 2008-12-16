@@ -654,10 +654,6 @@ object FViewer: TFViewer
       Alignment = taLeftJustify
       Layout = tlTop
     end
-    object GLFreeFormTest: TGLFreeForm
-      Position.Coordinates = {00000000000000000000803F0000803F}
-      Scale.Coordinates = {CDCCCC3DCDCCCC3DCDCCCC3D00000000}
-    end
     object GLCamera: TGLCamera
       DepthOfView = 1000.000000000000000000
       FocalLength = 75.000000000000000000

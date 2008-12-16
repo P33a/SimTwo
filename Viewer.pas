@@ -35,7 +35,7 @@ type
     PickSolid: TSolid;
     PickJoint: TdJointID;
     PickPoint, TargetPickPoint: TVector;
-    PickDist: double;
+    PickDist, PickLinDamping, PickAngularDamping: double;
     TestBody: TSolid;
 
     ground_box : PdxGeom;
@@ -52,7 +52,7 @@ type
 
     procedure CreateSolidBox(var Solid: TSolid; bmass, posX, posY, posZ, L, W, H: double);
     procedure CreateSolidCylinder(var Solid: TSolid; cmass, posX, posY, posZ: double; c_radius, c_length: double);
-    procedure CreateSolidBall(var Solid: TSolid; bmass, posX, posY, posZ: double; c_radius: double);
+    procedure CreateSolidSphere(var Solid: TSolid; bmass, posX, posY, posZ: double; c_radius: double);
 
     procedure CreateHingeJoint(var Link: TSolidLink; Solid1, Solid2: TSolid;
       anchor_x, anchor_y, anchor_z, axis_x, axis_y, axis_z: double);
@@ -138,7 +138,6 @@ type
     MenuChart: TMenuItem;
     MenuEditor: TMenuItem;
     GLMaterialLibrary3ds: TGLMaterialLibrary;
-    GLFreeFormTest: TGLFreeForm;
     procedure FormCreate(Sender: TObject);
     procedure GLSceneViewerMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -196,7 +195,136 @@ uses ODEGL, Params, Editor, FastChart, RemoteControl, utils, StdCtrls;
 procedure nearCallback (data : pointer; o1, o2 : PdxGeom); cdecl;
 var
   i,n : integer;
-  b1, b2{, tmp} : PdxBody;
+  b1, b2: PdxBody;
+  c : TdJointID;
+  contact : array[0..MAX_CONTACTS-1] of TdContact;
+  n_mode: cardinal;
+  n_mu, n_mu2, n_soft_cfm, tmp: double;
+  n_fdir1 : TdVector3;
+  n_motion1: double;
+begin
+  //exit;
+  b1 := dGeomGetBody(o1);
+  b2 := dGeomGetBody(o2);
+  if assigned(b1) and assigned(b2) then begin
+    //exit without doing anything if the two bodies are connected by a joint
+    //if (dAreConnected(b1, b2)<>0) then exit;
+    if (dAreConnectedExcluding(b1, b2, dJointTypeContact)<>0) then exit;
+  end;
+  // do not collide static objects
+  if not assigned(b1) and not assigned(b2) then exit;
+
+  n := dCollide(o1, o2, MAX_CONTACTS, contact[0].geom, sizeof(TdContact));
+  if (n > 0) then  begin
+    //FParams.EditDEbug2.Text := '';
+    //if((dGeomGetClass(o1) = dRayClass) or (dGeomGetClass(o2) = dRayClass)) then begin
+    if dGeomGetClass(o1) = dRayClass then begin
+      if (o1.data <> nil) then begin
+        with TSensor(o1.data) do begin
+          pos := contact[0].geom.pos;
+          measure := min(measure, contact[0].geom.depth);
+          has_measure:= true;
+        end;
+      end;
+      //FParams.EditDEbug2.Text := format('%.2f, %.2f %.2f',[contact[0].geom.pos[0], contact[0].geom.pos[1], contact[0].geom.pos[2]]);;
+      exit;
+    end;
+    if dGeomGetClass(o2) = dRayClass then begin
+      if (o2.data <> nil) then begin
+        with TSensor(o2.data) do begin
+          pos := contact[0].geom.pos;
+          measure := min(measure, contact[0].geom.depth);
+          has_measure:= true;
+        end;
+      end;
+      exit;
+    end;
+
+    n_mode := dContactBounce or
+              dContactSoftCFM or
+              dContactApprox1;
+
+    n_mu := WorldODE.default_n_mu;
+    n_mu2 := n_mu;
+    n_soft_cfm := 0.001;
+
+    n_motion1 := 0;
+    if (o1.data <> nil) and (TSolid(o1.data).ParSurface.mode <> 0) then begin
+      n_mu := TSolid(o1.data).ParSurface.mu;
+      n_mu2 := TSolid(o1.data).ParSurface.mu2;
+      n_soft_cfm := TSolid(o1.data).ParSurface.soft_cfm;
+    end;
+    if (o2.data <> nil) and (TSolid(o2.data).ParSurface.mode <> 0) then begin
+      n_mu := sqrt(n_mu * TSolid(o2.data).ParSurface.mu);
+      n_mu2 := sqrt(n_mu2 * TSolid(o2.data).ParSurface.mu2);
+      n_soft_cfm := max(n_soft_cfm, TSolid(o2.data).ParSurface.soft_cfm);
+    end;
+
+
+    {if((dGeomGetClass(o1) = dSphereClass) and (dGeomGetClass(o2) <> dPlaneClass)) or
+      ((dGeomGetClass(o2) = dSphereClass) and (dGeomGetClass(o1) <> dPlaneClass)) then begin
+      //n_mode := 0.9;
+      n_mu2 := 0.0;
+      n_mu := 0.1;
+      zeromemory(@n_fdir1[0], sizeof(n_fdir1));
+    end else}
+
+    //FParams.EditDebug.Text := format('%d- %.2f %.2f %.2f',[n, n_fdir1[0], n_fdir1[1], n_fdir1[2]]);
+    if (o1.data <> nil) and (TSolid(o1.data).kind = skOmniWheel) then begin
+        n_mode := n_mode or cardinal(dContactMu2 or dContactFDir1);
+        dBodyVectorToWorld(b1, 0, 0, 1, n_fdir1);
+        //n_fdir1 := Vector3Cross(contact[0].geom.normal, n_fdir1);
+        //dNormalize3(n_fdir1);
+        tmp := n_mu2;
+        n_mu2 := n_mu;
+        n_mu := tmp; //0.001;
+    end else if (o2.data <> nil) and (TSolid(o2.data).kind = skOmniWheel) then begin
+        n_mode := n_mode or cardinal(dContactMu2 or dContactFDir1);
+        dBodyVectorToWorld(b2, 0, 0, 1, n_fdir1);
+        //n_fdir1 := Vector3Cross(contact[0].geom.normal, n_fdir1);
+        //dNormalize3(n_fdir1);
+        tmp := n_mu2;
+        n_mu2 := n_mu;
+        n_mu := tmp; //0.001;
+    end;
+
+    // Conveyor belt case
+    if (o1.data <> nil) and (TSolid(o1.data).kind = skMotorBelt) then begin
+        n_mode := n_mode or cardinal(dContactMu2 or dContactFDir1 or dContactMotion1);
+        dBodyVectorToWorld(b1, 1, 0, 0, n_fdir1);
+        n_mu2 := n_mu; //0.9
+        n_motion1 := TSolid(o1.data).BeltSpeed;
+    end else if (o2.data <> nil) and (TSolid(o2.data).kind = skMotorBelt) then begin
+        n_mode := n_mode or cardinal(dContactMu2 or dContactFDir1 or dContactMotion1);
+        dBodyVectorToWorld(b2, 1, 0, 0, n_fdir1);
+        n_mu2 := n_mu;
+        n_motion1 := TSolid(o2.data).BeltSpeed;
+    end;
+
+    for i := 0 to n-1 do begin
+      with contact[i].surface do begin
+        mode := n_mode;
+        mu := n_mu;
+        mu2 := n_mu2;
+        contact[i].fdir1 := n_fdir1;
+
+        //soft_cfm := 0.001;
+        soft_cfm := n_soft_cfm;
+        bounce := 0.6;
+        bounce_vel := 0.001;
+        motion1 := n_motion1;
+      end;
+      c := dJointCreateContact(WorldODE.world, WorldODE.contactgroup, @contact[i]);
+      dJointAttach(c, dGeomGetBody(contact[i].geom.g1), dGeomGetBody(contact[i].geom.g2));
+    end;
+  end;
+end;
+
+{
+procedure nearCallback (data : pointer; o1, o2 : PdxGeom); cdecl;
+var
+  i,n : integer;
+  b1, b2 : PdxBody;
   c : TdJointID;
   contact : array[0..MAX_CONTACTS-1] of TdContact;
   n_mode: cardinal;
@@ -305,8 +433,7 @@ begin
     end;
   end;
 end;
-
-
+}
 procedure RFromZYXRotRel(var R: TdMatrix3; angX, angY, angZ: TDreal);
 var Rx, Ry, Rz, Ryx: TdMatrix3;
 begin
@@ -421,6 +548,8 @@ begin
   Solid.Ax := W * H;
   Solid.Ay := L * H;
   Solid.Az := L * W;
+  dBodySetDamping(Solid.Body, Solid.StokesDrag, Solid.RollDrag); // TODO anisotripic rolldrag
+//  dBodySetDamping(Solid.Body, Solid.StokesDrag * (L + W + H), Solid.RollDrag * (L + W + H));
 //  dBodySetDamping(Solid.Body, 1e-1, 1e-1);
 
   Solid.GLObj := TGLSceneObject(ODEScene.AddNewChild(TGLCube));
@@ -454,6 +583,12 @@ begin
   Solid.Geom.data := Solid;
 
   Solid.Volume :=  Pi* sqr(c_radius) * c_length;
+  //TODO falta acertar ax, ay, az
+  Solid.Ax := 2 * c_radius * c_length;
+  Solid.Ay := 2 * c_radius * c_length;
+  Solid.Az := pi * sqr(c_radius);
+  dBodySetDamping(Solid.Body, Solid.StokesDrag, Solid.RollDrag); // TODO anisotripic drag
+//  dBodySetDamping(Solid.Body, Solid.StokesDrag * (c_radius + c_length), Solid.RollDrag * (c_radius + c_length));
 //  dRFromAxisAndAngle(R,1,0,0,pi/2);
 //  dGeomSetOffsetRotation(Solid.Geom, R);
 //  dBodySetRotation(Solid.Body, R);
@@ -477,7 +612,7 @@ begin
 end;
 
 
-procedure TWorld_ODE.CreateSolidBall(var Solid: TSolid; bmass, posX, posY, posZ, c_radius: double);
+procedure TWorld_ODE.CreateSolidSphere(var Solid: TSolid; bmass, posX, posY, posZ, c_radius: double);
 var m: TdMass;
 begin
   Solid.kind := skDefault;
@@ -492,7 +627,12 @@ begin
   Solid.Geom.data := Solid;
 
   Solid.Volume :=  4/3 * Pi * sqr(c_radius) * c_radius;
+  Solid.Ax := pi * sqr(c_radius);
+  Solid.Ay := pi * sqr(c_radius);
+  Solid.Az := pi * sqr(c_radius);
   Solid.GLObj := TGLSceneObject(ODEScene.AddNewChild(TGLSphere));
+  dBodySetDamping(Solid.Body, Solid.StokesDrag, Solid.RollDrag);
+//  dBodySetDamping(Solid.Body, Solid.StokesDrag * pi * sqr(c_radius), Solid.RollDrag * c_radius);
 
   with (Solid.GLObj as TGLSphere) do begin
     TagObject := Solid;
@@ -692,6 +832,8 @@ begin
 
   dJointAttach(PickJoint, Solid.body, nil);
   dJointSetBallAnchor(PickJoint, anchor_x, anchor_y, anchor_z);
+  PickLinDamping := dBodyGetLinearDamping(PickSolid.Body);
+  PickAngularDamping := dBodyGetAngularDamping(PickSolid.Body);
   dBodySetDamping(PickSolid.Body, 1e-2, 1e-1);
 //  JointGLCreate(idx);
 
@@ -742,7 +884,7 @@ begin
   //dJointAttach(PickJoint, nil, nil);
   if PickJoint <> nil then begin
     dJointDestroy(PickJoint);
-    dBodySetDamping(PickSolid.Body, 0, 0);
+    dBodySetDamping(PickSolid.Body, PickLinDamping, PickAngularDamping);
     PickJoint := nil;
     PickSolid := nil;
   end;
@@ -819,7 +961,13 @@ begin
   newTyre.MovePosition(Pars.offsetX, Pars.offsetY, Pars.offsetZ);
   newTyre.SetZeroState();
 
-  if Pars.omni then newTyre.kind := skOmniWheel;
+  if Pars.omni then begin
+    newTyre.kind := skOmniWheel;
+  end;
+  newTyre.ParSurface.mode := $FF;
+  newTyre.ParSurface.mu := Pars.Mu;
+  newTyre.ParSurface.mu2 := Pars.Mu2;
+  newTyre.ParSurface.soft_cfm := Pars.soft_cfm;
 
   newLink := TSolidLink.Create;
   Robot.Links.Add(newLink);
@@ -861,7 +1009,7 @@ end;}
 procedure TWorld_ODE.LoadSolidsFromXML(SolidList: TSolidList; const root: IXMLNode);
 var bone, prop: IXMLNode;
     radius, sizeX, sizeY, sizeZ, posX, posY, posZ, angX, angY, angZ, mass: double;
-    BuoyantMass, Drag: double;
+    BuoyantMass, Drag, StokesDrag, RollDrag: double;
     colorR, colorG, colorB: double;
     ID: string;
     R: TdMatrix3;
@@ -871,6 +1019,7 @@ var bone, prop: IXMLNode;
     TextureScale: double;
     MeshFile: string;
     MeshScale: double;
+    Surf: TdSurfaceParameters;
 begin
   if root = nil then exit;
 
@@ -883,7 +1032,7 @@ begin
       MeshFile := '';
       MeshScale := 1;
       BuoyantMass := 0;
-      Drag := 0;
+      Drag := 0; StokesDrag := 0; RollDrag := 0;
       radius := 1;
       sizeX := 1; sizeY := 1; sizeZ := 1;
       posX := 0; posY := 0; posZ := 0;
@@ -891,13 +1040,24 @@ begin
       colorR := 128/255; colorG := 128/255; colorB := 128/255;
       TextureName := ''; TextureScale := 1;
       descr := bone.NodeName + inttostr(SolidList.Count);
+      Surf.mu := -1; Surf.mu2 := -1;
+      Surf.bounce := 0; Surf.bounce_vel := 0;
       while prop <> nil do begin
+        if prop.NodeName = 'surface' then begin
+          Surf.mu := GetNodeAttrReal(prop, 'mu', Surf.mu);
+          Surf.mu2 := GetNodeAttrReal(prop, 'mu2', Surf.mu2);
+          Surf.soft_cfm := GetNodeAttrReal(prop, 'softness', Surf.soft_cfm);
+          Surf.bounce := GetNodeAttrReal(prop, 'bounce', Surf.bounce);
+          Surf.bounce_vel := GetNodeAttrReal(prop, 'bounce_tresh', Surf.bounce_vel);
+        end;
         if prop.NodeName = 'mesh' then begin
           MeshFile := GetNodeAttrStr(prop, 'file', MeshFile);
           MeshScale := GetNodeAttrReal(prop, 'scale', MeshScale);
         end;
         if prop.NodeName = 'drag' then begin
           Drag := GetNodeAttrReal(prop, 'coefficient', Drag);
+          StokesDrag := GetNodeAttrReal(prop, 'stokes', StokesDrag);
+          RollDrag := GetNodeAttrReal(prop, 'roll', RollDrag);
         end;
         if prop.NodeName = 'buoyant' then begin
           BuoyantMass := GetNodeAttrReal(prop, 'mass', BuoyantMass);
@@ -947,10 +1107,18 @@ begin
         SolidList.Add(newBone);
         newBone.ID := ID;
         newBone.description := descr;
+        newBone.BuoyantMass := BuoyantMass;
+        if BuoyantMass <> 0 then begin
+          dBodySetGravityMode(newBone.Body, 0);
+        end;
+        newBone.Drag := Drag;
+        newBone.StokesDrag := StokesDrag;
+        newBone.RollDrag := RollDrag;
+
         if (bone.NodeName = 'cuboid') or (bone.NodeName = 'belt') or (bone.NodeName = 'propeller')then begin
           CreateSolidBox(newBone, mass, posX, posY, posZ, sizeX, sizeY, sizeZ);
         end else if bone.NodeName = 'sphere' then begin
-          CreateSolidBall(newBone, mass, posX, posY, posZ, radius);
+          CreateSolidSphere(newBone, mass, posX, posY, posZ, radius);
         end else if bone.NodeName = 'cylinder' then begin
           CreateSolidCylinder(newBone, mass, posX, posY, posZ, sizeX, sizeZ);
           if TextureName <> '' then begin
@@ -975,12 +1143,15 @@ begin
           (OdeScene as TGLShadowVolume).Occluders.AddCaster(newBone.AltGLObj);
         end;
 
-        newBone.BuoyantMass := BuoyantMass;
-        if BuoyantMass <> 0 then begin
-          dBodySetGravityMode(newBone.Body, 0);
-        end;
-        newBone.Drag := Drag;
 
+        if Surf.mu >= 0 then begin
+          newBone.ParSurface.mode := $FF;
+          newBone.ParSurface.mu := Surf.mu;
+          if Surf.mu2 >= 0 then newBone.ParSurface.mu2 := Surf.mu2;
+          newBone.ParSurface.soft_cfm := Surf.soft_cfm;
+          newBone.ParSurface.bounce := Surf.bounce;
+          newBone.ParSurface.bounce_vel := Surf.bounce_vel;
+        end;
         RFromZYXRotRel(R, angX, angY, AngZ);
         dBodySetRotation(newBone.Body, R);
 
@@ -1660,6 +1831,9 @@ begin
     Width := 0.03;
     mass := 0.13;
     CenterDist := 0.2;
+    Mu := 1;
+    Mu2:= 0.001;
+    soft_cfm := 0.001;
     Omni := false;
   end;
 
@@ -1736,6 +1910,14 @@ begin
           Pars.Radius := GetNodeAttrReal(prop, 'radius', Pars.Radius);
           Pars.Width := GetNodeAttrReal(prop, 'width', Pars.Width);
           Pars.CenterDist := GetNodeAttrReal(prop, 'centerdist', Pars.CenterDist);
+          //Pars.Mu := GetNodeAttrReal(prop, 'mu', Pars.mu);
+          //Pars.Mu2 := GetNodeAttrReal(prop, 'mu2', Pars.mu2);
+        end;
+
+        if prop.NodeName = 'surface' then begin
+          Pars.Mu := GetNodeAttrReal(prop, 'mu', Pars.mu);
+          Pars.Mu2 := GetNodeAttrReal(prop, 'mu2', Pars.mu2);
+          Pars.soft_cfm := GetNodeAttrReal(prop, 'softness', Pars.soft_cfm);
         end;
 
         ReadFrictionFromXMLNode(Friction, prop);
@@ -1973,12 +2155,12 @@ begin
         prop := prop.NextSibling;
 
       end;
-      if (mass > 0) and (radius > 0) then begin
+      {if (mass > 0) and (radius > 0) then begin
         Thing := TSolid.Create;
         Things.Add(Thing);
         Thing.description := 'Ball';
-        CreateSolidBall(Thing, mass, posX, posY, posZ, radius);
-      end;
+        CreateSolidSphere(Thing, mass, posX, posY, posZ, radius);
+      end;}
     end;
 
     objNode := objNode.NextSibling;
@@ -2571,21 +2753,24 @@ begin
               FEditor.RunOnce;
             end else if Fparams.RGControlBlock.ItemIndex = 2 then begin  // LAN controller
               Fparams.UDPServer.SendBuffer(Fparams.EditRemoteIP.Text, 9801, RemState, sizeof(RemState));
+              // Test if A new position was requested
+              if RemControl.num = r+1 then begin
+                //if MainBody <> nil then begin
+                  SetXYZTeta(RemControl.x, RemControl.y, RemControl.z, RemControl.teta);
+                //end;
+              end;
               // Copy Remote Control values to Wheel Structs
               for i := 0 to Wheels.Count-1 do begin
                 Wheels[i].Axle.Axis[0].ref.volts := RemControl.u[i];
                 Wheels[i].Axle.Axis[0].ref.w := RemControl.Wref[i];
                 //FParams.Edit4.Text := inttostr(round(WorldODE.Robots[r].Wheels[i].Axle.Axis.ref.volts));
               end;
+              // Default Remote Control values is zero
+              ZeroMemory(@RemControl,sizeof(RemControl));
             end;
             //Sleep(1);
 
-
-            // Default Remote Control values is zero
-            ZeroMemory(@RemControl,sizeof(RemControl));
-
             Fparams.ShowRobotState;
-
 
             //FChart.AddPoint(WorldODE.physTime, RemControl.Vref[1], WorldODE.Robots[0].Wheels[0].Axle.Axis.Motor.Im,
              //                dJointGetHingeAngleRate(WorldODE.Robots[0].Wheels[0].Axle.joint)  );
@@ -2635,6 +2820,7 @@ begin
             if Drag <> 0 then begin
                v1 := dBodyGetLinearVel(Body)^;
                dBodyVectorFromWorld(Body, v1[0], v1[1], v1[2], v2);
+               // Air Drag
                v1[0] := -0.5 * WorldODE.AirDensity * v2[0] * abs(v2[0])* Ax * Drag;
                v1[1] := -0.5 * WorldODE.AirDensity * v2[1] * abs(v2[1])* Ay * Drag;
                v1[2] := -0.5 * WorldODE.AirDensity * v2[2] * abs(v2[2])* Az * Drag;
@@ -2925,16 +3111,13 @@ end;}
 
 // TODO
 // trails  (2D( height), 3D (offset), length, color, tolerance)
-// Things.xml e scriptable
-// Sensores sem ser num robot
+// Things scriptable
+// Sensores sem ser num robot  (???)
 // Zona morta no PID
 // Calcular centro de gravidade
 // -Passadeiras- (falta controlar a aceleração delas, falta uma textura ou tecnica que indique o movimento)
-// Materiais { surface }
-// Surfaces
 // Thrusters + turbulence
-// alternate globject For TSolids only
+// alternate globject {For TSolids only}
 // world wind
 // Shell sphere
-
-
+// Channels

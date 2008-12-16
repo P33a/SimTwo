@@ -82,6 +82,8 @@ function GetSolidVx(R, i: integer): double;
 function GetSolidVy(R, i: integer): double;
 function GetSolidVz(R, i: integer): double;
 
+function GetSensorVal(R, i: integer): double;
+
 function GetAxisOdo(R, i: integer): integer;
 
 function GetAxisState(R, i: integer): TAxisState;
@@ -577,6 +579,11 @@ begin
     v1 := dBodyGetLinearVel(Body)^;
     Result := v1[2];
   end;
+end;
+
+function GetSensorVal(R, i: integer): double;
+begin
+  result := WorldODE.Robots[r].IRSensors[i].measure;
 end;
 
 

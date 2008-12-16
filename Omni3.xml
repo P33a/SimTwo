@@ -19,6 +19,7 @@
     <default>
       <omni/>
       <tyre mass='0.8' radius='0.04' width='0.03' centerdist='0.09'/>
+      <surface mu='1' mu2='0.001'/>
       <axis angle='0'/>
       <motor ri='0.3' ki='2.4e-2' vmax='12' imax='4' active='1'/>
       <gear ratio='12'/>
