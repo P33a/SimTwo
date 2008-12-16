@@ -68,10 +68,10 @@ type
     GLObj, AltGLObj: TGLSceneObject;
     kind: TSolidKind;
     BeltSpeed: double;
-    ParSurface, MaxParSurface : TdSurfaceParameters;
+    ParSurface{, MaxParSurface} : TdSurfaceParameters;
     ID: string;
     description: string;
-    BuoyantMass, Volume, Drag: double;
+    BuoyantMass, Volume, Drag, StokesDrag, RollDrag: double;
     Ax, Ay, Az: double;
     ZeroPosition: TdVector3;
     ZeroRotation: TdMatrix3;
@@ -228,6 +228,7 @@ type
   TWheelPars = record
     offsetX, offsetY, offsetZ: double;
     Radius, Width, mass, CenterDist, Angle: double;
+    Mu, Mu2, soft_cfm: double;
     omni: boolean;
   end;
 

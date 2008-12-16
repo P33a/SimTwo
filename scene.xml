@@ -50,8 +50,6 @@
 
     <body file='Bioloid2.xml'/>
   </robot>
--->
-
   <robot>
     <ID name='Zeppelin'/>
     <pos x='0' y='-1' z='0.5'/>
@@ -59,22 +57,25 @@
 
     <body file='zeppelin.xml'/>
   </robot>
-
   <robot>
     <ID name='Classic'/>
     <pos x='0' y='-1' z='0'/>
     <rot_deg x='0' y='0' z='0'/>
 
     <body file='Differential4.xml'/>
-  </robot>
+  </robot>-->
 
-<!--  <robot>
+
+  <robot>
     <ID name='Omni3'/>
     <pos x='0' y='0' z='0'/>
     <rot_deg x='0' y='0' z='0'/>
 
     <body file='Omni3.xml'/>
   </robot>
+
+
+<!--  <robot>
 
   <robot>
     <ID name='SubZero'/>
@@ -115,15 +116,15 @@
 
     <body file='Belt.xml'/>
   </robot>
--->
-
-  <things file='things.xml'/>
-
   <ball>
     <radius value='0.1'/>
     <mass value='0.3'/>
     <pos x='1' y='1' z='1'/>
+    <surface mu='0'/>
   </ball>
+-->
+
+  <things file='things.xml'/>
 
   <obstacles file='obstacles.xml'/>
 

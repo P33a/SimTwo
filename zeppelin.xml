@@ -1,0 +1,173 @@
+<?xml version="1.0" ?>
+<robot>
+  <kind value='wheelchair'/>
+
+  <solids>
+    <cuboid>
+      <ID value='S1'/>
+      <mass value='0.8'/>
+      <size x='0.10' y='0.10' z='0.04'/>
+      <pos x='0' y='0' z='0.08'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='S2'/>
+      <mesh file='zeppelin16-2.3DS' scale='1'/>
+      <mass value='0.8'/>
+      <buoyant mass='-8.435'/>
+      <drag coefficient='50'/>
+      <size x='0.9' y='0.21' z='0.21'/>
+      <pos x='0' y='0' z='0.37'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='0'/>
+    </cuboid>
+
+    <propeller>
+      <ID value='P1'/>
+      <mass value='0.02'/>
+      <size x='0.005' y='0.005' z='0.03'/>
+      <pos x='0.051' y='0.07' z='0.08'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </propeller>
+
+    <propeller>
+      <ID value='P2'/>
+      <mass value='0.02'/>
+      <size x='0.005' y='0.005' z='0.03'/>
+      <pos x='0.051' y='-0.07' z='0.08'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </propeller>
+
+    <propeller>
+      <ID value='P3'/>
+      <mass value='0.02'/>
+      <size x='0.005' y='0.005' z='0.03'/>
+      <pos x='0.0' y='0.0' z='0.05'/>
+      <rot_deg x='0' y='90' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </propeller>
+<!--
+
+    <cuboid>
+      <ID value='2'/>
+      <mass value='0.8'/>
+      <size x='0.09' y='0.09' z='0.135'/>
+      <pos x='0' y='-0.4' z='0.08'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </cuboid>-->
+
+  </solids>
+
+
+<!--  <articulations>
+    <default>
+      <motor ri='0.5' ki='1.2e-3' vmax='9' imax='1' active='0'/>
+      <gear ratio='100'/>
+      <friction bv='1e-5' fc='1e-3' coulomblimit='1e-2'/>
+      <encoder ppr='1000' mean='0' stdev='0'/>
+      <controller mode='state' kp='20' ki='1' kd='0' kf='0.05' active='1' period='10'/>
+    </default>
+    <joint>
+      <ID value='0'/>
+      <axis x='0' y='1' z='0'/>
+      <connect B1='1' B2='2'/>
+      <limits Min='-1' Max='1'/>
+      <type value='Slider'/>
+      <desc Eng='test'/>
+    </joint>
+  </articulations> -->
+  <articulations>
+    <default>
+      <motor ri='10' li='0.05' ki='1.2e-3' vmax='9' imax='1' active='1'/>
+      <gear ratio='100'/>
+      <friction bv='1e-5' fc='1e-3' coulomblimit='1e-2'/>
+      <encoder ppr='1000' mean='0' stdev='0'/>
+      <controller mode='pidspeed' kp='20' ki='1' kd='0' kf='0.05' active='0' period='10'/>
+    </default>
+    <joint>
+      <ID value='F'/>
+      <connect B1='S1' B2='S2'/>
+      <type value='Fixed'/>
+      <desc Eng='fixed'/>
+    </joint>
+    <joint>
+      <ID value='JP1'/>
+      <pos x='0.051' y='0.07' z='0.08'/>
+      <axis x='1' y='0' z='0'/>
+      <connect B1='P1' B2='S1'/>
+      <type value='Hinge'/>
+      <desc Eng='hinge'/>
+    </joint>
+    <joint>
+      <ID value='JP2'/>
+      <pos x='0.051' y='-0.07' z='0.08'/>
+      <axis x='1' y='0' z='0'/>
+      <connect B1='P2' B2='S1'/>
+      <type value='Hinge'/>
+      <desc Eng='hinge'/>
+    </joint>
+    <joint>
+      <ID value='JP3'/>
+      <pos x='0.0' y='0' z='0'/>
+      <axis x='0' y='0' z='1'/>
+      <connect B1='P3' B2='S1'/>
+      <type value='Hinge'/>
+      <desc Eng='hinge'/>
+    </joint>
+
+  </articulations>
+
+  <shells>
+    <sphere>
+      <solid id='S3'/>
+      <size x='0.01' y='0.15' z='0.05'/>
+      <pos x='0.3' y='0' z='0'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+    </sphere>
+	
+    <cuboid>
+      <ID value='S4'/>
+      <size x='0.35' y='0.14' z='0.14'/>
+      <pos x='0' y='0.0' z='0.45'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </cuboid>
+    <cuboid>
+      <ID value='S5'/>
+      <size x='0.35' y='0.14' z='0.14'/>
+      <pos x='0' y='0' z='0.12'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </cuboid>
+    <cuboid>
+      <ID value='S6'/>
+      <size x='0.35' y='0.14' z='0.14'/>
+      <pos x='0' y='0.16' z='0.29'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </cuboid>
+    <cuboid>
+      <ID value='S7'/>
+      <size x='0.35' y='0.14' z='0.14'/>
+      <pos x='0' y='-0.16' z='0.29'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </cuboid>
+  </shells>
+<!--
+  <sensors>
+    <IRSharp>
+      <beam length='0.8' initial_width='0.01' final_width='0.015'/>
+      <pos x='0' y='-0.3' z='0'/>
+      <rot_deg x='0' y='0' z='-90'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </IRSharp>
+  </sensors>
+-->
+</robot>

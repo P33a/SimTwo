@@ -25,7 +25,7 @@ object FParams: TFParams
     Top = 0
     Width = 273
     Height = 621
-    ActivePage = TabPhysics
+    ActivePage = TabControl
     Anchors = [akLeft, akTop, akBottom]
     TabOrder = 0
     object TabControl: TTabSheet
@@ -147,7 +147,7 @@ object FParams: TFParams
         Top = 168
         Width = 261
         Height = 425
-        ActivePage = TabRobot
+        ActivePage = TabAxis
         Anchors = [akLeft, akTop, akBottom]
         TabOrder = 4
         object TabRobot: TTabSheet
@@ -633,13 +633,13 @@ object FParams: TFParams
           object Label38: TLabel
             Left = 0
             Top = 62
-            Width = 9
+            Width = 21
             Height = 13
-            Caption = 'q:'
+            Caption = 'Pos:'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
             Font.Height = -11
-            Font.Name = 'Symbol'
+            Font.Name = 'Tahoma'
             Font.Style = []
             ParentFont = False
           end
@@ -670,16 +670,16 @@ object FParams: TFParams
               35)
           end
           object EditJointTeta: TEdit
-            Left = 10
+            Left = 22
             Top = 58
-            Width = 45
+            Width = 41
             Height = 21
             TabOrder = 1
           end
           object EditJointTetaRef: TEdit
-            Left = 58
+            Left = 66
             Top = 58
-            Width = 45
+            Width = 41
             Height = 21
             TabOrder = 2
             Text = '0'
