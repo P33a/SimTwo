@@ -1108,9 +1108,6 @@ begin
         newBone.ID := ID;
         newBone.description := descr;
         newBone.BuoyantMass := BuoyantMass;
-        if BuoyantMass <> 0 then begin
-          dBodySetGravityMode(newBone.Body, 0);
-        end;
         newBone.Drag := Drag;
         newBone.StokesDrag := StokesDrag;
         newBone.RollDrag := RollDrag;
@@ -1124,6 +1121,9 @@ begin
           if TextureName <> '' then begin
             newBone.SetTexture(TextureName, TextureScale); //'LibMaterialFeup'
           end;
+        end;
+        if BuoyantMass <> 0 then begin
+          dBodySetGravityMode(newBone.Body, 0);
         end;
         if bone.NodeName = 'belt' then newBone.kind := skMotorBelt;
         if bone.NodeName = 'propeller' then newBone.kind := skPropeller;

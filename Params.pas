@@ -712,6 +712,8 @@ begin
     FViewer.GLDummyCamPos.Position.SetPoint(GetVectorFromGrid(SGConf, 'Camera.Position', FViewer.GLDummyCamPos.Position.AsAffineVector));
   end else if varname = 'Light.Position' then begin
     FViewer.GLLightSource.Position.SetPoint(GetVectorFromGrid(SGConf, 'Light.Position', FViewer.GLLightSource.Position.AsAffineVector));
+  end else if varname = 'Light.Attenuation' then begin
+    FViewer.GLLightSource.ConstAttenuation := GetFloatFromGrid(SGConf, 'Light.Attenuation', 1, FViewer.GLLightSource.ConstAttenuation);
   end;
 end;
 
@@ -723,6 +725,8 @@ begin
     WriteVectorToGrid(SGConf, 'Camera.Position', FViewer.GLDummyCamPos.Position.AsAffineVector);
   end else if varname = 'Light.Position' then begin
     WriteVectorToGrid(SGConf, 'Light.Position', FViewer.GLLightSource.Position.AsAffineVector);
+  end else if varname = 'Light.Attenuation' then begin
+    WriteFloatToGrid(SGConf, 'Light.Attenuation', 1, FViewer.GLLightSource.ConstAttenuation);
   end;
 end;
 

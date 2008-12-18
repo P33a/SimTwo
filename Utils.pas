@@ -9,6 +9,8 @@ procedure ParseString(s,sep: string; sl: TStrings);
 procedure LoadGridFromfile(SG: TStringGrid; fname: string);
 procedure SaveGridTofile(SG: TStringGrid; fname: string);
 procedure WriteVectorToGrid(SG: TStringGrid; vname: string; wval: TAffineVector);
+procedure WriteStringToGrid(SG: TStringGrid; vname: string; icol: longword; wval: string);
+procedure WriteFloatToGrid(SG: TStringGrid; vname: string; icol: longword; wval: double);
 
 function GetStringFromGrid(SG: TStringGrid; vname: string; icol: longword; defval: string = ''): string;
 function GetFloatFromGrid(SG: TStringGrid; vname: string; icol: longword; defval: Double = 0): Double;
@@ -157,11 +159,28 @@ begin
   end;
 end;
 
+procedure WriteStringToGrid(SG: TStringGrid; vname: string; icol: longword; wval: string);
+var i: integer;
+begin
+  if icol >= SG.ColCount then exit;
+  for i := 0  to SG.RowCount-1 do begin
+    if SG.Cells[0, i] = vname then begin
+      SG.Cells[icol, i] := wval;
+      exit;
+    end;
+  end;
+end;
+
+
+procedure WriteFloatToGrid(SG: TStringGrid; vname: string; icol: longword; wval: double);
+begin
+  WriteStringToGrid(SG, vname, icol, format('%.5g',[wval]));
+end;
 
 procedure WriteVectorToGrid(SG: TStringGrid; vname: string; wval: TAffineVector);
 var i: integer;
 begin
-  if 4 >= SG.RowCount then exit;
+  if 4 >= SG.ColCount then exit;
   for i := 0  to SG.RowCount-1 do begin
     if SG.Cells[0, i] = vname then begin
       SG.Cells[1, i] := format('%.5g',[wval[0]]);
@@ -177,7 +196,7 @@ function GetVectorFromGrid(SG: TStringGrid; vname: string; defval: TAffineVector
 var i: integer;
 begin
   result := defval;
-  if 4 >= SG.RowCount then exit;
+  if 4 >= SG.ColCount then exit;
   for i := 0  to SG.RowCount-1 do begin
     if SG.Cells[0, i] = vname then begin
       result[0] := strTofloatdef(SG.Cells[1, i], result[0]);
@@ -192,7 +211,7 @@ function GetStringFromGrid(SG: TStringGrid; vname: string; icol: longword; defva
 var i: integer;
 begin
   result := defval;
-  if integer(icol) >= SG.RowCount then exit;
+  if integer(icol) >= SG.ColCount then exit;
   for i := 0  to SG.RowCount-1 do begin
     if SG.Cells[0, i] = vname then begin
       result := SG.Cells[icol, i];
