@@ -180,7 +180,6 @@ end;
 procedure WriteVectorToGrid(SG: TStringGrid; vname: string; wval: TAffineVector);
 var i: integer;
 begin
-  if 4 >= SG.ColCount then exit;
   for i := 0  to SG.RowCount-1 do begin
     if SG.Cells[0, i] = vname then begin
       SG.Cells[1, i] := format('%.5g',[wval[0]]);
@@ -196,7 +195,6 @@ function GetVectorFromGrid(SG: TStringGrid; vname: string; defval: TAffineVector
 var i: integer;
 begin
   result := defval;
-  if 4 >= SG.ColCount then exit;
   for i := 0  to SG.RowCount-1 do begin
     if SG.Cells[0, i] = vname then begin
       result[0] := strTofloatdef(SG.Cells[1, i], result[0]);

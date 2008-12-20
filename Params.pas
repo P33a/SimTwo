@@ -209,6 +209,8 @@ type
       var EditArray: array of TEdit);
     procedure SGConfRowToVar(SGRow: longword);
     procedure VarToSGConfRow(SGRow: longword);
+    procedure FillSGConf;
+    procedure FillSGConfRow(var SGRow: longword; varname: string);
     { Private declarations }
   public
     EditsU, EditsI, EditsOdo : array[0..3] of TEdit;
@@ -462,7 +464,11 @@ begin
   CBIRNoiseClick(Sender);
   BPhysicsSetClick(Sender);
   try
-    LoadGridFromfile(SGConf, 'params.cfg');
+    if FileExists('params.cfg') then begin
+      LoadGridFromfile(SGConf, 'params.cfg');
+    end else begin;
+      FillSGConf;
+    end;
   except
     on E: Exception do
     Showmessage(E.Message);
@@ -703,6 +709,23 @@ begin
 //  EditGridY.Text := SGConf.Cells[2, Arow];
 //  EditGridZ.Text := SGConf.Cells[3, Arow];
 end;
+
+procedure TFParams.FillSGConfRow(var SGRow: longword; varname: string);
+begin
+  SGConf.Cells[0, SGRow] := varname;
+  VarToSGConfRow(SGRow);
+  inc(SGRow);
+end;
+
+procedure TFParams.FillSGConf;
+var SGRow: longword;
+begin
+  SGRow := 1;
+  FillSGConfRow(SGRow, 'Camera.Position');
+  FillSGConfRow(SGRow, 'Light.Position');
+  FillSGConfRow(SGRow, 'Light.Attenuation');
+end;
+
 
 procedure TFParams.SGConfRowToVar(SGRow: longword);
 var varname: string;
