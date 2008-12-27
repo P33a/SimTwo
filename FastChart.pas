@@ -318,10 +318,10 @@ end;
 
 
 procedure TFChart.RemoveAllSeries(tree: TTreeView);
-var i, cnt: integer;
+var i: integer;
     cs: TChartSeries;
-    df: TSeriesDef;
-    node: TTreeNode;
+//    df: TSeriesDef;
+//    node: TTreeNode;
 //    derivative: boolean;
 begin
   SeriesNameList.Clear;
@@ -350,7 +350,7 @@ procedure TFChart.RefreshChart(tree: TTreeView);
 var i, cnt: integer;
     cs: TChartSeries;
     df: TSeriesDef;
-    node: TTreeNode;
+//    node: TTreeNode;
 //    derivative: boolean;
 begin
   SeriesNameList.Clear;

@@ -2,7 +2,13 @@ unit ODERobotsPublished;
 
 interface
 
-uses ODERobots;
+uses ODERobots, PathFinder;
+
+const
+  AStarVirgin = 0;
+  AStarObstacle = 1;
+  AStarClosed = 2;
+  AStarOpen = 3;
 
 type
   TAxisPoint = record
@@ -49,6 +55,13 @@ type
     CoulombLimit: double;
   end;
 
+  TRGBAColor = record
+    Red: byte;
+    Green: byte;
+    Blue: byte;
+    alpha: byte;
+  end;
+
 procedure SetRobotPos(R: integer; x, y, z, teta: double);
 
 function GetRobotPos2D(R: integer): TState2D;
@@ -83,6 +96,11 @@ function GetSolidVy(R, i: integer): double;
 function GetSolidVz(R, i: integer): double;
 
 function GetSensorVal(R, i: integer): double;
+function GetThingColor(T, c: integer): TRGBAColor;
+procedure SetThingColor(T, c: integer; Red, Green, Blue: byte);
+
+function GetSolidColor(R, i: integer): TRGBAColor;
+procedure SetSolidColor(R, I: integer; Red, Green, Blue: byte);
 
 function GetAxisOdo(R, i: integer): integer;
 
@@ -586,6 +604,27 @@ begin
   result := WorldODE.Robots[r].IRSensors[i].measure;
 end;
 
+function GetThingColor(T, c: integer): TRGBAColor;
+begin
+  with result do WorldODE.Things[T].GetColor(Red, Green, Blue, Alpha);
+end;
+
+procedure SetThingColor(T, c: integer; Red, Green, Blue: byte);
+begin
+  WorldODE.Things[T].SetColor(Red, Green, Blue);
+end;
+
+
+function GetSolidColor(R, i: integer): TRGBAColor;
+//var R, G, B, A: byte;
+begin
+  with result do WorldODE.Robots[R].Solids[i].GetColor(Red, Green, Blue, Alpha);
+end;
+
+procedure SetSolidColor(R, I: integer; Red, Green, Blue: byte);
+begin
+  WorldODE.Robots[R].Solids[i].SetColor(Red, Green, Blue);
+end;
 
 function GetAxisOdo(R, i: integer): integer;
 begin

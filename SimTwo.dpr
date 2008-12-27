@@ -16,7 +16,10 @@ uses
   uPSI_ODERobotsPublished in 'uPSI_ODERobotsPublished.pas',
   ProjConfig in 'ProjConfig.pas',
   Utils in 'Utils.pas',
-  WayPointsEdit in 'WayPointsEdit.pas' {FWayPointsEdit};
+  WayPointsEdit in 'WayPointsEdit.pas' {FWayPointsEdit},
+  VerInfo in 'VerInfo.pas',
+  AStar in 'AStar.pas',
+  PathFinder in 'PathFinder.pas';
 
 {$R *.res}
 

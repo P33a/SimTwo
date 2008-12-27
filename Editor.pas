@@ -158,7 +158,8 @@ var
 implementation
 
 //uses Viewer, ProjManage, Params, FastChart, uPSDebugger;
-uses ProjManage, uPSDebugger, Viewer, Utils, Params, uPSI_ODERobotsPublished;
+uses ProjManage, uPSDebugger, Viewer, Utils, Params, uPSI_ODERobotsPublished, uPSI_PathFinder,
+  uPSCompiler;
 
 {$R *.dfm}
 
@@ -280,8 +281,7 @@ begin
   ClearExceptions(false);
   Saved8087CW := Get8087CW;
   //Set8087CW(Default8087CW);
-  //SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide,
-  //                  exOverflow, exUnderflow, exPrecision]);
+  //SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow, exPrecision]);
   SetExceptionMask([exInvalidOp, exDenormalized, exOverflow, exUnderflow, exPrecision]);
 
   ProgTime := ProgCyclesCount * WorldODE.Ode_dt;
@@ -329,13 +329,13 @@ begin
   //  LBErrors.Items.clear;
     LBErrors.Items.Add('Error while executing script: '+
                   PSScript.ExecErrorToString);
+    //PSScript.Exec.Clear;
   end;
   ClearExceptions(false);
   Set8087CW(Saved8087CW);
 
 
   //PSScript.Exec.RaiseCurrentException;
-  //if IsNan(TmpSystemState.U[7]) then   StatusBar.Panels[4].Text := 'ex';
 
   //StatusBar.Panels[4].Text := inttostr(PSScript.Exec.ExceptionPos);
 
@@ -365,36 +365,19 @@ begin
   queryperformancecounter(i64_end);
 
   inc(ProgCyclesCount);
-//    MemoResult.Text := Tdws2DefaultResult( Prog.Result).Text;
 
   QueryPerformanceFrequency(i64_freq);
   StatusBar.Panels[3].Text := format('%f',[1000*(i64_end-i64_start)/i64_freq]);
-
-  //if Prog.Msgs.HasExecutionErrors then begin
-  //  LBErrors.Items.clear;
-  //  LBErrors.Items.Add('RunTime Errors:'+ inttostr(Prog.msgs.count));
-  //  LBErrors.Items.Add(trim(Prog.msgs.asstring));
-    //ScriptState:=ssReadyToRun;  // What happens if runtime error ???
-  //  PageControlBottom.ActivePageIndex:=1;  // Select Errors Tab
-  //  exit;
-  //end;
-
 
 end;
 
 function TFEditor.Compile: boolean;
 var i: integer;
   i64_start, i64_end, i64_freq: int64;
-  //dummy: TPoint;
-  //txt: string;
 begin
 
   SynEditPascal.Text := SynMemoHeader.Text + crlf + SynEditST.text + crlf + crlf + 'begin Control; end.';
   queryperformancecounter(i64_start);
-
-  //prog.Free;
-  //prog := DelphiWebScriptII.Compile(SynMemoHeader.Text + SynEditPascal.Text);
-  //  ce.Script.Assign(ed.Lines);
 
   PSScript.Comp.Clear;
   PSScript.Script.Text := SynEditPascal.Text;
@@ -403,13 +386,10 @@ begin
   LBErrors.Items.clear;
   LBErrors.Items.Add('Compile Messages:'+inttostr(PSScript.CompilerMessageCount));
   for i := 0 to PSScript.CompilerMessageCount -1 do begin
-    //Messages := PSScript.CompilerMessages[i].MessageToString;// + #13#10;
     LBErrors.Items.Add(PSScript.CompilerMessages[i].MessageToString);
   end;
 
-  if not Compiled then begin 
-    //LBErrors.Items.Add(
-      //FixLineColInErrorLine(trim(Prog.Msgs.AsInfo), dummy, -(SynMemoHeader.Lines.count-1)));
+  if not Compiled then begin
     PageControlBottom.ActivePageIndex:=1; // Select Errors Tab
     result := false;
 
@@ -660,7 +640,6 @@ begin
   end;
   //SynCompletionProposal.ItemList.Add('Sek');
   SynCompletionProposal.ItemList.EndUpdate;
-
 end;
 
 

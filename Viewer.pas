@@ -185,7 +185,7 @@ implementation
 
 {$R *.dfm}
 
-uses ODEGL, Params, Editor, FastChart, RemoteControl, utils, StdCtrls;
+uses ODEGL, Params, Editor, FastChart, RemoteControl, utils, StdCtrls, VerInfo;
 
 
 
@@ -1341,10 +1341,10 @@ begin
             if Robot.Solids[i].ID = LinkBody2 then SolidIndex2 := i;
           end;
 
-          // ID = 0 mean the world TODO: use a bettter name
+          // ID = 0 mean the world; TODO: use a bettter name
           if (((SolidIndex1 <> -1) or (LinkBody1 = '0')) and (SolidIndex2 <> -1)) or
              (((SolidIndex2 <> -1) or (LinkBody2 = '0')) and (SolidIndex1 <> -1)) then begin
-            if LinkBody1 = '0' then begin
+            if LinkBody1 = '0' then begin // It only works when the SECOND body is the Environment
               Solid1 := Robot.Solids[SolidIndex2];
               Solid2 := Environment;
             end else if LinkBody2 = '0' then begin
@@ -1422,15 +1422,21 @@ end;
 
 function LoadXML(XMLFile: string): IXMLDocument;
 var XML: IXMLDocument;
+    txt: string;
 begin
   result := nil;
   XML:=CreateXMLDoc;
   XML.Load(XMLFile);
   if XML.ParseError.Reason<>'' then begin
-    with FParams.MemoDebug.Lines do begin
-      Add('XML file error:' + XMLFile);
-      Add(XML.ParseError.Reason);
-    end;
+    //with FParams.MemoDebug.Lines do begin
+      //Add('XML file error:' + XMLFile);
+      //Add(XML.ParseError.Reason);
+    //end;
+    txt := 'XML file error: ' + format('%s(%d): ', [XMLFile, XML.ParseError.Line]) + #$0d+#$0A
+           + XML.ParseError.SrcText + #$0d+#$0A
+           + XML.ParseError.Reason ;
+
+    showmessage(txt);
     exit;
   end;
   result := XML;
@@ -2061,7 +2067,7 @@ var XML: IXMLDocument;
     root, objNode, prop: IXMLNode;
     posX, posY, posZ, angX, angY, angZ: double;
     newRobot: TRobot;
-    thing: TSolid;
+//    thing: TSolid;
     name, filename: string;
     mass, radius: double;
 begin
@@ -2349,6 +2355,9 @@ begin
   //GLCadencer.enabled := true;
 
   GLHUDTextObjName.Text := '';
+
+  GetVersionInfo;
+  SimTwoVersion := 'SimTwo v' + InfoData[3];  
 end;
 
 procedure TFViewer.GLSceneViewerMouseDown(Sender: TObject;
@@ -3005,7 +3014,7 @@ var fps: double;
 begin
   fps := GLSceneViewer.FramesPerSecond;
   GLSceneViewer.ResetPerformanceMonitor;
-  Caption:=Format('SimTwo - v0.9 (%.1f FPS)', [fps]);
+  Caption:=Format('SimTwo - v%s (%.1f FPS)', [InfoData[3], fps]);
 end;
 
 
@@ -3042,6 +3051,7 @@ procedure TFViewer.MenuEditorClick(Sender: TObject);
 begin
   FEditor.Show;
 end;
+
 
 end.
 
@@ -3121,3 +3131,5 @@ end;}
 // world wind
 // Shell sphere
 // Channels
+// Project dir
+// yasml
