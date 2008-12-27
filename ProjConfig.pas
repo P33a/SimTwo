@@ -6,7 +6,8 @@ uses Forms, SysUtils;
 
 const  crlf=#13+#10;
        FormEditorCaption = 'Code Editor: ';
-       SimTwoVersion = 'SimTwo v0.97';
+
+var SimTwoVersion: string = 'SimTwo v0.97';
 
 function GetIniFineName: string;
 

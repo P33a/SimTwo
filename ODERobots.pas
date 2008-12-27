@@ -75,6 +75,7 @@ type
     Ax, Ay, Az: double;
     ZeroPosition: TdVector3;
     ZeroRotation: TdMatrix3;
+  private
   public
     constructor Create;
     destructor Destroy; override;
@@ -84,6 +85,7 @@ type
     procedure SetRotation(R: TdMatrix3); overload;
     procedure SetZeroState;
     procedure SetColor(R, G, B: single; A: single = 1);
+    procedure GetColor(out R, G, B, A: byte);
     procedure SetTexture(TextureName: string; TextureScale: double);
     function GetPosition: TdVector3;
     function GetRotation: TdMatrix3;
@@ -165,7 +167,9 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure GetAnchor(var result: TdVector3);
+    procedure SetAnchor(const nAnchor: TdVector3);
     procedure GetDir(var result: TdVector3);
+    procedure SetDir(const nDir: TdVector3);
     function GetPos: double;
     function GetSpeed: double;
     procedure AddTorque(Tq: Double);
@@ -380,7 +384,7 @@ begin
 end;
 
 procedure TRobot.SetXYZTeta(new_x, new_y, new_z, new_teta: double);
-var i: integer;
+var i, j: integer;
     Rteta, Ra: TdMatrix3;
     Pr, P0, Pd: TdVector3;
 begin
@@ -401,11 +405,17 @@ begin
     dMULTIPLY0_331(Pr, Rteta, Pd);
     dBodySetPosition(Solids[i].Body, Pr[0] + P0[0] + new_x, Pr[1] + P0[1]  + new_y, Pr[2] + P0[2] + new_z);
 
-{    for j := 0 to Links.Count - 1 do begin
-      if (dJointGetBody(Links[j].joint, 0) = 0) and (dJointGetBody(Links[j].joint, 1)= Solids[i].Body) then begin
-        dJointGet
+    for j := 0 to Links.Count - 1 do begin
+      if (dJointGetBody(Links[j].joint, 0) = Solids[i].Body) and (dJointGetBody(Links[j].joint, 1)= nil) then begin
+        Links[j].Axis[0].GetAnchor(Pr);
+        Pd := Vector3SUB(Pr, P0);
+        dMULTIPLY0_331(Pr, Rteta, Pd);
+        Pd[0] := Pr[0] + P0[0] + new_x;
+        Pd[1] := Pr[1] + P0[1] + new_y;
+        Pd[2] := Pr[2] + P0[2] + new_z;
+        Links[j].Axis[0].SetAnchor(Pd);
       end;
-    end;}
+    end;
 
     // Nullify the velocities
     dBodySetLinearVel(Solids[i].Body, 0, 0, 0);
@@ -566,6 +576,17 @@ begin
   GLObj.Material.FrontProperties.Diffuse.SetColor(R, G, B, A);
 end;
 
+procedure TSolid.GetColor(out R, G, B, A: byte);
+begin
+  if GLObj = nil then exit;
+  with GLObj.Material.FrontProperties.Diffuse do begin
+    R := round(255 * Red);
+    G := round(255 * Green);
+    B := round(255 * Blue);
+    A := round(255 * Alpha);
+  end;
+end;
+
 procedure TSolid.SetPosition(posX, posY, posZ: double);
 begin
   dBodySetPosition(Body, posX, posY, posZ);
@@ -639,6 +660,24 @@ begin
   //TODO more Joint types
 end;
 
+procedure TAxis.SetAnchor(const nAnchor: TdVector3);
+var v: TdVector3;
+begin
+  if dJointGetType(ParentLink.joint) = ord(dJointTypeHinge) then begin
+    dJointSetHingeAnchor(ParentLink.joint, nAnchor[0], nAnchor[1], nAnchor[2]);
+  end else if dJointGetType(ParentLink.joint) = ord(dJointTypeUniversal) then begin
+    dJointSetUniversalAnchor(ParentLink.joint, nAnchor[0], nAnchor[1], nAnchor[2]);
+  end else if dJointGetType(ParentLink.joint) = ord(dJointTypeSlider) then begin
+    // Read and set the axis to reset the anchor point
+    dJointGetSliderAxis(ParentLink.joint, v);
+    dJointSetSliderAxis(ParentLink.joint, v[0], v[1], v[2]);
+  end else if dJointGetType(ParentLink.joint) = ord(dJointTypeFixed) then begin
+    dJointSetFixed(ParentLink.joint);
+  end;
+  //TODO more Joint types
+end;
+
+
 procedure TAxis.GetDir(var result: TdVector3);
 begin
   if dJointGetType(ParentLink.joint) = ord(dJointTypeHinge) then begin
@@ -658,6 +697,25 @@ begin
   end;
   //TODO more Joint types
 end;
+
+procedure TAxis.SetDir(const nDir: TdVector3);
+begin
+  if dJointGetType(ParentLink.joint) = ord(dJointTypeHinge) then begin
+    dJointSetHingeAxis(ParentLink.joint, nDir[0], nDir[1], nDir[2]);
+  end else if dJointGetType(ParentLink.joint) = ord(dJointTypeUniversal) then begin
+    if self = ParentLink.Axis[0] then begin //if it is the first axis in the universal joint..
+      dJointSetUniversalAxis1(ParentLink.joint, nDir[0], nDir[1], nDir[2]);
+    end else if self = ParentLink.Axis[1] then begin //if it is the second axis in the universal joint..
+      dJointSetUniversalAxis2(ParentLink.joint, nDir[0], nDir[1], nDir[2]);
+    end;
+  end else if dJointGetType(ParentLink.joint) = ord(dJointTypeSlider) then begin
+    dJointSetSliderAxis(ParentLink.joint, nDir[0], nDir[1], nDir[2]);
+  end else if dJointGetType(ParentLink.joint) = ord(dJointTypeFixed) then begin
+    // Nothing to do here
+  end;
+  //TODO more Joint types
+end;
+
 
 
 // Get Axis "angle"

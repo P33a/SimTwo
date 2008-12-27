@@ -10,7 +10,10 @@
   </robot>-->
 
 
+
 <!--
+
+
   <robot>
     <ID name='arm'/>
     <pos x='0' y='0' z='0.5'/>
@@ -18,7 +21,6 @@
 
     <body file='Arm.xml'/>
   </robot>
-
 
   <robot>
     <ID name='belt'/>
