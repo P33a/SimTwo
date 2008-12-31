@@ -4,12 +4,19 @@ interface
 
 uses windows, extctrls, sysutils, classes, Graphics, Math, AStar;
 
+const
+  AStarVirgin = 0;
+  AStarObstacle = 1;
+  AStarClosed = 2;
+  AStarOpen = 3;
+
 procedure ClearAStarMap;
 procedure SetupAStarMap(xi, yi, xt, yt: integer; nEucliDistK: double);
 procedure AddAStarObstacleCircle(xc, yc, r: double);
 procedure AddAStarObstacleRect(xi, yi, xf, yf: double);
 procedure CalcAStarPath;
 function GetAStarPathPoint(i: integer): TPoint;
+function GetAStarPathCount: integer;
 
 var AStarMap: TAStarMap;
     AStarActPath: TAStarPath;
@@ -77,9 +84,18 @@ end;
 
 function GetAStarPathPoint(i: integer): TPoint;
 begin
+  if i >= AStarActPath.count then begin
+    i := AStarActPath.count-1;
+  end;
   result.x := AStarActPath.Points[i].x;
   result.y := AStarActPath.Points[i].y;
 end;
+
+function GetAStarPathCount: integer;
+begin
+  result := AStarActPath.count;
+end;
+
 
 initialization
 

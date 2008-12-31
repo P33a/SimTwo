@@ -2707,15 +2707,6 @@ begin
     newFixedTime := WorldODE.physTime + GLCadencer.FixedDeltaTime * WorldODE.TimeFactor;
     while WorldODE.physTime < newFixedTime do begin
 
-      {if Focused then begin
-        if IsKeyDown('r') then begin
-          if WorldODE.ball_body <> nil then begin
-            dBodySetPosition(WorldODE.ball_body, 0, 0 ,1.2);
-            dBodySetLinearVel(WorldODE.ball_body, 0, 0 , 0);
-          end;
-        end;
-      end;}
-
       // Higher level controller (subsampled)
       for r := 0 to WorldODE.Robots.Count-1 do begin
         with WorldODE.Robots[r] do begin
@@ -3133,3 +3124,4 @@ end;}
 // Channels
 // Project dir
 // yasml
+// Texture panel

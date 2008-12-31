@@ -163,6 +163,11 @@ type
     BComRead: TButton;
     EditComRead: TEdit;
     EditComWrite: TEdit;
+    Panel2: TPanel;
+    EditUDPPort: TEdit;
+    Label46: TLabel;
+    CBUDPConnect: TCheckBox;
+    UDPGeneric: TIdUDPServer;
     procedure CBShadowsClick(Sender: TObject);
     procedure CBVsyncClick(Sender: TObject);
     procedure BSetFPSClick(Sender: TObject);
@@ -204,6 +209,9 @@ type
     procedure CBComOpenClick(Sender: TObject);
     procedure BComReadClick(Sender: TObject);
     procedure BComWriteClick(Sender: TObject);
+    procedure CBUDPConnectClick(Sender: TObject);
+    procedure UDPGenericUDPRead(Sender: TObject; AData: TStream;
+      ABinding: TIdSocketHandle);
   private
     procedure FillEditArray(ProtoName: string;
       var EditArray: array of TEdit);
@@ -215,6 +223,7 @@ type
   public
     EditsU, EditsI, EditsOdo : array[0..3] of TEdit;
     EditsIR: array[0..7] of TEdit;
+    UDPGenData: TMemoryStream;
 
     procedure FillLBRobots(LB: TListBox);
     procedure FillLBLinks(LB: TListBox; r: integer);
@@ -450,6 +459,8 @@ begin
   SGJoints.Cells[2,0] := 'Pos';
   SGJoints.Cells[3,0] := 'Ref';
   SGJoints.Cells[4,0] := 'WP';
+
+  UDPGenData := TMemoryStream.Create;
 end;
 
 procedure TFParams.FormShow(Sender: TObject);
@@ -772,6 +783,7 @@ end;
 
 procedure TFParams.FormDestroy(Sender: TObject);
 begin
+  UDPGenData.Free;
   try
      SaveGridTofile(SGConf, 'params.cfg');
   except
@@ -845,6 +857,26 @@ end;
 procedure TFParams.BComWriteClick(Sender: TObject);
 begin
   WriteComPort(EditComWrite.Text);
+end;
+
+procedure TFParams.CBUDPConnectClick(Sender: TObject);
+begin
+  try
+    UDPGeneric.DefaultPort := strtoint(EditUDPPort.Text);
+    UDPGeneric.Active := CBUDPConnect.Checked;
+  except
+    on E: exception do begin
+      CBUDPConnect.Checked := UDPGeneric.Active;
+      showmessage(E.Message);
+    end;
+  end;
+end;
+
+procedure TFParams.UDPGenericUDPRead(Sender: TObject; AData: TStream;
+  ABinding: TIdSocketHandle);
+begin
+  UDPGenData.Clear;
+  UDPGenData.CopyFrom(AData, 0);
 end;
 
 end.

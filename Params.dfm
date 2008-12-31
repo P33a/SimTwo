@@ -25,7 +25,7 @@ object FParams: TFParams
     Top = 0
     Width = 273
     Height = 621
-    ActivePage = TabControl
+    ActivePage = TabIO
     Anchors = [akLeft, akTop, akBottom]
     TabOrder = 0
     object TabControl: TTabSheet
@@ -147,7 +147,7 @@ object FParams: TFParams
         Top = 168
         Width = 261
         Height = 425
-        ActivePage = TabAxis
+        ActivePage = TabRobot
         Anchors = [akLeft, akTop, akBottom]
         TabOrder = 4
         object TabRobot: TTabSheet
@@ -1193,9 +1193,12 @@ object FParams: TFParams
     object TabIO: TTabSheet
       Caption = 'I/O'
       ImageIndex = 4
+      DesignSize = (
+        265
+        593)
       object Panel1: TPanel
         Left = 0
-        Top = 4
+        Top = 0
         Width = 265
         Height = 89
         Alignment = taLeftJustify
@@ -1259,6 +1262,39 @@ object FParams: TFParams
           TabOrder = 5
         end
       end
+      object Panel2: TPanel
+        Left = 0
+        Top = 92
+        Width = 265
+        Height = 89
+        Anchors = [akLeft, akTop, akRight]
+        BevelOuter = bvLowered
+        TabOrder = 1
+        object Label46: TLabel
+          Left = 12
+          Top = 12
+          Width = 47
+          Height = 13
+          Caption = 'UDP Port:'
+        end
+        object EditUDPPort: TEdit
+          Left = 64
+          Top = 8
+          Width = 57
+          Height = 21
+          TabOrder = 0
+          Text = '9808'
+        end
+        object CBUDPConnect: TCheckBox
+          Left = 128
+          Top = 10
+          Width = 73
+          Height = 17
+          Caption = 'Connect'
+          TabOrder = 1
+          OnClick = CBUDPConnectClick
+        end
+      end
     end
   end
   object EditDebug: TEdit
@@ -1301,7 +1337,9 @@ object FParams: TFParams
       'EditRemoteIP.Text'
       'EditOde_dt.Text'
       'EditTimeSpeed.Text'
-      'PageControl.ActivePage')
+      'PageControl.ActivePage'
+      'EditUDPPort.Text'
+      'CBUDPConnect.Checked')
     StoredValues = <>
     Left = 236
     Top = 60
@@ -1320,5 +1358,12 @@ object FParams: TFParams
     FlowControl.XonXoffOut = False
     FlowControl.XonXoffIn = False
     Left = 208
+  end
+  object UDPGeneric: TIdUDPServer
+    Bindings = <>
+    DefaultPort = 9808
+    OnUDPRead = UDPGenericUDPRead
+    Left = 236
+    Top = 120
   end
 end

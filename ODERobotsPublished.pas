@@ -4,12 +4,6 @@ interface
 
 uses ODERobots, PathFinder;
 
-const
-  AStarVirgin = 0;
-  AStarObstacle = 1;
-  AStarClosed = 2;
-  AStarOpen = 3;
-
 type
   TAxisPoint = record
     pos: double;
