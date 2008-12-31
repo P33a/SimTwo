@@ -56,6 +56,13 @@ type
     alpha: byte;
   end;
 
+procedure SetFirePosition(x, y, z: double);
+procedure StartFire;
+procedure StopFire;
+procedure StopSolidFire(R, I: integer);
+procedure StartSolidFire(R, I: integer);
+
+
 procedure SetRobotPos(R: integer; x, y, z, teta: double);
 
 function GetRobotPos2D(R: integer): TState2D;
@@ -930,6 +937,39 @@ function KeyPressed(k: integer): Boolean;
 begin
   result := IsKeyDown(TVirtualKeyCode(k));
 end;
+
+
+procedure SetFirePosition(x, y, z: double);
+begin
+  FViewer.GLDummyCFire.Position.SetPoint(x, y, z);
+end;
+
+
+procedure StartFire;
+begin
+  FViewer.GLFireFXManager.Disabled := false;
+end;
+
+
+procedure StopFire;
+begin
+  FViewer.GLFireFXManager.Disabled := true;
+end;
+
+
+procedure StartSolidFire(R, I: integer);
+begin
+  FViewer.GLFireFXManager.Reference := WorldODE.Robots[R].Solids[i].GLObj;
+  FViewer.GLFireFXManager.Disabled := false;
+end;
+
+
+procedure StopSolidFire(R, I: integer);
+begin
+  FViewer.GLFireFXManager.Disabled := true;
+  FViewer.GLFireFXManager.Reference := nil;
+end;
+
 
 {
 function GetLinkWayPointPos(R, i, j: integer): double;
