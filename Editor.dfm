@@ -25,7 +25,7 @@ object FEditor: TFEditor
     Top = 0
     Width = 769
     Height = 457
-    ActivePage = TabControl
+    ActivePage = TabPascal
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
     object TabProject: TTabSheet

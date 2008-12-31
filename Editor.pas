@@ -128,6 +128,9 @@ type
     procedure FindDialogFind(Sender: TObject);
   private
     procedure writeLn(S: string);
+    procedure BuildRegFuncList(Sender: TPSScript);
+    function ReadUDPData: string;
+    procedure WriteUDPData(ToIP: string; ToPort: integer; s: string);
     { Private declarations }
   public
     ProgCyclesCount: integer;
@@ -300,16 +303,6 @@ begin
   end;
 
   if PSScript.Execute then begin
-    //LBMessages.Items.Add('Succesfully Executed')
-    {LBVariables.Items.BeginUpdate;
-    LBVariables.Clear;
-    for i := 0 to PSScript.Exec.CurrentProcVars.Count -1 do begin
-      tp := NewTPSVariantIFC(PSScript.Exec.GetProcVar(i), false);
-      //PSVariantToString
-      txt := format('%s: %s',[ PSScript.Exec.CurrentProcVars[i] , PSVariantToString(tp,'')]);
-      LBVariables.Items.Add(txt);
-    end;
-    LBVariables.Items.EndUpdate;}
 
     if MenuShowGlobalVariables.Checked then begin
       LBVariables.Items.BeginUpdate;
@@ -334,34 +327,9 @@ begin
   ClearExceptions(false);
   Set8087CW(Saved8087CW);
 
-
   //PSScript.Exec.RaiseCurrentException;
-
   //StatusBar.Panels[4].Text := inttostr(PSScript.Exec.ExceptionPos);
 
-//  PSScript.Exec.ExceptionCode
-  //try
-  //  prog.RunProgram;
-  //except
-  //  on E: Exception do begin
-      //StopRunningProgram;
-  //    Fparams.RGControlBlock.itemindex := 0;
-  //    StatusBar.Panels[3].Text:=E.Message;
-  //    StatusBar.Panels[4].Text:=E.Message;
-      //showmessage(E.Message);  // DANGER
-  //  end;
-  //end;
-
-  // if prog.ProgramState = psRunningStopped then begin
-    //StopRunningProgram;
-  //  Fparams.RGControlBlock.itemindex := 0;
-  //  StatusBar.Panels[3].Text:='Timeout';
-  //  StatusBar.Panels[4].Text:='Timeout';
-    //ScriptState:=ssUndefined;
- //  end;
-
-  //ScriptStateTosystemState(Prog, SystemState);
-  //prog.EndProgram;
   queryperformancecounter(i64_end);
 
   inc(ProgCyclesCount);
@@ -585,6 +553,58 @@ begin
   ShellExecute(Handle, 'open', 'Help.pdf', nil, nil,  SW_SHOWNORMAL);
 end;
 
+procedure TFEditor.BuildRegFuncList(Sender: TPSScript);
+var i, j, typ: integer;
+    Funclist: TStringList;
+    S: string;
+begin
+  Funclist := TStringList.Create;
+  try
+    for i := 0 to Sender.Comp.GetRegProcCount-1 do  begin
+      //procedure Getdecl(decl : TPSParametersDecl; var T,v :string);
+      s:= Sender.Comp.GetRegProc(i).OrgName;
+      if (s <> '') and (s[1] <> '_') and (UpperCase(s) <> s) then begin
+        if Sender.Comp.GetRegProc(i).Decl.Result <> nil then begin
+          //s := 'function ' + s;
+          typ := 0;
+        end else begin
+          //s := 'procedure ' + s;
+          typ := 1;
+        end;
+        s := s + '(';
+        for j := 0 to Sender.Comp.GetRegProc(i).Decl.ParamCount - 1 do begin
+          if j <> 0 then s := s + ' ';
+          s := s + Sender.Comp.GetRegProc(i).Decl.Params[j].OrgName;
+          if Sender.Comp.GetRegProc(i).Decl.Params[j].aType <> nil then begin
+            s := s + ': ' + Sender.Comp.GetRegProc(i).Decl.Params[j].aType.OriginalName;
+            if j <> Sender.Comp.GetRegProc(i).Decl.ParamCount - 1 then s := s + ';';
+          end;
+        end;
+        if Sender.Comp.GetRegProc(i).Decl.Result <> nil then begin
+          s := s + '): ' + Sender.Comp.GetRegProc(i).Decl.Result.OriginalName + ';';
+        end else begin
+          s := s + ');';
+        end;
+        Funclist.AddObject(S, TObject(typ));
+      end;
+    end;
+
+    Funclist.Sort;
+
+    for i := 0 to Funclist.Count -1 do begin
+      if integer(Funclist.Objects[i]) = 1 then begin
+        Funclist.Strings[i] := ' function  ' + Funclist.Strings[i];
+      end else begin
+        Funclist.Strings[i] := ' procedure ' + Funclist.Strings[i];
+      end;
+    end;
+
+    Funclist.SaveToFile('funclist.txt');
+  finally
+    Funclist.Free;
+  end;
+end;
+
 procedure TFEditor.PSScript_Compile(Sender: TPSScript);
 var i: integer;
     s: string;
@@ -599,15 +619,20 @@ begin
   Sender.AddMethod(Self, @RotateAndTranslate, 'function RotateAndTranslate(var rx,ry: double; px,py,tx,ty,teta: double): double');
   Sender.AddMethod(Self, @RotateAroundPoint, 'function RotateAroundPoint(var rx,ry: double; px,py,cx,cy,teta: double): double');
   Sender.AddMethod(Self, @TFEditor.Writeln, 'procedure WriteLn(S: string)');
-  // Fuction with strig parameters work only in this case: as TFEditor members !!!???
+  // Fuction with string parameters work only in this case: as TFEditor members !!!???
   Sender.AddMethod(Self, @TFEditor.ReadComPort, 'function ReadComPort: string;');
   Sender.AddMethod(Self, @TFEditor.WriteComPort, 'procedure WriteComPort(s: string);');
+
+  Sender.AddMethod(Self, @TFEditor.ReadUDPData, 'function ReadUDPData: string;');
+  Sender.AddMethod(Self, @TFEditor.WriteUDPData, 'procedure WriteUDPData(ToIP: string; ToPort: integer; s: string);');
+
 //function IsKeyDown(vk : TVirtualKeyCode) : Boolean;
 //  Sender.AddMethod(Self, @IsKeyDown, 'function IsKeyDown(c : Char) : Boolean');
 
 //  Sender.AddMethod(Self, @IsKeyDown, 'function IsKeyDown(c : Char) : Boolean');
 
   Sender.AddRegisteredPTRVariable('Time', 'Double');
+  Sender.AddRegisteredPTRVariable('UDPDataRead', 'TMemoryStream');
 
 {  Sender.comp.AddTypeS('TMotVoltArray', 'array[1..4] of integer').ExportName := true;
   Sender.AddRegisteredPTRVariable('U', 'TMotVoltArray');
@@ -640,6 +665,8 @@ begin
   end;
   //SynCompletionProposal.ItemList.Add('Sek');
   SynCompletionProposal.ItemList.EndUpdate;
+
+  BuildRegFuncList(Sender);
 end;
 
 
@@ -660,6 +687,7 @@ begin
 //  PSScript.SetPointerToData('Scanner', @(RemState.robot.Scanner), pScriptArray);
 
   PSScript.SetPointerToData('Time', @(ProgTime), PSScript.FindBaseType(btDouble));
+  PSScript.SetPointerToData('UDPDataRead', @(FParams.UDPGenData), PSScript.FindNamedType('TMemoryStream'));
 //  PSScript.SetPointerToData('ScannerAngle', @(RemState.Robot.ScannerAngle), PSScript.FindBaseType(btDouble));
 
 {  PSScript.SetPointerToData('IO1', @(FParams.CBIO1), PSScript.FindNamedType('TCheckBox'));
@@ -866,6 +894,19 @@ begin
     ReadStr(result, InputCount);
   end;
 end;
+
+procedure TFEditor.WriteUDPData(ToIP: string; ToPort: integer; s: string);
+begin
+  Fparams.UDPGeneric.Send(ToIP, ToPort, s);
+end;
+
+function TFEditor.ReadUDPData: string;
+begin
+  FParams.UDPGenData.Position := 0;
+  SetLength(result, FParams.UDPGenData.Size);
+  FParams.UDPGenData.ReadBuffer(Pointer(result)^, FParams.UDPGenData.Size);
+end;
+
 
 end.
 
