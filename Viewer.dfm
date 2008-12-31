@@ -1,6 +1,6 @@
 object FViewer: TFViewer
-  Left = 224
-  Top = 188
+  Left = 244
+  Top = 196
   AutoScroll = False
   Caption = 'SimTwo View'
   ClientHeight = 572
@@ -653,6 +653,12 @@ object FViewer: TFViewer
       Text = 'ObjectName'
       Alignment = taLeftJustify
       Layout = tlTop
+    end
+    object GLDummyCFire: TGLDummyCube
+      CubeSize = 1.000000000000000000
+      EffectsData = {
+        0201060A54474C424669726546580200060F474C4669726546584D616E616765
+        72}
     end
     object GLCamera: TGLCamera
       DepthOfView = 1000.000000000000000000
@@ -9947,5 +9953,24 @@ object FViewer: TFViewer
   object GLMaterialLibrary3ds: TGLMaterialLibrary
     Left = 40
     Top = 88
+  end
+  object GLFireFXManager: TGLFireFXManager
+    FireDir.Coordinates = {00000000000000000000803F00000000}
+    InitialDir.Coordinates = {00000000000000000000803F00000000}
+    Cadencer = GLCadencer
+    MaxParticles = 32
+    ParticleSize = 0.100000001490116100
+    OuterColor.Color = {0000803F00000000000000000000803F}
+    FireDensity = 1.500000000000000000
+    FireEvaporation = 2.000000000000000000
+    ParticleLife = 1
+    FireBurst = 0.009999999776482582
+    FireRadius = 0.100000001490116100
+    Disabled = True
+    Paused = False
+    ParticleInterval = 0.050000000745058060
+    UseInterval = True
+    Left = 40
+    Top = 120
   end
 end

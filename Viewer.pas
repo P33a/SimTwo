@@ -8,7 +8,8 @@ uses
   GLShadowPlane, VectorGeometry, GLGeomObjects, ExtCtrls, ComCtrls,
   GLBitmapFont, GLWindowsFont, keyboard, GLTexture, math, GLSpaceText, Remote,
   GLShadowVolume, GLSkydome, GLGraph, OmniXML, OmniXMLUtils, Contnrs, ODERobots,
-  rxPlacemnt, ProjConfig, GLHUDObjects, Menus, GLVectorFileObjects;
+  rxPlacemnt, ProjConfig, GLHUDObjects, Menus, GLVectorFileObjects,
+  GLCelShader, GLFireFX;
 
 type
   TRGBfloat = record
@@ -138,6 +139,8 @@ type
     MenuChart: TMenuItem;
     MenuEditor: TMenuItem;
     GLMaterialLibrary3ds: TGLMaterialLibrary;
+    GLFireFXManager: TGLFireFXManager;
+    GLDummyCFire: TGLDummyCube;
     procedure FormCreate(Sender: TObject);
     procedure GLSceneViewerMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
