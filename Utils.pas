@@ -162,7 +162,7 @@ end;
 procedure WriteStringToGrid(SG: TStringGrid; vname: string; icol: longword; wval: string);
 var i: integer;
 begin
-  if icol >= SG.ColCount then exit;
+  if icol >= longword(SG.ColCount) then exit;
   for i := 0  to SG.RowCount-1 do begin
     if SG.Cells[0, i] = vname then begin
       SG.Cells[icol, i] := wval;

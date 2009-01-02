@@ -609,10 +609,32 @@ var LM: TGLLibMaterial;
 begin
   if GLObj = nil then exit;
   LM := GLObj.Material.MaterialLibrary.Materials.GetLibMaterialByName(TextureName);
-  if LM = nil then exit;
-  GLObj.Material.LibMaterialName := TextureName;
-  LM.TextureScale.x := TextureScale;
-  LM.TextureScale.y := TextureScale;
+  if LM <> nil then begin;
+    GLObj.Material.LibMaterialName := TextureName;
+    LM.TextureScale.x := TextureScale;
+    LM.TextureScale.y := TextureScale;
+  end else begin
+    GLObj.Material.TextureEx.Add;
+    GLObj.Material.TextureEx.Items[0].Texture.Image.LoadFromFile(TextureName);
+    with GLObj.Material.TextureEx.Items[0] do begin
+      TextureIndex := 0;
+
+      Texture.Disabled := false;
+      Texture.TextureMode := tmModulate;
+      Texture.MappingMode := tmmObjectLinear;
+      with Texture.MappingSCoordinates do begin
+        W := 0; X := 0; Y := 1; Z := 0;
+      end;
+      with Texture.MappingTCoordinates do begin
+        W := 0; X := 1; Y := 0; Z := 0;
+      end;
+      with TextureOffset do begin
+        X := 0.5; Y := 0.5; Z := 0;
+      end;
+    end;
+    GLObj.Material.TextureEx.Items[0].TextureScale.x := TextureScale;
+    GLObj.Material.TextureEx.Items[0].TextureScale.y := TextureScale;
+  end;
 end;
 
 procedure TSolid.SetZeroState;
