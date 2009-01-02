@@ -9,7 +9,7 @@ uses
   GLBitmapFont, GLWindowsFont, keyboard, GLTexture, math, GLSpaceText, Remote,
   GLShadowVolume, GLSkydome, GLGraph, OmniXML, OmniXMLUtils, Contnrs, ODERobots,
   rxPlacemnt, ProjConfig, GLHUDObjects, Menus, GLVectorFileObjects,
-  GLCelShader, GLFireFX;
+  GLCelShader, GLFireFX, GlGraphics, OpenGL1x;
 
 type
   TRGBfloat = record
@@ -141,6 +141,7 @@ type
     GLMaterialLibrary3ds: TGLMaterialLibrary;
     GLFireFXManager: TGLFireFXManager;
     GLDummyCFire: TGLDummyCube;
+    GLCube1: TGLCube;
     procedure FormCreate(Sender: TObject);
     procedure GLSceneViewerMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -169,6 +170,7 @@ type
     procedure IRSharpNoiseModel(r: integer);
     procedure UpdateGLScene;
     function GLSceneViewerPick(X, Y: Integer): TGLCustomSceneObject;
+    procedure TestTexture;
   public
   end;
 
@@ -560,9 +562,13 @@ begin
   PositionSceneObject(Solid.GLObj, Solid.Geom);
   with (Solid.GLObj as TGLCube) do begin
     TagObject := Solid;
-    Scale.x := L;
-    Scale.y := W;
-    Scale.z := H;
+    //Scale.x := L;
+    //Scale.y := W;
+    //Scale.z := H;
+    CubeDepth := H;
+    CubeHeight := W;
+    CubeWidth := L;
+    Material.MaterialLibrary := FViewer.GLMaterialLibrary;
     //Material.FrontProperties.Diffuse.AsWinColor := clyellow;
   end;
   (OdeScene as TGLShadowVolume).Occluders.AddCaster(Solid.GLObj);
@@ -1117,6 +1123,9 @@ begin
 
         if (bone.NodeName = 'cuboid') or (bone.NodeName = 'belt') or (bone.NodeName = 'propeller')then begin
           CreateSolidBox(newBone, mass, posX, posY, posZ, sizeX, sizeY, sizeZ);
+          if TextureName <> '' then begin
+            newBone.SetTexture(TextureName, TextureScale); //'LibMaterialFeup'
+          end;
         end else if bone.NodeName = 'sphere' then begin
           CreateSolidSphere(newBone, mass, posX, posY, posZ, radius);
         end else if bone.NodeName = 'cylinder' then begin
@@ -2660,6 +2669,15 @@ begin
         // Solids
         for i := 0 to Solids.Count-1 do begin
           if Solids[i].GLObj <> nil then begin
+            if Solids[i].kind = skMotorBelt then begin  // make the texture slide if there is a belt speed <> 0
+              if Solids[i].GLObj.Material.TextureEx.Count > 0 then begin
+                with Solids[i].GLObj.Material.TextureEx.Items[0] do begin
+                  TextureOffset.Y := TextureOffset.Y - TextureScale.Y * GLCadencer.FixedDeltaTime * WorldODE.TimeFactor * Solids[i].BeltSpeed;
+                  if TextureOffset.Y > 1 then TextureOffset.Y := TextureOffset.Y - 1;
+                  if TextureOffset.Y < -1 then TextureOffset.Y := TextureOffset.Y + 1;
+                end;
+              end;
+            end;
             PositionSceneObject(Solids[i].GLObj, Solids[i].Geom);
             if Solids[i].GLObj is TGLCylinder then Solids[i].GLObj.pitch(90);
           end;
@@ -3001,6 +3019,7 @@ begin
   UpdateGLScene;
 
   GLCadencer.enabled := true;
+  //TestTexture;
 end;
 
 procedure TFViewer.TimerTimer(Sender: TObject);
@@ -3012,7 +3031,20 @@ begin
 end;
 
 
-
+procedure TFViewer.TestTexture;
+var img: TGLBitmap32;
+    thebmp: TBitmap;
+begin
+  thebmp := TBitmap.Create;
+  thebmp.Width := 256;
+  thebmp.Height := 256;
+  thebmp.PixelFormat := pf24bit;
+  thebmp.Canvas.TextOut(10,10,'Hello World!');
+  //img := GLCube1.Material.Texture.Image.GetBitmap32(GL_TEXTURE_2D);
+  img := GLCube1.Material.TextureEx.Items[0].Texture.Image.GetBitmap32(GL_TEXTURE_2D);
+  img.AssignFromBitmap24WithoutRGBSwap(thebmp);
+  thebmp.Free;
+end;
 
 procedure TWorld_ODE.SetCameraTarget(r: integer);
 begin
@@ -3125,6 +3157,8 @@ end;}
 // world wind
 // Shell sphere
 // Channels
-// Project dir
+// Project dir   (SetCurrentDir()?)
 // yasml
 // Texture panel
+// Scale not
+

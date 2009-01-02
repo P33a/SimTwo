@@ -25,7 +25,17 @@
     <pos x='0' y='0.5' z='0.275'/>
     <rot_deg x='0' y='0' z='0'/>
     <color_rgb r='128' g='0' b='0'/>
-    <surface mu='0'/>
+    <surface mu='1e-5'/>
+  </cuboid>
+
+  <cuboid>
+    <ID value='C3'/>
+    <mass value='0.8'/>
+    <size x='0.1' y='0.1' z='0.15'/>
+    <pos x='0' y='0.5' z='0.375'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='128' g='0' b='0'/>
+    <surface mu='100'/>
   </cuboid>
 
   <cylinder>

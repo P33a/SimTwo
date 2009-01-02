@@ -7,9 +7,10 @@
       <ID value='1'/>
       <mass value='20'/>
       <size x='1.5' y='0.4' z='0.05'/>
-      <pos x='0' y='0' z='0.1'/>
+      <pos x='0' y='0' z='0'/>
       <rot_deg x='0' y='0' z='0'/>
-      <color_rgb r='64' g='64' b='64'/>
+      <color_rgb r='255' g='255' b='255'/>
+      <texture name='ConveyorBelt.jpg' scale='6'/>
     </belt>
 
 <!--    <cuboid>

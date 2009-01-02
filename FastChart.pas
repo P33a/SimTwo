@@ -347,7 +347,7 @@ end;
 
 
 procedure TFChart.RefreshChart(tree: TTreeView);
-var i, cnt: integer;
+var i{, cnt}: integer;
     cs: TChartSeries;
     df: TSeriesDef;
 //    node: TTreeNode;
@@ -366,10 +366,10 @@ begin
       end;
     end;
 
-    cnt:=0;
+    //cnt:=0;
     for i:=0 to Count-1 do begin
       if tree.Items[i].ImageIndex=1 then begin
-        Inc(cnt);
+        //Inc(cnt);
 
         // create new chart series for each variable
         cs:=TFastLineSeries.Create(FChart);
