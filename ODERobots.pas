@@ -621,6 +621,9 @@ begin
 
       Texture.Disabled := false;
       Texture.TextureMode := tmModulate;
+      //Texture.TextureMode := tmDecal;
+      //Texture.TextureMode := tmReplace;
+      //Texture.TextureMode := tmBlend;
       Texture.MappingMode := tmmObjectLinear;
       with Texture.MappingSCoordinates do begin
         W := 0; X := 0; Y := 1; Z := 0;

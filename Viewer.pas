@@ -2497,7 +2497,7 @@ begin
           dI := dt / Motor.Li * (Motor.voltage - w * Motor.GearRatio * Motor.Ki);
           Motor.Im := Motor.Im + dI;
         end else begin
-          Motor.Im := Motor.Imax;
+          Motor.Im := Motor.Imax * sign(Motor.voltage);
         end;
       end;
 
@@ -3019,7 +3019,7 @@ begin
   UpdateGLScene;
 
   GLCadencer.enabled := true;
-  //TestTexture;
+  TestTexture;
 end;
 
 procedure TFViewer.TimerTimer(Sender: TObject);
