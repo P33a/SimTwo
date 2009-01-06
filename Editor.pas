@@ -392,7 +392,7 @@ begin
 end;
 
 procedure TFEditor.FormCreate(Sender: TObject);
-var Plugin: TPSPlugin;
+var Plugin, PathPlugin: TPSPlugin;
 begin
   FormStorage.IniFileName := GetIniFineName;
   //TabPascal.TabVisible:=false;
@@ -407,6 +407,9 @@ begin
 
   Plugin := TPSImport_ODERobotsPublished.Create(Self);
   TPSPluginItem(PSScript.Plugins.add).Plugin := Plugin;
+
+  PathPlugin := TPSImport_PathFinder.Create(Self);
+  TPSPluginItem(PSScript.Plugins.add).Plugin := PathPlugin;
 end;
 
 procedure TFEditor.UpdateStatusLine;

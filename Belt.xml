@@ -10,7 +10,7 @@
       <pos x='0' y='0' z='0'/>
       <rot_deg x='0' y='0' z='0'/>
       <color_rgb r='255' g='255' b='255'/>
-      <texture name='ConveyorBelt.jpg' scale='6'/>
+      <texture name='ConveyorBelt256.jpg' scale='6'/>
     </belt>
 
 <!--    <cuboid>
