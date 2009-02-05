@@ -14,7 +14,8 @@
 
     <cuboid>
       <ID value='S2'/>
-      <mesh file='zeppelin16-2.3DS' scale='1'/>
+      <nomesh file='zeppelin16-2.3DS' scale='1'/>
+      <mesh file='zeppelin8.3DS' scale='1' shadow='0'/>
       <mass value='0.8'/>
       <buoyant mass='-8.435'/>
       <drag coefficient='50'/>

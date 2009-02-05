@@ -25,7 +25,7 @@ object FParams: TFParams
     Top = 0
     Width = 273
     Height = 621
-    ActivePage = TabIO
+    ActivePage = TabControl
     Anchors = [akLeft, akTop, akBottom]
     TabOrder = 0
     object TabControl: TTabSheet
@@ -614,6 +614,7 @@ object FParams: TFParams
             Checked = True
             State = cbChecked
             TabOrder = 33
+            OnClick = CBGLObjectClick
           end
           object CBAltGLObject: TCheckBox
             Left = 120
@@ -1156,6 +1157,20 @@ object FParams: TFParams
         Height = 13
         Caption = 'Time Speed:'
       end
+      object Label47: TLabel
+        Left = 4
+        Top = 92
+        Width = 49
+        Height = 13
+        Caption = 'ODE CFM:'
+      end
+      object Label48: TLabel
+        Left = 4
+        Top = 116
+        Width = 47
+        Height = 13
+        Caption = 'ODE ERP:'
+      end
       object EditDefaultFriction: TEdit
         Left = 84
         Top = 4
@@ -1188,6 +1203,22 @@ object FParams: TFParams
         Height = 21
         TabOrder = 3
         Text = '1'
+      end
+      object EditODE_CFM: TEdit
+        Left = 84
+        Top = 88
+        Width = 45
+        Height = 21
+        TabOrder = 4
+        Text = '1e-5'
+      end
+      object EditODE_ERP: TEdit
+        Left = 84
+        Top = 112
+        Width = 45
+        Height = 21
+        TabOrder = 5
+        Text = '0.4'
       end
     end
     object TabIO: TTabSheet
@@ -1339,7 +1370,10 @@ object FParams: TFParams
       'EditTimeSpeed.Text'
       'PageControl.ActivePage'
       'EditUDPPort.Text'
-      'CBUDPConnect.Checked')
+      'CBUDPConnect.Checked'
+      'EditODE_CFM.Text'
+      'EditODE_ERP.Text'
+      'CBGLObject.Checked')
     StoredValues = <>
     Left = 236
     Top = 60

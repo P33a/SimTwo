@@ -7,7 +7,6 @@ uses
   Viewer in 'Viewer.pas' {FViewer},
   Params in 'Params.pas' {FParams},
   Editor in 'Editor.pas' {FEditor},
-  ProjManage in 'ProjManage.pas',
   FastChart in 'FastChart.pas' {FFastChart},
   RemoteControl in 'RemoteControl.pas' {FRemoteControl},
   Remote in 'Remote.pas',

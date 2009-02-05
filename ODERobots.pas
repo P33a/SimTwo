@@ -65,7 +65,7 @@ type
   TSolid = class
     Body: PdxBody;
     Geom : PdxGeom;
-    GLObj, AltGLObj: TGLSceneObject;
+    GLObj, AltGLObj, ShadowGlObj: TGLSceneObject;
     kind: TSolidKind;
     BeltSpeed: double;
     ParSurface{, MaxParSurface} : TdSurfaceParameters;

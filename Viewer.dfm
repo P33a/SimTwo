@@ -75,7 +75,7 @@ object FViewer: TFViewer
             Caster = GLSphere_Ball
           end>
         Capping = svcDefault
-        Options = [svoScissorClips]
+        Mode = svmDarkening
         object GLSphere_Ball: TGLSphere
           Position.Coordinates = {00000000000000000000C03F0000803F}
           Visible = False
@@ -661,8 +661,6 @@ object FViewer: TFViewer
       TopRadius = 0.100000001490116100
     end
     object GLCube1: TGLCube
-      Material.Texture.MappingMode = tmmObjectLinear
-      Material.Texture.MappingTCoordinates.Coordinates = {00000000000000000000803F00000000}
       Material.TextureEx = <
         item
           Texture.MappingMode = tmmObjectLinear
@@ -675,9 +673,9 @@ object FViewer: TFViewer
       Visible = False
     end
     object GLCamera: TGLCamera
-      DepthOfView = 1000.000000000000000000
+      DepthOfView = 1000000000.000000000000000000
       FocalLength = 75.000000000000000000
-      NearPlaneBias = 0.100000001490116100
+      NearPlaneBias = 0.009999999776482582
       TargetObject = GLDummyTargetCam
       Position.Coordinates = {0000003FCDCC2CC0CDCC0C400000803F}
       Direction.Coordinates = {000000000000803F0000000000000000}

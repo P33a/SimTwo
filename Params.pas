@@ -168,6 +168,10 @@ type
     Label46: TLabel;
     CBUDPConnect: TCheckBox;
     UDPGeneric: TIdUDPServer;
+    Label47: TLabel;
+    EditODE_CFM: TEdit;
+    Label48: TLabel;
+    EditODE_ERP: TEdit;
     procedure CBShadowsClick(Sender: TObject);
     procedure CBVsyncClick(Sender: TObject);
     procedure BSetFPSClick(Sender: TObject);
@@ -212,6 +216,7 @@ type
     procedure CBUDPConnectClick(Sender: TObject);
     procedure UDPGenericUDPRead(Sender: TObject; AData: TStream;
       ABinding: TIdSocketHandle);
+    procedure CBGLObjectClick(Sender: TObject);
   private
     procedure FillEditArray(ProtoName: string;
       var EditArray: array of TEdit);
@@ -488,6 +493,7 @@ begin
     SGConfRowToVar(i);
     VarToSGConfRow(i);
   end;
+  CBGLObjectClick(Sender);
 end;
 
 procedure TFParams.FillEditArray(ProtoName: string; var EditArray: array of TEdit);
@@ -654,6 +660,12 @@ begin
   WorldODE.default_n_mu := strtofloatdef(EditDefaultFriction.Text, WorldODE.default_n_mu);
   WorldODE.Ode_dt := strtofloatdef(EditOde_dt.Text, WorldODE.Ode_dt * 1E3) * 1E-3;
   WorldODE.TimeFactor := strtofloatdef(EditTimeSpeed.Text, WorldODE.TimeFactor);
+  WorldODE.Ode_CFM := strtofloatdef(EditODE_CFM.Text, WorldODE.Ode_CFM);
+  WorldODE.Ode_ERP := strtofloatdef(EditODE_ERP.Text, WorldODE.Ode_ERP);
+  with WorldODE do begin
+    dWorldSetCFM(world, Ode_CFM);
+    dWorldSetERP(world, Ode_ERP);
+  end;
 end;
 
 procedure TFParams.BSetJointWayPointTetaClick(Sender: TObject);
@@ -875,8 +887,20 @@ end;
 procedure TFParams.UDPGenericUDPRead(Sender: TObject; AData: TStream;
   ABinding: TIdSocketHandle);
 begin
-  UDPGenData.Clear;
+  //UDPGenData.Clear;
   UDPGenData.CopyFrom(AData, 0);
+end;
+
+procedure TFParams.CBGLObjectClick(Sender: TObject);
+var r, i: integer;
+begin
+  for r := 0 to WorldODE.Robots.Count - 1 do begin
+    for i := 0 to WorldODE.Robots[r].Solids.Count - 1 do begin
+      with WorldODE.Robots[r].Solids[i] do begin
+        if AltGLObj <> nil then GLObj.Visible := CBGLObject.Checked;
+      end;
+    end;
+  end;
 end;
 
 end.

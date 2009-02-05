@@ -69,6 +69,14 @@
     <body file='Differential4.xml'/>
   </robot>-->
 
+   <robot>
+    <ID name='Zeppelin'/>
+    <pos x='0' y='-1' z='0.5'/>
+    <rot_deg x='0' y='0' z='0'/>
+
+    <body file='zeppelin.xml'/>
+  </robot>
+
   <robot>
     <ID name='belt'/>
     <pos x='1.5' y='0' z='0.5'/>
@@ -80,7 +88,7 @@
   <robot>
     <ID name='Omni3'/>
     <pos x='0' y='0' z='0'/>
-    <rot_deg x='0' y='0' z='0'/>
+    <rot_deg x='0' y='0' z='90'/>
 
     <body file='Omni3.xml'/>
   </robot>
