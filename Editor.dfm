@@ -1,6 +1,6 @@
 object FEditor: TFEditor
-  Left = 228
-  Top = 473
+  Left = 266
+  Top = 416
   Width = 775
   Height = 522
   Caption = 'Editor'
@@ -25,7 +25,7 @@ object FEditor: TFEditor
     Top = 0
     Width = 769
     Height = 457
-    ActivePage = TabPascal
+    ActivePage = TabControl
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
     object TabProject: TTabSheet
@@ -212,6 +212,7 @@ object FEditor: TFEditor
     object TabPascal: TTabSheet
       Caption = 'Pascal'
       ImageIndex = 2
+      TabVisible = False
       DesignSize = (
         761
         429)
@@ -243,6 +244,7 @@ object FEditor: TFEditor
         Top = 0
         Width = 753
         Height = 93
+        Anchors = [akLeft, akTop, akRight]
         Font.Charset = ANSI_CHARSET
         Font.Color = clWindowText
         Font.Height = -11

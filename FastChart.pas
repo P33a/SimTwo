@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, TeEngine, Series, ExtCtrls, TeeProcs, Chart, StdCtrls, IniFiles, ProjManage,
+  Dialogs, TeEngine, Series, ExtCtrls, TeeProcs, Chart, StdCtrls, IniFiles,
   rxPlacemnt, Menus, CheckLst, ProjConfig, ImgList, ComCtrls;
 
 type
@@ -87,7 +87,7 @@ begin
   //ProjMemIni.WriteInteger('Chart','ActiveTab',PageControl.ActivePageIndex);
 
   ProjMemIni.WriteString('Chart','MaxPoints',EditMaxPoints.text);
-  SaveFormGeometryToMemIni(ProjMemIni,FChart);
+  //SaveFormGeometryToMemIni(ProjMemIni,FChart);
 end;
 
 procedure TFChart.FormLoad(ProjMemIni : TMemIniFile);
@@ -95,7 +95,7 @@ begin
   //PageControl.ActivePageIndex := ProjMemIni.ReadInteger('Main','ActiveTab',PageControl.ActivePageIndex);
 
   EditMaxPoints.text:= ProjMemIni.ReadString('Chart','MaxPoints',EditMaxPoints.text);
-  LoadFormGeometryFromMemIni(ProjMemIni,FChart);
+  //LoadFormGeometryFromMemIni(ProjMemIni,FChart);
 end;
 
 

@@ -21,6 +21,7 @@ type
   TWorld_ODE = class
     //SampleCount: integer;
     Ode_dt, TimeFactor: double;
+    Ode_ERP, Ode_CFM: double;
     OdeScene: TGLBaseSceneObject;
     world: PdxWorld;
     space: PdxSpace;
@@ -251,12 +252,14 @@ begin
 
     n_mu := WorldODE.default_n_mu;
     n_mu2 := n_mu;
-    n_soft_cfm := 0.001;
+    //n_soft_cfm := 0.001;
+    n_soft_cfm := 1e-5;
 
     n_motion1 := 0;
     if (o1.data <> nil) and (TSolid(o1.data).ParSurface.mode <> 0) then begin
       n_mu := TSolid(o1.data).ParSurface.mu;
       n_mu2 := TSolid(o1.data).ParSurface.mu2;
+      //n_soft_cfm := max(n_soft_cfm, TSolid(o1.data).ParSurface.soft_cfm);
       n_soft_cfm := TSolid(o1.data).ParSurface.soft_cfm;
     end;
     if (o2.data <> nil) and (TSolid(o2.data).ParSurface.mode <> 0) then begin
@@ -325,120 +328,7 @@ begin
   end;
 end;
 
-{
-procedure nearCallback (data : pointer; o1, o2 : PdxGeom); cdecl;
-var
-  i,n : integer;
-  b1, b2 : PdxBody;
-  c : TdJointID;
-  contact : array[0..MAX_CONTACTS-1] of TdContact;
-  n_mode: cardinal;
-  n_mu, n_mu2: double;
-  n_fdir1 : TdVector3;
-  n_motion1: double;
-begin
-  //exit;
-  b1 := dGeomGetBody(o1);
-  b2 := dGeomGetBody(o2);
-  if assigned(b1) and assigned(b2) then begin
-    //exit without doing anything if the two bodies are connected by a joint
-    //if (dAreConnected(b1, b2)<>0) then exit;
-    if (dAreConnectedExcluding(b1, b2, dJointTypeContact)<>0) then exit;
-  end;
-  // do not collide static objects
-  if not assigned(b1) and not assigned(b2) then exit;
 
-  n := dCollide(o1, o2, MAX_CONTACTS, contact[0].geom, sizeof(TdContact));
-  if (n > 0) then  begin
-    //FParams.EditDEbug2.Text := '';
-    //if((dGeomGetClass(o1) = dRayClass) or (dGeomGetClass(o2) = dRayClass)) then begin
-    if dGeomGetClass(o1) = dRayClass then begin
-      if (o1.data <> nil) then begin
-        with TSensor(o1.data) do begin
-          pos := contact[0].geom.pos;
-          measure := min(measure, contact[0].geom.depth);
-          has_measure:= true;
-        end;
-      end;
-      //FParams.EditDEbug2.Text := format('%.2f, %.2f %.2f',[contact[0].geom.pos[0], contact[0].geom.pos[1], contact[0].geom.pos[2]]);;
-      exit;
-    end;
-    if dGeomGetClass(o2) = dRayClass then begin
-      if (o2.data <> nil) then begin
-        with TSensor(o2.data) do begin
-          pos := contact[0].geom.pos;
-          measure := min(measure, contact[0].geom.depth);
-          has_measure:= true;
-        end;
-      end;
-      exit;
-    end;
-
-    n_mode := dContactBounce or
-              dContactSoftCFM or
-              dContactApprox1;
-    n_mu := WorldODE.default_n_mu;
-    n_mu2 := n_mu;
-    n_motion1 := 0;
-
-    if((dGeomGetClass(o1) = dSphereClass) and (dGeomGetClass(o2) <> dPlaneClass)) or
-      ((dGeomGetClass(o2) = dSphereClass) and (dGeomGetClass(o1) <> dPlaneClass)) then begin
-      //n_mode := 0.9;
-      n_mu2 := 0.0;
-      n_mu := 0.1;
-      zeromemory(@n_fdir1[0], sizeof(n_fdir1));
-    end else
-
-    //FParams.EditDebug.Text := format('%d- %.2f %.2f %.2f',[n, n_fdir1[0], n_fdir1[1], n_fdir1[2]]);
-    if (o1.data <> nil) and (TSolid(o1.data).kind = skOmniWheel) then begin
-        n_mode := n_mode or cardinal(dContactMu2 or dContactFDir1);
-        dBodyVectorToWorld(b1, 0, 0, 1, n_fdir1);
-        //n_fdir1 := Vector3Cross(contact[0].geom.normal, n_fdir1);
-        //dNormalize3(n_fdir1);
-        n_mu2 := 1;
-        n_mu := 0.001;
-    end else if (o2.data <> nil) and (TSolid(o2.data).kind = skOmniWheel) then begin
-        n_mode := n_mode or cardinal(dContactMu2 or dContactFDir1);
-        dBodyVectorToWorld(b2, 0, 0, 1, n_fdir1);
-        //n_fdir1 := Vector3Cross(contact[0].geom.normal, n_fdir1);
-        //dNormalize3(n_fdir1);
-        n_mu2 := 1;
-        n_mu := 0.001;
-    end;
-
-    // Conveyor belt case
-    if (o1.data <> nil) and (TSolid(o1.data).kind = skMotorBelt) then begin
-        n_mode := n_mode or cardinal(dContactMu2 or dContactFDir1 or dContactMotion1);
-        dBodyVectorToWorld(b1, 1, 0, 0, n_fdir1);
-        n_mu2 := 0.9;
-        n_mu := 0.9;
-        n_motion1 := TSolid(o1.data).BeltSpeed;
-    end else if (o2.data <> nil) and (TSolid(o2.data).kind = skMotorBelt) then begin
-        n_mode := n_mode or cardinal(dContactMu2 or dContactFDir1 or dContactMotion1);
-        dBodyVectorToWorld(b2, 1, 0, 0, n_fdir1);
-        n_mu2 := 0.9;
-        n_mu := 0.9;
-        n_motion1 := TSolid(o2.data).BeltSpeed;
-    end;
-
-    for i := 0 to n-1 do begin
-      with contact[i].surface do begin
-        mode := n_mode;
-        mu := n_mu;
-        mu2 := n_mu2;
-        contact[i].fdir1 := n_fdir1;
-
-        soft_cfm := 0.001;
-        bounce := 0.1;
-        bounce_vel := 0.2;
-        motion1 := n_motion1;
-      end;
-      c := dJointCreateContact(WorldODE.world, WorldODE.contactgroup, @contact[i]);
-      dJointAttach(c, dGeomGetBody(contact[i].geom.g1), dGeomGetBody(contact[i].geom.g2));
-    end;
-  end;
-end;
-}
 procedure RFromZYXRotRel(var R: TdMatrix3; angX, angY, angZ: TDreal);
 var Rx, Ry, Rz, Ryx: TdMatrix3;
 begin
@@ -1026,8 +916,9 @@ var bone, prop: IXMLNode;
     descr: string;
     TextureName: string;
     TextureScale: double;
-    MeshFile: string;
+    MeshFile, MeshShadowFile: string;
     MeshScale: double;
+    MeshCastsShadows: boolean;
     Surf: TdSurfaceParameters;
 begin
   if root = nil then exit;
@@ -1039,7 +930,9 @@ begin
       // default values
       mass := 1;  ID := '-1';
       MeshFile := '';
+      MeshShadowFile := '';
       MeshScale := 1;
+      MeshCastsShadows := true;
       BuoyantMass := 0;
       Drag := 0; StokesDrag := 0; RollDrag := 0;
       radius := 1;
@@ -1050,6 +943,8 @@ begin
       TextureName := ''; TextureScale := 1;
       descr := bone.NodeName + inttostr(SolidList.Count);
       Surf.mu := -1; Surf.mu2 := -1;
+      Surf.soft_cfm := 1e-5;
+      //Surf.soft_erp := 0.2;
       Surf.bounce := 0; Surf.bounce_vel := 0;
       while prop <> nil do begin
         if prop.NodeName = 'surface' then begin
@@ -1061,7 +956,9 @@ begin
         end;
         if prop.NodeName = 'mesh' then begin
           MeshFile := GetNodeAttrStr(prop, 'file', MeshFile);
+          MeshShadowFile := GetNodeAttrStr(prop, 'shadowfile', MeshShadowFile);
           MeshScale := GetNodeAttrReal(prop, 'scale', MeshScale);
+          MeshCastsShadows := GetNodeAttrBool(prop, 'shadow', MeshCastsShadows);
         end;
         if prop.NodeName = 'drag' then begin
           Drag := GetNodeAttrReal(prop, 'coefficient', Drag);
@@ -1140,21 +1037,50 @@ begin
         if bone.NodeName = 'belt' then newBone.kind := skMotorBelt;
         if bone.NodeName = 'propeller' then newBone.kind := skPropeller;
 
+        // create mesh file
         if MeshFile <> '' then begin
-
+          //newBone.GLObj.Visible := false;
           newBone.AltGLObj := TGLSceneObject(ODEScene.AddNewChild(TGLFreeForm));
           with (newBone.AltGLObj as TGLFreeForm) do begin
             TagObject := newBone;
             MaterialLibrary := FViewer.GLMaterialLibrary3ds;
-            LoadFromFile(MeshFile);
+            try
+              LoadFromFile(MeshFile);
+            except on e: Exception do
+              showmessage(E.Message);
+            end;
             Scale.x := MeshScale;
             Scale.y := MeshScale;
             Scale.z := MeshScale;
           end;
           PositionSceneObject(newBone.AltGLObj, newBone.Geom);
-          (OdeScene as TGLShadowVolume).Occluders.AddCaster(newBone.AltGLObj);
+
+          if MeshCastsShadows and (MeshShadowFile = '') then
+            (OdeScene as TGLShadowVolume).Occluders.AddCaster(newBone.AltGLObj);
         end;
 
+        // create shadow mesh file
+        if MeshShadowFile <> '' then begin
+          newBone.ShadowGlObj := TGLSceneObject(ODEScene.Parent.AddNewChild(TGLFreeForm));
+          //newBone.ShadowGlObj := TGLSceneObject(ODEScene.AddNewChild(TGLFreeForm));
+          with (newBone.ShadowGlObj as TGLFreeForm) do begin
+            Visible := false;
+            TagObject := newBone;
+            MaterialLibrary := FViewer.GLMaterialLibrary3ds;
+            try
+              LoadFromFile(MeshShadowFile);
+            except on e: Exception do
+              showmessage(E.Message);
+            end;
+            Scale.x := MeshScale;
+            Scale.y := MeshScale;
+            Scale.z := MeshScale;
+          end;
+          PositionSceneObject(newBone.ShadowGlObj, newBone.Geom);
+          with (OdeScene as TGLShadowVolume).Occluders.AddCaster(newBone.ShadowGlObj) do begin
+            CastingMode := scmAlways;
+          end;
+        end;
 
         if Surf.mu >= 0 then begin
           newBone.ParSurface.mode := $FF;
@@ -2283,9 +2209,10 @@ begin
   contactgroup := dJointGroupCreate(0);
   dWorldSetGravity(world, 0, 0, -9.81);
 
-//  dWorldSetCFM(world, 1e-5);
-  dWorldSetCFM(world, 1e-5);
-  dWorldSetERP(world, 0.1);
+  Ode_CFM := 1e-5;
+  Ode_ERP := 0.4;
+  dWorldSetCFM(world, Ode_CFM);
+  dWorldSetERP(world, Ode_ERP);
 
   //Floor
   dCreatePlane(space, 0, 0, 1, 0);
@@ -2294,8 +2221,6 @@ begin
   dCreatePlane(space,  1, 0, 0, -10.00);
   dCreatePlane(space,  0,-1, 0, -10.00);
   dCreatePlane(space, -1, 0, 0, -10.00);
-
-//  FViewer.GLMaterialLibrary;
 
   LoadSceneFromXML('scene.xml');
   SetCameraTarget(0);
@@ -2306,11 +2231,7 @@ begin
       FViewer.GLDummyTargetCamRel.MoveTo(Robots[0].MainBody.GLObj);
     end;
   end;}
-
-//  if ball_geom = nil then
-//    FViewer.GLSphere_ball.Visible := false;
-
-  {
+ {
   //CreateSolidCylinder(TestBody, 1, 1.12, -0.1, 1.5, 0.1, 1);
   //RotateSolid(TestBody, 0, 1, 0, pi/2);
 }
@@ -2353,7 +2274,14 @@ end;
 
 
 procedure TFViewer.FormCreate(Sender: TObject);
+var s: string;
 begin
+  if ParamCount > 0 then begin
+    s := ParamStr(1);
+    if DirectoryExists(s) then  begin
+      SetCurrentDir(s);
+    end;
+  end;
   FormStorage.IniFileName := GetIniFineName;
 //  GetProcessAffinityMask(
   SetThreadAffinityMask(GetCurrentThreadId(), 1);
@@ -2684,6 +2612,9 @@ begin
 
           if Solids[i].AltGLObj <> nil then begin
             PositionSceneObject(Solids[i].AltGLObj, Solids[i].Geom);
+          end;
+          if Solids[i].ShadowGlObj <> nil then begin
+            PositionSceneObject(Solids[i].ShadowGlObj, Solids[i].Geom);
           end;
         end;
 
@@ -3161,4 +3092,7 @@ end;}
 // yasml
 // Texture panel
 // Scale not
-
+// rotation only in z????
+// HUD com o script state
+// 3ds offset
+// hud texto com timeout

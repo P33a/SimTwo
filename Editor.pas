@@ -145,23 +145,31 @@ type
 
     procedure RunOnce;
     function Compile: boolean;
-    procedure FormLoad(ProjMemIni: TMemIniFile);
-    procedure FormSave(ProjMemIni: TMemIniFile);
     procedure UpdateStatusLine;
 
     function ReadComPort: string;
     procedure WriteComPort(s: string);
   end;
 
+type
+  TProjectConfig = record
+    FileName : string;
+    //Modified: boolean; // Always compile
+    //Author: string;
+    //Comments: string;
+  end;
+
+
 
 var
   FEditor: TFEditor;
+  Project: TProjectConfig;
 
 
 implementation
 
 //uses Viewer, ProjManage, Params, FastChart, uPSDebugger;
-uses ProjManage, uPSDebugger, Viewer, Utils, Params, uPSI_ODERobotsPublished, uPSI_PathFinder,
+uses uPSDebugger, Viewer, Utils, Params, uPSI_ODERobotsPublished, uPSI_PathFinder,
   uPSCompiler;
 
 {$R *.dfm}
@@ -206,9 +214,7 @@ begin
   end;
 
   if scModified in Changes then begin
-    //ScriptState:=ssUndefined;
-    if (SynEditST.Modified) { or (Project.Modified) } then begin
-      //Project.Modified:=true;
+    if SynEditST.Modified then begin
       StatusBar.Panels[1].Text := 'Modified';
     end else begin
       StatusBar.Panels[1].Text := '';
@@ -421,9 +427,15 @@ end;
 
 procedure TFEditor.MenuSaveAsClick(Sender: TObject);
 begin
-  if SaveDialog.initialDir ='' then SaveDialog.initialDir:=extractFilePath(Application.ExeName);
+  if SaveDialog.initialDir ='' then SaveDialog.initialDir := GetCurrentDir;
+  SaveDialog.FileName := Project.FileName;
   if not SaveDialog.Execute then exit;
-  ProjectSave(SaveDialog.FileName);
+  //ProjectSave(SaveDialog.FileName);
+  Project.FileName := ExtractFileName(SaveDialog.FileName);
+
+  SynEditST.Lines.SaveToFile(SaveDialog.FileName);
+  FormStorage.WriteString('LastProjectName', Project.FileName);
+  SynEditST.Modified:=False;
 end;
 
 procedure TFEditor.MenuUndoClick(Sender: TObject);
@@ -444,6 +456,7 @@ begin
               'Copyright (C) 2008 Paulo Costa' + crlf + crlf+
               'Special thanks to:' + crlf+
               'José Luís Lima, José Alexandre Gonçalves,' + crlf+
+              'Paulo Malheiros, Paulo Marques' + crlf+
               'António Paulo Moreira, Armando Sousa and the' + crlf+
               'ODE, GLScene, SynEdit and PascalScript Teams,' + crlf+
               crlf+
@@ -466,20 +479,22 @@ begin
 end;
 
 procedure TFEditor.MenuSaveClick(Sender: TObject);
-var FileName: string;
+//var FileName: string;
 begin
-  FileName:= Project.FileName;
-  if  FileName = 'Untitled' then begin
-    if SaveDialog.initialDir ='' then SaveDialog.initialDir:=extractFilePath(Application.ExeName);
+  //FileName:= Project.FileName;
+  if Project.FileName = 'Untitled' then begin
+    if SaveDialog.initialDir ='' then SaveDialog.initialDir := GetCurrentDir;
+    SaveDialog.FileName := Project.FileName;
     if not SaveDialog.Execute then exit;
-    FileName := SaveDialog.FileName;
+    Project.FileName := ExtractFileName(SaveDialog.FileName);
   end;
 
-  ProjectSave(FileName);
-  FormStorage.WriteString('LastProjectName',FileName);
+  SynEditST.Lines.SaveToFile(Project.FileName);
+  FormStorage.WriteString('LastProjectName', Project.FileName);
+  SynEditST.Modified:=False;
 end;
 
-
+{
 procedure TFEditor.FormSave(ProjMemIni : TMemIniFile);
 begin
   SaveStringsToMemIni(ProjMemIni, 'Main','STText',SynEditST.lines);
@@ -505,23 +520,34 @@ begin
 
   LoadFormGeometryFromMemIni(ProjMemIni,FEditor);
 end;
-
+}
 
 procedure TFEditor.MenuNewClick(Sender: TObject);
 begin
-  if Project.Modified then begin
+  if SynEditST.Modified then begin
     if MessageDlg('Old project was changed.'+crlf+
                   'Start a new project ?',
                   mtConfirmation , [mbOk,mbCancel], 0)
        = mrCancel then exit;
   end;
 
-  ProjectNew;
+//  ProjectNew;
+  with Project do begin
+    FileName:='Untitled';
+  end;
+
+  EditAuthors.text:='';
+  EditComments.Text:='';
+//  FEditor.SynEditST.ReadOnly:=False;
+  SynEditST.Modified:=False;
+
+  UpdateStatusLine;
+  caption := FormEditorCaption + Project.FileName;
 end;
 
 procedure TFEditor.MenuOpenClick(Sender: TObject);
 begin
-  if Project.Modified then
+  if SynEditST.Modified then
     if MessageDlg('Project Modified.'+crlf+
                   'Loading will lose changes since last save.'+crlf+
                   'Open Project ?',
@@ -529,17 +555,35 @@ begin
        = mrCancel then exit;
 
 
-  if OpenDialog.initialDir ='' then OpenDialog.initialDir:=extractFilePath(Application.ExeName);
+  if OpenDialog.initialDir ='' then OpenDialog.initialDir := GetCurrentDir;
   if not OpenDialog.Execute then exit;
 
   if not fileexists(OpenDialog.FileName) then exit; // TODO: queixar ao utilizador
-  if not ProjectOpen(OpenDialog.FileName) then ProjectNew;
+  SynEditST.Lines.LoadFromFile(OpenDialog.FileName);
+  SynEditST.ReadOnly:=False;
+  SynEditST.Modified:=False;
+
+  with Project do begin
+    fileName:= OpenDialog.FileName;
+    //EditAuthors.text:=Author;
+    //EditComments.Text:=Comments;
+  end;
+
+  UpdateStatusLine;
+  Caption := FormEditorCaption+ExtractFileName(Project.FileName);
+
+  //if not ProjectOpen(OpenDialog.FileName) then ProjectNew;
 end;
 
 procedure TFEditor.MenuRunClick(Sender: TObject);
 begin
   if not compile then exit;
-  if CBSaveOnRun.Checked then ProjectSave(Project.FileName);
+  if CBSaveOnRun.Checked then begin //ProjectSave(Project.FileName);
+    SynEditST.Lines.SaveToFile(Project.FileName);
+    SynEditST.Modified:=false;
+    UpdateStatusLine;
+    Caption := FormEditorCaption + Project.FileName;
+  end;
   FParams.RGControlBlock.ItemIndex := 1; // script
   ProgCyclesCount := 0;
   SynEditST.Refresh;
@@ -826,7 +870,21 @@ var //i: integer;
 begin
   s := FormStorage.ReadString('LastProjectName','');
   if s <> '' then begin
-    ProjectOpen(s);
+    //ProjectOpen(s);
+    if not fileexists(s) then exit; // TODO: queixar ao utilizador
+    SynEditST.Lines.LoadFromFile(s);
+    SynEditST.ReadOnly:=False;
+    SynEditST.Modified := false;
+
+    with Project do begin
+      fileName:= s;
+      //EditAuthors.text:=Author;
+      //EditComments.Text:=Comments;
+      //Modified:=False;
+    end;
+
+    UpdateStatusLine;
+    Caption := FormEditorCaption + ExtractFileName(s);
   end;
 
   compile;
@@ -905,9 +963,13 @@ end;
 
 function TFEditor.ReadUDPData: string;
 begin
-  FParams.UDPGenData.Position := 0;
-  SetLength(result, FParams.UDPGenData.Size);
-  FParams.UDPGenData.ReadBuffer(Pointer(result)^, FParams.UDPGenData.Size);
+  result := '';
+  with FParams do begin
+    UDPGenData.Position := 0;
+    SetLength(result, UDPGenData.Size);
+    UDPGenData.ReadBuffer(Pointer(result)^, UDPGenData.Size);
+    UDPGenData.Clear;
+  end;
 end;
 
 
