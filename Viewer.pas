@@ -1306,11 +1306,19 @@ begin
               //CreateHingeJoint(newLink, Robot.Solids[SolidIndex1], Robot.Solids[SolidIndex2], posX, posY, posZ, axisX,axisY,axisZ);
               CreateHingeJoint(newLink, Solid1, Solid2, posX, posY, posZ, axisX,axisY,axisZ);
               SetHingeLimits(newLink, LimitMin, LimitMax);
+              if Friction.Fc > 0 then begin
+                dJointSetHingeParam(newLink.joint, dParamVel , 0);
+                dJointSetHingeParam(newLink.joint, dParamFMax, Friction.Fc);
+              end;
             end;
 
             if LinkType ='Slider' then begin
               CreateSliderJoint(newLink, Solid1, Solid2, axisX,axisY,axisZ);
               SetSliderLimits(newLink, LimitMin, LimitMax);
+              if Friction.Fc > 0 then begin
+                dJointSetSliderParam(newLink.joint, dParamVel , 0);
+                dJointSetSliderParam(newLink.joint, dParamFMax, Friction.Fc);
+              end;
             end;
 
             if LinkType ='Fixed' then begin
@@ -1320,6 +1328,10 @@ begin
             if LinkType ='Universal' then begin
               CreateUniversalJoint(newLink, Solid1, Solid2, posX, posY, posZ, axisX,axisY,axisZ, axis2X,axis2Y,axis2Z);
               SetUniversalLimits(newLink, LimitMin, LimitMax, Limit2Min, Limit2Max);
+              if Friction.Fc > 0 then begin
+                dJointSetUniversalParam(newLink.joint, dParamVel , 0);
+                dJointSetUniversalParam(newLink.joint, dParamFMax, Friction.Fc);
+              end;
 
               newAxis := TAxis.Create; //TODO Deal with different parameters for each axis
               Robot.Axes.Add(newAxis);
@@ -2477,7 +2489,8 @@ begin
     if Friction.CoulombLimit >= 0 then
       Tq := max(-Friction.CoulombLimit * abs(w), min(Friction.CoulombLimit * abs(w), Tq));
     //T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Tq - Spring.K * diffangle(Theta, Spring.ZeroPos);
-    T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Tq - Spring.K * (Theta - Spring.ZeroPos);
+    //T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Tq - Spring.K * (Theta - Spring.ZeroPos);
+    T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Spring.K * (Theta - Spring.ZeroPos);
   end;
 end;
 
@@ -2932,6 +2945,8 @@ end;
 
 procedure TFViewer.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+  //FXMLEdit.Close;
+
   //Execute Destroy Physics
   GLCadencer.Enabled := False;
   WorldODE.ODEEnable := False;
@@ -3102,13 +3117,12 @@ end;}
 // Sensores sem ser num robot  (???)
 // Zona morta no PID
 // Calcular centro de gravidade
-// -Passadeiras- (falta controlar a aceleração delas, falta uma textura ou tecnica que indique o movimento)
+// -Passadeiras- (falta controlar a aceleração delas)
 // Thrusters + turbulence
-// alternate globject {For TSolids only}
+// alternate globject {For TSolids only now}
 // world wind
 // Shell sphere
 // Channels
-// Project dir   (SetCurrentDir()?)
 // yasml
 // Texture panel
 // Scale not
@@ -3116,3 +3130,7 @@ end;}
 // HUD com o script state
 // 3ds offset
 // hud texto com timeout
+
+// atrito como motor
+// solidos compostos
+//
