@@ -217,6 +217,8 @@ type
     procedure UDPGenericUDPRead(Sender: TObject; AData: TStream;
       ABinding: TIdSocketHandle);
     procedure CBGLObjectClick(Sender: TObject);
+    procedure UDPGenericStatus(ASender: TObject; const AStatus: TIdStatus;
+      const AStatusText: String);
   private
     procedure FillEditArray(ProtoName: string;
       var EditArray: array of TEdit);
@@ -909,6 +911,12 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TFParams.UDPGenericStatus(ASender: TObject;
+  const AStatus: TIdStatus; const AStatusText: String);
+begin
+ // if hsDisconnected = AStatus then UDPGeneric.Active := false;
 end;
 
 end.
