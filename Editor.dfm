@@ -1,6 +1,6 @@
 object FEditor: TFEditor
-  Left = 266
-  Top = 416
+  Left = 271
+  Top = 414
   Width = 775
   Height = 522
   Caption = 'Editor'
@@ -151,7 +151,7 @@ object FEditor: TFEditor
         Top = 329
         Width = 761
         Height = 100
-        ActivePage = TabOutput
+        ActivePage = TabErrors
         Align = alBottom
         TabOrder = 1
         TabPosition = tpBottom
@@ -339,6 +339,7 @@ object FEditor: TFEditor
       end
       object MenuPrintSource: TMenuItem
         Caption = '&Print...'
+        Enabled = False
         ShortCut = 16464
       end
       object N1: TMenuItem
@@ -455,17 +456,17 @@ object FEditor: TFEditor
     end
   end
   object OpenDialog: TOpenDialog
-    DefaultExt = '.ulf'
-    Filter = 'Unreal Lab File|*.ulf'
-    Title = 'Load Unreal Lab Project'
+    DefaultExt = '.spas'
+    Filter = 'Pascal Script File|*.spas'
+    Title = 'Load Control Pascal Script'
     Left = 288
     Top = 36
   end
   object SaveDialog: TSaveDialog
-    DefaultExt = '.ulf'
-    Filter = 'Unreal Lab File|*.ulf'
+    DefaultExt = '.spas'
+    Filter = 'Pascal Script File|*.spas'
     Options = [ofHideReadOnly, ofPathMustExist, ofCreatePrompt, ofEnableSizing]
-    Title = 'Save Unreal Lab Project'
+    Title = 'Save Control Pascal Script'
     Left = 316
     Top = 36
   end

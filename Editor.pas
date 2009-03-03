@@ -426,10 +426,13 @@ end;
 
 
 procedure TFEditor.MenuSaveAsClick(Sender: TObject);
+var CurDir: string;
 begin
   if SaveDialog.initialDir ='' then SaveDialog.initialDir := GetCurrentDir;
   SaveDialog.FileName := Project.FileName;
+  CurDir := GetCurrentDir;
   if not SaveDialog.Execute then exit;
+  SetCurrentDir(CurDir);
   //ProjectSave(SaveDialog.FileName);
   Project.FileName := ExtractFileName(SaveDialog.FileName);
 
@@ -479,13 +482,15 @@ begin
 end;
 
 procedure TFEditor.MenuSaveClick(Sender: TObject);
-//var FileName: string;
+var CurDir: string;
 begin
   //FileName:= Project.FileName;
   if Project.FileName = 'Untitled' then begin
     if SaveDialog.initialDir ='' then SaveDialog.initialDir := GetCurrentDir;
     SaveDialog.FileName := Project.FileName;
+    CurDir := GetCurrentDir;
     if not SaveDialog.Execute then exit;
+    SetCurrentDir(CurDir);
     Project.FileName := ExtractFileName(SaveDialog.FileName);
   end;
 
@@ -546,6 +551,7 @@ begin
 end;
 
 procedure TFEditor.MenuOpenClick(Sender: TObject);
+var sname, curdir, txt: string;
 begin
   if SynEditST.Modified then
     if MessageDlg('Project Modified.'+crlf+
@@ -554,17 +560,23 @@ begin
                   mtConfirmation , [mbOk,mbCancel], 0)
        = mrCancel then exit;
 
-
+  curdir := GetCurrentDir;
   if OpenDialog.initialDir ='' then OpenDialog.initialDir := GetCurrentDir;
   if not OpenDialog.Execute then exit;
+  SetCurrentDir(curdir);
 
   if not fileexists(OpenDialog.FileName) then exit; // TODO: queixar ao utilizador
   SynEditST.Lines.LoadFromFile(OpenDialog.FileName);
+
   SynEditST.ReadOnly:=False;
-  SynEditST.Modified:=False;
+  sname := ExtractFileName(OpenDialog.FileName);
+
+  txt := GetCurrentDir + '\' + sname;
+  SynEditST.Modified := txt <> OpenDialog.FileName;
+//  SynEditST.Modified := GetCurrentDir + '\' + sname <> OpenDialog.FileName;
 
   with Project do begin
-    fileName:= OpenDialog.FileName;
+    fileName:= sname;
     //EditAuthors.text:=Author;
     //EditComments.Text:=Comments;
   end;

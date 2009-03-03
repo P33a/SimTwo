@@ -10179,6 +10179,10 @@ object FViewer: TFViewer
       Caption = '&Editor'
       OnClick = MenuEditorClick
     end
+    object MenuScene: TMenuItem
+      Caption = '&Scene'
+      OnClick = MenuSceneClick
+    end
   end
   object GLMaterialLibrary3ds: TGLMaterialLibrary
     Left = 40

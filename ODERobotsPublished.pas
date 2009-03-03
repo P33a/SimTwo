@@ -935,7 +935,10 @@ end;
 
 function KeyPressed(k: integer): Boolean;
 begin
-  result := IsKeyDown(TVirtualKeyCode(k));
+  if IsKeyDown(VK_SHIFT) or IsKeyDown(VK_CONTROL) or IsKeyDown(VK_MENU) then begin
+    result := False;
+  end else
+    result := IsKeyDown(TVirtualKeyCode(k));
 end;
 
 

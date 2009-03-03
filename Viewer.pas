@@ -45,6 +45,9 @@ type
 
     ODEEnable : boolean;
     physTime : double;
+
+    XMLFiles: TStringList;
+
     destructor destroy; override;
     constructor create;
     procedure WorldUpdate;
@@ -94,6 +97,7 @@ type
 //    procedure AxisGLCreate(axis: Taxis; aRadius, aHeight: double);
 //    procedure AxisGLSetPosition(axis: Taxis);
   public
+
     procedure LoadJointWayPointsFromXML(XMLFile: string; r: integer);
     procedure SaveJointWayPointsToXML(XMLFile: string; r: integer);
     procedure SetCameraTarget(r: integer);
@@ -143,6 +147,7 @@ type
     GLFireFXManager: TGLFireFXManager;
     GLDummyCFire: TGLDummyCube;
     GLCube1: TGLCube;
+    MenuScene: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure GLSceneViewerMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -160,6 +165,7 @@ type
     procedure MenuChartClick(Sender: TObject);
     procedure MenuConfigClick(Sender: TObject);
     procedure MenuEditorClick(Sender: TObject);
+    procedure MenuSceneClick(Sender: TObject);
   private
     { Private declarations }
     OldPick : TGLCustomSceneObject;
@@ -191,7 +197,8 @@ implementation
 
 {$R *.dfm}
 
-uses ODEGL, Params, Editor, FastChart, RemoteControl, utils, StdCtrls, VerInfo;
+uses ODEGL, Params, Editor, FastChart, RemoteControl, utils, StdCtrls, VerInfo,
+  SceneEdit;
 
 
 
@@ -2020,6 +2027,7 @@ begin
   end;}
   XML := LoadXML(XMLFile);
   if XML = nil then exit;
+  XMLFiles.Add(XMLFile);
 
   root:=XML.SelectSingleNode('/scene');
   if root = nil then exit;
@@ -2055,6 +2063,7 @@ begin
 
       //if filename <> '' then begin
       if fileexists(filename) then begin
+        XMLFiles.Add(filename);
         newRobot := LoadRobotFromXML(filename);
         if newRobot <> nil then begin
           newRobot.Name := name;
@@ -2066,6 +2075,7 @@ begin
       // Create static obstacles
       filename := GetNodeAttrStr(objNode, 'file', filename);
       if fileexists(filename) then begin
+        XMLFiles.Add(filename);
         LoadObstaclesFromXML(filename);
       end;
 
@@ -2073,6 +2083,7 @@ begin
       // Create things
       filename := GetNodeAttrStr(objNode, 'file', filename);
       if fileexists(filename) then begin
+        XMLFiles.Add(filename);
         LoadThingsFromXML(filename);
       end;
 
@@ -2199,6 +2210,7 @@ begin
   Obstacles := TSolidList.Create;
   Things := TSolidList.Create;
 
+  XMLFiles := TStringList.Create;
 
   //Create physic
   world := dWorldCreate();
@@ -2257,6 +2269,9 @@ begin
   dSpaceDestroy(space);
   //TODO Destroy the bodies
   dWorldDestroy(world);
+
+  XMLFiles.Free;
+
   inherited;
 end;
 
@@ -2288,16 +2303,15 @@ begin
 //  SetThreadAffinityMask(GetCurrentProcessId(), 1);
   QueryPerformanceFrequency(t_delta);
   t_delta := t_delta div 1000;
+
   //Execute Create physic
   WorldODE := TWorld_ODE.create;
   //WorldODE.SampleCount := 0;
   WorldODE.ODEEnable := True;
-  //GLCadencer.enabled := true;
 
   GLHUDTextObjName.Text := '';
-
   GetVersionInfo;
-  SimTwoVersion := 'SimTwo v' + InfoData[3];  
+  SimTwoVersion := 'SimTwo v' + InfoData[3];
 end;
 
 procedure TFViewer.GLSceneViewerMouseDown(Sender: TObject;
@@ -2943,8 +2957,9 @@ begin
   FParams.show;
   FEditor.show;
   FChart.show;
-  //FLog.show;
-  //FRemoteControl.show;
+
+
+  FXMLEdit.Show;
 
   MakeFullyVisible();
   UpdateGLScene;
@@ -3009,6 +3024,11 @@ begin
   FEditor.Show;
 end;
 
+
+procedure TFViewer.MenuSceneClick(Sender: TObject);
+begin
+  FXMLEdit.Show;
+end;
 
 end.
 
