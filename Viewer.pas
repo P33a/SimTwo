@@ -3131,6 +3131,5 @@ end;}
 // 3ds offset
 // hud texto com timeout
 
-// atrito como motor
 // solidos compostos
-//
+// Variaveis no xml

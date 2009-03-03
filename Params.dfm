@@ -735,7 +735,7 @@ object FParams: TFParams
             Width = 149
             Height = 21
             Style = csDropDownList
-            ItemHeight = 0
+            ItemHeight = 13
             TabOrder = 8
           end
           object BJointWayPointsSave: TButton
@@ -1394,6 +1394,8 @@ object FParams: TFParams
     Left = 208
   end
   object UDPGeneric: TIdUDPServer
+    OnStatus = UDPGenericStatus
+    BroadcastEnabled = True
     Bindings = <>
     DefaultPort = 9808
     OnUDPRead = UDPGenericUDPRead
