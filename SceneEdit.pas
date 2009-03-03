@@ -109,6 +109,7 @@ begin
   for i := 0 to WorldODE.XMLFiles.Count -1 do begin
     CreateXMLTabEdit(WorldODE.XMLFiles, i);
   end;
+  FormStorage.RestoreFormPlacement;
 end;
 
 procedure TFXMLEdit.MenuReBuildClick(Sender: TObject);

@@ -265,6 +265,8 @@ object FXMLEdit: TFXMLEdit
   object FormStorage: TFormStorage
     IniSection = 'SceneEditor'
     UseRegistry = False
+    StoredProps.Strings = (
+      'PageControlXML.ActivePage')
     StoredValues = <>
     Left = 476
     Top = 36
