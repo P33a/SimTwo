@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls, ExtCtrls, GLWin32Viewer, GLcontext, Math,
   IdBaseComponent, IdComponent, IdUDPBase, IdUDPServer, IdSocketHandle, ODERobots, OdeImport,
-  rxPlacemnt, Grids, GLCadencer, CPort;
+  rxPlacemnt, Grids, GLCadencer, CPort, ShellAPI;
 
 type
   TFParams = class(TForm)
@@ -325,11 +325,19 @@ begin
 end;
 
 procedure TFParams.BTestClick(Sender: TObject);
+var prs: string;
+    i: integer;
 begin
 //  UDPServer.Send(EditRemoteIP.Text, 9801, 'test');
 //  FRemoteControl.show;
-  FChart.AddSample(0, WorldODE.physTime);
+//  FChart.AddSample(0, WorldODE.physTime);
 //  FViewer.GLCadencer.Progress;
+  prs := '';
+  for i := 1 to ParamCount do begin
+    prs := ' ' + ParamStr(i);
+  end;
+  FViewer.Close;
+  ShellExecute(Handle, 'open', pchar(Application.ExeName), pchar(prs), nil,  SW_SHOWNORMAL);
 end;
 
 function GetListValue(L: TStrings; QName: string): string;

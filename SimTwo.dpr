@@ -18,7 +18,8 @@ uses
   WayPointsEdit in 'WayPointsEdit.pas' {FWayPointsEdit},
   VerInfo in 'VerInfo.pas',
   AStar in 'AStar.pas',
-  PathFinder in 'PathFinder.pas';
+  PathFinder in 'PathFinder.pas',
+  SceneEdit in 'SceneEdit.pas' {FXMLEdit};
 
 {$R *.res}
 
@@ -32,5 +33,6 @@ begin
   Application.CreateForm(TFChart, FChart);
   Application.CreateForm(TFRemoteControl, FRemoteControl);
   Application.CreateForm(TFWayPointsEdit, FWayPointsEdit);
+  Application.CreateForm(TFXMLEdit, FXMLEdit);
   Application.Run;
 end.
