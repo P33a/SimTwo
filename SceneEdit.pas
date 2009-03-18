@@ -63,6 +63,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure LBErrorsDblClick(Sender: TObject);
   private
     function GetSynEdit: TSynEdit;
     function ActSynEdit: TSynEdit;
@@ -403,6 +404,41 @@ begin
     end;
   end;
   result := AnyModified;
+end;
+
+function GetLineInErrorString(const txt : string): integer;
+var p1, p2: integer;
+    s: string;
+begin
+  result := -1;
+
+  p1:= pos('(',txt);
+  p2:= pos(')',txt);
+  if (p1 > 0) and (p2 > 0) then begin
+    s := copy(txt, p1+1, p2-(p1+1));
+    result := strToIntdef(s,-1);
+  end;
+end;
+
+
+procedure TFXMLEdit.LBErrorsDblClick(Sender: TObject);
+var i: integer;
+    TmpSynEdit: TSynEdit;
+    ErrLineNumber: integer;
+begin
+  i:= LBErrors.ItemIndex;
+  if i<0 then exit;
+
+  ErrLineNumber := GetLineInErrorString(LBErrors.Items[i]);
+
+  TmpSynEdit := GetSynEdit();
+  if TmpSynEdit = nil then exit;
+
+  if (ErrLineNumber <> -1) then begin
+    TmpSynEdit.caretY := ErrLineNumber;
+    TmpSynEdit.UpdateCaret;
+    TmpSynEdit.setfocus;
+  end;
 end;
 
 end.
