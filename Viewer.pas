@@ -9,7 +9,7 @@ uses
   GLBitmapFont, GLWindowsFont, keyboard, GLTexture, math, GLSpaceText, Remote,
   GLShadowVolume, GLSkydome, GLGraph, OmniXML, OmniXMLUtils, Contnrs, ODERobots,
   rxPlacemnt, ProjConfig, GLHUDObjects, Menus, GLVectorFileObjects,
-  GLCelShader, GLFireFX, GlGraphics, OpenGL1x;
+  GLCelShader, GLFireFX, GlGraphics, OpenGL1x, Simple;
 
 type
   TRGBfloat = record
@@ -23,6 +23,7 @@ type
     Ode_dt, TimeFactor: double;
     Ode_ERP, Ode_CFM: double;
     OdeScene: TGLBaseSceneObject;
+    MaxWorldX, MaxWorldY, MinWorldX, MinWorldY: double;
     world: PdxWorld;
     space: PdxSpace;
     contactgroup: TdJointGroupID;
@@ -45,8 +46,9 @@ type
 
     ODEEnable : boolean;
     physTime : double;
+    SecondsCount, DecPeriod: double;
 
-    XMLFiles: TStringList;
+    XMLFiles, XMLErrors: TStringList;
 
     destructor destroy; override;
     constructor create;
@@ -94,6 +96,8 @@ type
     procedure UpdatePickJoint;
     procedure LoadThingsFromXML(XMLFile: string);
     procedure CreateFixedJoint(var Link: TSolidLink; Solid1,  Solid2: TSolid);
+    function GetNodeAttrRealParse(parentNode: IXMLNode; attrName: string;
+      defaultValue: real): real;
 //    procedure AxisGLCreate(axis: Taxis; aRadius, aHeight: double);
 //    procedure AxisGLSetPosition(axis: Taxis);
   public
@@ -170,7 +174,7 @@ type
     { Private declarations }
     OldPick : TGLCustomSceneObject;
     my,mx: integer;
-    t_delta: int64;
+    t_delta, t_last, t_act: int64;
     KeyVals: TKeyVals;
     procedure UpdateCamPos(CMode: integer);
     procedure FillRemote(r: integer);
@@ -406,6 +410,72 @@ begin
       up.z := vtmp[2];
     end;
 end;
+{
+function XMLStrToReal(nodeValue: WideString): real;
+begin
+  Result := StrToFloat(StringReplace(nodeValue, DEFAULT_DECIMALSEPARATOR,
+    DecimalSeparator, [rfReplaceAll]));
+end;
+
+function XMLStrToReal(nodeValue: WideString; var value: real): boolean;
+begin
+  try
+    value := XMLStrToReal(nodeValue);
+    Result := true;
+  except
+    on EConvertError do
+      Result := false;
+  end;
+end;
+
+function XMLStrToRealDef(nodeValue: WideString; defaultValue: real): real;
+begin
+  if not XMLStrToReal(nodeValue,Result) then
+    Result := defaultValue;
+end;  XMLStrToRealDef }
+
+
+function GetNodeAttrRealExpr(parentNode: IXMLNode; attrName: string; defaultValue: real): real;
+var attrValue, s: WideString;
+begin
+  if not GetNodeAttr(parentNode, attrName, attrValue) then begin
+    Result := defaultValue;
+  end else begin
+    s := StringReplace(attrValue, DEFAULT_DECIMALSEPARATOR, DecimalSeparator, [rfReplaceAll]);
+    try
+      Result := SimpleCalc(s);
+    except on E: Exception do
+      Result := defaultValue;
+    end;
+  end;
+end; { GetNodeAttrReal }
+
+
+function TWorld_ODE.GetNodeAttrRealParse(parentNode: IXMLNode; attrName: string; defaultValue: real): real;
+var attrValue, s: WideString;
+    err: string;
+begin
+  if not GetNodeAttr(parentNode, attrName, attrValue) then begin
+    Result := defaultValue;
+  end else begin
+    s := StringReplace(attrValue, DEFAULT_DECIMALSEPARATOR, DecimalSeparator, [rfReplaceAll]);
+    try
+      Result := SimpleCalc(s);
+    except on E: Exception do begin
+      Result := defaultValue;
+      err := '[Expression error] ' + format('%s(%d): ', [XMLFiles[XMLFiles.count - 1], -1]) + #$0d+#$0A
+             + E.Message + ': ' +#$0d+#$0A
+             + '"'+ s + '"';
+
+      if XMLErrors <> nil then begin
+        XMLErrors.Add(err);
+      end else begin
+        showmessage(err);
+      end;
+      end;
+    end;
+  end;
+end; { GetNodeAttrReal }
 
 
 procedure TWorld_ODE.CreateSubGeomBox(var body: PdxBody; var geom: PdxGeom; xsize, ysize, zsize: double; x,y,z: double);
@@ -1377,23 +1447,28 @@ begin
 
 end;
 
-function LoadXML(XMLFile: string): IXMLDocument;
+function LoadXML(XMLFile: string; ErrorList: TStringList): IXMLDocument;
 var XML: IXMLDocument;
-    txt: string;
+    err: string;
 begin
   result := nil;
   XML:=CreateXMLDoc;
   XML.Load(XMLFile);
-  if XML.ParseError.Reason<>'' then begin
+  if XML.ParseError.Reason <> '' then begin
     //with FParams.MemoDebug.Lines do begin
       //Add('XML file error:' + XMLFile);
       //Add(XML.ParseError.Reason);
     //end;
-    txt := 'XML file error: ' + format('%s(%d): ', [XMLFile, XML.ParseError.Line]) + #$0d+#$0A
+    err := '[XML error] ' + format('%s(%d): ', [XMLFile, XML.ParseError.Line]) + #$0d+#$0A
+    //err := format('%s(%d): ', [XMLFile, XML.ParseError.Line]) + #$0d+#$0A
            + XML.ParseError.SrcText + #$0d+#$0A
            + XML.ParseError.Reason ;
 
-    showmessage(txt);
+    if ErrorList <> nil then begin
+      ErrorList.Add(err);
+    end else begin
+      showmessage(err);
+    end;
     exit;
   end;
   result := XML;
@@ -1472,7 +1547,7 @@ begin
   if XML.ParseError.Reason<>'' then begin
     exit;
   end;}
-  XML := LoadXML(XMLFile);
+  XML := LoadXML(XMLFile, XMLErrors);
   if XML = nil then exit;
 
   root:=XML.SelectSingleNode('/joint_waypoints');
@@ -1566,7 +1641,7 @@ begin
   if XML.ParseError.Reason<>'' then begin
     exit;
   end;}
-  XML := LoadXML(XMLFile);
+  XML := LoadXML(XMLFile, XMLErrors);
   if XML = nil then exit;
 
   root:=XML.SelectSingleNode('/obstacles');
@@ -2009,7 +2084,7 @@ procedure TWorld_ODE.LoadThingsFromXML(XMLFile: string);
 var XML: IXMLDocument;
     root: IXMLNode;
 begin
-  XML := LoadXML(XMLFile);
+  XML := LoadXML(XMLFile, XMLErrors);
   if XML = nil then exit;
 
 
@@ -2037,9 +2112,9 @@ begin
     end;
     exit;
   end;}
-  XML := LoadXML(XMLFile);
-  if XML = nil then exit;
   XMLFiles.Add(XMLFile);
+  XML := LoadXML(XMLFile, XMLErrors);
+  if XML = nil then exit;
 
   root:=XML.SelectSingleNode('/scene');
   if root = nil then exit;
@@ -2061,14 +2136,14 @@ begin
           filename := GetNodeAttrStr(prop, 'file', filename);
         end;
         if prop.NodeName = 'pos' then begin
-          posX := GetNodeAttrReal(prop, 'x', posX);
-          posY := GetNodeAttrReal(prop, 'y', posY);
-          posZ := GetNodeAttrReal(prop, 'z', posZ);
+          posX := GetNodeAttrRealParse(prop, 'x', posX);
+          posY := GetNodeAttrRealParse(prop, 'y', posY);
+          posZ := GetNodeAttrRealParse(prop, 'z', posZ);
         end;
         if prop.NodeName = 'rot_deg' then begin
-          angX := degToRad(GetNodeAttrReal(prop, 'x', angX));
-          angY := degToRad(GetNodeAttrReal(prop, 'y', angY));
-          angZ := degToRad(GetNodeAttrReal(prop, 'z', angZ));
+          angX := degToRad(GetNodeAttrRealParse(prop, 'x', angX));
+          angY := degToRad(GetNodeAttrRealParse(prop, 'y', angY));
+          angZ := degToRad(GetNodeAttrRealParse(prop, 'z', angZ));
         end;
         prop := prop.NextSibling;
       end;
@@ -2109,15 +2184,15 @@ begin
       while prop <> nil do begin
 
         if prop.NodeName = 'radius' then begin
-          radius := GetNodeAttrReal(prop, 'value', radius);
+          radius := GetNodeAttrRealExpr(prop, 'value', radius);
         end;
         if prop.NodeName = 'mass' then begin
-          mass := GetNodeAttrReal(prop, 'value', mass);
+          mass := GetNodeAttrRealExpr(prop, 'value', mass);
         end;
         if prop.NodeName = 'pos' then begin
-          posX := GetNodeAttrReal(prop, 'x', posX);
-          posY := GetNodeAttrReal(prop, 'y', posY);
-          posZ := GetNodeAttrReal(prop, 'z', posZ);
+          posX := GetNodeAttrRealExpr(prop, 'x', posX);
+          posY := GetNodeAttrRealExpr(prop, 'y', posY);
+          posZ := GetNodeAttrRealExpr(prop, 'z', posZ);
         end;
         prop := prop.NextSibling;
 
@@ -2141,19 +2216,10 @@ var XML: IXMLDocument;
     root, objNode: IXMLNode;
     newRobot: TRobot;
     str: string;
-    //KeysUNom, KeysSpeedNom: double;
 begin
   result := nil;
-{  XML:=CreateXMLDoc;
-  XML.Load(XMLFile);
-  if XML.ParseError.Reason<>'' then begin
-    with FParams.MemoDebug.Lines do begin
-      Add('XML file error:' + XMLFile);
-      Add(XML.ParseError.Reason);
-    end;
-    exit;
-  end;}
-  XML := LoadXML(XMLFile);
+
+  XML := LoadXML(XMLFile, XMLErrors);
   if XML = nil then exit;
 
   root:=XML.SelectSingleNode('/robot');
@@ -2213,6 +2279,10 @@ begin
   TimeFactor := 1;
   ODEEnable := False;
   PhysTime := 0;
+
+  SecondsCount := 0;
+  DecPeriod := 0.04;
+
   OdeScene := FViewer.GLShadowVolume;
 
   Environment := TSolid.Create;
@@ -2223,6 +2293,7 @@ begin
   Things := TSolidList.Create;
 
   XMLFiles := TStringList.Create;
+  XMLErrors := TStringList.Create;
 
   //Create physic
   world := dWorldCreate();
@@ -2238,16 +2309,21 @@ begin
   dWorldSetCFM(world, Ode_CFM);
   dWorldSetERP(world, Ode_ERP);
 
-  //Floor
-  dCreatePlane(space, 0, 0, 1, 0);
-  //Box wall limit
-  dCreatePlane(space,  0, 1, 0, -10.00);
-  dCreatePlane(space,  1, 0, 0, -10.00);
-  dCreatePlane(space,  0,-1, 0, -10.00);
-  dCreatePlane(space, -1, 0, 0, -10.00);
+  MaxWorldX := 12;
+  MinWorldX := -12;
+  MaxWorldY := 12;
+  MinWorldY := -12;
 
   LoadSceneFromXML('scene.xml');
   SetCameraTarget(0);
+
+  //Floor
+  dCreatePlane(space, 0, 0, 1, 0);
+  //Box wall limit
+  dCreatePlane(space,  0, 1, 0, -MaxWorldY);
+  dCreatePlane(space,  1, 0, 0, -MaxWorldX);
+  dCreatePlane(space,  0,-1, 0, MinWorldY);
+  dCreatePlane(space, -1, 0, 0, MinWorldX);
 
 {  if Robots[0] <> nil then begin
     if Robots[0].MainBody.GLObj<>nil then begin
@@ -2282,6 +2358,7 @@ begin
   //TODO Destroy the bodies
   dWorldDestroy(world);
 
+  XMLErrors.Free;
   XMLFiles.Free;
 
   inherited;
@@ -2305,10 +2382,14 @@ var s: string;
 begin
   if ParamCount > 0 then begin
     s := ParamStr(1);
-    if DirectoryExists(s) then  begin
-      SetCurrentDir(s);
-    end;
+  end else begin
+    s := 'default';
   end;
+
+  if DirectoryExists(s) then begin
+    SetCurrentDir(s);
+  end;
+
   FormStorage.IniFileName := GetIniFineName;
 //  GetProcessAffinityMask(
   SetThreadAffinityMask(GetCurrentThreadId(), 1);
@@ -2398,7 +2479,7 @@ begin
 end;
 
 procedure AxisTorqueModel(axis: TAxis; Theta, w, dt: double; var T: double);
-var duty, Tq, old_Im, dI: double;
+var duty, old_Im, dI: double;
     max_delta_Im: double;
 begin
   max_delta_Im := 0.15; // A/ms
@@ -2484,10 +2565,10 @@ begin
       Motor.EnergyDrain := Motor.EnergyDrain + Motor.PowerDrain;
     end;
     // coulomb friction
-    Tq := Friction.Fc * sign(w);
+    // Tq := Friction.Fc * sign(w);
     // Limit it to avoid instability
     if Friction.CoulombLimit >= 0 then
-      Tq := max(-Friction.CoulombLimit * abs(w), min(Friction.CoulombLimit * abs(w), Tq));
+    // Tq := max(-Friction.CoulombLimit * abs(w), min(Friction.CoulombLimit * abs(w), Tq));
     //T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Tq - Spring.K * diffangle(Theta, Spring.ZeroPos);
     //T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Tq - Spring.K * (Theta - Spring.ZeroPos);
     T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Spring.K * (Theta - Spring.ZeroPos);
@@ -2687,17 +2768,15 @@ begin
     while WorldODE.physTime < newFixedTime do begin
 
       // Higher level controller (subsampled)
-      for r := 0 to WorldODE.Robots.Count-1 do begin
-        with WorldODE.Robots[r] do begin
-          SecondsCount := SecondsCount + WorldODE.Ode_dt;
-          if SecondsCount > DecPeriod then begin
-            SecondsCount := SecondsCount - DecPeriod;
+      WorldODE.SecondsCount := WorldODE.SecondsCount + WorldODE.Ode_dt;
+      if WorldODE.SecondsCount > WorldODE.DecPeriod then begin
+        WorldODE.SecondsCount := WorldODE.SecondsCount - WorldODE.DecPeriod;
 
-            if Focused then begin
-              // Keyboard injection defaults to zero
-              zeroMemory(@KeyVals, sizeof(KeyVals));
-              ReadKeyVals(KeyVals);
-            end;
+        t_last := t_act;
+        QueryPerformanceCounter(t_act);
+
+        for r := 0 to WorldODE.Robots.Count-1 do begin
+          with WorldODE.Robots[r] do begin
 
             // Read Odometry
             for i := 0 to Wheels.Count-1 do begin
@@ -2719,6 +2798,11 @@ begin
               Wheels[i].Axle.Axis[0].ref.volts := 0;
               Wheels[i].Axle.Axis[0].ref.w := 0;
             end;
+          end;
+        end;
+
+        for r := 0 to WorldODE.Robots.Count-1 do begin
+          with WorldODE.Robots[r] do begin
 
             // Call the selected Decision System
             if Fparams.RGControlBlock.ItemIndex = 0 then begin
@@ -2729,20 +2813,17 @@ begin
                 end;
               end;
             end else if Fparams.RGControlBlock.ItemIndex = 1 then begin  // Script controller
-              FEditor.RunOnce;
+              if r = 0 then FEditor.RunOnce;
             end else if Fparams.RGControlBlock.ItemIndex = 2 then begin  // LAN controller
               Fparams.UDPServer.SendBuffer(Fparams.EditRemoteIP.Text, 9801, RemState, sizeof(RemState));
               // Test if A new position was requested
               if RemControl.num = r+1 then begin
-                //if MainBody <> nil then begin
-                  SetXYZTeta(RemControl.x, RemControl.y, RemControl.z, RemControl.teta);
-                //end;
+                SetXYZTeta(RemControl.x, RemControl.y, RemControl.z, RemControl.teta);
               end;
               // Copy Remote Control values to Wheel Structs
               for i := 0 to Wheels.Count-1 do begin
                 Wheels[i].Axle.Axis[0].ref.volts := RemControl.u[i];
                 Wheels[i].Axle.Axis[0].ref.w := RemControl.Wref[i];
-                //FParams.Edit4.Text := inttostr(round(WorldODE.Robots[r].Wheels[i].Axle.Axis.ref.volts));
               end;
               // Default Remote Control values is zero
               ZeroMemory(@RemControl,sizeof(RemControl));
@@ -2751,8 +2832,6 @@ begin
 
             Fparams.ShowRobotState;
 
-            //FChart.AddPoint(WorldODE.physTime, RemControl.Vref[1], WorldODE.Robots[0].Wheels[0].Axle.Axis.Motor.Im,
-             //                dJointGetHingeAngleRate(WorldODE.Robots[0].Wheels[0].Axle.joint)  );
             FChart.AddSample(r, WorldODE.physTime);
           end;
         end;
@@ -2889,8 +2968,9 @@ begin
 
     end;
     //End Physics Loop
+
     QueryPerformanceCounter(t_end);
-    FParams.EditDebug.text := format('%.2f',[(t_end - t_start)/t_delta]);
+    FParams.EditDebug.text := format('%.2f [%.2f]',[(t_end - t_start)/t_delta, (t_act - t_last)/t_delta]);
 
     // GLScene
 
@@ -2945,7 +3025,7 @@ end;
 
 procedure TFViewer.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  //FXMLEdit.Close;
+  FXMLEdit.Close;
 
   //Execute Destroy Physics
   GLCadencer.Enabled := False;
@@ -2975,6 +3055,9 @@ begin
 
 
   FXMLEdit.Show;
+  if WorldODE.XMLErrors.Count > 0 then begin
+    FXMLEdit.LBErrors.Items.AddStrings(WorldODE.XMLErrors);
+  end;
 
   MakeFullyVisible();
   UpdateGLScene;
@@ -3021,6 +3104,8 @@ end;
 procedure TFViewer.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   FEditor.FormCloseQuery(Sender, CanClose);
+  if CanClose then
+    FXMLEdit.FormCloseQuery(Sender, CanClose);
 end;
 
 

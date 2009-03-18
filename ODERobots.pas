@@ -323,7 +323,7 @@ type
     IRSensors: TSensorList;
     Kind: TRobotKind;
     //SamplesCount, DecPeriodSamples: integer;
-    SecondsCount, DecPeriod: double;
+    //SecondsCount, DecPeriod: double;
     Name: string;
     ForceMoved: boolean;
   public
@@ -361,8 +361,6 @@ begin
   Links := TSolidLinkList.Create;
   Wheels := TWheelList.Create;
   IRSensors := TSensorList.Create;
-  SecondsCount := 0;
-  DecPeriod := 0.04;
 end;
 
 destructor TRobot.Destroy;

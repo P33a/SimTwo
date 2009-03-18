@@ -22,7 +22,7 @@ type
     EditAuthors: TEdit;
     EditComments: TEdit;
     TabControl: TTabSheet;
-    Splitter1: TSplitter;
+    Splitter: TSplitter;
     SynEditST: TSynEdit;
     PageControlBottom: TPageControl;
     TabOutput: TTabSheet;
@@ -170,7 +170,7 @@ implementation
 
 //uses Viewer, ProjManage, Params, FastChart, uPSDebugger;
 uses uPSDebugger, Viewer, Utils, Params, uPSI_ODERobotsPublished, uPSI_PathFinder,
-  uPSCompiler;
+  uPSCompiler, IdUDPBase;
 
 {$R *.dfm}
 
