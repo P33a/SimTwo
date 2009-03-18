@@ -63,6 +63,7 @@ object FXMLEdit: TFXMLEdit
     Align = alBottom
     ItemHeight = 13
     TabOrder = 1
+    OnDblClick = LBErrorsDblClick
   end
   object PageControlXML: TPageControl
     Left = 0

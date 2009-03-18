@@ -1461,7 +1461,7 @@ begin
     //end;
     err := '[XML error] ' + format('%s(%d): ', [XMLFile, XML.ParseError.Line]) + #$0d+#$0A
     //err := format('%s(%d): ', [XMLFile, XML.ParseError.Line]) + #$0d+#$0A
-           + XML.ParseError.SrcText + #$0d+#$0A
+           + format('"%s": ',[trim(XML.ParseError.SrcText)]) + #$0d+#$0A
            + XML.ParseError.Reason ;
 
     if ErrorList <> nil then begin
