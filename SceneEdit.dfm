@@ -12,6 +12,8 @@ object FXMLEdit: TFXMLEdit
   Font.Style = []
   Menu = MainMenu
   OldCreateOrder = False
+  OnClose = FormClose
+  OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnShow = FormShow
   PixelsPerInch = 96
@@ -139,6 +141,7 @@ object FXMLEdit: TFXMLEdit
           ''
           '</scene>'
           '')
+        Options = [eoAutoIndent, eoDragDropEditing, eoEnhanceEndKey, eoGroupUndo, eoScrollByOneLess, eoScrollPastEol, eoShowScrollHint, eoSmartTabDelete, eoSmartTabs, eoTabsToSpaces]
         OnStatusChange = SynEditXMLStatusChange
       end
     end
@@ -266,7 +269,8 @@ object FXMLEdit: TFXMLEdit
     IniSection = 'SceneEditor'
     UseRegistry = False
     StoredProps.Strings = (
-      'PageControlXML.ActivePage')
+      'PageControlXML.ActivePage'
+      'LBErrors.Height')
     StoredValues = <>
     Left = 476
     Top = 36

@@ -135,10 +135,12 @@ begin
 end;
 
 procedure TFChart.FormShow(Sender: TObject);
+var fname: string;
 begin
   MaxPoints := strtointdef(EditMaxPoints.Text, 400);
-
-  SeriesNameList.LoadFromFile(ChangeFileExt(FormStorage.IniFileName,'.LogSeries.txt'));
+  fname := ChangeFileExt(FormStorage.IniFileName,'.LogSeries.txt');
+  if fileexists(fname) then
+    SeriesNameList.LoadFromFile(fname);
   FillTreeView(TreeView);
   RefreshChart(TreeView);
 end;

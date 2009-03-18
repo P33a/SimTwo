@@ -77,7 +77,7 @@ object FEditor: TFEditor
     object TabControl: TTabSheet
       Caption = 'Control'
       ImageIndex = 1
-      object Splitter1: TSplitter
+      object Splitter: TSplitter
         Left = 0
         Top = 323
         Width = 761
@@ -593,6 +593,8 @@ object FEditor: TFEditor
   object FormStorage: TFormStorage
     IniSection = 'Editor'
     UseRegistry = False
+    StoredProps.Strings = (
+      'PageControlBottom.Height')
     StoredValues = <
       item
         Name = 'StoredLastProjectName'

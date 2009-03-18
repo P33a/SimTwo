@@ -61,11 +61,14 @@ type
     procedure MenuOpenClick(Sender: TObject);
     procedure MenuExitClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
   private
     function GetSynEdit: TSynEdit;
     function ActSynEdit: TSynEdit;
     procedure FindReplaceDialog(TmpSynEdit: TSynEdit; Dialog: TFindDialog);
     procedure CreateXMLTabEdit(SL: TStringList; i: integer);
+    function CheckModified: boolean;
     { Private declarations }
   public
     { Public declarations }
@@ -103,6 +106,8 @@ procedure TFXMLEdit.FormShow(Sender: TObject);
 var i: integer;
 //    NewTabSheet: TTabSheet;
 //    NewSynEdit: TSynEdit;
+   TmpSynEdit: TSynEdit;
+//   coord: TBufferCoord;
 begin
   TabScene.TabVisible := false;
   SynEditXML.Lines.AddStrings(WorldODE.XMLFiles);
@@ -111,6 +116,15 @@ begin
       CreateXMLTabEdit(WorldODE.XMLFiles, i);
   end;
   FormStorage.RestoreFormPlacement;
+
+  TmpSynEdit := GetSynEdit();
+  if TmpSynEdit = nil then exit;
+  TmpSynEdit.CaretY := FormStorage.ReadInteger('CursorLine',TmpSynEdit.CaretY);
+  TmpSynEdit.CaretX := FormStorage.ReadInteger('CursorCol',TmpSynEdit.CaretX);
+  TmpSynEdit.UpdateCaret;
+  //coord.Line := 100;
+  //SynEditXML.SetCaretAndSelection(coord, coord, coord);
+  TmpSynEdit.SetFocus;
 end;
 
 procedure TFXMLEdit.MenuReBuildClick(Sender: TObject);
@@ -132,16 +146,17 @@ begin
   end;
   FViewer.Close;
   ShellExecute(Handle, 'open', pchar(Application.ExeName), pchar(prs), nil,  SW_SHOWNORMAL);
-
 end;
 
 function TFXMLEdit.GetSynEdit: TSynEdit;
 var i: integer;
 begin
+  result := nil;
   i := PageControlXML.TabIndex;
+  if i<0 then exit;
   if (WorldODE.XMLFiles.Objects[i] is TSynEdit) then begin
     result := TSynEdit(WorldODE.XMLFiles.Objects[i]);
-  end else result := nil;
+  end;
 end;
 
 // Same as GetSynEdit but returns a dummy SynEdit instead of nil
@@ -346,6 +361,36 @@ end;
 
 
 procedure TFXMLEdit.MenuExitClick(Sender: TObject);
+begin
+  FViewer.close;
+end;
+
+procedure TFXMLEdit.FormCreate(Sender: TObject);
+begin
+  FormStorage.IniFileName := GetIniFineName;
+end;
+
+procedure TFXMLEdit.FormClose(Sender: TObject; var Action: TCloseAction);
+var TmpSynEdit: TSynEdit;
+begin
+  TmpSynEdit := GetSynEdit();
+  if TmpSynEdit = nil then exit;
+  FormStorage.WriteInteger('CursorLine',TmpSynEdit.CaretY);
+  FormStorage.WriteInteger('CursorCol',TmpSynEdit.CaretX);
+end;
+
+procedure TFXMLEdit.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+begin
+  if CheckModified then begin
+    if MessageDlg('Some XML Files were changed.'+crlf+
+                  'Exit anyway?',
+                  mtConfirmation , [mbOk,mbCancel], 0)
+       = mrCancel then CanClose:=false;
+  end;
+end;
+
+
+function TFXMLEdit.CheckModified: boolean;
 var i: integer;
     TmpSynEdit: TSynEdit;
     AnyModified: boolean;
@@ -354,22 +399,10 @@ begin
   for i := 0 to WorldODE.XMLFiles.Count -1 do begin
     if (WorldODE.XMLFiles.Objects[i] is TSynEdit) then begin
       TmpSynEdit := TSynEdit(WorldODE.XMLFiles.Objects[i]);
-    end else continue;
-    AnyModified := AnyModified or TmpSynEdit.Modified;
+      AnyModified := AnyModified or TmpSynEdit.Modified;
+    end;
   end;
-
-  if AnyModified then begin
-    if MessageDlg('SomeFiles were changed.'+ #13 + #10 +
-                  'Exit anyway?',
-                  mtConfirmation , [mbOk,mbCancel], 0)
-       = mrCancel then exit;
-  end;
-  FViewer.close;
-end;
-
-procedure TFXMLEdit.FormCreate(Sender: TObject);
-begin
-  FormStorage.IniFileName := GetIniFineName;
+  result := AnyModified;
 end;
 
 end.

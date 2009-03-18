@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls, ExtCtrls, GLWin32Viewer, GLcontext, Math,
   IdBaseComponent, IdComponent, IdUDPBase, IdUDPServer, IdSocketHandle, ODERobots, OdeImport,
-  rxPlacemnt, Grids, GLCadencer, CPort, ShellAPI;
+  rxPlacemnt, Grids, GLCadencer, CPort, ShellAPI, Sockets;
 
 type
   TFParams = class(TForm)
@@ -489,6 +489,8 @@ begin
   FillEditArray('EditIR', EditsIR);
   CBIRNoiseClick(Sender);
   BPhysicsSetClick(Sender);
+  CBGLObjectClick(Sender);
+
   try
     if FileExists('params.cfg') then begin
       LoadGridFromfile(SGConf, 'params.cfg');
@@ -503,7 +505,6 @@ begin
     SGConfRowToVar(i);
     VarToSGConfRow(i);
   end;
-  CBGLObjectClick(Sender);
 end;
 
 procedure TFParams.FillEditArray(ProtoName: string; var EditArray: array of TEdit);
@@ -917,6 +918,7 @@ procedure TFParams.UDPGenericStatus(ASender: TObject;
   const AStatus: TIdStatus; const AStatusText: String);
 begin
  // if hsDisconnected = AStatus then UDPGeneric.Active := false;
+//  UDPGeneric.DoWork();
 end;
 
 end.
