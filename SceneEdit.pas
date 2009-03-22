@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ComCtrls, SynEditHighlighter, SynHighlighterXML, SynEdit, Menus,
   ExtCtrls, StdCtrls, ShellAPI, SynEditTypes, SynEditMiscClasses, SynEditSearch,
-  rxPlacemnt, ProjConfig;
+  rxPlacemnt, ProjConfig, StrUtils;
 
 type
   TFXMLEdit = class(TForm)
@@ -421,10 +421,23 @@ begin
 end;
 
 
+function GetTokenInErrorString(const txt : string): string;
+var p1, p2: integer;
+begin
+  result := '';
+
+  p1:= pos('"', txt);
+  p2:= posex('"', txt, p1+1);
+  if (p1 > 0) and (p2 > 0) then begin
+    result := copy(txt, p1+1, p2-(p1+1));
+  end;
+end;
+
 procedure TFXMLEdit.LBErrorsDblClick(Sender: TObject);
-var i: integer;
+var i, col: integer;
     TmpSynEdit: TSynEdit;
     ErrLineNumber: integer;
+    tok, lin: string;
 begin
   i:= LBErrors.ItemIndex;
   if i<0 then exit;
@@ -436,6 +449,13 @@ begin
 
   if (ErrLineNumber <> -1) then begin
     TmpSynEdit.caretY := ErrLineNumber;
+
+    tok := GetTokenInErrorString(LBErrors.Items[i]);
+    lin :=  TmpSynEdit.LineText;
+    col := pos(tok, lin);
+    if col <> 0 then
+      TmpSynEdit.caretX := col;
+
     TmpSynEdit.UpdateCaret;
     TmpSynEdit.setfocus;
   end;
