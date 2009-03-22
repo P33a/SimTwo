@@ -410,31 +410,8 @@ begin
       up.z := vtmp[2];
     end;
 end;
+
 {
-function XMLStrToReal(nodeValue: WideString): real;
-begin
-  Result := StrToFloat(StringReplace(nodeValue, DEFAULT_DECIMALSEPARATOR,
-    DecimalSeparator, [rfReplaceAll]));
-end;
-
-function XMLStrToReal(nodeValue: WideString; var value: real): boolean;
-begin
-  try
-    value := XMLStrToReal(nodeValue);
-    Result := true;
-  except
-    on EConvertError do
-      Result := false;
-  end;
-end;
-
-function XMLStrToRealDef(nodeValue: WideString; defaultValue: real): real;
-begin
-  if not XMLStrToReal(nodeValue,Result) then
-    Result := defaultValue;
-end;  XMLStrToRealDef }
-
-
 function GetNodeAttrRealExpr(parentNode: IXMLNode; attrName: string; defaultValue: real): real;
 var attrValue, s: WideString;
 begin
@@ -448,7 +425,7 @@ begin
       Result := defaultValue;
     end;
   end;
-end; { GetNodeAttrReal }
+end; // GetNodeAttrReal }
 
 
 function TWorld_ODE.GetNodeAttrRealParse(parentNode: IXMLNode; attrName: string; defaultValue: real): real;
@@ -2184,15 +2161,15 @@ begin
       while prop <> nil do begin
 
         if prop.NodeName = 'radius' then begin
-          radius := GetNodeAttrRealExpr(prop, 'value', radius);
+          radius := GetNodeAttrRealParse(prop, 'value', radius);
         end;
         if prop.NodeName = 'mass' then begin
-          mass := GetNodeAttrRealExpr(prop, 'value', mass);
+          mass := GetNodeAttrRealParse(prop, 'value', mass);
         end;
         if prop.NodeName = 'pos' then begin
-          posX := GetNodeAttrRealExpr(prop, 'x', posX);
-          posY := GetNodeAttrRealExpr(prop, 'y', posY);
-          posZ := GetNodeAttrRealExpr(prop, 'z', posZ);
+          posX := GetNodeAttrRealParse(prop, 'x', posX);
+          posY := GetNodeAttrRealParse(prop, 'y', posY);
+          posZ := GetNodeAttrRealParse(prop, 'z', posZ);
         end;
         prop := prop.NextSibling;
 
