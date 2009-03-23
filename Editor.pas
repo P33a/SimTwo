@@ -880,6 +880,7 @@ procedure TFEditor.FormShow(Sender: TObject);
 var //i: integer;
     s: string;
 begin
+  Project.FileName := 'Untitled';
   s := FormStorage.ReadString('LastProjectName','');
   if s <> '' then begin
     //ProjectOpen(s);
@@ -890,14 +891,12 @@ begin
 
     with Project do begin
       fileName:= s;
-      //EditAuthors.text:=Author;
-      //EditComments.Text:=Comments;
       //Modified:=False;
     end;
-
-    UpdateStatusLine;
-    Caption := FormEditorCaption + ExtractFileName(s);
   end;
+
+  UpdateStatusLine;
+  Caption := FormEditorCaption + ExtractFileName(Project.FileName);
 
   compile;
 

@@ -9,7 +9,7 @@ uses
   GLBitmapFont, GLWindowsFont, keyboard, GLTexture, math, GLSpaceText, Remote,
   GLShadowVolume, GLSkydome, GLGraph, OmniXML, OmniXMLUtils, Contnrs, ODERobots,
   rxPlacemnt, ProjConfig, GLHUDObjects, Menus, GLVectorFileObjects,
-  GLCelShader, GLFireFX, GlGraphics, OpenGL1x, Simple;
+  GLCelShader, GLFireFX, GlGraphics, OpenGL1x, SimpleParser;
 
 type
   TRGBfloat = record
@@ -96,8 +96,7 @@ type
     procedure UpdatePickJoint;
     procedure LoadThingsFromXML(XMLFile: string);
     procedure CreateFixedJoint(var Link: TSolidLink; Solid1,  Solid2: TSolid);
-    function GetNodeAttrRealParse(parentNode: IXMLNode; attrName: string;
-      defaultValue: real): real;
+    function GetNodeAttrRealParse(parentNode: IXMLNode; attrName: string; defaultValue: double; const Parser: TSimpleParser): double;
 //    procedure AxisGLCreate(axis: Taxis; aRadius, aHeight: double);
 //    procedure AxisGLSetPosition(axis: Taxis);
   public
@@ -428,7 +427,7 @@ begin
 end; // GetNodeAttrReal }
 
 
-function TWorld_ODE.GetNodeAttrRealParse(parentNode: IXMLNode; attrName: string; defaultValue: real): real;
+function TWorld_ODE.GetNodeAttrRealParse(parentNode: IXMLNode; attrName: string; defaultValue: double; const Parser: TSimpleParser): double;
 var attrValue, s: WideString;
     err: string;
 begin
@@ -437,7 +436,7 @@ begin
   end else begin
     s := StringReplace(attrValue, DEFAULT_DECIMALSEPARATOR, DecimalSeparator, [rfReplaceAll]);
     try
-      Result := SimpleCalc(s);
+      Result := Parser.Calc(s);
     except on E: Exception do begin
       Result := defaultValue;
       err := '[Expression error] ' + format('%s(%d): ', [XMLFiles[XMLFiles.count - 1], -1]) + #$0d+#$0A
@@ -2079,6 +2078,9 @@ var XML: IXMLDocument;
 //    thing: TSolid;
     name, filename: string;
     mass, radius: double;
+    Parser: TSimpleParser;
+    ConstName: string;
+    ConstValue: double;
 begin
 {  XML:=CreateXMLDoc;
   XML.Load(XMLFile);
@@ -2096,93 +2098,107 @@ begin
   root:=XML.SelectSingleNode('/scene');
   if root = nil then exit;
 
-  objNode := root.FirstChild;
-  while objNode <> nil do begin
-    if objNode.NodeName = 'robot' then begin
-      prop := objNode.FirstChild;
-      // default values
-      name:='robot' + inttostr(Robots.count);
-      filename := '';
-      posX := 0; posY := 0; posZ := 0;
-      angX := 0; angY := 0; angZ := 0;
-      while prop <> nil do begin
-        if prop.NodeName = 'ID' then begin
-          name := GetNodeAttrStr(prop, 'name', name);
+  Parser := TSimpleParser.Create;
+  try
+    objNode := root.FirstChild;
+    while objNode <> nil do begin
+      if objNode.NodeName = 'robot' then begin
+        prop := objNode.FirstChild;
+        // default values
+        name:='robot' + inttostr(Robots.count);
+        filename := '';
+        posX := 0; posY := 0; posZ := 0;
+        angX := 0; angY := 0; angZ := 0;
+        while prop <> nil do begin
+          if prop.NodeName = 'ID' then begin
+            name := GetNodeAttrStr(prop, 'name', name);
+          end;
+          if prop.NodeName = 'body' then begin
+            filename := GetNodeAttrStr(prop, 'file', filename);
+          end;
+          if prop.NodeName = 'pos' then begin
+            posX := GetNodeAttrRealParse(prop, 'x', posX, Parser);
+            posY := GetNodeAttrRealParse(prop, 'y', posY, Parser);
+            posZ := GetNodeAttrRealParse(prop, 'z', posZ, Parser);
+          end;
+          if prop.NodeName = 'rot_deg' then begin
+            angX := degToRad(GetNodeAttrRealParse(prop, 'x', angX, Parser));
+            angY := degToRad(GetNodeAttrRealParse(prop, 'y', angY, Parser));
+            angZ := degToRad(GetNodeAttrRealParse(prop, 'z', angZ, Parser));
+          end;
+          prop := prop.NextSibling;
         end;
-        if prop.NodeName = 'body' then begin
-          filename := GetNodeAttrStr(prop, 'file', filename);
+
+        //if filename <> '' then begin
+        if fileexists(filename) then begin
+          XMLFiles.Add(filename);
+          newRobot := LoadRobotFromXML(filename);
+          if newRobot <> nil then begin
+            newRobot.Name := name;
+            newRobot.SetXYZTeta(posX, posY, posZ, angZ);
+          end;
         end;
-        if prop.NodeName = 'pos' then begin
-          posX := GetNodeAttrRealParse(prop, 'x', posX);
-          posY := GetNodeAttrRealParse(prop, 'y', posY);
-          posZ := GetNodeAttrRealParse(prop, 'z', posZ);
+
+      end else if objNode.NodeName = 'defines' then begin
+        prop := objNode.FirstChild;
+        // default values
+        ConstName:='';
+        ConstValue := 0;
+        while prop <> nil do begin
+          if prop.NodeName = 'const' then begin
+            ConstName := GetNodeAttrStr(prop, 'name', ConstName);
+            ConstValue := GetNodeAttrRealParse(prop, 'value', ConstValue, Parser);
+            Parser.RegisterConst(ConstName, ConstValue);
+          end;
+          prop := prop.NextSibling;
         end;
-        if prop.NodeName = 'rot_deg' then begin
-          angX := degToRad(GetNodeAttrRealParse(prop, 'x', angX));
-          angY := degToRad(GetNodeAttrRealParse(prop, 'y', angY));
-          angZ := degToRad(GetNodeAttrRealParse(prop, 'z', angZ));
+
+      end else if objNode.NodeName = 'obstacles' then begin
+        // Create static obstacles
+        filename := GetNodeAttrStr(objNode, 'file', filename);
+        if fileexists(filename) then begin
+          XMLFiles.Add(filename);
+          LoadObstaclesFromXML(filename);
         end;
-        prop := prop.NextSibling;
+
+      end else if objNode.NodeName = 'things' then begin
+        // Create things
+        filename := GetNodeAttrStr(objNode, 'file', filename);
+        if fileexists(filename) then begin
+          XMLFiles.Add(filename);
+          LoadThingsFromXML(filename);
+        end;
+
+
+      end else if objNode.NodeName = 'ball' then begin
+        prop := objNode.FirstChild;
+        // default values
+        radius := -1; mass := -1;
+        posX := 0; posY := 0; posZ := 0;
+
+        while prop <> nil do begin
+
+          if prop.NodeName = 'radius' then begin
+            radius := GetNodeAttrRealParse(prop, 'value', radius, Parser);
+          end;
+          if prop.NodeName = 'mass' then begin
+            mass := GetNodeAttrRealParse(prop, 'value', mass, Parser);
+          end;
+          if prop.NodeName = 'pos' then begin
+            posX := GetNodeAttrRealParse(prop, 'x', posX, Parser);
+            posY := GetNodeAttrRealParse(prop, 'y', posY, Parser);
+            posZ := GetNodeAttrRealParse(prop, 'z', posZ, Parser);
+          end;
+          prop := prop.NextSibling;
+
+        end;
       end;
 
-      //if filename <> '' then begin
-      if fileexists(filename) then begin
-        XMLFiles.Add(filename);
-        newRobot := LoadRobotFromXML(filename);
-        if newRobot <> nil then begin
-          newRobot.Name := name;
-          newRobot.SetXYZTeta(posX, posY, posZ, angZ);
-        end;
-      end;
-
-    end else if objNode.NodeName = 'obstacles' then begin
-      // Create static obstacles
-      filename := GetNodeAttrStr(objNode, 'file', filename);
-      if fileexists(filename) then begin
-        XMLFiles.Add(filename);
-        LoadObstaclesFromXML(filename);
-      end;
-
-    end else if objNode.NodeName = 'things' then begin
-      // Create things
-      filename := GetNodeAttrStr(objNode, 'file', filename);
-      if fileexists(filename) then begin
-        XMLFiles.Add(filename);
-        LoadThingsFromXML(filename);
-      end;
-
-
-    end else if objNode.NodeName = 'ball' then begin
-      prop := objNode.FirstChild;
-      // default values
-      radius := -1; mass := -1;
-      posX := 0; posY := 0; posZ := 0;
-
-      while prop <> nil do begin
-
-        if prop.NodeName = 'radius' then begin
-          radius := GetNodeAttrRealParse(prop, 'value', radius);
-        end;
-        if prop.NodeName = 'mass' then begin
-          mass := GetNodeAttrRealParse(prop, 'value', mass);
-        end;
-        if prop.NodeName = 'pos' then begin
-          posX := GetNodeAttrRealParse(prop, 'x', posX);
-          posY := GetNodeAttrRealParse(prop, 'y', posY);
-          posZ := GetNodeAttrRealParse(prop, 'z', posZ);
-        end;
-        prop := prop.NextSibling;
-
-      end;
-      {if (mass > 0) and (radius > 0) then begin
-        Thing := TSolid.Create;
-        Things.Add(Thing);
-        Thing.description := 'Ball';
-        CreateSolidSphere(Thing, mass, posX, posY, posZ, radius);
-      end;}
+      objNode := objNode.NextSibling;
     end;
 
-    objNode := objNode.NextSibling;
+  finally
+    Parser.Free;
   end;
 
 end;

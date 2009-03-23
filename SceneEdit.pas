@@ -80,7 +80,7 @@ var
 
 implementation
 
-uses Viewer;
+uses Viewer, Editor;
 
 {$R *.dfm}
 
@@ -138,13 +138,16 @@ begin
     TmpSynEdit := TSynEdit(WorldODE.XMLFiles.Objects[i]);
     if TmpSynEdit.Modified then begin
       TmpSynEdit.Lines.SaveToFile(WorldODE.XMLFiles[i]);
+      TmpSynEdit.Modified := false;
     end;
   end;
+  FEditor.MenuSaveClick(Sender);
 
   prs := '';
   for i := 1 to ParamCount do begin
     prs := ' ' + ParamStr(i);
   end;
+
   FViewer.Close;
   ShellExecute(Handle, 'open', pchar(Application.ExeName), pchar(prs), nil,  SW_SHOWNORMAL);
 end;
@@ -434,31 +437,37 @@ begin
 end;
 
 procedure TFXMLEdit.LBErrorsDblClick(Sender: TObject);
-var i, col: integer;
+var i, col, idx: integer;
     TmpSynEdit: TSynEdit;
     ErrLineNumber: integer;
     tok, lin: string;
+    BufferCoord: TBufferCoord;
 begin
+  TmpSynEdit := GetSynEdit();
+  if TmpSynEdit = nil then exit;
+
   i:= LBErrors.ItemIndex;
   if i<0 then exit;
 
   ErrLineNumber := GetLineInErrorString(LBErrors.Items[i]);
-
-  TmpSynEdit := GetSynEdit();
-  if TmpSynEdit = nil then exit;
+  tok := GetTokenInErrorString(LBErrors.Items[i]);
 
   if (ErrLineNumber <> -1) then begin
     TmpSynEdit.caretY := ErrLineNumber;
 
-    tok := GetTokenInErrorString(LBErrors.Items[i]);
     lin :=  TmpSynEdit.LineText;
     col := pos(tok, lin);
     if col <> 0 then
       TmpSynEdit.caretX := col;
 
-    TmpSynEdit.UpdateCaret;
-    TmpSynEdit.setfocus;
+  end else begin
+    idx := pos(tok, TmpSynEdit.Text);
+    BufferCoord := TmpSynEdit.CharIndexToRowCol(idx);
+    TmpSynEdit.SetCaretAndSelection(BufferCoord, BufferCoord, BufferCoord);
   end;
+
+  TmpSynEdit.UpdateCaret;
+  TmpSynEdit.setfocus;
 end;
 
 end.
