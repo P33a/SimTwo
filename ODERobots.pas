@@ -302,10 +302,6 @@ type
     procedure ClearAll;
   end;
 
-  TJointsRefs = record
-//    Sample: array[0..MaxJointSamples-1, 0..MaxAxis-1] of TAxisInputs;
-  end;
-
 
   TKeyVals = array[0..MaxKeyVals-1] of single; //TODO
 
@@ -388,6 +384,7 @@ var i, j: integer;
 begin
   if MainBody <> nil then begin
     P0 := MainBody.ZeroPosition;
+    //P0 := Solids[0].ZeroPosition;
   end else begin
     P0 := Vector3Make(0, 0, 0);
   end;
@@ -405,13 +402,33 @@ begin
 
     for j := 0 to Links.Count - 1 do begin
       if (dJointGetBody(Links[j].joint, 0) = Solids[i].Body) and (dJointGetBody(Links[j].joint, 1)= nil) then begin
-        Links[j].Axis[0].GetAnchor(Pr);
+        {Links[j].Axis[0].GetAnchor(Pr);
         Pd := Vector3SUB(Pr, P0);
+        dMULTIPLY0_331(Pr, Rteta, Pd);
+        Pd[0] := Pr[0] + P0[0];
+        Pd[1] := Pr[1] + P0[1];
+        Pd[2] := Pr[2] + P0[2];
+        Links[j].Axis[0].SetAnchor(Pd)}
+
+        {Pd := Vector3SUB(Pr, P0);
         dMULTIPLY0_331(Pr, Rteta, Pd);
         Pd[0] := Pr[0] + P0[0] + new_x;
         Pd[1] := Pr[1] + P0[1] + new_y;
-        Pd[2] := Pr[2] + P0[2] + new_z;
-        Links[j].Axis[0].SetAnchor(Pd);
+        Pd[2] := Pr[2] + P0[2] + new_z;}
+        //Links[j].Axis[0].SetAnchor(Pd);
+
+        {Links[j].Axis[0].GetAnchor(Pr);
+        dMULTIPLY0_331(Pd, Rteta, Pr);
+        Pr[0] := Pd[0];// + new_x;
+        Pr[1] := Pd[1];// + new_y;
+        Pr[2] := Pd[2];// + new_z;
+        Links[j].Axis[0].SetAnchor(Pr);}
+        Links[j].Axis[0].GetAnchor(Pr);
+        dMULTIPLY0_331(Pd, Rteta, Pr);
+        Pr[0] := Pd[0];// + new_x;
+        Pr[1] := Pd[1];// + new_y;
+        Pr[2] := Pd[2];// + new_z;
+        Links[j].Axis[0].SetAnchor(Pr);
       end;
     end;
 
