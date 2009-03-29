@@ -71,7 +71,7 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    //procedure SetVarList(nVarsList: TStrings);
+    procedure CopyVarList(const SourceParser: TSimpleParser);
 
     procedure Check(e: string);
     function Calc(e: string): double;
@@ -118,13 +118,21 @@ begin
 end;
 
 procedure TSimpleParser.RegisterConst(ConstName: string; value: double);
+var idx: integer;
 begin
- //TODO: Test if constname already exists
-  if ConstsCount >=  maxDoubleStack then exit; //BAaaaad...
-  consts[ConstsCount] := value;
-  inc(ConstsCount);
+  //Test if constname already exists
+  idx := VarsList.IndexOf(uppercase(ConstName));
+  if idx = -1 then begin
+    if ConstsCount >=  maxDoubleStack then exit; //BAaaaad...
+    consts[ConstsCount] := value;
+    inc(ConstsCount);
 
-  VarsList.AddObject(uppercase(ConstName), Tobject(@consts[ConstsCount-1]));
+    VarsList.AddObject(uppercase(ConstName), Tobject(@consts[ConstsCount-1]));
+  end else begin
+    //VarsList.Strings[idx] :=
+    //VarsList.Objects[idx] :=
+    consts[idx] := value;
+  end;
 //  BuildHashTable(VarsList,HashVars);
 end;
 
@@ -796,6 +804,19 @@ end;
 
 { TSimpleParser }
 
+procedure TSimpleParser.CopyVarList(const SourceParser: TSimpleParser);
+var i: integer;
+begin
+  // Copy VarList
+  VarsList.Assign(SourceParser.VarsList);
+  for i := 0 to VarsList.Count -1 do begin
+    // Copy values
+    Consts[i] := SourceParser.Consts[i];
+    // Copy Reference
+    VarsList.Objects[i] := TObject(@Consts[i]);
+  end;
+end;
+
 constructor TSimpleParser.Create;
 begin
   VarsList := TStringList.create;
@@ -825,5 +846,6 @@ begin
   VarsList.Free;
   inherited;
 end;
+
 
 end.

@@ -1232,7 +1232,7 @@ struct dxHashSpace : public dxSpace {
   procedure dJointGetBreakForce(const dJointID : TdJointID; body : integer; var force: TdVector3); cdecl; external {$IFDEF __GPC__}name 'dJointGetBreakForce'{$ELSE} ODEDLL{$ENDIF __GPC__};
   procedure dJointGetBreakTorque(const dJointID : TdJointID; body : integer; var torque: TdVector3); cdecl; external {$IFDEF __GPC__}name 'dJointGetBreakTorque'{$ELSE} ODEDLL{$ENDIF __GPC__};
   {$ENDIF}
-
+                   
   // normal joints
   procedure dJointGroupDestroy(const dJointGroupID : TdJointGroupID); cdecl; external {$IFDEF __GPC__}name 'dJointGroupDestroy'{$ELSE} ODEDLL{$ENDIF __GPC__};
   function dJointGroupCreate(const max_size: Integer): TdJointGroupID; cdecl; external {$IFDEF __GPC__}name 'dJointGroupCreate'{$ELSE} ODEDLL{$ENDIF __GPC__};

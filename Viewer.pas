@@ -6,10 +6,10 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, GLScene, GLObjects, GLMisc, GLWin32Viewer, GLCadencer, ODEImport,
   GLShadowPlane, VectorGeometry, GLGeomObjects, ExtCtrls, ComCtrls,
-  GLBitmapFont, GLWindowsFont, keyboard, GLTexture, math, GLSpaceText, Remote,
+  GLWindowsFont, keyboard, GLTexture, math, GLSpaceText, Remote,
   GLShadowVolume, GLSkydome, GLGraph, OmniXML, OmniXMLUtils, Contnrs, ODERobots,
   rxPlacemnt, ProjConfig, GLHUDObjects, Menus, GLVectorFileObjects,
-  GLCelShader, GLFireFX, GlGraphics, OpenGL1x, SimpleParser;
+  GLCelShader, GLFireFX, GlGraphics, OpenGL1x, SimpleParser, GLBitmapFont;
 
 type
   TRGBfloat = record
@@ -73,30 +73,33 @@ type
     procedure CreateIRSensor(motherbody: PdxBody; IRSensor: TSensor; posX, posY, posZ,
       IR_teta, IR_length, InitialWidth, FinalWidth: double);
 
-    procedure LoadObstaclesFromXML(XMLFile: string);
-    procedure LoadIRSensorsFromXML(Robot: TRobot; const root: IXMLNode);
+    procedure LoadObstaclesFromXML(XMLFile: string; Parser: TSimpleParser);
+    procedure LoadIRSensorsFromXML(Robot: TRobot; const root: IXMLNode; Parser: TSimpleParser);
     //procedure LoadHumanoidJointsFromXML(Robot: TRobot; XMLFile: string);
-    procedure LoadLinksFromXML(Robot: TRobot; const root: IXMLNode);
+    procedure LoadLinksFromXML(Robot: TRobot; const root: IXMLNode; Parser: TSimpleParser);
+    procedure ReadFrictionFromXMLNode(var Friction: TFriction; const prop: IXMLNode; Parser: TSimpleParser);
+    procedure ReadSpringFromXMLNode(var Spring: TSpring; const prop: IXMLNode; Parser: TSimpleParser);
+    procedure ReadMotorFromXMLNode(var Motor: TMotor; const prop: IXMLNode; Parser: TSimpleParser);
 
     procedure CreateUniversalJoint(var Link: TSolidLink; Solid1,
       Solid2: TSolid; anchor_x, anchor_y, anchor_z, axis_x, axis_y, axis_z,
       axis2_x, axis2_y, axis2_z: double);
     procedure SetUniversalLimits(var Link: TSolidLink; LimitMin, LimitMax,
       Limit2Min, Limit2Max: double);
-    procedure LoadSolidsFromXML(SolidList: TSolidList; const root: IXMLNode);
+    procedure LoadSolidsFromXML(SolidList: TSolidList; const root: IXMLNode; Parser: TSimpleParser);
 //    procedure CreateBall(bmass, radius, posX, posY, posZ: double);
-    procedure LoadWheelsFromXML(Robot: TRobot; const root: IXMLNode);
-    procedure LoadShellsFromXML(Robot: TRobot;  const root: IXMLNode);
+    procedure LoadWheelsFromXML(Robot: TRobot; const root: IXMLNode; Parser: TSimpleParser);
+    procedure LoadShellsFromXML(Robot: TRobot;  const root: IXMLNode; Parser: TSimpleParser);
     procedure LoadSceneFromXML(XMLFile: string);
-    function LoadRobotFromXML(XMLFile: string): TRobot;
+    function LoadRobotFromXML(XMLFile: string; Parser: TSimpleParser): TRobot;
     procedure CreateSliderJoint(var Link: TSolidLink; Solid1,
       Solid2: TSolid; axis_x, axis_y, axis_z: double);
-    procedure SetSliderLimits(var Link: TSolidLink; LimitMin,
-      LimitMax: double);
+    procedure SetSliderLimits(var Link: TSolidLink; LimitMin, LimitMax: double);
     procedure UpdatePickJoint;
-    procedure LoadThingsFromXML(XMLFile: string);
+    procedure LoadThingsFromXML(XMLFile: string; Parser: TSimpleParser);
     procedure CreateFixedJoint(var Link: TSolidLink; Solid1,  Solid2: TSolid);
     function GetNodeAttrRealParse(parentNode: IXMLNode; attrName: string; defaultValue: double; const Parser: TSimpleParser): double;
+    procedure LoadDefinesFromXML(Parser: TSimpleParser; const root: IXMLNode);
 //    procedure AxisGLCreate(axis: Taxis; aRadius, aHeight: double);
 //    procedure AxisGLSetPosition(axis: Taxis);
   public
@@ -184,9 +187,6 @@ type
   public
   end;
 
-procedure ReadFrictionFromXMLNode(var Friction: TFriction; const prop: IXMLNode);
-procedure ReadSpringFromXMLNode(var Spring: TSpring; const prop: IXMLNode);
-procedure ReadMotorFromXMLNode(var Motor: TMotor; const prop: IXMLNode);
 
 procedure RFromZYXRotRel(var R: TdMatrix3; angX, angY, angZ: TDreal);
 
@@ -711,6 +711,9 @@ begin
 //  JointGLCreate(idx);
 
 //  dJointSetHingeParam (joint[idx], dParamStopERP, );
+//  dJointSetHingeParam(Link.joint, dParamCFM, 1e-8);
+//  dJointSetHingeParam(Link.joint, dParamFudgeFactor, 0.1);
+
   dJointSetHingeParam(Link.joint, dParamStopCFM, 1e-5);
 end;
 
@@ -784,9 +787,9 @@ begin
 
   dJointAttach(PickJoint, Solid.body, nil);
   dJointSetBallAnchor(PickJoint, anchor_x, anchor_y, anchor_z);
-  PickLinDamping := dBodyGetLinearDamping(PickSolid.Body);
-  PickAngularDamping := dBodyGetAngularDamping(PickSolid.Body);
-  dBodySetDamping(PickSolid.Body, 1e-2, 1e-1);
+  PickLinDamping := dBodyGetLinearDamping(Solid.Body);
+  PickAngularDamping := dBodyGetAngularDamping(Solid.Body);
+  dBodySetDamping(Solid.Body, 1e-2, 1e-1);
 //  JointGLCreate(idx);
 
 //  dJointSetBallParam(PickJoint, dParamStopERP, );
@@ -835,6 +838,7 @@ procedure TWorld_ODE.DestroyPickJoint;
 begin
   //dJointAttach(PickJoint, nil, nil);
   if PickJoint <> nil then begin
+    //dJointAttach(PickJoint, nil, nil);
     dJointDestroy(PickJoint);
     dBodySetDamping(PickSolid.Body, PickLinDamping, PickAngularDamping);
     PickJoint := nil;
@@ -958,7 +962,7 @@ end;}
 
 //procedure TWorld_ODE.LoadHumanoidBonesFromXML(Robot: TRobot; XMLFile: string);
 //procedure TWorld_ODE.LoadSolidsFromXML(Robot: TRobot; const root: IXMLNode);
-procedure TWorld_ODE.LoadSolidsFromXML(SolidList: TSolidList; const root: IXMLNode);
+procedure TWorld_ODE.LoadSolidsFromXML(SolidList: TSolidList; const root: IXMLNode; Parser: TSimpleParser);
 var bone, prop: IXMLNode;
     radius, sizeX, sizeY, sizeZ, posX, posY, posZ, angX, angY, angZ, mass: double;
     BuoyantMass, Drag, StokesDrag, RollDrag: double;
@@ -1001,43 +1005,43 @@ begin
       Surf.bounce := 0; Surf.bounce_vel := 0;
       while prop <> nil do begin
         if prop.NodeName = 'surface' then begin
-          Surf.mu := GetNodeAttrReal(prop, 'mu', Surf.mu);
-          Surf.mu2 := GetNodeAttrReal(prop, 'mu2', Surf.mu2);
-          Surf.soft_cfm := GetNodeAttrReal(prop, 'softness', Surf.soft_cfm);
-          Surf.bounce := GetNodeAttrReal(prop, 'bounce', Surf.bounce);
-          Surf.bounce_vel := GetNodeAttrReal(prop, 'bounce_tresh', Surf.bounce_vel);
+          Surf.mu := GetNodeAttrRealParse(prop, 'mu', Surf.mu, Parser);
+          Surf.mu2 := GetNodeAttrRealParse(prop, 'mu2', Surf.mu2, Parser);
+          Surf.soft_cfm := GetNodeAttrRealParse(prop, 'softness', Surf.soft_cfm, Parser);
+          Surf.bounce := GetNodeAttrRealParse(prop, 'bounce', Surf.bounce, Parser);
+          Surf.bounce_vel := GetNodeAttrRealParse(prop, 'bounce_tresh', Surf.bounce_vel, Parser);
         end;
         if prop.NodeName = 'mesh' then begin
           MeshFile := GetNodeAttrStr(prop, 'file', MeshFile);
           MeshShadowFile := GetNodeAttrStr(prop, 'shadowfile', MeshShadowFile);
-          MeshScale := GetNodeAttrReal(prop, 'scale', MeshScale);
+          MeshScale := GetNodeAttrRealParse(prop, 'scale', MeshScale, Parser);
           MeshCastsShadows := GetNodeAttrBool(prop, 'shadow', MeshCastsShadows);
         end;
         if prop.NodeName = 'drag' then begin
-          Drag := GetNodeAttrReal(prop, 'coefficient', Drag);
-          StokesDrag := GetNodeAttrReal(prop, 'stokes', StokesDrag);
-          RollDrag := GetNodeAttrReal(prop, 'roll', RollDrag);
+          Drag := GetNodeAttrRealParse(prop, 'coefficient', Drag, Parser);
+          StokesDrag := GetNodeAttrRealParse(prop, 'stokes', StokesDrag, Parser);
+          RollDrag := GetNodeAttrRealParse(prop, 'roll', RollDrag, Parser);
         end;
         if prop.NodeName = 'buoyant' then begin
-          BuoyantMass := GetNodeAttrReal(prop, 'mass', BuoyantMass);
+          BuoyantMass := GetNodeAttrRealParse(prop, 'mass', BuoyantMass, Parser);
         end;
         if prop.NodeName = 'radius' then begin
-          radius := GetNodeAttrReal(prop, 'value', radius);
+          radius := GetNodeAttrRealParse(prop, 'value', radius, Parser);
         end;
         if prop.NodeName = 'size' then begin
-          sizeX := GetNodeAttrReal(prop, 'x', sizeX);
-          sizeY := GetNodeAttrReal(prop, 'y', sizeY);
-          sizeZ := GetNodeAttrReal(prop, 'z', sizeZ);
+          sizeX := GetNodeAttrRealParse(prop, 'x', sizeX, Parser);
+          sizeY := GetNodeAttrRealParse(prop, 'y', sizeY, Parser);
+          sizeZ := GetNodeAttrRealParse(prop, 'z', sizeZ, Parser);
         end;
         if prop.NodeName = 'pos' then begin
-          posX := GetNodeAttrReal(prop, 'x', posX);
-          posY := GetNodeAttrReal(prop, 'y', posY);
-          posZ := GetNodeAttrReal(prop, 'z', posZ);
+          posX := GetNodeAttrRealParse(prop, 'x', posX, Parser);
+          posY := GetNodeAttrRealParse(prop, 'y', posY, Parser);
+          posZ := GetNodeAttrRealParse(prop, 'z', posZ, Parser);
         end;
         if prop.NodeName = 'rot_deg' then begin
-          angX := degToRad(GetNodeAttrReal(prop, 'x', angX));
-          angY := degToRad(GetNodeAttrReal(prop, 'y', angY));
-          angZ := degToRad(GetNodeAttrReal(prop, 'z', angZ));
+          angX := degToRad(GetNodeAttrRealParse(prop, 'x', angX, Parser));
+          angY := degToRad(GetNodeAttrRealParse(prop, 'y', angY, Parser));
+          angZ := degToRad(GetNodeAttrRealParse(prop, 'z', angZ, Parser));
         end;
         if prop.NodeName = 'color_rgb' then begin
           colorR := GetNodeAttrInt(prop, 'r', 128)/255;
@@ -1045,7 +1049,7 @@ begin
           colorB := GetNodeAttrInt(prop, 'b', 128)/255;
         end;
         if prop.NodeName = 'mass' then begin
-          mass := GetNodeAttrReal(prop, 'value', mass);
+          mass := GetNodeAttrRealParse(prop, 'value', mass, Parser);
         end;
         if prop.NodeName = 'ID' then begin
           ID := GetNodeAttrStr(prop, 'value', ID);
@@ -1055,7 +1059,7 @@ begin
         end;
         if prop.NodeName = 'texture' then begin
           TextureName := GetNodeAttrStr(prop, 'name', TextureName);
-          TextureScale := GetNodeAttrReal(prop, 'scale', TextureScale);
+          TextureScale := GetNodeAttrRealParse(prop, 'scale', TextureScale, Parser);
         end;
         prop := prop.NextSibling;
       end;
@@ -1155,7 +1159,6 @@ begin
 
     bone := bone.NextSibling;
   end;
-
 end;
 
 {
@@ -1173,7 +1176,7 @@ end;
   </joint>}
 
 //procedure TWorld_ODE.LoadHumanoidJointsFromXML(Robot: TRobot; XMLFile: string);
-procedure TWorld_ODE.LoadLinksFromXML(Robot: TRobot; const root: IXMLNode);
+procedure TWorld_ODE.LoadLinksFromXML(Robot: TRobot; const root: IXMLNode; Parser: TSimpleParser);
 var JointNode, prop: IXMLNode;
     posX, posY, posZ: double;
     axisX, axisY, axisZ: double;
@@ -1263,27 +1266,27 @@ begin
 
       while prop <> nil do begin
         if prop.NodeName = 'pos' then begin
-          posX := GetNodeAttrReal(prop, 'x', posX);
-          posY := GetNodeAttrReal(prop, 'y', posY);
-          posZ := GetNodeAttrReal(prop, 'z', posZ);
+          posX := GetNodeAttrRealParse(prop, 'x', posX, Parser);
+          posY := GetNodeAttrRealParse(prop, 'y', posY, Parser);
+          posZ := GetNodeAttrRealParse(prop, 'z', posZ, Parser);
         end;
         if prop.NodeName = 'axis' then begin
-          axisX := GetNodeAttrReal(prop, 'x', axisX);
-          axisY := GetNodeAttrReal(prop, 'y', axisY);
-          axisZ := GetNodeAttrReal(prop, 'z', axisZ);
+          axisX := GetNodeAttrRealParse(prop, 'x', axisX, Parser);
+          axisY := GetNodeAttrRealParse(prop, 'y', axisY, Parser);
+          axisZ := GetNodeAttrRealParse(prop, 'z', axisZ, Parser);
         end;
         if prop.NodeName = 'axis2' then begin
-          axis2X := GetNodeAttrReal(prop, 'x', axis2X);
-          axis2Y := GetNodeAttrReal(prop, 'y', axis2Y);
-          axis2Z := GetNodeAttrReal(prop, 'z', axis2Z);
+          axis2X := GetNodeAttrRealParse(prop, 'x', axis2X, Parser);
+          axis2Y := GetNodeAttrRealParse(prop, 'y', axis2Y, Parser);
+          axis2Z := GetNodeAttrRealParse(prop, 'z', axis2Z, Parser);
         end;
         if prop.NodeName = 'limits' then begin
-          LimitMin := GetNodeAttrReal(prop, 'Min', LimitMin);
-          LimitMax := GetNodeAttrReal(prop, 'Max', LimitMax);
+          LimitMin := GetNodeAttrRealParse(prop, 'Min', LimitMin, Parser);
+          LimitMax := GetNodeAttrRealParse(prop, 'Max', LimitMax, Parser);
         end;
         if prop.NodeName = 'limits2' then begin
-          Limit2Min := GetNodeAttrReal(prop, 'Min', Limit2Min);
-          Limit2Max := GetNodeAttrReal(prop, 'Max', Limit2Max);
+          Limit2Min := GetNodeAttrRealParse(prop, 'Min', Limit2Min, Parser);
+          Limit2Max := GetNodeAttrRealParse(prop, 'Max', Limit2Max, Parser);
         end;
         if prop.NodeName = 'connect' then begin
           LinkBody1 := GetNodeAttrStr(prop, 'B1', LinkBody1);
@@ -1291,8 +1294,8 @@ begin
         end;
         //<draw radius='0.01' height='0.1' rgb24='8F0000'/>
         if prop.NodeName = 'draw' then begin
-          aGL.Radius := GetNodeAttrReal(prop, 'radius', aGL.Radius);
-          aGL.height := GetNodeAttrReal(prop, 'height', aGL.height);
+          aGL.Radius := GetNodeAttrRealParse(prop, 'radius', aGL.Radius, Parser);
+          aGL.height := GetNodeAttrRealParse(prop, 'height', aGL.height, Parser);
           aGL.Color := StrToIntDef('$'+GetNodeAttrStr(prop, 'rgb24', inttohex(aGL.color,6)), aGL.color);
         end;
         {if prop.NodeName = 'color_rgb' then begin
@@ -1309,9 +1312,9 @@ begin
         if prop.NodeName = 'ID' then begin
           IDValue := GetNodeAttrStr(prop, 'value', IDValue);
         end;
-        ReadFrictionFromXMLNode(Friction, prop);
-        ReadSpringFromXMLNode(Spring, prop);
-        ReadMotorFromXMLNode(Motor, prop);
+        ReadFrictionFromXMLNode(Friction, prop, Parser);
+        ReadSpringFromXMLNode(Spring, prop, Parser);
+        ReadMotorFromXMLNode(Motor, prop, Parser);
         prop := prop.NextSibling;
       end;
 
@@ -1604,7 +1607,7 @@ end;
 
 
 
-procedure TWorld_ODE.LoadObstaclesFromXML(XMLFile: string);
+procedure TWorld_ODE.LoadObstaclesFromXML(XMLFile: string; Parser: TSimpleParser);
 var XML: IXMLDocument;
     root, obstacle, prop: IXMLNode;
     sizeX, sizeY, sizeZ, posX, posY, posZ, angX, angY, angZ: double;
@@ -1634,19 +1637,19 @@ begin
       colorR := 128/255; colorG := 128/255; colorB := 128/255;
       while prop <> nil do begin
         if prop.NodeName = 'size' then begin
-          sizeX := GetNodeAttrReal(prop, 'x', sizeX);
-          sizeY := GetNodeAttrReal(prop, 'y', sizeY);
-          sizeZ := GetNodeAttrReal(prop, 'z', sizeZ);
+          sizeX := GetNodeAttrRealParse(prop, 'x', sizeX, Parser);
+          sizeY := GetNodeAttrRealParse(prop, 'y', sizeY, Parser);
+          sizeZ := GetNodeAttrRealParse(prop, 'z', sizeZ, Parser);
         end;
         if prop.NodeName = 'pos' then begin
-          posX := GetNodeAttrReal(prop, 'x', posX);
-          posY := GetNodeAttrReal(prop, 'y', posY);
-          posZ := GetNodeAttrReal(prop, 'z', posZ);
+          posX := GetNodeAttrRealParse(prop, 'x', posX, Parser);
+          posY := GetNodeAttrRealParse(prop, 'y', posY, Parser);
+          posZ := GetNodeAttrRealParse(prop, 'z', posZ, Parser);
         end;
         if prop.NodeName = 'rot_deg' then begin
-          angX := degToRad(GetNodeAttrReal(prop, 'x', angX));
-          angY := degToRad(GetNodeAttrReal(prop, 'y', angY));
-          angZ := degToRad(GetNodeAttrReal(prop, 'z', angZ));
+          angX := degToRad(GetNodeAttrRealParse(prop, 'x', angX, Parser));
+          angY := degToRad(GetNodeAttrRealParse(prop, 'y', angY, Parser));
+          angZ := degToRad(GetNodeAttrRealParse(prop, 'z', angZ, Parser));
         end;
         if prop.NodeName = 'color_rgb' then begin
           colorR := GetNodeAttrInt(prop, 'r', 128)/255;
@@ -1674,7 +1677,7 @@ begin
 end;
 
 
-procedure TWorld_ODE.LoadIRSensorsFromXML(Robot: TRobot; const root: IXMLNode);
+procedure TWorld_ODE.LoadIRSensorsFromXML(Robot: TRobot; const root: IXMLNode; Parser: TSimpleParser);
 var sensor, prop: IXMLNode;
     SLen, SInitialWidth, SFinalWidth, posX, posY, posZ, angX, angY, angZ: double;
     Noise: TSensorNoise;
@@ -1707,26 +1710,26 @@ begin
           MotherSolidId := GetNodeAttrStr(prop, 'id', MotherSolidId);
         end;
         if prop.NodeName = 'beam' then begin
-          SLen := GetNodeAttrReal(prop, 'length', SLen);
-          SInitialWidth := GetNodeAttrReal(prop, 'initial_width', SInitialWidth);
-          SFinalWidth := GetNodeAttrReal(prop, 'final_width', SFinalWidth);
+          SLen := GetNodeAttrRealParse(prop, 'length', SLen, Parser);
+          SInitialWidth := GetNodeAttrRealParse(prop, 'initial_width', SInitialWidth, Parser);
+          SFinalWidth := GetNodeAttrRealParse(prop, 'final_width', SFinalWidth, Parser);
         end;
         if prop.NodeName = 'pos' then begin
-          posX := GetNodeAttrReal(prop, 'x', posX);
-          posY := GetNodeAttrReal(prop, 'y', posY);
-          posZ := GetNodeAttrReal(prop, 'z', posZ);
+          posX := GetNodeAttrRealParse(prop, 'x', posX, Parser);
+          posY := GetNodeAttrRealParse(prop, 'y', posY, Parser);
+          posZ := GetNodeAttrRealParse(prop, 'z', posZ, Parser);
         end;
         if prop.NodeName = 'rot_deg' then begin
-          angX := degToRad(GetNodeAttrReal(prop, 'x', angX));
-          angY := degToRad(GetNodeAttrReal(prop, 'y', angY));
-          angZ := degToRad(GetNodeAttrReal(prop, 'z', angZ));
+          angX := degToRad(GetNodeAttrRealParse(prop, 'x', angX, Parser));
+          angY := degToRad(GetNodeAttrRealParse(prop, 'y', angY, Parser));
+          angZ := degToRad(GetNodeAttrRealParse(prop, 'z', angZ, Parser));
         end;
         if prop.NodeName = 'noise' then with Noise do begin
           active := true;  // if the tag 'noise' is present then it is active
-          var_k := GetNodeAttrReal(prop, 'var_k', var_k);
-          var_d := GetNodeAttrReal(prop, 'var_d', var_d);
-          offset := GetNodeAttrReal(prop, 'offset', offset);
-          gain := GetNodeAttrReal(prop, 'gain', gain);
+          var_k := GetNodeAttrRealParse(prop, 'var_k', var_k, Parser);
+          var_d := GetNodeAttrRealParse(prop, 'var_d', var_d, Parser);
+          offset := GetNodeAttrRealParse(prop, 'offset', offset, Parser);
+          gain := GetNodeAttrRealParse(prop, 'gain', gain, Parser);
         end;
         if prop.NodeName = 'color_rgb' then begin
           colorR := GetNodeAttrInt(prop, 'r', 128)/255;
@@ -1762,56 +1765,56 @@ begin
 
 end;
 
-procedure ReadFrictionFromXMLNode(var Friction: TFriction; const prop: IXMLNode);
+procedure TWorld_ODE.ReadFrictionFromXMLNode(var Friction: TFriction; const prop: IXMLNode; Parser: TSimpleParser);
 begin
   with Friction do begin
     if prop.NodeName = 'friction' then begin
-      Bv := GetNodeAttrReal(prop, 'bv', Bv);
-      Fc := GetNodeAttrReal(prop, 'fc', Fc);
-      CoulombLimit := GetNodeAttrReal(prop, 'coulomblimit', CoulombLimit);
+      Bv := GetNodeAttrRealParse(prop, 'bv', Bv, Parser);
+      Fc := GetNodeAttrRealParse(prop, 'fc', Fc, Parser);
+      //CoulombLimit := GetNodeAttrReal(prop, 'coulomblimit', CoulombLimit);
     end;
   end;
 end;
 
-procedure ReadSpringFromXMLNode(var Spring: TSpring; const prop: IXMLNode);
+procedure TWorld_ODE.ReadSpringFromXMLNode(var Spring: TSpring; const prop: IXMLNode; Parser: TSimpleParser);
 begin
   with Spring do begin
     if prop.NodeName = 'spring' then begin
-      K := GetNodeAttrReal(prop, 'k', K);
-      ZeroPos := degtorad(GetNodeAttrReal(prop, 'zeropos', ZeroPos));
+      K := GetNodeAttrRealParse(prop, 'k', K, Parser);
+      ZeroPos := degtorad(GetNodeAttrRealParse(prop, 'zeropos', ZeroPos, Parser));
     end;
   end;
 end;
 
 
-procedure ReadMotorFromXMLNode(var Motor: TMotor; const prop: IXMLNode);
+procedure TWorld_ODE.ReadMotorFromXMLNode(var Motor: TMotor; const prop: IXMLNode; Parser: TSimpleParser);
 var str: string;
 begin
   with Motor do begin
     if prop.NodeName = 'motor' then begin
-      Ri := GetNodeAttrReal(prop, 'ri', Ri);
-      Li := GetNodeAttrReal(prop, 'li', Li);
-      Ki := GetNodeAttrReal(prop, 'ki', Ki);
-      Vmax := GetNodeAttrReal(prop, 'vmax', Vmax);
-      Imax := GetNodeAttrReal(prop, 'imax', Imax);
+      Ri := GetNodeAttrRealParse(prop, 'ri', Ri, Parser);
+      Li := GetNodeAttrRealParse(prop, 'li', Li, Parser);
+      Ki := GetNodeAttrRealParse(prop, 'ki', Ki, Parser);
+      Vmax := GetNodeAttrRealParse(prop, 'vmax', Vmax, Parser);
+      Imax := GetNodeAttrRealParse(prop, 'imax', Imax, Parser);
       active := GetNodeAttrBool(prop, 'active', active);
     end;
     if prop.NodeName = 'gear' then begin
-      GearRatio := GetNodeAttrReal(prop, 'ratio', GearRatio);
+      GearRatio := GetNodeAttrRealParse(prop, 'ratio', GearRatio, Parser);
     end;
     if prop.NodeName = 'encoder' then begin
       Encoder.PPR := GetNodeAttrInt(prop, 'ppr', Encoder.PPR);
-      Encoder.NoiseMean := GetNodeAttrReal(prop, 'mean', Encoder.NoiseMean);
-      Encoder.NoiseStDev := GetNodeAttrReal(prop, 'stdev', Encoder.NoiseStDev);
+      Encoder.NoiseMean := GetNodeAttrRealParse(prop, 'mean', Encoder.NoiseMean, Parser);
+      Encoder.NoiseStDev := GetNodeAttrRealParse(prop, 'stdev', Encoder.NoiseStDev, Parser);
     end;
 
     if prop.NodeName = 'controller' then begin
       with Controller do begin
-        Kp := GetNodeAttrReal(prop, 'kp', Kp);
-        Ki := GetNodeAttrReal(prop, 'ki', Ki);
-        Kd := GetNodeAttrReal(prop, 'kd', Kd);
-        Kf := GetNodeAttrReal(prop, 'kf', Kf);
-        Y_sat := GetNodeAttrReal(prop, 'ysat', Y_sat);
+        Kp := GetNodeAttrRealParse(prop, 'kp', Kp, Parser);
+        Ki := GetNodeAttrRealParse(prop, 'ki', Ki, Parser);
+        Kd := GetNodeAttrRealParse(prop, 'kd', Kd, Parser);
+        Kf := GetNodeAttrRealParse(prop, 'kf', Kf, Parser);
+        Y_sat := GetNodeAttrRealParse(prop, 'ysat', Y_sat, Parser);
         controlPeriod := GetNodeAttrInt(prop, 'period', controlPeriod);
         str := GetNodeAttrStr(prop, 'mode', 'pidspeed');
         if str = 'pidspeed' then ControlMode := cmPIDSpeed
@@ -1823,7 +1826,7 @@ begin
   end;
 end;
 
-procedure TWorld_ODE.LoadWheelsFromXML(Robot: TRobot; const root: IXMLNode);
+procedure TWorld_ODE.LoadWheelsFromXML(Robot: TRobot; const root: IXMLNode; Parser: TSimpleParser);
 var wheelnode, prop: IXMLNode;
     //offX, offY, offZ,
     angX, angY, angZ: double;
@@ -1920,34 +1923,34 @@ begin
           Pars.omni := true;
         end;
         if prop.NodeName = 'tyre' then begin
-          Pars.mass := GetNodeAttrReal(prop, 'mass', Pars.mass);
-          Pars.Radius := GetNodeAttrReal(prop, 'radius', Pars.Radius);
-          Pars.Width := GetNodeAttrReal(prop, 'width', Pars.Width);
-          Pars.CenterDist := GetNodeAttrReal(prop, 'centerdist', Pars.CenterDist);
+          Pars.mass := GetNodeAttrRealParse(prop, 'mass', Pars.mass, Parser);
+          Pars.Radius := GetNodeAttrRealParse(prop, 'radius', Pars.Radius, Parser);
+          Pars.Width := GetNodeAttrRealParse(prop, 'width', Pars.Width, Parser);
+          Pars.CenterDist := GetNodeAttrRealParse(prop, 'centerdist', Pars.CenterDist, Parser);
           //Pars.Mu := GetNodeAttrReal(prop, 'mu', Pars.mu);
           //Pars.Mu2 := GetNodeAttrReal(prop, 'mu2', Pars.mu2);
         end;
 
         if prop.NodeName = 'surface' then begin
-          Pars.Mu := GetNodeAttrReal(prop, 'mu', Pars.mu);
-          Pars.Mu2 := GetNodeAttrReal(prop, 'mu2', Pars.mu2);
-          Pars.soft_cfm := GetNodeAttrReal(prop, 'softness', Pars.soft_cfm);
+          Pars.Mu := GetNodeAttrRealParse(prop, 'mu', Pars.mu, Parser);
+          Pars.Mu2 := GetNodeAttrRealParse(prop, 'mu2', Pars.mu2, Parser);
+          Pars.soft_cfm := GetNodeAttrRealParse(prop, 'softness', Pars.soft_cfm, Parser);
         end;
 
-        ReadFrictionFromXMLNode(Friction, prop);
+        ReadFrictionFromXMLNode(Friction, prop, Parser);
 
-        ReadMotorFromXMLNode(Motor, prop);
+        ReadMotorFromXMLNode(Motor, prop, Parser);
 
         if prop.NodeName = 'offset' then begin
-          Pars.offsetX := GetNodeAttrReal(prop, 'x', Pars.offsetX);
-          Pars.offsetY := GetNodeAttrReal(prop, 'y', Pars.offsetY);
-          Pars.offsetZ := GetNodeAttrReal(prop, 'z', Pars.offsetZ);
+          Pars.offsetX := GetNodeAttrRealParse(prop, 'x', Pars.offsetX, Parser);
+          Pars.offsetY := GetNodeAttrRealParse(prop, 'y', Pars.offsetY, Parser);
+          Pars.offsetZ := GetNodeAttrRealParse(prop, 'z', Pars.offsetZ, Parser);
         end;
 
         if prop.NodeName = 'axis' then begin
-          angX := degToRad(GetNodeAttrReal(prop, 'x', angX));
-          angY := degToRad(GetNodeAttrReal(prop, 'y', angY));
-          angZ := degToRad(GetNodeAttrReal(prop, 'angle', angZ));
+          angX := degToRad(GetNodeAttrRealParse(prop, 'x', angX, Parser));
+          angY := degToRad(GetNodeAttrRealParse(prop, 'y', angY, Parser));
+          angZ := degToRad(GetNodeAttrRealParse(prop, 'angle', angZ, Parser));
         end;
 
         if prop.NodeName = 'color_rgb' then begin
@@ -1980,7 +1983,7 @@ begin
 end;
 
 
-procedure TWorld_ODE.LoadShellsFromXML(Robot: TRobot; const root: IXMLNode);
+procedure TWorld_ODE.LoadShellsFromXML(Robot: TRobot; const root: IXMLNode; Parser: TSimpleParser);
 var ShellNode, prop: IXMLNode;
     sizeX, sizeY, sizeZ, posX, posY, posZ, angX, angY, angZ: double;
     colorR, colorG, colorB: double;
@@ -2007,19 +2010,19 @@ begin
           MotherSolidId := GetNodeAttrStr(prop, 'id', MotherSolidId);
         end;
         if prop.NodeName = 'size' then begin
-          sizeX := GetNodeAttrReal(prop, 'x', sizeX);
-          sizeY := GetNodeAttrReal(prop, 'y', sizeY);
-          sizeZ := GetNodeAttrReal(prop, 'z', sizeZ);
+          sizeX := GetNodeAttrRealParse(prop, 'x', sizeX, Parser);
+          sizeY := GetNodeAttrRealParse(prop, 'y', sizeY, Parser);
+          sizeZ := GetNodeAttrRealParse(prop, 'z', sizeZ, Parser);
         end;
         if prop.NodeName = 'pos' then begin
-          posX := GetNodeAttrReal(prop, 'x', posX);
-          posY := GetNodeAttrReal(prop, 'y', posY);
-          posZ := GetNodeAttrReal(prop, 'z', posZ);
+          posX := GetNodeAttrRealParse(prop, 'x', posX, Parser);
+          posY := GetNodeAttrRealParse(prop, 'y', posY, Parser);
+          posZ := GetNodeAttrRealParse(prop, 'z', posZ, Parser);
         end;
         if prop.NodeName = 'rot_deg' then begin
-          angX := degToRad(GetNodeAttrReal(prop, 'x', angX));
-          angY := degToRad(GetNodeAttrReal(prop, 'y', angY));
-          angZ := degToRad(GetNodeAttrReal(prop, 'z', angZ));
+          angX := degToRad(GetNodeAttrRealParse(prop, 'x', angX, Parser));
+          angY := degToRad(GetNodeAttrRealParse(prop, 'y', angY, Parser));
+          angZ := degToRad(GetNodeAttrRealParse(prop, 'z', angZ, Parser));
         end;
         if prop.NodeName = 'color_rgb' then begin
           colorR := GetNodeAttrInt(prop, 'r', 128)/255;
@@ -2056,9 +2059,10 @@ begin
 end;
 
 
-procedure TWorld_ODE.LoadThingsFromXML(XMLFile: string);
+procedure TWorld_ODE.LoadThingsFromXML(XMLFile: string; Parser: TSimpleParser);
 var XML: IXMLDocument;
     root: IXMLNode;
+    LocalParser: TSimpleParser;
 begin
   XML := LoadXML(XMLFile, XMLErrors);
   if XML = nil then exit;
@@ -2066,7 +2070,39 @@ begin
 
   root:=XML.SelectSingleNode('/things');
   if root = nil then exit;
-  LoadSolidsFromXML(Things, root);
+
+  LocalParser:= TSimpleParser.Create;
+  try
+    LocalParser.CopyVarList(Parser);
+    LoadSolidsFromXML(Things, root, LocalParser);
+  finally
+    LocalParser.Free;
+  end;
+end;
+
+
+procedure TWorld_ODE.LoadDefinesFromXML(Parser: TSimpleParser; const root: IXMLNode);
+var XML: IXMLDocument;
+    prop: IXMLNode;
+    ConstName: string;
+    ConstValue: double;
+begin
+  if root = nil then exit;
+
+  // default values
+  ConstName:='';
+  ConstValue := 0;
+
+  prop := root.FirstChild;
+  while prop <> nil do begin
+    if prop.NodeName = 'const' then begin
+      ConstName := GetNodeAttrStr(prop, 'name', ConstName);
+      ConstValue := GetNodeAttrRealParse(prop, 'value', ConstValue, Parser);
+      if ConstName <> '' then
+        Parser.RegisterConst(ConstName, ConstValue);
+    end;
+    prop := prop.NextSibling;
+  end;
 end;
 
 
@@ -2079,8 +2115,8 @@ var XML: IXMLDocument;
     name, filename: string;
     mass, radius: double;
     Parser: TSimpleParser;
-    ConstName: string;
-    ConstValue: double;
+//    ConstName: string;
+//    ConstValue: double;
 begin
 {  XML:=CreateXMLDoc;
   XML.Load(XMLFile);
@@ -2132,7 +2168,7 @@ begin
         //if filename <> '' then begin
         if fileexists(filename) then begin
           XMLFiles.Add(filename);
-          newRobot := LoadRobotFromXML(filename);
+          newRobot := LoadRobotFromXML(filename, Parser);
           if newRobot <> nil then begin
             newRobot.Name := name;
             newRobot.SetXYZTeta(posX, posY, posZ, angZ);
@@ -2140,25 +2176,14 @@ begin
         end;
 
       end else if objNode.NodeName = 'defines' then begin
-        prop := objNode.FirstChild;
-        // default values
-        ConstName:='';
-        ConstValue := 0;
-        while prop <> nil do begin
-          if prop.NodeName = 'const' then begin
-            ConstName := GetNodeAttrStr(prop, 'name', ConstName);
-            ConstValue := GetNodeAttrRealParse(prop, 'value', ConstValue, Parser);
-            Parser.RegisterConst(ConstName, ConstValue);
-          end;
-          prop := prop.NextSibling;
-        end;
+        LoadDefinesFromXML(Parser, objnode);
 
       end else if objNode.NodeName = 'obstacles' then begin
         // Create static obstacles
         filename := GetNodeAttrStr(objNode, 'file', filename);
         if fileexists(filename) then begin
           XMLFiles.Add(filename);
-          LoadObstaclesFromXML(filename);
+          LoadObstaclesFromXML(filename, Parser);
         end;
 
       end else if objNode.NodeName = 'things' then begin
@@ -2166,7 +2191,7 @@ begin
         filename := GetNodeAttrStr(objNode, 'file', filename);
         if fileexists(filename) then begin
           XMLFiles.Add(filename);
-          LoadThingsFromXML(filename);
+          LoadThingsFromXML(filename, Parser);
         end;
 
 
@@ -2204,11 +2229,12 @@ begin
 end;
 
 
-function TWorld_ODE.LoadRobotFromXML(XMLFile: string): TRobot;
+function TWorld_ODE.LoadRobotFromXML(XMLFile: string; Parser: TSimpleParser): TRobot;
 var XML: IXMLDocument;
     root, objNode: IXMLNode;
     newRobot: TRobot;
     str: string;
+    LocalParser: TSimpleParser;
 begin
   result := nil;
 
@@ -2218,48 +2244,57 @@ begin
   root:=XML.SelectSingleNode('/robot');
   if root = nil then exit;
 
-  newRobot := TRobot.Create;
-  Robots.Add(newRobot);
+  LocalParser:= TSimpleParser.Create;
+  LocalParser.CopyVarList(Parser);
 
-  objNode := root.FirstChild;
-  while objNode <> nil do begin
-    if objNode.NodeName = 'kind' then begin
-      str := GetNodeAttrStr(objNode, 'value', '');
-      if lowercase(str)='omni3' then newRobot.Kind := rkOmni3
-      else if lowercase(str)='omni4' then newRobot.Kind := rkOmni4
-      else if lowercase(str)='wheelchair' then newRobot.Kind := rkWheelChair
-      else if lowercase(str)='humanoid' then newRobot.Kind := rkHumanoid
-      else if lowercase(str)='belt' then newRobot.Kind := rkConveyorBelt;
+  try
+    newRobot := TRobot.Create;
+    Robots.Add(newRobot);
+
+    objNode := root.FirstChild;
+    while objNode <> nil do begin
+      if objNode.NodeName = 'kind' then begin
+        str := GetNodeAttrStr(objNode, 'value', '');
+        if lowercase(str)='omni3' then newRobot.Kind := rkOmni3
+        else if lowercase(str)='omni4' then newRobot.Kind := rkOmni4
+        else if lowercase(str)='wheelchair' then newRobot.Kind := rkWheelChair
+        else if lowercase(str)='humanoid' then newRobot.Kind := rkHumanoid
+        else if lowercase(str)='belt' then newRobot.Kind := rkConveyorBelt;
+      end;
+
+      if objNode.NodeName = 'defines' then begin
+        LoadDefinesFromXML(LocalParser, objnode);
+      end;
+
+      if objNode.NodeName = 'solids' then begin
+        LoadSolidsFromXML(newRobot.Solids, objNode, LocalParser);
+        if newRobot.Solids.Count = 0 then exit;
+        newRobot.MainBody := newRobot.Solids[0];
+      end;
+
+      if objNode.NodeName = 'wheels' then begin
+        LoadWheelsFromXML(newRobot, objNode, LocalParser);
+      end;
+
+      if objNode.NodeName = 'shells' then begin
+        LoadShellsFromXML(newRobot, objNode, LocalParser);
+      end;
+
+      if objNode.NodeName = 'sensors' then begin
+        LoadIRSensorsFromXML(newRobot, objNode, LocalParser);
+      end;
+
+      if objNode.NodeName = 'articulations' then begin
+        LoadLinksFromXML(newRobot, objNode, LocalParser);
+      end;
+
+      objNode := objNode.NextSibling;
     end;
 
-{    if objNode.NodeName = 'keycontrol' then begin
-      str := GetNodeAttr(objNode, 'u_nom', '');
-    end;}
-
-    if objNode.NodeName = 'solids' then begin
-      LoadSolidsFromXML(newRobot.Solids, objNode);
-      if newRobot.Solids.Count = 0 then exit;
-      newRobot.MainBody := newRobot.Solids[0];
-    end;
-
-    if objNode.NodeName = 'wheels' then begin
-      LoadWheelsFromXML(newRobot, objNode);
-    end;
-
-    if objNode.NodeName = 'shells' then begin
-      LoadShellsFromXML(newRobot, objNode);
-    end;
-
-    if objNode.NodeName = 'sensors' then begin
-      LoadIRSensorsFromXML(newRobot, objNode);
-    end;
-
-    if objNode.NodeName = 'articulations' then begin
-      LoadLinksFromXML(newRobot, objNode);
-    end;
-
-    objNode := objNode.NextSibling;
+  finally
+    LocalParser.Free;
   end;
+
   result := newRobot;
 end;
 
@@ -2746,6 +2781,7 @@ procedure TFViewer.GLCadencerProgress(Sender: TObject; const deltaTime, newTime:
 var theta, w, Tq: double;
     i, r: integer;
     t_start, t_end: int64;
+    t_i1, t_i2, t_itot: int64;
     v1, v2: TdVector3;
 //    txt: string;
     vs: TVector;
@@ -2755,6 +2791,7 @@ begin
   GLScene.CurrentGLCamera.Position := GLDummyCamPos.Position;
   if WorldODE.ODEEnable <> False then begin
     QueryPerformanceCounter(t_start);
+    t_itot := 0;
 
     // while WorldODE.physTime < newtime do begin
     newFixedTime := WorldODE.physTime + GLCadencer.FixedDeltaTime * WorldODE.TimeFactor;
@@ -2945,7 +2982,10 @@ begin
         WorldODE.UpdatePickJoint;
       end;
 
+      QueryPerformanceCounter(t_i1);
       WorldODE.WorldUpdate;
+      QueryPerformanceCounter(t_i2);
+      t_itot := t_itot + t_i2 - t_i1;
 
       // Debug IR sensors
       {txt := '';
@@ -2963,7 +3003,7 @@ begin
     //End Physics Loop
 
     QueryPerformanceCounter(t_end);
-    FParams.EditDebug.text := format('%.2f [%.2f]',[(t_end - t_start)/t_delta, (t_act - t_last)/t_delta]);
+    FParams.EditDebug.text := format('%.2f (%.2f)[%.2f]',[(t_end - t_start)/t_delta, t_itot/t_delta, (t_act - t_last)/t_delta]);
 
     // GLScene
 
