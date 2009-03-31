@@ -41,7 +41,7 @@ type
     Ki, Kd, Kp, Kf: double;
     Sek, ek_1: double;
     y_sat: double;
-    ticks, controlPeriod: integer;
+    Ticks, ControlPeriod: double;
     ControlMode: TControlMode;
     active: boolean;
   end;
