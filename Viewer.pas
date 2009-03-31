@@ -1815,7 +1815,7 @@ begin
         Kd := GetNodeAttrRealParse(prop, 'kd', Kd, Parser);
         Kf := GetNodeAttrRealParse(prop, 'kf', Kf, Parser);
         Y_sat := GetNodeAttrRealParse(prop, 'ysat', Y_sat, Parser);
-        controlPeriod := GetNodeAttrInt(prop, 'period', controlPeriod);
+        controlPeriod := GetNodeAttrRealParse(prop, 'period', controlPeriod, Parser)/1000;
         str := GetNodeAttrStr(prop, 'mode', 'pidspeed');
         if str = 'pidspeed' then ControlMode := cmPIDSpeed
         else if str = 'pidposition' then ControlMode := cmPIDPosition
@@ -2491,16 +2491,19 @@ begin
   if Assigned(pick) then begin
     if pick.TagObject is TSolid then begin
       GLHUDTextObjName.Text := TSolid(pick.TagObject).description;
+      GLHUDTextObjName.TagFloat := 10;
       if Assigned(OldPick) then OldPick.Material.FrontProperties.Emission.Color:=clrBlack;
       pick.Material.FrontProperties.Emission.Color:=clrRed;
       OldPick := Pick;
     end else begin
       GLHUDTextObjName.Text := '';
+      GLHUDTextObjName.TagFloat := 0;
       if Assigned(OldPick) then OldPick.Material.FrontProperties.Emission.Color:=clrBlack;
       OldPick := nil;
     end;
     if pick.TagObject is TAxis then begin
       GLHUDTextObjName.Text := TAxis(pick.TagObject).ParentLink.description;
+      GLHUDTextObjName.TagFloat := 10;
     end;
   end;
   result := pick;
@@ -2516,8 +2519,12 @@ begin
     if Motor.active then begin
       with Motor.Controller do begin
         if active then begin
-          inc(ticks);
+
+          ticks := ticks + WorldODE.Ode_dt;
           if ticks >= ControlPeriod then begin
+            ticks := ticks - ControlPeriod;
+          //inc(ticks);
+          //if ticks >= ControlPeriod then begin
             case ControlMode of
               cmPIDPosition: begin
                 ref.volts := CalcPID(Motor.Controller, ref.theta, theta);
@@ -2533,7 +2540,7 @@ begin
                 ref.volts := CalcPD(Motor.Controller, ref.theta, ref.w, theta, filt_speed);
               end;
             end;
-            ticks := 0;
+            //ticks := 0;
           end;
         end;
       end;
@@ -2595,8 +2602,8 @@ begin
     // coulomb friction
     // Tq := Friction.Fc * sign(w);
     // Limit it to avoid instability
-    if Friction.CoulombLimit >= 0 then
-    // Tq := max(-Friction.CoulombLimit * abs(w), min(Friction.CoulombLimit * abs(w), Tq));
+    //if Friction.CoulombLimit >= 0 then
+    //  Tq := max(-Friction.CoulombLimit * abs(w), min(Friction.CoulombLimit * abs(w), Tq));
     //T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Tq - Spring.K * diffangle(Theta, Spring.ZeroPos);
     //T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Tq - Spring.K * (Theta - Spring.ZeroPos);
     T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Spring.K * (Theta - Spring.ZeroPos);
@@ -2715,6 +2722,13 @@ end;
 procedure TFViewer.UpdateGLScene;
 var r, i: integer;
 begin
+    if GLHUDTextObjName.TagFloat > 0 then begin
+      GLHUDTextObjName.TagFloat := GLHUDTextObjName.TagFloat - GLCadencer.FixedDeltaTime;
+      GLHUDTextObjName.ModulateColor.Alpha := max(0, min(1, GLHUDTextObjName.TagFloat / 2));
+    end else begin
+      GLHUDTextObjName.Text := '';
+    end;
+
     for r := 0 to WorldODE.Robots.Count-1 do begin
       with WorldODE.Robots[r] do begin
         // Shells
@@ -2824,10 +2838,15 @@ begin
             end;
 
             // Default Control values are zero
-            for i := 0 to Wheels.Count-1 do begin
-              Wheels[i].Axle.Axis[0].ref.volts := 0;
-              Wheels[i].Axle.Axis[0].ref.w := 0;
+            //for i := 0 to Wheels.Count-1 do begin
+            //  Wheels[i].Axle.Axis[0].ref.volts := 0;
+            //  Wheels[i].Axle.Axis[0].ref.w := 0;
+            //end;
+            for i := 0 to Axes.Count-1 do begin
+              Axes[i].ref.volts := 0;
+              Axes[i].ref.w := 0;
             end;
+
           end;
         end;
 
@@ -3236,7 +3255,7 @@ end;}
 // Zona morta no PID
 // Calcular centro de gravidade
 // -Passadeiras- (falta controlar a aceleração delas)
-// Thrusters + turbulence
+// -Thrusters- + turbulence
 // alternate globject {For TSolids only now}
 // world wind
 // Shell sphere
@@ -3247,7 +3266,6 @@ end;}
 // rotation only in z????
 // HUD com o script state
 // 3ds offset
-// hud texto com timeout
 
 // solidos compostos
-// Variaveis no xml
+

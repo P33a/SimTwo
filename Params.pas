@@ -46,8 +46,6 @@ type
     PGRobots: TPageControl;
     TabRobot: TTabSheet;
     TabAxis: TTabSheet;
-    Label1: TLabel;
-    Label4: TLabel;
     Label6: TLabel;
     Label19: TLabel;
     Label20: TLabel;
@@ -70,8 +68,6 @@ type
     Label32: TLabel;
     Label33: TLabel;
     Label34: TLabel;
-    EditMotUnom: TEdit;
-    EditMotSpeedRef: TEdit;
     CBIO1: TCheckBox;
     CBIO2: TCheckBox;
     CBIO3: TCheckBox;
@@ -117,8 +113,6 @@ type
     Label40: TLabel;
     EditDefaultFriction: TEdit;
     BPhysicsSet: TButton;
-    EditRemoteIP: TEdit;
-    Label8: TLabel;
     Label28: TLabel;
     BSetPosition: TButton;
     EditRobotX: TEdit;
@@ -151,8 +145,6 @@ type
     EditGridY: TEdit;
     EditGridZ: TEdit;
     BSGConfSet: TButton;
-    CBGLObject: TCheckBox;
-    CBAltGLObject: TCheckBox;
     ComPort: TComPort;
     TabIO: TTabSheet;
     Panel1: TPanel;
@@ -172,6 +164,13 @@ type
     EditODE_CFM: TEdit;
     Label48: TLabel;
     EditODE_ERP: TEdit;
+    TabGlobal: TTabSheet;
+    CBGLObject: TCheckBox;
+    Label8: TLabel;
+    EditRemoteIP: TEdit;
+    Label1: TLabel;
+    EditScriptPeriod: TEdit;
+    BGlobalSet: TButton;
     procedure CBShadowsClick(Sender: TObject);
     procedure CBVsyncClick(Sender: TObject);
     procedure BSetFPSClick(Sender: TObject);
@@ -219,6 +218,7 @@ type
     procedure CBGLObjectClick(Sender: TObject);
     procedure UDPGenericStatus(ASender: TObject; const AStatus: TIdStatus;
       const AStatusText: String);
+    procedure BGlobalSetClick(Sender: TObject);
   private
     procedure FillEditArray(ProtoName: string;
       var EditArray: array of TEdit);
@@ -460,8 +460,11 @@ begin
   idx := LBRobots.ItemIndex;
   if (idx < 0) or (idx >= WorldODE.Robots.Count) then exit;
 
-  for i := 0 to WorldODE.Robots[idx].Wheels.Count - 1 do begin
-    WorldODE.Robots[idx].Wheels[i].Axle.Axis[0].Motor.Controller.active := CBPIDsActive.Checked;
+  //for i := 0 to WorldODE.Robots[idx].Wheels.Count - 1 do begin
+  //  WorldODE.Robots[idx].Wheels[i].Axle.Axis[0].Motor.Controller.active := CBPIDsActive.Checked;
+  //end;
+  for i := 0 to WorldODE.Robots[idx].Axes.Count - 1 do begin
+    WorldODE.Robots[idx].Axes[i].Motor.Controller.active := CBPIDsActive.Checked;
   end;
 end;
 
@@ -919,6 +922,11 @@ procedure TFParams.UDPGenericStatus(ASender: TObject;
 begin
  // if hsDisconnected = AStatus then UDPGeneric.Active := false;
 //  UDPGeneric.DoWork();
+end;
+
+procedure TFParams.BGlobalSetClick(Sender: TObject);
+begin
+  WorldODE.DecPeriod := strtoint(EditScriptPeriod.Text)/1000;
 end;
 
 end.

@@ -25,7 +25,7 @@ object FParams: TFParams
     Top = 0
     Width = 273
     Height = 621
-    ActivePage = TabDebug
+    ActivePage = TabControl
     Anchors = [akLeft, akTop, akBottom]
     TabOrder = 0
     object TabControl: TTabSheet
@@ -147,25 +147,66 @@ object FParams: TFParams
         Top = 168
         Width = 261
         Height = 425
-        ActivePage = TabRobot
+        ActivePage = TabGlobal
         Anchors = [akLeft, akTop, akBottom]
         TabOrder = 4
+        object TabGlobal: TTabSheet
+          Caption = 'Global'
+          ImageIndex = 2
+          object Label8: TLabel
+            Left = 8
+            Top = 374
+            Width = 14
+            Height = 13
+            Caption = 'IP:'
+          end
+          object Label1: TLabel
+            Left = 4
+            Top = 32
+            Width = 64
+            Height = 13
+            Caption = 'Script Period:'
+          end
+          object CBGLObject: TCheckBox
+            Left = 4
+            Top = 4
+            Width = 97
+            Height = 17
+            Caption = 'GL Objects'
+            Checked = True
+            State = cbChecked
+            TabOrder = 0
+            OnClick = CBGLObjectClick
+          end
+          object EditRemoteIP: TEdit
+            Left = 28
+            Top = 370
+            Width = 109
+            Height = 21
+            TabOrder = 1
+            Text = '127.0.0.1'
+            OnChange = EditRemoteIPChange
+          end
+          object EditScriptPeriod: TEdit
+            Left = 72
+            Top = 28
+            Width = 41
+            Height = 21
+            TabOrder = 2
+            Text = '40'
+          end
+          object BGlobalSet: TButton
+            Left = 200
+            Top = 28
+            Width = 47
+            Height = 21
+            Caption = 'Set'
+            TabOrder = 3
+            OnClick = BGlobalSetClick
+          end
+        end
         object TabRobot: TTabSheet
           Caption = 'Robot'
-          object Label1: TLabel
-            Left = 76
-            Top = 29
-            Width = 40
-            Height = 13
-            Caption = 'Voltage:'
-          end
-          object Label4: TLabel
-            Left = 168
-            Top = 29
-            Width = 34
-            Height = 13
-            Caption = 'Speed:'
-          end
           object Label6: TLabel
             Left = 16
             Top = 240
@@ -320,29 +361,6 @@ object FParams: TFParams
             Height = 13
             Caption = 'Sensors:'
           end
-          object Label8: TLabel
-            Left = 16
-            Top = 366
-            Width = 14
-            Height = 13
-            Caption = 'IP:'
-          end
-          object EditMotUnom: TEdit
-            Left = 120
-            Top = 25
-            Width = 41
-            Height = 21
-            TabOrder = 0
-            Text = '24'
-          end
-          object EditMotSpeedRef: TEdit
-            Left = 208
-            Top = 25
-            Width = 41
-            Height = 21
-            TabOrder = 1
-            Text = '50'
-          end
           object CBIO1: TCheckBox
             Left = 16
             Top = 260
@@ -350,7 +368,7 @@ object FParams: TFParams
             Height = 17
             Alignment = taLeftJustify
             Caption = 'IO1'
-            TabOrder = 2
+            TabOrder = 0
           end
           object CBIO2: TCheckBox
             Left = 16
@@ -359,7 +377,7 @@ object FParams: TFParams
             Height = 17
             Alignment = taLeftJustify
             Caption = 'IO2'
-            TabOrder = 3
+            TabOrder = 1
           end
           object CBIO3: TCheckBox
             Left = 16
@@ -368,7 +386,7 @@ object FParams: TFParams
             Height = 17
             Alignment = taLeftJustify
             Caption = 'IO3'
-            TabOrder = 4
+            TabOrder = 2
           end
           object CBIO4: TCheckBox
             Left = 16
@@ -377,7 +395,7 @@ object FParams: TFParams
             Height = 17
             Alignment = taLeftJustify
             Caption = 'IO4'
-            TabOrder = 5
+            TabOrder = 3
           end
           object CBIO5: TCheckBox
             Left = 64
@@ -386,7 +404,7 @@ object FParams: TFParams
             Height = 17
             Alignment = taLeftJustify
             Caption = 'IO5'
-            TabOrder = 6
+            TabOrder = 4
           end
           object CBIO6: TCheckBox
             Left = 64
@@ -395,7 +413,7 @@ object FParams: TFParams
             Height = 17
             Alignment = taLeftJustify
             Caption = 'IO6'
-            TabOrder = 7
+            TabOrder = 5
           end
           object CBIO7: TCheckBox
             Left = 64
@@ -404,7 +422,7 @@ object FParams: TFParams
             Height = 17
             Alignment = taLeftJustify
             Caption = 'IO7'
-            TabOrder = 8
+            TabOrder = 6
           end
           object CBIO8: TCheckBox
             Left = 64
@@ -413,14 +431,14 @@ object FParams: TFParams
             Height = 17
             Alignment = taLeftJustify
             Caption = 'IO8'
-            TabOrder = 9
+            TabOrder = 7
           end
           object EditU0: TEdit
             Left = 32
             Top = 52
             Width = 41
             Height = 21
-            TabOrder = 10
+            TabOrder = 8
             Text = '100'
           end
           object EditOdo0: TEdit
@@ -428,7 +446,7 @@ object FParams: TFParams
             Top = 52
             Width = 41
             Height = 21
-            TabOrder = 11
+            TabOrder = 9
             Text = '0'
           end
           object EditOdo1: TEdit
@@ -436,7 +454,7 @@ object FParams: TFParams
             Top = 72
             Width = 41
             Height = 21
-            TabOrder = 12
+            TabOrder = 10
             Text = '0'
           end
           object EditU1: TEdit
@@ -444,7 +462,7 @@ object FParams: TFParams
             Top = 72
             Width = 41
             Height = 21
-            TabOrder = 13
+            TabOrder = 11
             Text = '200'
           end
           object EditI0: TEdit
@@ -452,7 +470,7 @@ object FParams: TFParams
             Top = 52
             Width = 41
             Height = 21
-            TabOrder = 14
+            TabOrder = 12
             Text = '0'
           end
           object EditI1: TEdit
@@ -460,7 +478,7 @@ object FParams: TFParams
             Top = 72
             Width = 41
             Height = 21
-            TabOrder = 15
+            TabOrder = 13
             Text = '0'
           end
           object EditU2: TEdit
@@ -468,7 +486,7 @@ object FParams: TFParams
             Top = 92
             Width = 41
             Height = 21
-            TabOrder = 16
+            TabOrder = 14
             Text = '100'
           end
           object EditOdo2: TEdit
@@ -476,7 +494,7 @@ object FParams: TFParams
             Top = 92
             Width = 41
             Height = 21
-            TabOrder = 17
+            TabOrder = 15
             Text = '0'
           end
           object EditI2: TEdit
@@ -484,7 +502,7 @@ object FParams: TFParams
             Top = 92
             Width = 41
             Height = 21
-            TabOrder = 18
+            TabOrder = 16
             Text = '0'
           end
           object EditI3: TEdit
@@ -492,7 +510,7 @@ object FParams: TFParams
             Top = 112
             Width = 41
             Height = 21
-            TabOrder = 19
+            TabOrder = 17
             Text = '0'
           end
           object EditOdo3: TEdit
@@ -500,7 +518,7 @@ object FParams: TFParams
             Top = 112
             Width = 41
             Height = 21
-            TabOrder = 20
+            TabOrder = 18
             Text = '0'
           end
           object EditU3: TEdit
@@ -508,7 +526,7 @@ object FParams: TFParams
             Top = 112
             Width = 41
             Height = 21
-            TabOrder = 21
+            TabOrder = 19
             Text = '200'
           end
           object CBPIDsActive: TCheckBox
@@ -517,9 +535,8 @@ object FParams: TFParams
             Width = 53
             Height = 17
             Caption = 'PIDs'
-            Checked = True
-            State = cbChecked
-            TabOrder = 22
+            State = cbGrayed
+            TabOrder = 20
             OnClick = CBPIDsActiveClick
           end
           object EditIR0: TEdit
@@ -527,7 +544,7 @@ object FParams: TFParams
             Top = 164
             Width = 41
             Height = 21
-            TabOrder = 23
+            TabOrder = 21
             Text = '0'
           end
           object EditIR1: TEdit
@@ -535,7 +552,7 @@ object FParams: TFParams
             Top = 184
             Width = 41
             Height = 21
-            TabOrder = 24
+            TabOrder = 22
             Text = '0'
           end
           object EditIR2: TEdit
@@ -543,7 +560,7 @@ object FParams: TFParams
             Top = 204
             Width = 41
             Height = 21
-            TabOrder = 25
+            TabOrder = 23
             Text = '0'
           end
           object EditIR3: TEdit
@@ -551,7 +568,7 @@ object FParams: TFParams
             Top = 224
             Width = 41
             Height = 21
-            TabOrder = 26
+            TabOrder = 24
             Text = '0'
           end
           object EditIR4: TEdit
@@ -559,7 +576,7 @@ object FParams: TFParams
             Top = 244
             Width = 41
             Height = 21
-            TabOrder = 27
+            TabOrder = 25
             Text = '0'
           end
           object EditIR5: TEdit
@@ -567,7 +584,7 @@ object FParams: TFParams
             Top = 264
             Width = 41
             Height = 21
-            TabOrder = 28
+            TabOrder = 26
             Text = '0'
           end
           object EditIR6: TEdit
@@ -575,7 +592,7 @@ object FParams: TFParams
             Top = 284
             Width = 41
             Height = 21
-            TabOrder = 29
+            TabOrder = 27
             Text = '0'
           end
           object EditIR7: TEdit
@@ -583,7 +600,7 @@ object FParams: TFParams
             Top = 304
             Width = 41
             Height = 21
-            TabOrder = 30
+            TabOrder = 28
             Text = '0'
           end
           object CBIRNoise: TCheckBox
@@ -593,36 +610,8 @@ object FParams: TFParams
             Height = 17
             Caption = 'IR Noise'
             State = cbGrayed
-            TabOrder = 31
+            TabOrder = 29
             OnClick = CBIRNoiseClick
-          end
-          object EditRemoteIP: TEdit
-            Left = 36
-            Top = 362
-            Width = 109
-            Height = 21
-            TabOrder = 32
-            Text = '127.0.0.1'
-            OnChange = EditRemoteIPChange
-          end
-          object CBGLObject: TCheckBox
-            Left = 8
-            Top = 4
-            Width = 97
-            Height = 17
-            Caption = 'GL Object'
-            Checked = True
-            State = cbChecked
-            TabOrder = 33
-            OnClick = CBGLObjectClick
-          end
-          object CBAltGLObject: TCheckBox
-            Left = 120
-            Top = 4
-            Width = 97
-            Height = 17
-            Caption = 'Alt GL Object'
-            TabOrder = 34
           end
         end
         object TabAxis: TTabSheet
@@ -735,7 +724,7 @@ object FParams: TFParams
             Width = 149
             Height = 21
             Style = csDropDownList
-            ItemHeight = 0
+            ItemHeight = 13
             TabOrder = 8
           end
           object BJointWayPointsSave: TButton
@@ -1365,7 +1354,6 @@ object FParams: TFParams
       'EditRobotSetX.Text'
       'EditRobotSetY.Text'
       'EditRobotSetZ.Text'
-      'EditRemoteIP.Text'
       'EditOde_dt.Text'
       'EditTimeSpeed.Text'
       'PageControl.ActivePage'
@@ -1373,7 +1361,7 @@ object FParams: TFParams
       'CBUDPConnect.Checked'
       'EditODE_CFM.Text'
       'EditODE_ERP.Text'
-      'CBGLObject.Checked')
+      'EditScriptPeriod.Text')
     StoredValues = <>
     Left = 236
     Top = 60
