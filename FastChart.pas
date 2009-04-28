@@ -232,11 +232,12 @@ begin
     //node:=Add(nil,'General');
     //node.Data:=nil;
     //FillGeneralTreeView(node,tree);
-    node:=Add(nil,'Ball');
-    node.Data:=nil;
+    //node:=Add(nil,'Ball');
+    //node.Data:=nil;
     //FillBallTreeView(node,tree);
     for i:=0 to WorldODE.Robots.Count-1 do begin
-      node:=Add(nil,'Robot '+inttostr(i+1));
+      //node:=Add(nil,'Robot '+inttostr(i+1));
+      node:=Add(nil,WorldODE.Robots[i].Name);
       node.Data:=nil;
       FillRobotTreeView(i,node,tree);
     end;

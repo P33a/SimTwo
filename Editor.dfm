@@ -25,7 +25,7 @@ object FEditor: TFEditor
     Top = 0
     Width = 769
     Height = 457
-    ActivePage = TabControl
+    ActivePage = TabProject
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
     object TabProject: TTabSheet
@@ -33,45 +33,31 @@ object FEditor: TFEditor
       DesignSize = (
         761
         429)
-      object Label1: TLabel
-        Left = 8
-        Top = 8
-        Width = 50
-        Height = 13
-        Caption = 'Author(s):'
-      end
-      object Label2: TLabel
-        Left = 8
-        Top = 32
-        Width = 54
-        Height = 13
-        Caption = 'Comments:'
-      end
-      object EditAuthors: TEdit
-        Left = 68
+      object Label3: TLabel
+        Left = 4
         Top = 4
-        Width = 676
-        Height = 21
-        Anchors = [akLeft, akTop, akRight]
-        TabOrder = 0
-      end
-      object EditComments: TEdit
-        Left = 68
-        Top = 28
-        Width = 676
-        Height = 21
-        Anchors = [akLeft, akTop, akRight]
-        TabOrder = 1
+        Width = 57
+        Height = 13
+        Caption = 'Description:'
       end
       object CBSaveOnRun: TCheckBox
-        Left = 8
-        Top = 92
+        Left = 660
+        Top = 4
         Width = 97
         Height = 17
+        Anchors = [akTop, akRight]
         Caption = 'Save On Run'
         Checked = True
         State = cbChecked
-        TabOrder = 2
+        TabOrder = 0
+      end
+      object MemoDescription: TMemo
+        Left = 0
+        Top = 24
+        Width = 761
+        Height = 405
+        Anchors = [akLeft, akTop, akRight, akBottom]
+        TabOrder = 1
       end
     end
     object TabControl: TTabSheet
@@ -424,9 +410,11 @@ object FEditor: TFEditor
     end
     object MenuWindow: TMenuItem
       Caption = '&Window'
+      Visible = False
       object MenuChart: TMenuItem
         Caption = '&Chart...'
         ShortCut = 8308
+        Visible = False
       end
       object MenuControl: TMenuItem
         Caption = 'Control...'
@@ -456,16 +444,17 @@ object FEditor: TFEditor
     end
   end
   object OpenDialog: TOpenDialog
-    DefaultExt = '.spas'
-    Filter = 'Pascal Script File|*.spas'
+    DefaultExt = '.pas'
+    Filter = 'Pascal Script File|*.*pas|Any File|*.*'
+    Options = [ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
     Title = 'Load Control Pascal Script'
     Left = 288
     Top = 36
   end
   object SaveDialog: TSaveDialog
-    DefaultExt = '.spas'
-    Filter = 'Pascal Script File|*.spas'
-    Options = [ofHideReadOnly, ofPathMustExist, ofCreatePrompt, ofEnableSizing]
+    DefaultExt = '.pas'
+    Filter = 'Pascal Script File|*.*pas|Any File|*.*'
+    Options = [ofHideReadOnly, ofNoChangeDir, ofPathMustExist, ofCreatePrompt, ofEnableSizing]
     Title = 'Save Control Pascal Script'
     Left = 316
     Top = 36

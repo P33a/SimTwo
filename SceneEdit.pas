@@ -145,7 +145,8 @@ begin
 
   prs := '';
   for i := 1 to ParamCount do begin
-    prs := ' ' + ParamStr(i);
+    prs := ' ' + AnsiQuotedStr(AnsiDequotedStr(ParamStr(i), '"'), '"');
+    //prs := ' "' + ParamStr(i) + '"';
   end;
 
   FViewer.Close;
@@ -155,7 +156,7 @@ end;
 function TFXMLEdit.GetSynEdit: TSynEdit;
 var i: integer;
 begin
-  result := nil;
+  result := nil; 
   i := PageControlXML.TabIndex;
   if i<0 then exit;
   if (WorldODE.XMLFiles.Objects[i] is TSynEdit) then begin
