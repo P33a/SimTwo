@@ -17,10 +17,6 @@ type
     SynPasSyn: TSynPasSyn;
     PageControl: TPageControl;
     TabProject: TTabSheet;
-    Label1: TLabel;
-    Label2: TLabel;
-    EditAuthors: TEdit;
-    EditComments: TEdit;
     TabControl: TTabSheet;
     Splitter: TSplitter;
     SynEditST: TSynEdit;
@@ -87,6 +83,8 @@ type
     PopupMenuOutput: TPopupMenu;
     PopUpClearAll: TMenuItem;
     SynEditSearch: TSynEditSearch;
+    Label3: TLabel;
+    MemoDescription: TMemo;
     procedure SynEditSTMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
     procedure SynEditSTStatusChange(Sender: TObject;
@@ -128,9 +126,12 @@ type
     procedure FindDialogFind(Sender: TObject);
   private
     procedure writeLn(S: string);
+    function myFormat(const sFormat: string; const Args: array of const): string;
     procedure BuildRegFuncList(Sender: TPSScript);
     function ReadUDPData: string;
     procedure WriteUDPData(ToIP: string; ToPort: integer; s: string);
+    procedure ProjectSave(FileName: string);
+    function ProjectOpen(FileName: string): boolean;
     { Private declarations }
   public
     ProgCyclesCount: integer;
@@ -424,6 +425,19 @@ begin
   StatusBar.Invalidate;
 end;
 
+procedure TFEditor.ProjectSave(FileName: string);
+begin
+  Project.FileName := ExtractFileName(FileName);
+
+  SynEditST.Lines.SaveToFile(FileName);
+  FormStorage.WriteString('LastProjectName', Project.FileName);
+  MemoDescription.Lines.SaveToFile('info.txt');
+
+  SynEditST.Modified:=False;
+  caption := FormEditorCaption + Project.FileName;
+  UpdateStatusLine;
+end;
+
 
 procedure TFEditor.MenuSaveAsClick(Sender: TObject);
 var CurDir: string;
@@ -433,12 +447,7 @@ begin
   CurDir := GetCurrentDir;
   if not SaveDialog.Execute then exit;
   SetCurrentDir(CurDir);
-  //ProjectSave(SaveDialog.FileName);
-  Project.FileName := ExtractFileName(SaveDialog.FileName);
-
-  SynEditST.Lines.SaveToFile(SaveDialog.FileName);
-  FormStorage.WriteString('LastProjectName', Project.FileName);
-  SynEditST.Modified:=False;
+  ProjectSave(SaveDialog.FileName);
 end;
 
 procedure TFEditor.MenuUndoClick(Sender: TObject);
@@ -459,8 +468,8 @@ begin
               'Copyright (C) 2008 Paulo Costa' + crlf + crlf+
               'Special thanks to:' + crlf+
               'José Luís Lima, José Alexandre Gonçalves,' + crlf+
-              'Paulo Malheiros, Paulo Marques' + crlf+
-              'António Paulo Moreira, Armando Sousa and the' + crlf+
+              'Paulo Malheiros, Paulo Marques,' + crlf+
+              'Armando Sousa, António Paulo Moreira and the' + crlf+
               'ODE, GLScene, SynEdit and PascalScript Teams,' + crlf+
               crlf+
               'Compiled: ' + DateToStr(FileDateToDateTime(FileAge(Application.ExeName))));
@@ -493,10 +502,7 @@ begin
     SetCurrentDir(CurDir);
     Project.FileName := ExtractFileName(SaveDialog.FileName);
   end;
-
-  SynEditST.Lines.SaveToFile(Project.FileName);
-  FormStorage.WriteString('LastProjectName', Project.FileName);
-  SynEditST.Modified:=False;
+  ProjectSave(Project.FileName);
 end;
 
 {
@@ -541,17 +547,37 @@ begin
     FileName:='Untitled';
   end;
 
-  EditAuthors.text:='';
-  EditComments.Text:='';
-//  FEditor.SynEditST.ReadOnly:=False;
+//  EditAuthors.text:='';
+//  EditDescription.Text:='';
+  MemoDescription.Text:='';
   SynEditST.Modified:=False;
 
   UpdateStatusLine;
   caption := FormEditorCaption + Project.FileName;
 end;
 
+function TFEditor.ProjectOpen(FileName: string): boolean;
+begin
+  result := false;
+  if not fileexists(FileName) then exit;
+  SynEditST.Lines.LoadFromFile(FileName);
+
+  Project.FileName := ExtractFileName(FileName);
+  SynEditST.ReadOnly := false;
+  SynEditST.Modified := false;
+//  SynEditST.Modified := (GetCurrentDir + '\' + Project.FileName) <> OpenDialog.FileName;
+
+  if FileExists('info.txt') then
+    MemoDescription.Lines.LoadFromFile('info.txt');
+
+  UpdateStatusLine;
+  Caption := FormEditorCaption + ExtractFileName(Project.FileName);
+  result := true;
+end;
+
+
 procedure TFEditor.MenuOpenClick(Sender: TObject);
-var sname, curdir, txt: string;
+var curdir: string;
 begin
   if SynEditST.Modified then
     if MessageDlg('Project Modified.'+crlf+
@@ -565,7 +591,7 @@ begin
   if not OpenDialog.Execute then exit;
   SetCurrentDir(curdir);
 
-  if not fileexists(OpenDialog.FileName) then exit; // TODO: queixar ao utilizador
+{  if not fileexists(OpenDialog.FileName) then exit; // TODO: queixar ao utilizador
   SynEditST.Lines.LoadFromFile(OpenDialog.FileName);
 
   SynEditST.ReadOnly:=False;
@@ -582,19 +608,17 @@ begin
   end;
 
   UpdateStatusLine;
-  Caption := FormEditorCaption+ExtractFileName(Project.FileName);
+  Caption := FormEditorCaption+ExtractFileName(Project.FileName);}
 
+  ProjectOpen(OpenDialog.FileName);
   //if not ProjectOpen(OpenDialog.FileName) then ProjectNew;
 end;
 
 procedure TFEditor.MenuRunClick(Sender: TObject);
 begin
   if not compile then exit;
-  if CBSaveOnRun.Checked then begin //ProjectSave(Project.FileName);
-    SynEditST.Lines.SaveToFile(Project.FileName);
-    SynEditST.Modified:=false;
-    UpdateStatusLine;
-    Caption := FormEditorCaption + Project.FileName;
+  if CBSaveOnRun.Checked then begin
+    ProjectSave(Project.FileName);
   end;
   FParams.RGControlBlock.ItemIndex := 1; // script
   ProgCyclesCount := 0;
@@ -664,6 +688,11 @@ begin
   end;
 end;
 
+function TFEditor.myFormat(const sFormat: string; const Args: array of const): string;
+begin
+  result := format(sFormat, Args);
+end;
+
 procedure TFEditor.PSScript_Compile(Sender: TPSScript);
 var i: integer;
     s: string;
@@ -677,8 +706,10 @@ begin
   Sender.AddMethod(Self, @TranslateAndRotate, 'function TranslateAndRotate(var rx,ry: double; px,py,tx,ty,teta: double): double');
   Sender.AddMethod(Self, @RotateAndTranslate, 'function RotateAndTranslate(var rx,ry: double; px,py,tx,ty,teta: double): double');
   Sender.AddMethod(Self, @RotateAroundPoint, 'function RotateAroundPoint(var rx,ry: double; px,py,cx,cy,teta: double): double');
+
   Sender.AddMethod(Self, @TFEditor.Writeln, 'procedure WriteLn(S: string)');
-  // Fuction with string parameters work only in this case: as TFEditor members !!!???
+  // Functions with string parameters work only in this case: as TFEditor members !!!???
+  Sender.AddMethod(Self, @TFEditor.myformat, 'function Format(const sFormat: string; const Args: array of const): string;');
   Sender.AddMethod(Self, @TFEditor.ReadComPort, 'function ReadComPort: string;');
   Sender.AddMethod(Self, @TFEditor.WriteComPort, 'procedure WriteComPort(s: string);');
 
@@ -880,23 +911,14 @@ procedure TFEditor.FormShow(Sender: TObject);
 var //i: integer;
     s: string;
 begin
-  Project.FileName := 'Untitled';
   s := FormStorage.ReadString('LastProjectName','');
   if s <> '' then begin
-    //ProjectOpen(s);
-    if not fileexists(s) then exit; // TODO: queixar ao utilizador
-    SynEditST.Lines.LoadFromFile(s);
-    SynEditST.ReadOnly:=False;
-    SynEditST.Modified := false;
-
-    with Project do begin
-      fileName:= s;
-      //Modified:=False;
-    end;
+    ProjectOpen(s);
+  end else begin
+    Project.FileName := 'Untitled';
+    UpdateStatusLine;
+    Caption := FormEditorCaption + ExtractFileName(Project.FileName);
   end;
-
-  UpdateStatusLine;
-  Caption := FormEditorCaption + ExtractFileName(Project.FileName);
 
   compile;
 

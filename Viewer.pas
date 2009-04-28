@@ -2407,11 +2407,28 @@ end;
 
 procedure TFViewer.FormCreate(Sender: TObject);
 var s: string;
+    Slist: TStringList;
 begin
   if ParamCount > 0 then begin
     s := ParamStr(1);
   end else begin
     s := 'default';
+  end;
+
+  if ExtractFileExt(s) = '.sim2' then begin
+    Slist := TStringList.Create;
+    try
+      try
+        Slist.LoadFromFile(s);
+        if Slist.Count > 0 then begin
+          s := Slist[0];
+        end;
+      finally
+        Slist.Free;
+      end;
+    except
+      on E: Exception do showmessage(E.Message);
+    end;
   end;
 
   if DirectoryExists(s) then begin
@@ -2845,6 +2862,7 @@ begin
             for i := 0 to Axes.Count-1 do begin
               Axes[i].ref.volts := 0;
               Axes[i].ref.w := 0;
+              Axes[i].ref.Torque := 0;
             end;
 
           end;
@@ -2906,6 +2924,8 @@ begin
             AxisTorqueModel(Axes[i], Theta, w, WorldODE.Ode_dt ,Tq);
             // Apply it to the axis
             Axes[i].AddTorque(Tq);
+            // Apply Extra torque
+            Axes[i].AddTorque(Axes[i].ref.Torque);
           end;
         end;
 

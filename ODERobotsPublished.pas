@@ -139,6 +139,7 @@ procedure SetAxisStateRef(R, i: integer; aState: TAxisState);
 procedure SetAxisPosRef(R, i: integer; aPos: double);
 procedure SetAxisSpeedRef(R, i: integer; aSpeed: double);
 procedure SetAxisVoltageRef(R, i: integer; aVoltage: double);
+procedure SetAxisTorqueRef(R, i: integer; aTorque: double);
 
 function GetAxisPosDeg(R, i: integer): double;
 function GetAxisSpeedDeg(R, i: integer): double;
@@ -806,6 +807,11 @@ end;
 procedure SetAxisVoltageRef(R, i: integer; aVoltage: double);
 begin
   WorldODE.Robots[r].Axes[i].ref.volts := aVoltage;
+end;
+
+procedure SetAxisTorqueRef(R, i: integer; aTorque: double);
+begin
+  WorldODE.Robots[r].Axes[i].ref.Torque := aTorque;
 end;
 
 

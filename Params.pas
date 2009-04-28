@@ -416,6 +416,7 @@ begin
     end;
   end;
 
+  theta := 0;
   with WorldODE.Robots[idx] do begin
     for i := 0 to Axes.Count -1 do begin
       SGJoints.Cells[0,i+1] := Axes[i].ParentLink.ID;
