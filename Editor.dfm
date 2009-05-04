@@ -25,7 +25,7 @@ object FEditor: TFEditor
     Top = 0
     Width = 769
     Height = 457
-    ActivePage = TabProject
+    ActivePage = TabControl
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
     object TabProject: TTabSheet
@@ -101,27 +101,18 @@ object FEditor: TFEditor
         Gutter.LineNumberStart = 0
         Highlighter = SynPasSyn
         Lines.Strings = (
-          '// '
-          '// '
+          '// Global Variables Here'
           ''
-          '// Global Variables'
-          'var Vnom: double;'
-          ''
+          '// this procedure is called periodicaly (default: 40 ms)'
           'procedure Control;'
-          'var teta, ref: double;'
           'begin'
-          '//  teta := GetLinkTheta(2,0);'
-          '//  writeln(floatTostr(teta));'
-          '//  ref := -teta * 0.01;'
-          '//  setLinkThetaRef(2,0,10);'
-          ' setAxisSpeedRef(0, 0, Vnom);'
-          ' setAxisSpeedRef(0, 1, Vnom);'
-          ' setAxisSpeedRef(0, 2, Vnom);'
+          ''
           'end;'
           ''
+          '// this procedure is called once when the script is started'
           'procedure Initialize;'
           'begin'
-          '  Vnom := 10;'
+          ''
           'end;'
           '')
         Options = [eoAutoIndent, eoDragDropEditing, eoEnhanceEndKey, eoGroupUndo, eoScrollByOneLess, eoScrollPastEol, eoShowScrollHint, eoSmartTabDelete, eoSpecialLineDefaultFg, eoTabsToSpaces, eoTrimTrailingSpaces]

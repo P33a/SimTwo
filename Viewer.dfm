@@ -16,6 +16,7 @@ object FViewer: TFViewer
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnMouseWheel = FormMouseWheel
   OnShow = FormShow
   PixelsPerInch = 96
@@ -494,6 +495,31 @@ object FViewer: TFViewer
           Height = 20.000000000000000000
           Width = 20.000000000000000000
           NoZWrite = False
+          object GLMultiPolygonTrack: TGLMultiPolygon
+            Material.FrontProperties.Diffuse.Color = {0000000000000000000000000000803F}
+            Material.FrontProperties.Emission.Color = {CDCCCC3ECDCCCC3ECDCCCC3E0000803F}
+            Direction.Coordinates = {00000000000000800000803F00000000}
+            Position.Coordinates = {00000000000000006F12033A0000803F}
+            Contours = <
+              item
+                Description = 'demo'
+                Nodes = <
+                  item
+                    Y = 0.200000002980232200
+                  end
+                  item
+                    Y = -0.200000002980232200
+                  end
+                  item
+                    X = 0.500000000000000000
+                    Y = -0.200000002980232200
+                  end
+                  item
+                    X = 0.500000000000000000
+                    Y = 0.200000002980232200
+                  end>
+              end>
+          end
           object GLLinesXY: TGLLines
             Visible = False
             LineColor.Color = {CDCC4C3FF8FEFE3EACC8483E0000803F}
@@ -646,6 +672,13 @@ object FViewer: TFViewer
       Scale.Coordinates = {0000003F3333333F0000803F00000000}
       BitmapFont = GLStoredBitmapFont
       Text = 'ObjectName'
+      Alignment = taLeftJustify
+      Layout = tlTop
+    end
+    object GLHUDTextGeneric: TGLHUDText
+      Position.Coordinates = {0000A04100002042000000000000803F}
+      Scale.Coordinates = {0000003F3333333F0000803F00000000}
+      BitmapFont = GLStoredBitmapFont
       Alignment = taLeftJustify
       Layout = tlTop
     end

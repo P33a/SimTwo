@@ -610,7 +610,9 @@ begin
   UpdateStatusLine;
   Caption := FormEditorCaption+ExtractFileName(Project.FileName);}
 
-  ProjectOpen(OpenDialog.FileName);
+  if not ProjectOpen(OpenDialog.FileName) then begin
+    ShowMessage('Could not open File: ' + OpenDialog.FileName);
+  end;
   //if not ProjectOpen(OpenDialog.FileName) then ProjectNew;
 end;
 
@@ -723,6 +725,7 @@ begin
 
   Sender.AddRegisteredPTRVariable('Time', 'Double');
   Sender.AddRegisteredPTRVariable('UDPDataRead', 'TMemoryStream');
+  Sender.AddRegisteredPTRVariable('HUDStrings', 'TStringList');
 
 {  Sender.comp.AddTypeS('TMotVoltArray', 'array[1..4] of integer').ExportName := true;
   Sender.AddRegisteredPTRVariable('U', 'TMotVoltArray');
@@ -778,6 +781,7 @@ begin
 
   PSScript.SetPointerToData('Time', @(ProgTime), PSScript.FindBaseType(btDouble));
   PSScript.SetPointerToData('UDPDataRead', @(FParams.UDPGenData), PSScript.FindNamedType('TMemoryStream'));
+  PSScript.SetPointerToData('HUDStrings', @(FViewer.HUDStrings), PSScript.FindNamedType('TStringList'));
 //  PSScript.SetPointerToData('ScannerAngle', @(RemState.Robot.ScannerAngle), PSScript.FindBaseType(btDouble));
 
 {  PSScript.SetPointerToData('IO1', @(FParams.CBIO1), PSScript.FindNamedType('TCheckBox'));
@@ -912,9 +916,7 @@ var //i: integer;
     s: string;
 begin
   s := FormStorage.ReadString('LastProjectName','');
-  if s <> '' then begin
-    ProjectOpen(s);
-  end else begin
+  if not ProjectOpen(s) then begin
     Project.FileName := 'Untitled';
     UpdateStatusLine;
     Caption := FormEditorCaption + ExtractFileName(Project.FileName);
