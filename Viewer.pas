@@ -9,7 +9,8 @@ uses
   GLWindowsFont, keyboard, GLTexture, math, GLSpaceText, Remote,
   GLShadowVolume, GLSkydome, GLGraph, OmniXML, OmniXMLUtils, Contnrs, ODERobots,
   rxPlacemnt, ProjConfig, GLHUDObjects, Menus, GLVectorFileObjects,
-  GLCelShader, GLFireFX, GlGraphics, OpenGL1x, SimpleParser, GLBitmapFont;
+  GLCelShader, GLFireFX, GlGraphics, OpenGL1x, SimpleParser, GLBitmapFont,
+  GLMultiPolygon;
 
 type
   TRGBfloat = record
@@ -154,6 +155,8 @@ type
     GLDummyCFire: TGLDummyCube;
     GLCube1: TGLCube;
     MenuScene: TMenuItem;
+    GLHUDTextGeneric: TGLHUDText;
+    GLMultiPolygonTrack: TGLMultiPolygon;
     procedure FormCreate(Sender: TObject);
     procedure GLSceneViewerMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -172,6 +175,7 @@ type
     procedure MenuConfigClick(Sender: TObject);
     procedure MenuEditorClick(Sender: TObject);
     procedure MenuSceneClick(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
   private
     { Private declarations }
     OldPick : TGLCustomSceneObject;
@@ -185,6 +189,8 @@ type
     function GLSceneViewerPick(X, Y: Integer): TGLCustomSceneObject;
     procedure TestTexture;
   public
+    HUDStrings: TStringList;
+
   end;
 
 
@@ -2448,6 +2454,7 @@ begin
   WorldODE.ODEEnable := True;
 
   GLHUDTextObjName.Text := '';
+  HUDStrings := TStringlist.Create;
   GetVersionInfo;
   SimTwoVersion := 'SimTwo v' + InfoData[3];
 end;
@@ -2612,10 +2619,12 @@ begin
     end else begin
       Motor.Im := 0;
     end;
+
     Motor.PowerDrain := Motor.Im * Motor.voltage * WorldODE.Ode_dt;
     if Motor.PowerDrain > 0 then begin
       Motor.EnergyDrain := Motor.EnergyDrain + Motor.PowerDrain;
     end;
+
     // coulomb friction
     // Tq := Friction.Fc * sign(w);
     // Limit it to avoid instability
@@ -2745,6 +2754,7 @@ begin
     end else begin
       GLHUDTextObjName.Text := '';
     end;
+    GLHUDTextGeneric.Text := HUDStrings.Text;
 
     for r := 0 to WorldODE.Robots.Count-1 do begin
       with WorldODE.Robots[r] do begin
@@ -3136,6 +3146,8 @@ begin
 
   GLCadencer.enabled := true;
   TestTexture;
+  //GLHUDTextGeneric.Text := 'Test' + #13 + '2nd line?'; 
+
 end;
 
 procedure TFViewer.TimerTimer(Sender: TObject);
@@ -3202,10 +3214,107 @@ begin
   FXMLEdit.Show;
 end;
 
+procedure TFViewer.FormDestroy(Sender: TObject);
+begin
+  HUDStrings.Free;
+end;
+
 end.
 
 
 {
+procedure TFMain.BTrackLoadClick(Sender: TObject);
+var i,act,ns: integer;
+    s: string;
+    x0,y0,xn,yn,d,teta,ra,teta_i: double;
+    ParList: TStrings;
+begin
+  //Memo.lines.insert(0,'##'); // Anti count=0 bug!!??
+  Memo.Lines.LoadFromFile(JvFilenameEditTrack.Text);
+  GLMultiPolygonTrack.Contours.Clear;
+  ParList := TStringList.Create;
+  try    x0:=0;
+    y0:=0;
+    for i:=0 to Memo.Lines.Count-1 do begin
+      s:=trim(Memo.lines[i]);
+      if s='' then continue;
+      if s[1] in ['/','#','%'] then continue; // ignore comments
+      ParseString(s,' ;',ParList);
+      if s[1] in['O','L','A'] then begin // Absolute coordinates -> offset is null
+        x0:=0;
+        y0:=0;
+      end;
+      if s[1] in ['O','o'] then begin  // Open new contour
+        if ParList.Count<3 then continue;
+        act:=GLMultiPolygonTrack.Contours.count-1;
+        if act>=0 then
+          if GLMultiPolygonTrack.Contours.Items[act].Description<>'C' then
+             closeContour(GLMultiPolygonTrack,act);
+        GLMultiPolygonTrack.Contours.Add;
+
+        x0 := x0 + strtofloatDef(ParList[1],x0);
+        y0 := y0 + strtofloatDef(ParList[2],y0);
+        act:=GLMultiPolygonTrack.Contours.count-1;
+        if act<0 then continue;
+
+        GLMultiPolygonTrack.Contours.Items[act].Nodes.AddNode(AffineVectorMake(x0,y0,0));
+
+      end else if s[1] in ['C','c'] then begin  // Close a contour
+        act:=GLMultiPolygonTrack.Contours.count-1;
+        if act>=0 then closeContour(GLMultiPolygonTrack,act);
+
+      end else if s[1] in ['L','l'] then begin  // Insert Line: L x y width
+        if ParList.Count<4 then continue;
+        xn := x0 + strtofloatDef(ParList[1],x0);
+        yn := y0 + strtofloatDef(ParList[2],y0);
+        d := strtofloatDef(ParList[3],0.1);
+
+        act:=GLMultiPolygonTrack.Contours.count-1;
+        if act<0 then continue;
+
+        GLMultiPolygonTrack.Contours.Items[act].Nodes.AddNode(AffineVectorMake(xn,yn,d));
+        x0:=xn;
+        y0:=yn;
+
+      end else if s[1] in ['R','r'] then begin  // Insert Line: d teta width
+        if ParList.Count<4 then continue;
+        ra := strtofloatDef(ParList[1],x0);
+        teta := strtofloatDef(ParList[2],0);
+        d := strtofloatDef(ParList[3],0.1);
+
+        xn := x0 + ra*cos(degTorad(teta));
+        yn := y0 + ra*sin(degTorad(teta));
+
+        act:=GLMultiPolygonTrack.Contours.count-1;
+        if act<0 then continue;
+
+        GLMultiPolygonTrack.Contours.Items[act].Nodes.AddNode(AffineVectorMake(xn,yn,d));
+        x0:=xn;
+        y0:=yn;
+
+      end else if s[1] in ['A','a'] then begin  // insert arc: A xc yc width angle numSegments
+        if ParList.Count<6 then continue;
+        xn := x0 + strtofloatDef(ParList[1],x0);
+        yn := y0 + strtofloatDef(ParList[2],y0);
+        d := strtofloatDef(ParList[3],0.1);
+        teta := strtofloatDef(ParList[4],pi/2);
+        ns := strtointDef(ParList[5],16);
+
+        act:=GLMultiPolygonTrack.Contours.count-1;
+        if act<0 then continue;
+
+        ra:=dist(x0-xn,y0-yn);
+        teta_i:=RadToDeg(atan2(y0-yn,x0-xn));
+        GLMultiPolygonTrack.Contours.Items[act].Nodes.AddXYArc(ra,ra,teta_i+0.1,teta_i+teta,ns,AffineVectorMake(xn,yn,d));
+        RotateAroundPoint(x0,y0,x0,y0,xn,yn,degToRad(teta));
+      end;
+
+    end;
+  finally
+    ParList.Free;
+  end;
+end;
+
 procedure TFMain.GLCadencerProgress(Sender: TObject; const deltaTime, newTime: Double);
 var acttime: Dword;
     dteta,droR,droL,dsR,dsL: double;
@@ -3265,7 +3374,82 @@ begin
     GLSceneViewer.ResetPerformanceMonitor;
     LastCadencerTime:=ActTime;
   end;
-end;}
+end;
+procedure TFMain.BuildLineScan;
+const ScanRes = 64;
+var Vo, Vp, V, V1, V2 : TAffineVector;
+    iPoint: TVector;
+//    iObj : TGLBaseSceneObject;
+    i, j, ico, ins: integer;
+    b, inside: boolean;
+    X,Y: single;
+    sens: array[1..ScanRes] of integer;
+begin
+  //ZeroMemory(@(RemState.Robot.Scanner), sizeof(RemState.Robot.Scanner));
+  ZeroMemory(@(sens), sizeof(sens));
+  Vo := GLPolygonScanner.LocalToAbsolute(GLPolygonScanner.Nodes.Items[0].AsAffineVector);
+  V1 := GLPolygonScanner.LocalToAbsolute(GLPolygonScanner.Nodes.Items[2].AsAffineVector);
+  V1 := VectorSubtract(V1, Vo);
+  V2 := GLPolygonScanner.LocalToAbsolute(GLPolygonScanner.Nodes.Items[1].AsAffineVector);
+  V2 := VectorSubtract(V2, Vo);
+  V := VectorSubtract(V2, V1);
+  for i:=0 to ScanRes-1 do begin
+    Vp := VectorCombine(V1, V, 1, i/ScanRes);
+    NormalizeVector(Vp);
+    b :=GLPlaneFloor.RayCastIntersect(VectorMake(Vo), VectorMake(Vp), @iPoint, nil);
+    if b then begin
+      X:=iPoint[0];
+      Y:=iPoint[1];
+      inside:= false;
+      // test if point is inside contours
+      for ico:=0 to GLMultiPolygonTrack.Contours.Count -1 do begin
+        j := GLMultiPolygonTrack.Contours.Items[ico].Nodes.Count - 1;
+        with GLMultiPolygonTrack.Contours.Items[ico] do begin
+          for ins:=0 to Nodes.Count -1 do begin
+            if ((((Nodes.Items[ins].Y <= Y) and (Y<Nodes.Items[j].Y)) or ((Nodes.Items[j].Y <= Y) and (Y<Nodes.Items[ins].Y)) )
+                 and (X<(Nodes.Items[j].X-Nodes.Items[ins].X)*(Y-Nodes.Items[ins].Y)/(Nodes.Items[j].Y-Nodes.Items[ins].Y)+Nodes.Items[ins].X)) then
+                inside:=not inside;
+             j:=ins;
+          end;
+          if inside then break;
+        end;
+      end;
+      EditDebug.Text :=  format(' %.2f, %.2f, %.2f',[iPoint[0], iPoint[1], iPoint[2]]);
+      //EditDebug.Text :=  iObj.Name + format(' %.2f, %.2f, %.2f',[Vo[0], Vo[1], Vo[2]]);
+      if inside then begin
+        //RemState.Robot.Scanner[i]:=255;
+        sens[i]:=255;
+      end else begin
+        //RemState.Robot.Scanner[i]:=0;
+        sens[i]:=0;
+      end;
+    end else begin
+      //RemState.Robot.Scanner[i]:=0;
+      sens[i]:=0;
+    end;
+  end;
+
+
+  // Add noise
+  for i:=0 to ScanRes-1 do begin
+    Sens[i] :=  round(Sens[i] + 10 *randg(0,2));
+  end;
+
+  // Filter
+  for i:=1 to ScanRes-2 do begin
+    RemState.Robot.Scanner[i] := round(max(0,min(255,(sens[i-1] + 2*sens[i] + sens[i+1]) div 4)));
+  end;
+
+  // Show In Chart
+  Series1.BeginUpdate;
+  Series1.Clear;
+  for i:=0 to ScanRes-1 do begin
+    Series1.AddXY(i,RemState.Robot.Scanner[i]);
+  end;
+  Series1.EndUpdate;
+
+end;
+}
 
 
 // TODO

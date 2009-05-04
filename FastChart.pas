@@ -53,6 +53,8 @@ type
   public
     SeriesNameList: TStringList;
     MaxPoints : integer;
+    physTime_zero: double; 
+
     procedure AddSeriesValue(var Series: TFastLineSeries; X, Y: double);
     procedure AddPoint(x, r, y, u: double);
     procedure AddSample(r: integer; t: double);
@@ -103,6 +105,7 @@ procedure TFChart.FormCreate(Sender: TObject);
 begin
   SeriesNameList := TStringList.Create;
   FormStorage.IniFileName := GetIniFineName;
+  physTime_zero := 0;
 end;
 
 procedure TFChart.AddSeriesValue(var Series: TFastLineSeries; X,Y: double);
@@ -130,7 +133,8 @@ begin
   if not CBFreeze.Checked then begin
     for i := 0 to Chart.SeriesCount -1 do begin
       Chart.Series[i].Clear;
-    end
+    end;
+    physTime_zero := WorldODE.physTime;
   end;
 end;
 
@@ -157,7 +161,7 @@ begin
       df := TSeriesDef(Tag);
       if df.RobotNum = r then begin
         v := df.func(df.RobotNum, df.AxisNum);
-        AddXY(t, v);
+        AddXY(t - physTime_zero, v);
         while Count > MaxPoints do Delete(0);
       end;
     end;
