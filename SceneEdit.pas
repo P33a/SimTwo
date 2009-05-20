@@ -88,11 +88,11 @@ procedure TFXMLEdit.CreateXMLTabEdit(SL: TStringList; i: integer);
 var NewTabSheet: TTabSheet;
     NewSynEdit: TSynEdit;
 begin
-    NewTabSheet := TTabSheet.Create(Self);
+    NewTabSheet := TTabSheet.Create(self);
     NewTabSheet.Name := 'TS' + inttostr(i);
     NewTabSheet.PageControl := PageControlXML;
     NewTabSheet.Caption := SL[i];
-    NewSynEdit := TSynEdit.Create(Self);
+    NewSynEdit := TSynEdit.Create(self);
     NewSynEdit.Name := 'SE' + inttostr(i);
     SL.Objects[i] := NewSynEdit;
     NewSynEdit.Parent := NewTabSheet;
@@ -113,8 +113,10 @@ begin
   TabScene.TabVisible := false;
   SynEditXML.Lines.AddStrings(WorldODE.XMLFiles);
   for i := 0 to WorldODE.XMLFiles.Count -1 do begin
-    if WorldODE.XMLFiles.IndexOf(WorldODE.XMLFiles[i]) = i then
-      CreateXMLTabEdit(WorldODE.XMLFiles, i);
+    if WorldODE.XMLFiles.IndexOf(WorldODE.XMLFiles[i]) = i then begin
+      if WorldODE.XMLFiles.Objects[i] = nil then  // only if they were not already created (ex: a cycle show/close/show again)
+        CreateXMLTabEdit(WorldODE.XMLFiles, i);
+    end;
   end;
   FormStorage.RestoreFormPlacement;
 
@@ -200,6 +202,7 @@ begin
     end;
   end;
   StatusBar.Invalidate;
+  TmpSynEdit.Invalidate;
 
 end;
 
@@ -382,6 +385,9 @@ begin
   if TmpSynEdit = nil then exit;
   FormStorage.WriteInteger('CursorLine',TmpSynEdit.CaretY);
   FormStorage.WriteInteger('CursorCol',TmpSynEdit.CaretX);
+  //while PageControlXML.PageCount > 0 do begin
+  //  PageControlXML.Pages[0].Free;
+  //end;
 end;
 
 procedure TFXMLEdit.FormCloseQuery(Sender: TObject; var CanClose: Boolean);

@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls, ExtCtrls, GLWin32Viewer, GLcontext, Math,
   IdBaseComponent, IdComponent, IdUDPBase, IdUDPServer, IdSocketHandle, ODERobots, OdeImport,
-  rxPlacemnt, Grids, GLCadencer, CPort, ShellAPI, Sockets;
+  rxPlacemnt, Grids, GLCadencer, CPort, ShellAPI, Sockets, GLShadowVolume;
 
 type
   TFParams = class(TForm)
@@ -171,6 +171,9 @@ type
     Label1: TLabel;
     EditScriptPeriod: TEdit;
     BGlobalSet: TButton;
+    CBWorldQuickStep: TCheckBox;
+    Label4: TLabel;
+    EditQuickStepIterations: TEdit;
     procedure CBShadowsClick(Sender: TObject);
     procedure CBVsyncClick(Sender: TObject);
     procedure BSetFPSClick(Sender: TObject);
@@ -677,9 +680,11 @@ begin
   WorldODE.TimeFactor := strtofloatdef(EditTimeSpeed.Text, WorldODE.TimeFactor);
   WorldODE.Ode_CFM := strtofloatdef(EditODE_CFM.Text, WorldODE.Ode_CFM);
   WorldODE.Ode_ERP := strtofloatdef(EditODE_ERP.Text, WorldODE.Ode_ERP);
+  WorldODE.Ode_QuickStepIters := strtointdef(EditQuickStepIterations.Text, WorldODE.Ode_QuickStepIters);
   with WorldODE do begin
     dWorldSetCFM(world, Ode_CFM);
     dWorldSetERP(world, Ode_ERP);
+    dWorldSetQuickStepNumIterations(world, Ode_QuickStepIters);
   end;
 end;
 
@@ -912,7 +917,14 @@ begin
   for r := 0 to WorldODE.Robots.Count - 1 do begin
     for i := 0 to WorldODE.Robots[r].Solids.Count - 1 do begin
       with WorldODE.Robots[r].Solids[i] do begin
-        if AltGLObj <> nil then GLObj.Visible := CBGLObject.Checked;
+        if AltGLObj <> nil then
+          AltGLObj.Visible := CBGLObject.Checked;
+        if ShadowGlObj <> nil then
+          ShadowGlObj.Visible := CBGLObject.Checked;
+          //idx := (WorldODE.OdeScene as TGLShadowVolume).Occluders.IndexOfCaster(ShadowGlObj);
+          //if idx >= 0 then begin
+          //  (WorldODE.OdeScene as TGLShadowVolume).Occluders[idx].CastingMode := scmVisible;
+          //end;
       end;
     end;
   end;

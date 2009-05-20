@@ -175,6 +175,7 @@ type
     procedure AddTorque(Tq: Double);
     procedure GLCreate(Parent: TGLBaseSceneObject; aRadius, aHeight: double);
     procedure GLSetPosition;
+    function isCircular: boolean;
   end;
 
 
@@ -840,6 +841,15 @@ begin
     up.y := vtmp[1];
     up.z := vtmp[2];
   end;
+end;
+
+function TAxis.isCircular: boolean;
+begin
+  result := true;
+  if dJointGetType(ParentLink.joint) = ord(dJointTypeSlider) then begin
+    result := false;
+  end;
+  //TODO more Joint types
 end;
 
 { TSolidLink }

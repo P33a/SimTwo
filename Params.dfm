@@ -25,7 +25,7 @@ object FParams: TFParams
     Top = 0
     Width = 273
     Height = 621
-    ActivePage = TabControl
+    ActivePage = TabPhysics
     Anchors = [akLeft, akTop, akBottom]
     TabOrder = 0
     object TabControl: TTabSheet
@@ -1160,6 +1160,13 @@ object FParams: TFParams
         Height = 13
         Caption = 'ODE ERP:'
       end
+      object Label4: TLabel
+        Left = 4
+        Top = 152
+        Width = 76
+        Height = 13
+        Caption = 'Step Iterations:'
+      end
       object EditDefaultFriction: TEdit
         Left = 84
         Top = 4
@@ -1208,6 +1215,24 @@ object FParams: TFParams
         Height = 21
         TabOrder = 5
         Text = '0.4'
+      end
+      object CBWorldQuickStep: TCheckBox
+        Left = 136
+        Top = 150
+        Width = 97
+        Height = 17
+        Caption = 'WorldQuickStep'
+        Checked = True
+        State = cbChecked
+        TabOrder = 6
+      end
+      object EditQuickStepIterations: TEdit
+        Left = 84
+        Top = 148
+        Width = 45
+        Height = 21
+        TabOrder = 7
+        Text = '10'
       end
     end
     object TabIO: TTabSheet
