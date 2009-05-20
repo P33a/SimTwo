@@ -31,7 +31,7 @@ object FViewer: TFViewer
     Buffer.AmbientColor.Color = {9A99993E9A99993E9A99993E0000803F}
     Buffer.ContextOptions = [roDoubleBuffer, roStencilBuffer, roRenderToWindow]
     Buffer.AntiAliasing = aa2x
-    FieldOfView = 150.611511230468700000
+    FieldOfView = 150.000000000000000000
     Align = alClient
     PopupMenu = PopupMenu
     OnMouseDown = GLSceneViewerMouseDown
@@ -492,34 +492,9 @@ object FViewer: TFViewer
           Material.Texture.MappingSCoordinates.Coordinates = {0000A040000000000000000000000000}
           Material.Texture.MappingTCoordinates.Coordinates = {000000000000A0400000000000000000}
           Direction.Coordinates = {00000000000000800000803F00000000}
-          Height = 20.000000000000000000
-          Width = 20.000000000000000000
+          Height = 24.000000000000000000
+          Width = 24.000000000000000000
           NoZWrite = False
-          object GLMultiPolygonTrack: TGLMultiPolygon
-            Material.FrontProperties.Diffuse.Color = {0000000000000000000000000000803F}
-            Material.FrontProperties.Emission.Color = {CDCCCC3ECDCCCC3ECDCCCC3E0000803F}
-            Direction.Coordinates = {00000000000000800000803F00000000}
-            Position.Coordinates = {00000000000000006F12033A0000803F}
-            Contours = <
-              item
-                Description = 'demo'
-                Nodes = <
-                  item
-                    Y = 0.200000002980232200
-                  end
-                  item
-                    Y = -0.200000002980232200
-                  end
-                  item
-                    X = 0.500000000000000000
-                    Y = -0.200000002980232200
-                  end
-                  item
-                    X = 0.500000000000000000
-                    Y = 0.200000002980232200
-                  end>
-              end>
-          end
           object GLLinesXY: TGLLines
             Visible = False
             LineColor.Color = {CDCC4C3FF8FEFE3EACC8483E0000803F}
@@ -581,7 +556,7 @@ object FViewer: TFViewer
       object GLPolygonArrowX: TGLPolygon
         Material.FrontProperties.Ambient.Color = {CDCCCC3ECDCCCC3ECDCCCC3E0000803F}
         Material.FrontProperties.Diffuse.Color = {0000803F0000803F0000803F0000803F}
-        Position.Coordinates = {48E17A3F000000006F12833A0000803F}
+        Position.Coordinates = {48E17A3F0000000017B7D1380000803F}
         RollAngle = -90.000000000000000000
         Scale.Coordinates = {CDCCCC3D0000803F0000803F00000000}
         Up.Coordinates = {0000803F2EBD3BB30000000000000000}
@@ -613,7 +588,7 @@ object FViewer: TFViewer
       object GLPolygonArrowY: TGLPolygon
         Material.FrontProperties.Ambient.Color = {CDCCCC3ECDCCCC3ECDCCCC3E0000803F}
         Material.FrontProperties.Diffuse.Color = {0000803F0000803F0000803F0000803F}
-        Position.Coordinates = {0000000048E17A3F6F12833A0000803F}
+        Position.Coordinates = {0000000048E17A3F17B7D1380000803F}
         Scale.Coordinates = {CDCCCC3D0000803F0000803F00000000}
         Nodes = <
           item
@@ -707,7 +682,7 @@ object FViewer: TFViewer
     end
     object GLCamera: TGLCamera
       DepthOfView = 1000000000.000000000000000000
-      FocalLength = 75.000000000000000000
+      FocalLength = 76.633468627929690000
       NearPlaneBias = 0.009999999776482582
       TargetObject = GLDummyTargetCam
       Position.Coordinates = {0000003FCDCC2CC0CDCC0C400000803F}
@@ -732,7 +707,7 @@ object FViewer: TFViewer
   object GLMaterialLibrary: TGLMaterialLibrary
     Materials = <
       item
-        Name = 'LibMaterialBumps'
+        Name = 'MatBumps'
         Material.Texture.Image.Picture.Data = {
           07544269746D617036FD0200424D36FD0200000000003600000028000000FF00
           0000FF000000010018000000000000FD0200130B0000130B0000000000000000

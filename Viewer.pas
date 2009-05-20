@@ -9,8 +9,8 @@ uses
   GLWindowsFont, keyboard, GLTexture, math, GLSpaceText, Remote,
   GLShadowVolume, GLSkydome, GLGraph, OmniXML, OmniXMLUtils, Contnrs, ODERobots,
   rxPlacemnt, ProjConfig, GLHUDObjects, Menus, GLVectorFileObjects,
-  GLCelShader, GLFireFX, GlGraphics, OpenGL1x, SimpleParser, GLBitmapFont,
-  GLMultiPolygon;
+  GLFireFX, GlGraphics, OpenGL1x, SimpleParser, GLBitmapFont,
+  GLMultiPolygon, GLMesh;
 
 type
   TRGBfloat = record
@@ -23,6 +23,7 @@ type
     //SampleCount: integer;
     Ode_dt, TimeFactor: double;
     Ode_ERP, Ode_CFM: double;
+    Ode_QuickStepIters: integer;
     OdeScene: TGLBaseSceneObject;
     MaxWorldX, MaxWorldY, MinWorldX, MinWorldY: double;
     world: PdxWorld;
@@ -48,6 +49,7 @@ type
     ODEEnable : boolean;
     physTime : double;
     SecondsCount, DecPeriod: double;
+    Ode_UseQuickStep: boolean;
 
     XMLFiles, XMLErrors: TStringList;
 
@@ -55,8 +57,8 @@ type
     constructor create;
     procedure WorldUpdate;
   private
-    procedure CreateSubGeomBox(var body: PdxBody; var geom: PdxGeom; xsize, ysize, zsize, x, y, z: double);
-    procedure CreateGlBox(var GLCube: TGLCube; var geom: PdxGeom);
+    //procedure CreateSubGeomBox(var body: PdxBody; var geom: PdxGeom; xsize, ysize, zsize, x, y, z: double);
+    //procedure CreateGlBox(var GLCube: TGLCube; var geom: PdxGeom);
 
     procedure CreateSolidBox(var Solid: TSolid; bmass, posX, posY, posZ, L, W, H: double);
     procedure CreateSolidCylinder(var Solid: TSolid; cmass, posX, posY, posZ: double; c_radius, c_length: double);
@@ -67,7 +69,9 @@ type
     procedure SetHingeLimits(var Link: TSolidLink; LimitMin, LimitMax: double);
 
     procedure CreateBoxObstacle(var Obstacle: TSolid; sizeX, sizeY, sizeZ, posX, posY, posZ: double);
+
     procedure CreateShellBox(var Solid: TSolid; motherbody: PdxBody; posX, posY, posZ, L, W, H: double);
+    procedure CreateShellCylinder(var Solid: TSolid; motherbody: PdxBody; posX, posY, posZ, R, H: double);
 
     procedure UpdateOdometry(var Link: TSolidLink);
     procedure CreateWheel(Robot: TRobot; Wheel: TWheel; const Pars: TWheelPars; const wFriction: TFriction; const wMotor: TMotor);
@@ -101,6 +105,12 @@ type
     procedure CreateFixedJoint(var Link: TSolidLink; Solid1,  Solid2: TSolid);
     function GetNodeAttrRealParse(parentNode: IXMLNode; attrName: string; defaultValue: double; const Parser: TSimpleParser): double;
     procedure LoadDefinesFromXML(Parser: TSimpleParser; const root: IXMLNode);
+    procedure LoadTrackFromXML(XMLFile: string; Parser: TSimpleParser);
+    procedure LoadPolygonFromXML(const root: IXMLNode; Parser: TSimpleParser);
+    procedure LoadArcFromXML(const root: IXMLNode; Parser: TSimpleParser);
+    procedure LoadLineFromXML(const root: IXMLNode; Parser: TSimpleParser);
+    procedure CreateShellSphere(var Solid: TSolid; motherbody: PdxBody;
+      posX, posY, posZ, R: double);
 //    procedure AxisGLCreate(axis: Taxis; aRadius, aHeight: double);
 //    procedure AxisGLSetPosition(axis: Taxis);
   public
@@ -156,7 +166,6 @@ type
     GLCube1: TGLCube;
     MenuScene: TMenuItem;
     GLHUDTextGeneric: TGLHUDText;
-    GLMultiPolygonTrack: TGLMultiPolygon;
     procedure FormCreate(Sender: TObject);
     procedure GLSceneViewerMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -188,6 +197,7 @@ type
     procedure UpdateGLScene;
     function GLSceneViewerPick(X, Y: Integer): TGLCustomSceneObject;
     procedure TestTexture;
+    procedure ShowOrRestoreForm(Fm: TForm);
   public
     HUDStrings: TStringList;
 
@@ -228,13 +238,14 @@ begin
   //exit;
   b1 := dGeomGetBody(o1);
   b2 := dGeomGetBody(o2);
+  // do not collide static objects
+  if not assigned(b1) and not assigned(b2) then exit;
+
   if assigned(b1) and assigned(b2) then begin
     //exit without doing anything if the two bodies are connected by a joint
     //if (dAreConnected(b1, b2)<>0) then exit;
     if (dAreConnectedExcluding(b1, b2, dJointTypeContact)<>0) then exit;
   end;
-  // do not collide static objects
-  if not assigned(b1) and not assigned(b2) then exit;
 
   n := dCollide(o1, o2, MAX_CONTACTS, contact[0].geom, sizeof(TdContact));
   if (n > 0) then  begin
@@ -357,13 +368,13 @@ begin
 end;
 
 
-function CalcPID(var PID: TMotController; ref, yk: double): double;
-var ek, dek, mk: double;
+function CalcPID(var PID: TMotController; ref, ek: double): double;
+var {ek,} dek, mk: double;
 begin
   result := 0;
   if not PID.active then exit;
 
-  ek := ref - yk;
+  //ek := ref - yk;
   dek := ek - PID.ek_1;
   PID.Sek := PID.Sek + ek;
   mk := PID.Kp * ek + PID.Ki * PID.Sek + PID.Kd * dek + PID.Kf * ref;
@@ -459,7 +470,7 @@ begin
   end;
 end; { GetNodeAttrReal }
 
-
+{
 procedure TWorld_ODE.CreateSubGeomBox(var body: PdxBody; var geom: PdxGeom; xsize, ysize, zsize: double; x,y,z: double);
 begin
   // create geom in current space
@@ -478,7 +489,7 @@ begin
   (OdeScene as TGLShadowVolume).Occluders.AddCaster(GLCube);
 //  PositionSceneObject(GLCube, geom);
 end;
-
+}
 
 procedure TWorld_ODE.CreateSolidBox(var Solid: TSolid; bmass, posX, posY, posZ, L, W, H: double);
 var m: TdMass;
@@ -560,7 +571,7 @@ begin
     Height := c_length;
     //Material.FrontProperties.Diffuse.AsWinColor := clyellow;
     Material.MaterialLibrary := FViewer.GLMaterialLibrary;
-    Material.LibMaterialName := 'LibMaterialBumps';
+    //Material.LibMaterialName := 'LibMaterialBumps';
     //Material.LibMaterialName := 'LibMaterialFeup';
   end;
   (OdeScene as TGLShadowVolume).Occluders.AddCaster(Solid.GLObj);
@@ -612,9 +623,6 @@ begin
   Solid.kind := skDefault;
   Solid.Body := motherbody;
 
-  //dRFromAxisAndAngle (R,0,1,0,0);
-  //dBodySetRotation (Solid.Body, R);
-
   Solid.Geom := dCreateBox(space, L, W, H);
   dGeomSetBody(Solid.Geom, Solid.Body);
   Solid.Geom.data := Solid;
@@ -623,12 +631,58 @@ begin
 
   Solid.GLObj := TGLSceneObject(ODEScene.AddNewChild(TGLCube));
 
-  //PositionSceneObject(Solid.GLObj, Solid.Geom);
   with (Solid.GLObj as TGLCube) do begin
     TagObject := Solid;
     Scale.x := L;
     Scale.y := W;
     Scale.z := H;
+    //Material.FrontProperties.Diffuse.AsWinColor := clyellow;
+  end;
+  (OdeScene as TGLShadowVolume).Occluders.AddCaster(Solid.GLObj);
+end;
+
+
+
+procedure TWorld_ODE.CreateShellCylinder(var Solid: TSolid; motherbody: PdxBody; posX, posY, posZ, R, H: double);
+begin
+  Solid.kind := skDefault;
+  Solid.Body := motherbody;
+
+  Solid.Geom := dCreateCylinder(space, R, H);
+  dGeomSetBody(Solid.Geom, Solid.Body);
+  Solid.Geom.data := Solid;
+
+  dGeomSetOffsetPosition(Solid.Geom, posX, posY, posZ);
+
+  Solid.GLObj := TGLSceneObject(ODEScene.AddNewChild(TGLCylinder));
+
+  with (Solid.GLObj as TGLCylinder) do begin
+    TagObject := Solid;
+    TopRadius := R;
+    BottomRadius := R;
+    Height := H;
+    //Material.FrontProperties.Diffuse.AsWinColor := clyellow;
+  end;
+  (OdeScene as TGLShadowVolume).Occluders.AddCaster(Solid.GLObj);
+end;
+
+
+procedure TWorld_ODE.CreateShellSphere(var Solid: TSolid; motherbody: PdxBody; posX, posY, posZ, R: double);
+begin
+  Solid.kind := skDefault;
+  Solid.Body := motherbody;
+
+  Solid.Geom := dCreateSphere(space, R);
+  dGeomSetBody(Solid.Geom, Solid.Body);
+  Solid.Geom.data := Solid;
+
+  dGeomSetOffsetPosition(Solid.Geom, posX, posY, posZ);
+
+  Solid.GLObj := TGLSceneObject(ODEScene.AddNewChild(TGLSphere));
+
+  with (Solid.GLObj as TGLSphere) do begin
+    TagObject := Solid;
+    Radius := R;
     //Material.FrontProperties.Diffuse.AsWinColor := clyellow;
   end;
   (OdeScene as TGLShadowVolume).Occluders.AddCaster(Solid.GLObj);
@@ -971,6 +1025,7 @@ end;}
 procedure TWorld_ODE.LoadSolidsFromXML(SolidList: TSolidList; const root: IXMLNode; Parser: TSimpleParser);
 var bone, prop: IXMLNode;
     radius, sizeX, sizeY, sizeZ, posX, posY, posZ, angX, angY, angZ, mass: double;
+    I11, I22, I33, I12, I13, I23: double;
     BuoyantMass, Drag, StokesDrag, RollDrag: double;
     colorR, colorG, colorB: double;
     ID: string;
@@ -983,21 +1038,23 @@ var bone, prop: IXMLNode;
     MeshScale: double;
     MeshCastsShadows: boolean;
     Surf: TdSurfaceParameters;
+    dMass: TdMass;
 begin
   if root = nil then exit;
 
   bone := root.FirstChild;
   while bone <> nil do begin
-    if pos(bone.NodeName, 'cuboid, cylinder, sphere, belt, propeller') <> 0 then begin // 'bone'
+    if pos(bone.NodeName, 'cuboid <> cylinder <> sphere <> belt <> propeller') <> 0 then begin // 'bone'
       prop := bone.FirstChild;
       // default values
       mass := 1;  ID := '-1';
+      I11 := -1; I22 := -1; I33 := -1; I12 := 0; I13 := 0; I23 := 0;
       MeshFile := '';
       MeshShadowFile := '';
       MeshScale := 1;
       MeshCastsShadows := true;
       BuoyantMass := 0;
-      Drag := 0; StokesDrag := 0; RollDrag := 0;
+      Drag := 0; StokesDrag := 1e-5; RollDrag := 1e-3;
       radius := 1;
       sizeX := 1; sizeY := 1; sizeZ := 1;
       posX := 0; posY := 0; posZ := 0;
@@ -1056,6 +1113,13 @@ begin
         end;
         if prop.NodeName = 'mass' then begin
           mass := GetNodeAttrRealParse(prop, 'value', mass, Parser);
+          //I11, I22, I33, I12, I13, I23
+          I11 := GetNodeAttrRealParse(prop, 'I11', I11, Parser);
+          I22 := GetNodeAttrRealParse(prop, 'I22', I22, Parser);
+          I33 := GetNodeAttrRealParse(prop, 'I33', I33, Parser);
+          I12 := GetNodeAttrRealParse(prop, 'I12', I12, Parser);
+          I13 := GetNodeAttrRealParse(prop, 'I13', I13, Parser);
+          I23 := GetNodeAttrRealParse(prop, 'I23', I23, Parser);
         end;
         if prop.NodeName = 'ID' then begin
           ID := GetNodeAttrStr(prop, 'value', ID);
@@ -1083,17 +1147,31 @@ begin
 
         if (bone.NodeName = 'cuboid') or (bone.NodeName = 'belt') or (bone.NodeName = 'propeller')then begin
           CreateSolidBox(newBone, mass, posX, posY, posZ, sizeX, sizeY, sizeZ);
-          if TextureName <> '' then begin
-            newBone.SetTexture(TextureName, TextureScale); //'LibMaterialFeup'
-          end;
+          //if TextureName <> '' then begin
+          //  newBone.SetTexture(TextureName, TextureScale); //'LibMaterialFeup'
+          //end;
         end else if bone.NodeName = 'sphere' then begin
           CreateSolidSphere(newBone, mass, posX, posY, posZ, radius);
         end else if bone.NodeName = 'cylinder' then begin
           CreateSolidCylinder(newBone, mass, posX, posY, posZ, sizeX, sizeZ);
-          if TextureName <> '' then begin
-            newBone.SetTexture(TextureName, TextureScale); //'LibMaterialFeup'
-          end;
+          //if TextureName <> '' then begin
+          //  newBone.SetTexture(TextureName, TextureScale); //'LibMaterialFeup'
+          //end;
         end;
+        if (I11 > 0) and (I22 > 0) and (I33 > 0)  then begin
+          dMass := newBone.Body.mass;
+          dMassSetParameters(dmass, dmass.mass,
+                             dmass.c[0],
+                             dmass.c[1],
+                             dmass.c[2],
+                             I11, I22, I33, I12, I13, I23);
+          dBodySetMass(newBone.Body, @dMass);
+        end;
+
+        if TextureName <> '' then begin
+          newBone.SetTexture(TextureName, TextureScale); //'LibMaterialFeup'
+        end;
+
         if BuoyantMass <> 0 then begin
           dBodySetGravityMode(newBone.Body, 0);
         end;
@@ -1141,7 +1219,7 @@ begin
           end;
           PositionSceneObject(newBone.ShadowGlObj, newBone.Geom);
           with (OdeScene as TGLShadowVolume).Occluders.AddCaster(newBone.ShadowGlObj) do begin
-            CastingMode := scmAlways;
+            CastingMode := scmVisible;
           end;
         end;
 
@@ -1358,7 +1436,6 @@ begin
             Robot.Links.Add(newLink);
 
             if LinkType ='Hinge' then begin
-              //CreateHingeJoint(newLink, Robot.Solids[SolidIndex1], Robot.Solids[SolidIndex2], posX, posY, posZ, axisX,axisY,axisZ);
               CreateHingeJoint(newLink, Solid1, Solid2, posX, posY, posZ, axisX,axisY,axisZ);
               SetHingeLimits(newLink, LimitMin, LimitMax);
               if Friction.Fc > 0 then begin
@@ -1378,6 +1455,7 @@ begin
 
             if LinkType ='Fixed' then begin
               CreateFixedJoint(newLink, Solid1, Solid2);
+              aGL.Radius := -1;
             end;
 
             if LinkType ='Universal' then begin
@@ -1398,6 +1476,7 @@ begin
 
               if aGL.Radius > 0 then begin
                 newAxis.GLCreate(OdeScene, aGL.Radius, aGL.height);
+                (newAxis.GLObj as TGLSceneObject).Material.FrontProperties.Diffuse.AsWinColor := aGL.color;
                 newAxis.GLSetPosition;
                 newAxis.GLObj.TagObject := newAxis;
               end;
@@ -1413,6 +1492,7 @@ begin
 
             if aGL.Radius > 0 then begin
               newAxis.GLCreate(OdeScene, aGL.Radius, aGL.height);
+              (newAxis.GLObj as TGLSceneObject).Material.FrontProperties.Diffuse.AsWinColor := aGL.color;
               newAxis.GLSetPosition;
               newAxis.GLObj.TagObject := newAxis;
             end;
@@ -1979,6 +2059,7 @@ begin
         newWheel := TWheel.Create;
         Robot.Wheels.Add(newWheel);
         CreateWheel(Robot, newWheel, Pars, Friction, Motor);
+        newWheel.Tyre.SetTexture('MatBumps', 4); //TODO
       end;
 
     end;
@@ -1992,6 +2073,7 @@ end;
 procedure TWorld_ODE.LoadShellsFromXML(Robot: TRobot; const root: IXMLNode; Parser: TSimpleParser);
 var ShellNode, prop: IXMLNode;
     sizeX, sizeY, sizeZ, posX, posY, posZ, angX, angY, angZ: double;
+    radius: double;
     colorR, colorG, colorB: double;
     R: TdMatrix3;
     newShell: TSolid;
@@ -2003,10 +2085,11 @@ begin
 
   ShellNode := root.FirstChild;
   while ShellNode <> nil do begin
-    if ShellNode.NodeName = 'cuboid' then begin
+    if pos(ShellNode.NodeName, 'cuboid<>cylinder<>sphere') <> 0 then begin
       prop := ShellNode.FirstChild;
       // default values
       sizeX := 1; sizeY := 1; sizeZ := 1;
+      radius := 1;
       posX := 0; posY := 0; posZ := 0;
       angX := 0; angY := 0; angZ := 0;
       colorR := 128/255; colorG := 128/255; colorB := 128/255;
@@ -2014,6 +2097,9 @@ begin
       while prop <> nil do begin
         if prop.NodeName = 'solid' then begin
           MotherSolidId := GetNodeAttrStr(prop, 'id', MotherSolidId);
+        end;
+        if prop.NodeName = 'radius' then begin
+          radius := GetNodeAttrRealParse(prop, 'value', radius, Parser);
         end;
         if prop.NodeName = 'size' then begin
           sizeX := GetNodeAttrRealParse(prop, 'x', sizeX, Parser);
@@ -2037,7 +2123,7 @@ begin
         end;
         prop := prop.NextSibling;
       end;
-      // Create and position the obstacle
+      // Create and position the shell
       newShell := TSolid.Create;
       Robot.Shells.Add(newShell);
       newShell.description := 'Shell';
@@ -2048,12 +2134,19 @@ begin
       end else begin
         MotherSolid := Robot.Solids[SolidIdx];
       end;
-      CreateShellBox(newShell, MotherSolid.Body, posX, posY, posZ, sizeX, sizeY, sizeZ);
+
+      if ShellNode.NodeName = 'cuboid' then begin
+        CreateShellBox(newShell, MotherSolid.Body, posX, posY, posZ, sizeX, sizeY, sizeZ);
+      end else if ShellNode.NodeName = 'cylinder' then begin
+        CreateShellCylinder(newShell, MotherSolid.Body, posX, posY, posZ, sizeX, sizeZ);
+      end else if ShellNode.NodeName = 'sphere' then begin
+        CreateShellSphere(newShell, MotherSolid.Body, posX, posY, posZ, radius);
+      end;
 
       RFromZYXRotRel(R, angX, angY, AngZ);
       dGeomSetOffsetRotation(newShell.Geom, R);
 
-      with newShell.GLObj as TGLCube do begin
+      with newShell.GLObj as TGLSceneObject do begin
         Material.FrontProperties.Diffuse.SetColor(colorR, colorG, colorB);
       end;
       PositionSceneObject(newShell.GLObj, newShell.Geom);
@@ -2087,9 +2180,249 @@ begin
 end;
 
 
-procedure TWorld_ODE.LoadDefinesFromXML(Parser: TSimpleParser; const root: IXMLNode);
+
+procedure TWorld_ODE.LoadTrackFromXML(XMLFile: string; Parser: TSimpleParser);
 var XML: IXMLDocument;
-    prop: IXMLNode;
+    root, objNode: IXMLNode;
+    LocalParser: TSimpleParser;
+begin
+  XML := LoadXML(XMLFile, XMLErrors);
+  if XML = nil then exit;
+
+  root:=XML.SelectSingleNode('/track');
+  if root = nil then exit;
+
+  LocalParser:= TSimpleParser.Create;
+  LocalParser.CopyVarList(Parser);
+
+  try
+    objNode := root.FirstChild;
+    while objNode <> nil do begin
+
+      if objNode.NodeName = 'defines' then begin
+        LoadDefinesFromXML(LocalParser, objnode);
+      end else if objNode.NodeName = 'polygon' then begin
+        LoadPolygonFromXML(objNode, LocalParser);
+      end else if objNode.NodeName = 'line' then begin
+        LoadLineFromXML(objNode, LocalParser);
+      end else if objNode.NodeName = 'arc' then begin
+        LoadArcFromXML(objNode, LocalParser);
+      end;
+
+      objNode := objNode.NextSibling;
+    end;
+
+  finally
+    LocalParser.Free;
+  end;
+end;
+
+{
+  <arc>
+    <color rgb24='8F8F8F'/>
+    <center x='0' y='0' z='0'/>
+    <radius inner='1.3' outer='1.4'/>
+    <angle_deg start='0' stop='90' steps='15'/>
+  </arc>
+}
+procedure TWorld_ODE.LoadArcFromXML(const root: IXMLNode; Parser: TSimpleParser);
+var PolyNode: IXMLNode;
+    Xc, Yc, Zc: double;
+    innerRadius, outerRadius: double;
+    StartAngle, StopAngle, steps: double;
+    aWinColor: longWord;
+    GLPolygon: TGLPolygon;
+    ang: double;
+    over: boolean;
+    i: integer;
+begin
+  if root = nil then exit;
+
+  PolyNode := root.FirstChild;
+  if PolyNode = nil then exit;
+
+  // Start a new contour
+  //GLPolygon := TGLPolygon.CreateAsChild(FViewer.GLPlaneFloor);
+  GLPolygon := TGLPolygon.CreateAsChild(OdeScene.FindChild('GLPlaneFloor',false));
+  GLPolygon.Position.Z := 0.0005;
+
+  // default values
+  Xc := 0; Yc := 0; Zc := 0;
+  aWinColor := $808080;
+  innerRadius := 0; outerRadius := 1;
+  StartAngle := 0; StopAngle := 180; steps := 20;
+
+  while PolyNode <> nil do begin
+    if PolyNode.NodeName = 'center' then begin
+      Xc := GetNodeAttrRealParse(PolyNode, 'x', Xc, Parser);
+      Yc := GetNodeAttrRealParse(PolyNode, 'y', Yc, Parser);
+      Zc := GetNodeAttrRealParse(PolyNode, 'z', Zc, Parser);
+    end else if PolyNode.NodeName = 'radius' then begin
+      innerRadius := GetNodeAttrRealParse(PolyNode, 'inner', innerRadius, Parser);
+      outerRadius := GetNodeAttrRealParse(PolyNode, 'outer', outerRadius, Parser);
+    end else if PolyNode.NodeName = 'angle_deg' then begin
+      StartAngle := GetNodeAttrRealParse(PolyNode, 'start', StartAngle, Parser);
+      StopAngle := GetNodeAttrRealParse(PolyNode, 'stop', StopAngle, Parser);
+    end else if PolyNode.NodeName = 'color' then begin
+      aWinColor := StrToIntDef('$'+GetNodeAttrStr(PolyNode, 'rgb24', inttohex(aWinColor,6)), aWinColor);
+      GLPolygon.Material.FrontProperties.Diffuse.AsWinColor := aWinColor;
+    end;
+
+    PolyNode := PolyNode.NextSibling;
+  end;
+
+  StartAngle := DegToRad(StartAngle);
+  StopAngle := DegToRad(StopAngle);
+  steps := DegToRad(steps);
+
+  // Draw outer arc
+  GLPolygon.BeginUpdate;
+  ang := StartAngle;
+  over := false;
+  while true do begin
+    GLPolygon.AddNode(Xc + outerRadius * cos(ang), Yc + outerRadius * sin(ang), ang); // Z stores the angle temporarily
+    if over then break;
+    ang := ang + steps;
+    if ang > StopAngle then begin
+      ang :=  StopAngle;
+      over := true;
+    end;
+  end;
+
+  // Draw inner arc
+  if innerRadius <= 0 then begin
+    GLPolygon.AddNode(Xc, Yc, Zc);
+  end else begin
+    for i := GLPolygon.Nodes.Count-1 downto 0 do begin
+      ang := GLPolygon.Nodes[i].Z;
+      GLPolygon.Nodes[i].Z := Zc;
+      GLPolygon.AddNode(Xc + innerRadius * cos(ang), Yc + innerRadius * sin(ang), Zc);
+    end;
+  end;
+  GLPolygon.EndUpdate;
+
+end;
+
+procedure TWorld_ODE.LoadPolygonFromXML(const root: IXMLNode; Parser: TSimpleParser);
+var PolyNode: IXMLNode;
+    posX, posY, posZ: double;
+    aWinColor: longWord;
+    GLPolygon: TGLPolygon;
+begin
+  if root = nil then exit;
+
+  PolyNode := root.FirstChild;
+  if PolyNode = nil then exit;
+
+  // Start a new contour
+  //GLPolygon := TGLPolygon.CreateAsChild(FViewer.GLPlaneFloor);
+  GLPolygon := TGLPolygon.CreateAsChild(OdeScene.FindChild('GLPlaneFloor',false));
+  GLPolygon.Position.Z := 0.0005;
+
+  while PolyNode <> nil do begin
+    // default values
+    posX := 0; posY := 0; posZ := 0;
+    aWinColor := $808080;
+
+    if PolyNode.NodeName = 'vertice' then begin
+      posX := GetNodeAttrRealParse(PolyNode, 'x', posX, Parser);
+      posY := GetNodeAttrRealParse(PolyNode, 'y', posY, Parser);
+      posZ := GetNodeAttrRealParse(PolyNode, 'z', posZ, Parser);
+      GLPolygon.AddNode(posX, posY, posZ);
+    end else if PolyNode.NodeName = 'color' then begin
+      aWinColor := StrToIntDef('$'+GetNodeAttrStr(PolyNode, 'rgb24', inttohex(aWinColor,6)), aWinColor);
+      GLPolygon.Material.FrontProperties.Diffuse.AsWinColor := aWinColor;
+    end;
+
+    PolyNode := PolyNode.NextSibling;
+  end;
+end;
+
+{  <line>
+    <color rgb24='8F8F8F'/>
+    <position x='0' y='0' z='0' angle='0'/>
+    <size width='0' lenght='0'/>
+  </line>
+}
+procedure TWorld_ODE.LoadLineFromXML(const root: IXMLNode; Parser: TSimpleParser);
+var PolyNode: IXMLNode;
+    posX, posY, posZ, angle: double;
+    lineWidth, lineLength: double;
+    aWinColor: longWord;
+    GLPolygon: TGLPolygon;
+//    x, y: double;
+begin
+  if root = nil then exit;
+
+  PolyNode := root.FirstChild;
+  if PolyNode = nil then exit;
+
+  // Start a new contour
+  //GLPolygon := TGLPolygon.CreateAsChild(FViewer.GLPlaneFloor);
+  GLPolygon := TGLPolygon.CreateAsChild(OdeScene.FindChild('GLPlaneFloor',false));
+  GLPolygon.Position.Z := 0.0005;
+
+  // default values
+  posX := 0; posY := 0; posZ := 0; angle := 0;
+  lineWidth := 0.1; lineLength := 1;
+  aWinColor := $808080;
+
+  while PolyNode <> nil do begin
+    if PolyNode.NodeName = 'position' then begin
+      posX := GetNodeAttrRealParse(PolyNode, 'x', posX, Parser);
+      posY := GetNodeAttrRealParse(PolyNode, 'y', posY, Parser);
+      posZ := GetNodeAttrRealParse(PolyNode, 'z', posZ, Parser);
+      angle := GetNodeAttrRealParse(PolyNode, 'angle', angle, Parser);
+    end else if PolyNode.NodeName = 'size' then begin
+      lineWidth := GetNodeAttrRealParse(PolyNode, 'width', lineWidth, Parser);
+      lineLength := GetNodeAttrRealParse(PolyNode, 'length', lineLength, Parser);
+    end else if PolyNode.NodeName = 'color' then begin
+      aWinColor := StrToIntDef('$'+GetNodeAttrStr(PolyNode, 'rgb24', inttohex(aWinColor,6)), aWinColor);
+      GLPolygon.Material.FrontProperties.Diffuse.AsWinColor := aWinColor;
+    end;
+
+    PolyNode := PolyNode.NextSibling;
+  end;
+
+  //angle := DegToRad(angle);
+
+  {x := posX;
+  y := posY;
+  GLPolygon.AddNode(x, y, posZ);
+
+  x := x + lineLength * cos(angle);
+  y := y + lineLength * sin(angle);
+  GLPolygon.AddNode(x, y, posZ);
+
+  x := x - lineWidth * sin(angle);
+  y := y + lineWidth * cos(angle);
+  GLPolygon.AddNode(x, y, posZ);
+
+  x := posX - lineWidth * sin(angle);
+  y := posY + lineWidth * cos(angle);
+  GLPolygon.AddNode(x, y, posZ);}
+
+  GLPolygon.AddNode(0, 0, 0);
+  GLPolygon.AddNode(lineLength, 0, 0);
+  GLPolygon.AddNode(lineLength, lineWidth, 0);
+  GLPolygon.AddNode(0, lineWidth, 0);
+
+  GLPolygon.RotateAbsolute(zvector, -angle);
+  GLPolygon.Position.SetPoint(posX, posY, posZ);
+
+ { GLPolygon.Material.Texture.Image.LoadFromFile('..\grad.jpg');
+  if lineWidth > 1e-10 then begin
+    GLPolygon.Material.Texture.MappingSCoordinates.X := 0;
+    GLPolygon.Material.Texture.MappingSCoordinates.Y := 1/lineWidth;
+  end;
+  GLPolygon.Material.Texture.MappingMode := tmmObjectLinear;
+  GLPolygon.Material.Texture.TextureWrap := twNone;
+  GLPolygon.Material.Texture.Disabled := false;}
+end;
+
+
+procedure TWorld_ODE.LoadDefinesFromXML(Parser: TSimpleParser; const root: IXMLNode);
+var prop: IXMLNode;
     ConstName: string;
     ConstValue: double;
 begin
@@ -2200,6 +2533,13 @@ begin
           LoadThingsFromXML(filename, Parser);
         end;
 
+      end else if objNode.NodeName = 'track' then begin
+        // Create track
+        filename := GetNodeAttrStr(objNode, 'file', filename);
+        if fileexists(filename) then begin
+          XMLFiles.Add(filename);
+          LoadTrackFromXML(filename, Parser);
+        end;
 
       end else if objNode.NodeName = 'ball' then begin
         prop := objNode.FirstChild;
@@ -2332,7 +2672,8 @@ begin
   //Create physic
   world := dWorldCreate();
 //  dWorldSetQuickStepNumIterations(world, 10);
-  dWorldSetQuickStepNumIterations(world, 10);
+  Ode_QuickStepIters := 10;
+  dWorldSetQuickStepNumIterations(world, Ode_QuickStepIters);
   space := dHashSpaceCreate(nil);
   //dHashSpaceSetLevels(space, -4, 1);
   contactgroup := dJointGroupCreate(0);
@@ -2402,7 +2743,12 @@ procedure TWorld_ODE.WorldUpdate;
 begin
   //Update the physic
   dSpaceCollide(space, nil, nearCallback);
-  dWorldQuickStep (world, Ode_dt);
+  if FParams.CBWorldQuickStep.Checked then begin
+    //dWorldSetQuickStepNumIterations(world, 10);
+    dWorldQuickStep(world, Ode_dt);
+  end else begin
+    dWorldStep(world, Ode_dt);
+  end;
   //dWorldStep (world, Ode_dt);
   physTime := physTime + Ode_dt;
 
@@ -2534,7 +2880,7 @@ begin
 end;
 
 procedure AxisTorqueModel(axis: TAxis; Theta, w, dt: double; var T: double);
-var duty, old_Im, dI: double;
+var duty, old_Im, dI, err: double;
     max_delta_Im: double;
 begin
   max_delta_Im := 0.15; // A/ms
@@ -2551,12 +2897,17 @@ begin
           //if ticks >= ControlPeriod then begin
             case ControlMode of
               cmPIDPosition: begin
-                ref.volts := CalcPID(Motor.Controller, ref.theta, theta);
+                if axis.isCircular then begin
+                  err := DiffAngle(ref.theta, theta);
+                end else begin
+                  err := ref.theta - theta;
+                end;
+                ref.volts := CalcPID(Motor.Controller, ref.theta, err);
               end;
 
               cmPIDSpeed: begin
                 //ref.volts := CalcPID(Motor.Controller, ref.w, w);
-                ref.volts := CalcPID(Motor.Controller, ref.w, filt_speed);
+                ref.volts := CalcPID(Motor.Controller, ref.w, ref.w - filt_speed);
               end;
 
               cmState: begin
@@ -2679,6 +3030,7 @@ procedure TFViewer.IRSharpNoiseModel(r: integer);
 var i: integer;
     v, iv, var_v, m, var_dist: double;
 begin
+  v := 0;
   with WorldODE.Robots[r] do begin
     for i := 0 to IRSensors.Count - 1 do begin
       with WorldODE.Robots[r].IRSensors[i] do begin
@@ -2821,7 +3173,7 @@ end;
 procedure TFViewer.GLCadencerProgress(Sender: TObject; const deltaTime, newTime: Double);
 var theta, w, Tq: double;
     i, r: integer;
-    t_start, t_end: int64;
+    t_start, t_end, t_end_gl: int64;
     t_i1, t_i2, t_itot: int64;
     v1, v2: TdVector3;
 //    txt: string;
@@ -3052,12 +3404,14 @@ begin
     //End Physics Loop
 
     QueryPerformanceCounter(t_end);
-    FParams.EditDebug.text := format('%.2f (%.2f)[%.2f]',[(t_end - t_start)/t_delta, t_itot/t_delta, (t_act - t_last)/t_delta]);
+    //FParams.EditDebug.text := format('%.2f (%.2f)[%.2f]',[(t_end - t_start)/t_delta, t_itot/t_delta, (t_act - t_last)/t_delta]);
 
     // GLScene
 
     //Update all GLscene Parts.
     UpdateGLScene;
+    QueryPerformanceCounter(t_end_gl);
+    FParams.EditDebug.text := format('%.2f (%.2f) %.2f [%.2f]',[(t_end - t_start)/t_delta, t_itot/t_delta, (t_end_gl - t_end)/t_delta, (t_act - t_last)/t_delta]);
 
     // Update Camera Position
     UpdateCamPos(FParams.RGCamera.ItemIndex);
@@ -3152,10 +3506,16 @@ end;
 
 procedure TFViewer.TimerTimer(Sender: TObject);
 var fps: double;
+    script: string;
 begin
   fps := GLSceneViewer.FramesPerSecond;
   GLSceneViewer.ResetPerformanceMonitor;
-  Caption:=Format('SimTwo - v%s (%.1f FPS)', [InfoData[3], fps]);
+  if FParams.RGControlBlock.ItemIndex = 1 then begin
+    script := ' - Script Running';
+  end else begin
+    script := '';
+  end;
+  Caption:=Format('SimTwo - v%s (%.1f FPS)%s', [InfoData[3], fps, script]);
 end;
 
 
@@ -3168,7 +3528,7 @@ begin
   thebmp.Height := 256;
   thebmp.PixelFormat := pf24bit;
   thebmp.Canvas.TextOut(10,10,'Hello World!');
-  //img := GLCube1.Material.Texture.Image.GetBitmap32(GL_TEXTURE_2D);
+  //img := GLCube1.Material.Texture.Image.GetBitmap32(GL_TEXTURE_2D);  tgltexture
   img := GLCube1.Material.TextureEx.Items[0].Texture.Image.GetBitmap32(GL_TEXTURE_2D);
   img.AssignFromBitmap24WithoutRGBSwap(thebmp);
   thebmp.Free;
@@ -3192,26 +3552,33 @@ begin
     FXMLEdit.FormCloseQuery(Sender, CanClose);
 end;
 
+procedure TFViewer.ShowOrRestoreForm(Fm: TForm);
+begin
+  Fm.Show;
+  if Fm.WindowState = wsMinimized then
+    Fm.WindowState := wsNormal;
+end;
+
 
 procedure TFViewer.MenuChartClick(Sender: TObject);
 begin
-  FChart.show;
+  ShowOrRestoreForm(FChart);
 end;
 
 procedure TFViewer.MenuConfigClick(Sender: TObject);
 begin
-  FParams.Show;
+  ShowOrRestoreForm(FParams);
 end;
 
 procedure TFViewer.MenuEditorClick(Sender: TObject);
 begin
-  FEditor.Show;
+  ShowOrRestoreForm(FEditor);
 end;
 
 
 procedure TFViewer.MenuSceneClick(Sender: TObject);
 begin
-  FXMLEdit.Show;
+  ShowOrRestoreForm(FXMLEdit);
 end;
 
 procedure TFViewer.FormDestroy(Sender: TObject);
@@ -3313,6 +3680,38 @@ begin
   finally
     ParList.Free;
   end;
+end;
+
+procedure TFMain.CloseContour(var MPoly: TGLMultiPolygon; act: integer);
+var i,n: integer;
+    x0,y0,d0,xn,yn,rot: double;
+    vec0,vec1,vec2: TAffineVector;
+begin
+  n:=MPoly.Contours.Items[act].Nodes.Count;
+  if n<2 then exit;
+  if act=0 then rot:=pi/2 else rot:=-pi/2;
+
+  with MPoly.Contours.Items[act] do begin
+    for i:=n-1 downto 1 do begin
+      x0:=Nodes[i].x;
+      y0:=Nodes[i].y;
+      d0:=Nodes[i].Z;
+      Nodes[i].Z:=0;
+      xn:=Nodes[i-1].x;
+      yn:=Nodes[i-1].y;
+
+      vec0:=AffineVectorMake(x0,y0,0);
+      vec1:=AffineVectorMake(xn-x0,yn-y0,0);
+      vec2:=VectorScale(VectorNormalize(VectorRotateAroundZ(vec1,rot)),d0);
+
+      vec0:=VectorAdd(vec0,vec2);
+      MPoly.Contours.Items[act].Nodes.AddNode(vec0);
+      vec0:=VectorAdd(vec0,vec1);
+      MPoly.Contours.Items[act].Nodes.AddNode(vec0);
+    end;
+    Nodes[0].Z:=0;
+  end;
+  MPoly.Contours.Items[act].Description:='C';  // Mark it Closed
 end;
 
 procedure TFMain.GLCadencerProgress(Sender: TObject; const deltaTime, newTime: Double);
@@ -3462,7 +3861,6 @@ end;
 // -Thrusters- + turbulence
 // alternate globject {For TSolids only now}
 // world wind
-// Shell sphere
 // Channels
 // yasml
 // Texture panel
