@@ -97,8 +97,17 @@ function GetSolidVy(R, i: integer): double;
 function GetSolidVz(R, i: integer): double;
 
 function GetSensorVal(R, i: integer): double;
+
+function GetThingIndex(ID: string): integer;
+
 function GetThingColor(T, c: integer): TRGBAColor;
 procedure SetThingColor(T, c: integer; Red, Green, Blue: byte);
+
+function GetThingPos(T: integer): TPoint3D;
+procedure SetThingPos(T: integer; x, y, z: double);
+
+function GetThingSize(T: integer): TPoint3D;
+procedure SetThingSize(T: integer; x, y, z: double);
 
 function GetSolidColor(R, i: integer): TRGBAColor;
 procedure SetSolidColor(R, I: integer; Red, Green, Blue: byte);
@@ -376,6 +385,46 @@ begin
     Result.angle := v1[2];
   end;
 end;
+
+
+function GetThingPos(T: integer): TPoint3D;
+var v1: TdVector3;
+begin
+  result.x := 0;
+  result.y := 0;
+  result.z := 0;
+
+  with WorldODE.Things[T] do begin
+    if Body = nil then exit;
+    v1 := dBodyGetPosition(Body)^;
+    Result.x := v1[0];
+    Result.y := v1[1];
+    Result.z := v1[2];
+  end;
+end;
+
+procedure SetThingPos(T: integer; x, y, z: double);
+begin
+  WorldODE.Things[T].SetLinSpeed(0, 0, 0);
+  WorldODE.Things[T].SetPosition(x, y, z);
+end;
+
+function GetThingSize(T: integer): TPoint3D;
+begin
+  WorldODE.Things[T].GetSize(result.x, result.y, result.z);
+end;
+
+procedure SetThingSize(T: integer; x, y, z: double);
+begin
+  WorldODE.Things[T].SetSize(x, y, z);
+end;
+
+
+function GetThingIndex(ID: string): integer;
+begin
+  result := WorldODE.Things.IndexFromID(ID);
+end;
+
 
 function GetSolidIndex(R: integer; ID: string): integer;
 begin

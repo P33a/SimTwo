@@ -724,7 +724,7 @@ object FParams: TFParams
             Width = 149
             Height = 21
             Style = csDropDownList
-            ItemHeight = 0
+            ItemHeight = 13
             TabOrder = 8
           end
           object BJointWayPointsSave: TButton
@@ -1386,7 +1386,9 @@ object FParams: TFParams
       'CBUDPConnect.Checked'
       'EditODE_CFM.Text'
       'EditODE_ERP.Text'
-      'EditScriptPeriod.Text')
+      'EditScriptPeriod.Text'
+      'CBWorldQuickStep.Checked'
+      'EditQuickStepIterations.Text')
     StoredValues = <>
     Left = 236
     Top = 60

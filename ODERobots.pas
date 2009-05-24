@@ -62,11 +62,15 @@ type
     active: boolean;
   end;
 
+  TMatterPropertie = (smMetallic, smFerroMagnetic);
+  TMatterProperties = set of TMatterPropertie;
+
   TSolid = class
     Body: PdxBody;
     Geom : PdxGeom;
     GLObj, AltGLObj, ShadowGlObj: TGLSceneObject;
     kind: TSolidKind;
+    MatterProperties: TMatterProperties;
     BeltSpeed: double;
     ParSurface{, MaxParSurface} : TdSurfaceParameters;
     ID: string;
@@ -80,6 +84,7 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure SetPosition(posX, posY, posZ: double);
+    procedure SetLinSpeed(vX, vY, vZ: double);
     procedure MovePosition(dX, dY, dZ: double);
     procedure SetRotation(axisX, axisY, axisZ, rot_angle: double);  overload;
     procedure SetRotation(R: TdMatrix3); overload;
@@ -89,6 +94,8 @@ type
     procedure SetTexture(TextureName: string; TextureScale: double);
     function GetPosition: TdVector3;
     function GetRotation: TdMatrix3;
+    procedure SetSize(sizeX, sizeY, sizeZ: double);
+    procedure GetSize(out sizeX, sizeY, sizeZ: double);
   end;
 
   TSolidList = class(TList)
@@ -176,6 +183,7 @@ type
     procedure GLCreate(Parent: TGLBaseSceneObject; aRadius, aHeight: double);
     procedure GLSetPosition;
     function isCircular: boolean;
+    procedure GetLimits(out MinLimit, Maxlimit: double);
   end;
 
 
@@ -663,6 +671,59 @@ begin
 end;
 
 
+
+procedure TSolid.SetLinSpeed(vX, vY, vZ: double);
+begin
+  dBodySetLinearVel(Body, vX, vY, vZ);
+end;
+
+procedure TSolid.SetSize(sizeX, sizeY, sizeZ: double);
+begin
+  if dGeomGetClass(Geom) = dBoxClass then begin
+    dGeomBoxSetLengths(Geom, sizeX, sizeY, sizeZ);
+    with (GLObj as TGLCube) do begin
+      CubeDepth := sizeZ;
+      CubeHeight := sizeY;
+      CubeWidth := sizeX;
+    end;
+  end else if dGeomGetClass(Geom) = dCylinderClass then begin
+    dGeomCylinderSetParams(Geom, sizeX, sizeZ);
+    with (GLObj as TGLCylinder) do begin
+      TopRadius := sizeX;
+      BottomRadius := sizeX;
+      Height := sizeZ;
+    end;
+  end else if dGeomGetClass(Geom) = dSphereClass then begin
+    dGeomSphereSetRadius(Geom, sizeX);
+    with (GLObj as TGLSphere) do begin
+      Radius := sizeX;
+    end;
+  end;
+  // TODO more geom classes
+end;
+
+
+procedure TSolid.GetSize(out sizeX, sizeY, sizeZ: double);
+var Vsize: TdVector3;
+    r, h: TdReal;
+begin
+  if dGeomGetClass(Geom) = dBoxClass then begin
+    dGeomBoxGetLengths(Geom, Vsize);
+    SizeX := Vsize[0];
+    SizeY := Vsize[1];
+    SizeZ := Vsize[2];
+  end else if dGeomGetClass(Geom) = dCylinderClass then begin
+    dGeomCylinderGetParams(Geom, r, h);
+    SizeX := r;
+    SizeY := r;
+    SizeZ := h;
+  end else if dGeomGetClass(Geom) = dSphereClass then begin
+    sizeX := dGeomSphereGetRadius(Geom);
+    SizeY := sizeX;
+    SizeZ := sizeX;
+  end;
+end;
+
 { TAxis }
 
 
@@ -848,6 +909,26 @@ begin
   result := true;
   if dJointGetType(ParentLink.joint) = ord(dJointTypeSlider) then begin
     result := false;
+  end;
+  //TODO more Joint types
+end;
+
+procedure TAxis.GetLimits(out MinLimit, Maxlimit: double);
+begin
+  if dJointGetType(ParentLink.joint) = ord(dJointTypeHinge) then begin
+    MinLimit := dJointGetHingeParam(ParentLink.joint, dParamLoStop);
+    MaxLimit := dJointGetHingeParam(ParentLink.joint, dParamHiStop);
+  end else if dJointGetType(ParentLink.joint) = ord(dJointTypeUniversal) then begin
+    if self = ParentLink.Axis[0] then begin //if it is the first axis in the universal joint..
+      MinLimit := dJointGetUniversalParam(ParentLink.joint, dParamLoStop);
+      MaxLimit := dJointGetUniversalParam(ParentLink.joint, dParamHiStop);
+    end else if self = ParentLink.Axis[1] then begin //if it is the second axis in the universal joint..
+      MinLimit := dJointGetUniversalParam(ParentLink.joint, dParamLoStop2);
+      MaxLimit := dJointGetUniversalParam(ParentLink.joint, dParamHiStop2);
+    end;
+  end else if dJointGetType(ParentLink.joint) = ord(dJointTypeSlider) then begin
+    MinLimit := dJointGetHingeParam(ParentLink.joint, dParamLoStop);
+    MaxLimit := dJointGetHingeParam(ParentLink.joint, dParamHiStop);
   end;
   //TODO more Joint types
 end;
