@@ -79,7 +79,7 @@ type
       IR_teta, IR_length, InitialWidth, FinalWidth: double);
 
     procedure LoadObstaclesFromXML(XMLFile: string; Parser: TSimpleParser);
-    procedure LoadIRSensorsFromXML(Robot: TRobot; const root: IXMLNode; Parser: TSimpleParser);
+    procedure LoadSensorsFromXML(Robot: TRobot; const root: IXMLNode; Parser: TSimpleParser);
     //procedure LoadHumanoidJointsFromXML(Robot: TRobot; XMLFile: string);
     procedure LoadLinksFromXML(Robot: TRobot; const root: IXMLNode; Parser: TSimpleParser);
     procedure ReadFrictionFromXMLNode(var Friction: TFriction; const prop: IXMLNode; Parser: TSimpleParser);
@@ -1039,6 +1039,7 @@ var bone, prop: IXMLNode;
     MeshCastsShadows: boolean;
     Surf: TdSurfaceParameters;
     dMass: TdMass;
+    MatterProps: TMatterProperties;
 begin
   if root = nil then exit;
 
@@ -1049,6 +1050,7 @@ begin
       // default values
       mass := 1;  ID := '-1';
       I11 := -1; I22 := -1; I33 := -1; I12 := 0; I13 := 0; I23 := 0;
+      MatterProps := [];
       MeshFile := '';
       MeshShadowFile := '';
       MeshScale := 1;
@@ -1067,6 +1069,12 @@ begin
       //Surf.soft_erp := 0.2;
       Surf.bounce := 0; Surf.bounce_vel := 0;
       while prop <> nil do begin
+        if prop.NodeName = 'metallic' then begin
+          MatterProps := MatterProps + [smMetallic];
+        end;
+        if prop.NodeName = 'ferromagnetic' then begin
+          MatterProps := MatterProps + [smFerromagnetic];
+        end;
         if prop.NodeName = 'surface' then begin
           Surf.mu := GetNodeAttrRealParse(prop, 'mu', Surf.mu, Parser);
           Surf.mu2 := GetNodeAttrRealParse(prop, 'mu2', Surf.mu2, Parser);
@@ -1139,7 +1147,7 @@ begin
         newBone := TSolid.Create;
         SolidList.Add(newBone);
         newBone.ID := ID;
-        newBone.description := descr;
+        newBone.description := ID;
         newBone.BuoyantMass := BuoyantMass;
         newBone.Drag := Drag;
         newBone.StokesDrag := StokesDrag;
@@ -1499,7 +1507,7 @@ begin
 
             if newLink <> nil then begin
               newLink.ID := IDValue;
-              newLink.description := descr;
+              newLink.description := IDValue;
             end;
           end;
         end;
@@ -1763,7 +1771,7 @@ begin
 end;
 
 
-procedure TWorld_ODE.LoadIRSensorsFromXML(Robot: TRobot; const root: IXMLNode; Parser: TSimpleParser);
+procedure TWorld_ODE.LoadSensorsFromXML(Robot: TRobot; const root: IXMLNode; Parser: TSimpleParser);
 var sensor, prop: IXMLNode;
     SLen, SInitialWidth, SFinalWidth, posX, posY, posZ, angX, angY, angZ: double;
     Noise: TSensorNoise;
@@ -2073,13 +2081,17 @@ end;
 procedure TWorld_ODE.LoadShellsFromXML(Robot: TRobot; const root: IXMLNode; Parser: TSimpleParser);
 var ShellNode, prop: IXMLNode;
     sizeX, sizeY, sizeZ, posX, posY, posZ, angX, angY, angZ: double;
-    radius: double;
+    mass, radius: double;
     colorR, colorG, colorB: double;
     R: TdMatrix3;
     newShell: TSolid;
     MotherSolidId: string;
     MotherSolid: TSolid;
     SolidIdx: integer;
+    IDValue: string;
+    CompMass, NewMass: TdMass;
+    PGeomPos: PdVector3;
+    i: integer;
 begin
   if root = nil then exit;
 
@@ -2088,15 +2100,23 @@ begin
     if pos(ShellNode.NodeName, 'cuboid<>cylinder<>sphere') <> 0 then begin
       prop := ShellNode.FirstChild;
       // default values
+      mass := 0;
       sizeX := 1; sizeY := 1; sizeZ := 1;
       radius := 1;
+      IDValue := '';
       posX := 0; posY := 0; posZ := 0;
       angX := 0; angY := 0; angZ := 0;
       colorR := 128/255; colorG := 128/255; colorB := 128/255;
       MotherSolidId := '';
       while prop <> nil do begin
+        if prop.NodeName = 'ID' then begin
+          IDValue := GetNodeAttrStr(prop, 'value', IDValue);
+        end;
         if prop.NodeName = 'solid' then begin
           MotherSolidId := GetNodeAttrStr(prop, 'id', MotherSolidId);
+        end;
+        if prop.NodeName = 'mass' then begin
+          mass := GetNodeAttrRealParse(prop, 'value', mass, Parser);
         end;
         if prop.NodeName = 'radius' then begin
           radius := GetNodeAttrRealParse(prop, 'value', radius, Parser);
@@ -2126,7 +2146,11 @@ begin
       // Create and position the shell
       newShell := TSolid.Create;
       Robot.Shells.Add(newShell);
-      newShell.description := 'Shell';
+      if IDValue = '' then begin
+        newShell.description := 'Shell';
+      end else begin
+        newShell.description := IDValue;
+      end;
 
       SolidIdx := Robot.Solids.IndexFromID(MotherSolidId);
       if SolidIdx = -1 then  begin
@@ -2135,16 +2159,57 @@ begin
         MotherSolid := Robot.Solids[SolidIdx];
       end;
 
+      if mass > 0 then begin  // Offset from previous compositions
+        PGeomPos := dGeomGetOffsetPosition(MotherSolid.Geom);
+        posX := posX + PGeomPos^[0];
+        posY := posY + PGeomPos^[1];
+        posZ := posZ + PGeomPos^[2];
+      end;
+
       if ShellNode.NodeName = 'cuboid' then begin
         CreateShellBox(newShell, MotherSolid.Body, posX, posY, posZ, sizeX, sizeY, sizeZ);
+        if mass > 0 then dMassSetBoxTotal(NewMass, mass, sizeX, sizeY, sizeZ);
       end else if ShellNode.NodeName = 'cylinder' then begin
         CreateShellCylinder(newShell, MotherSolid.Body, posX, posY, posZ, sizeX, sizeZ);
+        if mass > 0 then dMassSetCylinderTotal(NewMass, mass, 1, sizeX, sizeZ);
       end else if ShellNode.NodeName = 'sphere' then begin
         CreateShellSphere(newShell, MotherSolid.Body, posX, posY, posZ, radius);
+        if mass > 0 then dMassSetSphereTotal(NewMass, mass, radius);
       end;
 
       RFromZYXRotRel(R, angX, angY, AngZ);
       dGeomSetOffsetRotation(newShell.Geom, R);
+
+      if mass > 0 then begin  // Affect the body center of mass and Inertia matrix
+        CompMass := MotherSolid.Body.mass;
+        dMassTranslate(NewMass, posX, posY, posZ);
+        dMassRotate(NewMass, R);
+        dMassAdd(CompMass, NewMass);
+
+        // Reposition the objects to set a center of gravity to 0,0,0
+        //dGeomSetOffsetPosition(newShell.Geom, posX - CompMass.c[0],
+        //                                      posY - CompMass.c[1],
+        //                                      posZ - CompMass.c[2]);
+        PGeomPos := dGeomGetOffsetPosition(MotherSolid.Geom);
+        dGeomSetOffsetPosition(MotherSolid.Geom, PGeomPos^[0] - CompMass.c[0],
+                                                 PGeomPos^[1] - CompMass.c[1],
+                                                 PGeomPos^[2] - CompMass.c[2]);
+        // Update offset of all connected geoms
+        for i:= 0 to Robot.Shells.count-1 do begin
+          if Robot.Shells[i].Body = MotherSolid.Body then begin
+            PGeomPos := dGeomGetOffsetPosition(Robot.Shells[i].Geom);
+            dGeomSetOffsetPosition(Robot.Shells[i].Geom, PGeomPos^[0] - CompMass.c[0],
+                                                         PGeomPos^[1] - CompMass.c[1],
+                                                         PGeomPos^[2] - CompMass.c[2]);
+          end;
+        end;
+
+        MotherSolid.MovePosition(CompMass.c[0], CompMass.c[1], CompMass.c[2]);
+        MotherSolid.SetZeroState;
+
+        dMassTranslate(CompMass, -CompMass.c[0], - CompMass.c[1], - CompMass.c[2]);
+        dBodySetMass(MotherSolid.Body, @CompMass);
+      end;
 
       with newShell.GLObj as TGLSceneObject do begin
         Material.FrontProperties.Diffuse.SetColor(colorR, colorG, colorB);
@@ -2627,7 +2692,7 @@ begin
       end;
 
       if objNode.NodeName = 'sensors' then begin
-        LoadIRSensorsFromXML(newRobot, objNode, LocalParser);
+        LoadSensorsFromXML(newRobot, objNode, LocalParser);
       end;
 
       if objNode.NodeName = 'articulations' then begin
@@ -2882,6 +2947,7 @@ end;
 procedure AxisTorqueModel(axis: TAxis; Theta, w, dt: double; var T: double);
 var duty, old_Im, dI, err: double;
     max_delta_Im: double;
+    minLim, maxLim: double;
 begin
   max_delta_Im := 0.15; // A/ms
   with Axis do begin
@@ -2897,8 +2963,13 @@ begin
           //if ticks >= ControlPeriod then begin
             case ControlMode of
               cmPIDPosition: begin
-                if axis.isCircular then begin
-                  err := DiffAngle(ref.theta, theta);
+                if axis.isCircular then begin   // If it is a circular joint
+                  axis.GetLimits(minLim, maxLim);
+                  if (minlim < -pi) and (maxlim > pi) then begin  // and it has no limits
+                    err := DiffAngle(ref.theta, theta);           // Use the shortest path solution
+                  end else begin
+                    err := ref.theta - theta;                     // Else usa the standard path
+                  end;
                 end else begin
                   err := ref.theta - theta;
                 end;
@@ -3866,8 +3937,8 @@ end;
 // Texture panel
 // Scale not
 // rotation only in z????
-// HUD com o script state
 // 3ds offset
 
-// solidos compostos
-
+// Optional walls
+// Sensores indutivos, capcitivos
+// Solve color input mess
