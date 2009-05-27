@@ -335,6 +335,7 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure SetXYZTeta(new_x, new_y, new_z, new_teta: double);
+    procedure GetXYZTeta(out x, y, z, teta: double);
   end;
 
   TRobotList = class(TList)
@@ -354,6 +355,8 @@ type
   end;
 
 implementation
+
+uses Utils;
 
 { TRobot }
 
@@ -386,6 +389,21 @@ begin
   inherited;
 end;
 
+procedure TRobot.GetXYZTeta(out x, y, z, teta: double);
+var v1, v2: TdVector3;
+begin
+  if (MainBody <> nil) and
+     (MainBody.Body <> nil) then begin
+    v1 := dBodyGetPosition(MainBody.Body)^;
+    dBodyGetRelPointPos(MainBody.Body, 1,0,0, v2);
+    x := v1[0];
+    y := v1[1];
+    z := v1[2];
+    teta := atan2(v2[1]-v1[1], v2[0]-v1[0]);
+  end;
+end;
+
+
 procedure TRobot.SetXYZTeta(new_x, new_y, new_z, new_teta: double);
 var i, j: integer;
     Rteta, Ra: TdMatrix3;
@@ -409,6 +427,12 @@ begin
     dMULTIPLY0_331(Pr, Rteta, Pd);
     dBodySetPosition(Solids[i].Body, Pr[0] + P0[0] + new_x, Pr[1] + P0[1]  + new_y, Pr[2] + P0[2] + new_z);
 
+    // Nullify the velocities
+    dBodySetLinearVel(Solids[i].Body, 0, 0, 0);
+    dBodySetAngularVel(Solids[i].Body, 0, 0, 0);
+  end;
+
+  for i := 0 to Solids.Count - 1 do begin
     for j := 0 to Links.Count - 1 do begin
       if (dJointGetBody(Links[j].joint, 0) = Solids[i].Body) and (dJointGetBody(Links[j].joint, 1)= nil) then begin
         {Links[j].Axis[0].GetAnchor(Pr);
@@ -426,25 +450,34 @@ begin
         Pd[2] := Pr[2] + P0[2] + new_z;}
         //Links[j].Axis[0].SetAnchor(Pd);
 
-        {Links[j].Axis[0].GetAnchor(Pr);
-        dMULTIPLY0_331(Pd, Rteta, Pr);
+        //Links[j].Axis[0].GetAnchor(Pr);
+        //dMULTIPLY0_331(Pd, Rteta, Pr);
+        //Pr[0] := Pr[0] + new_x;
+        //Pr[1] := Pr[1] + new_y;
+        //Pr[2] := Pr[2] + new_z;
+        //Links[j].Axis[0].SetAnchor(Pr);
+
+        Links[j].Axis[0].GetAnchor(Pr);  // TWICE!!!
+       { dMULTIPLY0_331(Pd, Rteta, Pr);
         Pr[0] := Pd[0];// + new_x;
         Pr[1] := Pd[1];// + new_y;
-        Pr[2] := Pd[2];// + new_z;
-        Links[j].Axis[0].SetAnchor(Pr);}
-        Links[j].Axis[0].GetAnchor(Pr);
-        dMULTIPLY0_331(Pd, Rteta, Pr);
-        Pr[0] := Pd[0];// + new_x;
-        Pr[1] := Pd[1];// + new_y;
-        Pr[2] := Pd[2];// + new_z;
+        Pr[2] := Pd[2];// + new_z;}
         Links[j].Axis[0].SetAnchor(Pr);
+        Links[j].Axis[0].GetAnchor(Pr);
+        Links[j].Axis[0].SetAnchor(Pr);
+
+        Links[j].Axis[0].GetDir(Pr);
+        dMULTIPLY0_331(Pd, Rteta, Pr); // Double angle!!!
+        dMULTIPLY0_331(Pr, Rteta, Pd);
+        {Pr[0] := Pd[0];// + new_x;
+        Pr[1] := Pd[1];// + new_y;
+        Pr[2] := Pd[2];// + new_z;}
+
+        Links[j].Axis[0].Setdir(Pr);
       end;
     end;
-
-    // Nullify the velocities
-    dBodySetLinearVel(Solids[i].Body, 0, 0, 0);
-    dBodySetAngularVel(Solids[i].Body, 0, 0, 0);
   end;
+
   ForceMoved := true;
 end;
 

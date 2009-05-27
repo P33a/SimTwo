@@ -25,7 +25,7 @@ object FParams: TFParams
     Top = 0
     Width = 273
     Height = 621
-    ActivePage = TabPhysics
+    ActivePage = TabGraphics
     Anchors = [akLeft, akTop, akBottom]
     TabOrder = 0
     object TabControl: TTabSheet
@@ -70,7 +70,7 @@ object FParams: TFParams
       end
       object Label13: TLabel
         Left = 124
-        Top = 80
+        Top = 100
         Width = 9
         Height = 13
         Caption = 'q:'
@@ -100,6 +100,13 @@ object FParams: TFParams
         Font.Name = 'Symbol'
         Font.Style = []
         ParentFont = False
+      end
+      object Label49: TLabel
+        Left = 124
+        Top = 80
+        Width = 10
+        Height = 13
+        Caption = 'Z:'
       end
       object RGControlBlock: TRadioGroup
         Left = 0
@@ -817,7 +824,7 @@ object FParams: TFParams
       end
       object EditRobotTeta: TEdit
         Left = 140
-        Top = 76
+        Top = 96
         Width = 45
         Height = 21
         TabOrder = 13
@@ -839,6 +846,14 @@ object FParams: TFParams
         TabOrder = 15
         Text = '0'
       end
+      object EditRobotZ: TEdit
+        Left = 140
+        Top = 76
+        Width = 45
+        Height = 21
+        TabOrder = 16
+        Text = '0'
+      end
     end
     object TabGraphics: TTabSheet
       Caption = 'Graphics'
@@ -855,31 +870,59 @@ object FParams: TFParams
       end
       object Label9: TLabel
         Left = 116
-        Top = 212
+        Top = 202
         Width = 10
         Height = 13
         Caption = 'X:'
       end
       object Label10: TLabel
         Left = 116
-        Top = 236
+        Top = 226
         Width = 10
         Height = 13
         Caption = 'Y:'
       end
       object Label11: TLabel
         Left = 116
-        Top = 260
+        Top = 250
         Width = 10
         Height = 13
         Caption = 'Z:'
       end
       object Label12: TLabel
-        Left = 128
-        Top = 192
+        Left = 132
+        Top = 182
         Width = 37
         Height = 13
         Caption = 'Position'
+      end
+      object Label50: TLabel
+        Left = 180
+        Top = 182
+        Width = 35
+        Height = 13
+        Caption = 'Look at'
+      end
+      object Label51: TLabel
+        Left = 4
+        Top = 294
+        Width = 37
+        Height = 13
+        Caption = 'Camera'
+      end
+      object Label52: TLabel
+        Left = 8
+        Top = 310
+        Width = 41
+        Height = 13
+        Caption = 'Position:'
+      end
+      object Label53: TLabel
+        Left = 8
+        Top = 332
+        Width = 39
+        Height = 13
+        Caption = 'Look at:'
       end
       object CBShadows: TCheckBox
         Left = 8
@@ -997,32 +1040,29 @@ object FParams: TFParams
       end
       object EditCamX: TEdit
         Left = 132
-        Top = 208
-        Width = 34
+        Top = 198
+        Width = 45
         Height = 21
         TabOrder = 11
-        Text = '1'
       end
       object EditCamY: TEdit
         Left = 132
-        Top = 232
-        Width = 34
+        Top = 222
+        Width = 45
         Height = 21
         TabOrder = 12
-        Text = '1'
       end
       object EditCamZ: TEdit
         Left = 132
-        Top = 256
-        Width = 34
+        Top = 246
+        Width = 45
         Height = 21
         TabOrder = 13
-        Text = '1'
       end
       object MemoCameraConfig: TMemo
-        Left = 4
-        Top = 296
-        Width = 257
+        Left = 112
+        Top = 32
+        Width = 145
         Height = 61
         Lines.Strings = (
           'Camera.Position = [1 1 3]'
@@ -1046,7 +1086,6 @@ object FParams: TFParams
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSelect]
         TabOrder = 15
         OnDblClick = SGConfDblClick
-        OnSelectCell = SGConfSelectCell
         ColWidths = (
           87
           50
@@ -1085,6 +1124,102 @@ object FParams: TFParams
         Caption = 'Set'
         TabOrder = 19
         OnClick = BSGConfSetClick
+      end
+      object EditCamLookX: TEdit
+        Left = 180
+        Top = 198
+        Width = 45
+        Height = 21
+        TabOrder = 20
+      end
+      object EditCamLookY: TEdit
+        Left = 180
+        Top = 222
+        Width = 45
+        Height = 21
+        TabOrder = 21
+      end
+      object EditCamLookZ: TEdit
+        Left = 180
+        Top = 246
+        Width = 45
+        Height = 21
+        TabOrder = 22
+      end
+      object EditSetCamX: TEdit
+        Left = 52
+        Top = 306
+        Width = 45
+        Height = 21
+        TabOrder = 23
+        Text = '1'
+      end
+      object EditSetCamY: TEdit
+        Left = 100
+        Top = 306
+        Width = 45
+        Height = 21
+        TabOrder = 24
+        Text = '1'
+      end
+      object EditSetCamZ: TEdit
+        Left = 148
+        Top = 306
+        Width = 45
+        Height = 21
+        TabOrder = 25
+        Text = '1'
+      end
+      object BSetCamPars: TButton
+        Left = 232
+        Top = 306
+        Width = 32
+        Height = 43
+        Caption = 'Set'
+        TabOrder = 26
+        OnClick = BSetCamParsClick
+      end
+      object EditSetCamLookX: TEdit
+        Left = 52
+        Top = 328
+        Width = 45
+        Height = 21
+        TabOrder = 27
+        Text = '0'
+      end
+      object EditSetCamLookY: TEdit
+        Left = 100
+        Top = 328
+        Width = 45
+        Height = 21
+        TabOrder = 28
+        Text = '0'
+      end
+      object EditSetCamLookZ: TEdit
+        Left = 148
+        Top = 328
+        Width = 45
+        Height = 21
+        TabOrder = 29
+        Text = '0'
+      end
+      object BGetCamPos: TButton
+        Left = 196
+        Top = 306
+        Width = 33
+        Height = 21
+        Caption = 'Get'
+        TabOrder = 30
+        OnClick = BGetCamPosClick
+      end
+      object Button1: TButton
+        Left = 196
+        Top = 328
+        Width = 33
+        Height = 21
+        Caption = 'Get'
+        TabOrder = 31
+        OnClick = Button1Click
       end
     end
     object TabDebug: TTabSheet
@@ -1388,7 +1523,13 @@ object FParams: TFParams
       'EditODE_ERP.Text'
       'EditScriptPeriod.Text'
       'CBWorldQuickStep.Checked'
-      'EditQuickStepIterations.Text')
+      'EditQuickStepIterations.Text'
+      'EditSetCamLookX.Text'
+      'EditSetCamLookY.Text'
+      'EditSetCamLookZ.Text'
+      'EditSetCamX.Text'
+      'EditSetCamY.Text'
+      'EditSetCamZ.Text')
     StoredValues = <>
     Left = 236
     Top = 60

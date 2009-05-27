@@ -10,7 +10,7 @@ uses
   GLShadowVolume, GLSkydome, GLGraph, OmniXML, OmniXMLUtils, Contnrs, ODERobots,
   rxPlacemnt, ProjConfig, GLHUDObjects, Menus, GLVectorFileObjects,
   GLFireFX, GlGraphics, OpenGL1x, SimpleParser, GLBitmapFont,
-  GLMultiPolygon, GLMesh;
+  GLMultiPolygon, GLMesh, AppEvnts;
 
 type
   TRGBfloat = record
@@ -244,7 +244,8 @@ begin
   if assigned(b1) and assigned(b2) then begin
     //exit without doing anything if the two bodies are connected by a joint
     //if (dAreConnected(b1, b2)<>0) then exit;
-    if (dAreConnectedExcluding(b1, b2, dJointTypeContact)<>0) then exit;
+    if (dGeomGetClass(o1) <> dRayClass) and (dGeomGetClass(o2) <> dRayClass) then
+      if (dAreConnectedExcluding(b1, b2, dJointTypeContact)<>0) then exit;
   end;
 
   n := dCollide(o1, o2, MAX_CONTACTS, contact[0].geom, sizeof(TdContact));
@@ -543,7 +544,7 @@ begin
   Solid.Body := dBodyCreate(world);
   dBodySetPosition(Solid.Body, posX, posY, posZ);
 
-  dMassSetCylinder(m, 1, 1, c_radius, c_length);
+  dMassSetCylinder(m, 1, 3, c_radius, c_length);
   dMassAdjust(m, cmass);
   dBodySetMass(Solid.Body, @m);
 
@@ -726,6 +727,7 @@ begin
   Obstacle.Geom.data := Obstacle;
 
   CopyCubeSizeFromBox(TGLCube(Obstacle.GLObj), Obstacle.Geom);
+  TGLCube(Obstacle.GLObj).Material.MaterialLibrary := FViewer.GLMaterialLibrary;
   PositionSceneObject(Obstacle.GLObj, Obstacle.Geom);
 //  PositionSceneObject(TGLBaseSceneObject(PdxGeom(ground_box).data), ground_box);
   (OdeScene as TGLShadowVolume).Occluders.AddCaster(Obstacle.GLObj);
@@ -1706,6 +1708,8 @@ var XML: IXMLDocument;
     root, obstacle, prop: IXMLNode;
     sizeX, sizeY, sizeZ, posX, posY, posZ, angX, angY, angZ: double;
     colorR, colorG, colorB: double;
+    TextureName: string;
+    TextureScale: double;
     R: TdMatrix3;
     NewObstacle: TSolid;
 begin
@@ -1729,6 +1733,7 @@ begin
       posX := 0; posY := 0; posZ := 0;
       angX := 0; angY := 0; angZ := 0;
       colorR := 128/255; colorG := 128/255; colorB := 128/255;
+      TextureName := ''; TextureScale := 1;
       while prop <> nil do begin
         if prop.NodeName = 'size' then begin
           sizeX := GetNodeAttrRealParse(prop, 'x', sizeX, Parser);
@@ -1750,6 +1755,10 @@ begin
           colorG := GetNodeAttrInt(prop, 'g', 128)/255;
           colorB := GetNodeAttrInt(prop, 'b', 128)/255;
         end;
+        if prop.NodeName = 'texture' then begin
+          TextureName := GetNodeAttrStr(prop, 'name', TextureName);
+          TextureScale := GetNodeAttrRealParse(prop, 'scale', TextureScale, Parser);
+        end;
         prop := prop.NextSibling;
       end;
       // Create and position the obstacle
@@ -1761,6 +1770,9 @@ begin
       RFromZYXRotRel(R, angX, angY, AngZ);
       dGeomSetRotation(NewObstacle.Geom, R);
 
+      if TextureName <> '' then begin
+        NewObstacle.SetTexture(TextureName, TextureScale); //'LibMaterialFeup'
+      end;
       NewObstacle.SetColor(colorR, colorG, colorB);
       PositionSceneObject(NewObstacle.GLObj, NewObstacle.Geom);
     end;
@@ -2899,9 +2911,16 @@ end;
 procedure TFViewer.GLSceneViewerMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
-  if [ssleft, ssCtrl] <= shift then begin
+  if [ssShift, ssleft, ssCtrl] <= shift then begin
+    GLScene.CurrentGLCamera.MoveTargetInEyeSpace(0, -0.03*(mx-x), 0.03*(my-y));
+    //GLDummyTargetCam.Position := GLScene.CurrentGLCamera.TargetObject.Position;
+    //UpdateCamPos(FParams.RGCamera.ItemIndex);
+    my := y;
+    mx := x;
+  end else if [ssleft, ssCtrl] <= shift then begin
     GLScene.CurrentGLCamera.MoveAroundTarget(my-y,mx-x);
     GLDummyCamPos.Position := GLScene.CurrentGLCamera.Position;
+    //UpdateCamPos(FParams.RGCamera.ItemIndex);
     my := y;
     mx := x;
   end;
@@ -3284,8 +3303,9 @@ begin
             if r = Fparams.LBRobots.ItemIndex then begin
               //UDP.RemoteHost:=EditIP.text;
               FillRemote(r);
-              FParams.ShowRobotRemState(r);
             end;
+
+            FParams.ShowRobotPosition(r);
 
             // Default Control values are zero
             //for i := 0 to Wheels.Count-1 do begin
@@ -3487,11 +3507,7 @@ begin
     // Update Camera Position
     UpdateCamPos(FParams.RGCamera.ItemIndex);
 
-    with FParams do begin
-      EditCamX.Text:=format('%.2f',[GLCamera.Position.x]);
-      EditCamY.Text:=format('%.2f',[GLCamera.Position.y]);
-      EditCamZ.Text:=format('%.2f',[GLCamera.Position.z]);
-    end;
+    FParams.ShowCameraConfig(GLCamera);
 
     GLSceneViewer.Invalidate;
   end;
@@ -3936,7 +3952,7 @@ end;
 // yasml
 // Texture panel
 // Scale not
-// rotation only in z????
+// rotation only in z for the robots
 // 3ds offset
 
 // Optional walls

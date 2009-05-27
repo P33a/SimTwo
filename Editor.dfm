@@ -435,7 +435,7 @@ object FEditor: TFEditor
     end
   end
   object OpenDialog: TOpenDialog
-    DefaultExt = '.pas'
+    DefaultExt = 'pas'
     Filter = 'Pascal Script File|*.*pas|Any File|*.*'
     Options = [ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
     Title = 'Load Control Pascal Script'
@@ -443,7 +443,7 @@ object FEditor: TFEditor
     Top = 36
   end
   object SaveDialog: TSaveDialog
-    DefaultExt = '.pas'
+    DefaultExt = 'pas'
     Filter = 'Pascal Script File|*.*pas|Any File|*.*'
     Options = [ofHideReadOnly, ofNoChangeDir, ofPathMustExist, ofCreatePrompt, ofEnableSizing]
     Title = 'Save Control Pascal Script'

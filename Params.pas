@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls, ExtCtrls, GLWin32Viewer, GLcontext, Math,
   IdBaseComponent, IdComponent, IdUDPBase, IdUDPServer, IdSocketHandle, ODERobots, OdeImport,
-  rxPlacemnt, Grids, GLCadencer, CPort, ShellAPI, Sockets, GLShadowVolume;
+  rxPlacemnt, Grids, GLCadencer, CPort, ShellAPI, Sockets, GLShadowVolume, GLScene;
 
 type
   TFParams = class(TForm)
@@ -174,6 +174,24 @@ type
     CBWorldQuickStep: TCheckBox;
     Label4: TLabel;
     EditQuickStepIterations: TEdit;
+    EditRobotZ: TEdit;
+    Label49: TLabel;
+    Label50: TLabel;
+    EditCamLookX: TEdit;
+    EditCamLookY: TEdit;
+    EditCamLookZ: TEdit;
+    EditSetCamX: TEdit;
+    EditSetCamY: TEdit;
+    Label51: TLabel;
+    Label52: TLabel;
+    EditSetCamZ: TEdit;
+    BSetCamPars: TButton;
+    Label53: TLabel;
+    EditSetCamLookX: TEdit;
+    EditSetCamLookY: TEdit;
+    EditSetCamLookZ: TEdit;
+    BGetCamPos: TButton;
+    Button1: TButton;
     procedure CBShadowsClick(Sender: TObject);
     procedure CBVsyncClick(Sender: TObject);
     procedure BSetFPSClick(Sender: TObject);
@@ -205,8 +223,6 @@ type
     procedure BSetAllClick(Sender: TObject);
     procedure BJointWayPointsSaveClick(Sender: TObject);
     procedure BWayPointEditClick(Sender: TObject);
-    procedure SGConfSelectCell(Sender: TObject; ACol, ARow: Integer;
-      var CanSelect: Boolean);
     procedure BSGConfSetClick(Sender: TObject);
     procedure SGConfDblClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -222,6 +238,9 @@ type
     procedure UDPGenericStatus(ASender: TObject; const AStatus: TIdStatus;
       const AStatusText: String);
     procedure BGlobalSetClick(Sender: TObject);
+    procedure BSetCamParsClick(Sender: TObject);
+    procedure BGetCamPosClick(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
   private
     procedure FillEditArray(ProtoName: string;
       var EditArray: array of TEdit);
@@ -238,8 +257,10 @@ type
     procedure FillLBRobots(LB: TListBox);
     procedure FillLBLinks(LB: TListBox; r: integer);
     procedure ShowRobotState;
-    procedure ShowRobotRemState(r: integer);
+    procedure ShowRobotPosition(r: integer);
     procedure ComboWayPointNameUpdate(robot: TRobot);
+
+    procedure ShowCameraConfig(GLCamera: TGLCamera);
 //    procedure ShowIRValues;
   end;
 
@@ -446,14 +467,15 @@ begin
 end;
 
 
-procedure TFParams.ShowRobotRemState(r: integer);
+procedure TFParams.ShowRobotPosition(r: integer);
+var x, y, z, teta: double;
 begin
   if r <> LBRobots.ItemIndex then exit;
-  with RemState do begin
-    EditRobotX.text := format('%.3f',[Robot.x]);
-    EditRobotY.text := format('%.3f',[Robot.y]);
-    EditRobotTeta.text := format('%.3f',[radToDeg(Robot.teta)]);
-  end;
+  WorldODE.Robots[r].GetXYZTeta(x, y, z, teta);
+  EditRobotX.text := format('%.3f',[x]);
+  EditRobotY.text := format('%.3f',[y]);
+  EditRobotZ.text := format('%.3f',[z]);
+  EditRobotTeta.text := format('%.3f',[radToDeg(teta)]);
 end;
 
 
@@ -511,6 +533,18 @@ begin
   for i := 1 to SGConf.RowCount-1 do begin
     SGConfRowToVar(i);
     VarToSGConfRow(i);
+  end;
+
+  // Vista hack?
+  if PageControl.Height + PageControl.Top > ClientHeight - (EditDebug.Height + 4) then begin
+    PageControl.Height := - PageControl.Top + ClientHeight - (EditDebug.Height + 4);
+  end;
+
+  try
+    BSetCamParsClick(Sender);
+  except
+    on E: Exception do
+    Showmessage(E.Message);
   end;
 end;
 
@@ -745,14 +779,6 @@ begin
 end;
 
 
-procedure TFParams.SGConfSelectCell(Sender: TObject; ACol, ARow: Integer;
-  var CanSelect: Boolean);
-begin
-//  EditGridX.Text := SGConf.Cells[1, Arow];
-//  EditGridY.Text := SGConf.Cells[2, Arow];
-//  EditGridZ.Text := SGConf.Cells[3, Arow];
-end;
-
 procedure TFParams.FillSGConfRow(var SGRow: longword; varname: string);
 begin
   SGConf.Cells[0, SGRow] := varname;
@@ -940,6 +966,47 @@ end;
 procedure TFParams.BGlobalSetClick(Sender: TObject);
 begin
   WorldODE.DecPeriod := strtoint(EditScriptPeriod.Text)/1000;
+end;
+
+procedure TFParams.ShowCameraConfig(GLCamera: TGLCamera);
+begin
+  EditCamX.Text:=format('%.2f',[GLCamera.Position.x]);
+  EditCamY.Text:=format('%.2f',[GLCamera.Position.y]);
+  EditCamZ.Text:=format('%.2f',[GLCamera.Position.z]);
+
+  EditCamLookX.Text:=format('%.2f',[GLCamera.TargetObject.Position.x]);
+  EditCamLookY.Text:=format('%.2f',[GLCamera.TargetObject.Position.y]);
+  EditCamLookZ.Text:=format('%.2f',[GLCamera.TargetObject.Position.z]);
+end;
+
+procedure TFParams.BSetCamParsClick(Sender: TObject);
+var x, y, z: double;
+begin
+  //FViewer.GLCamera.Position.SetPoint
+  x := strtofloat(EditSetCamX.Text);
+  y := strtofloat(EditSetCamY.Text);
+  z := strtofloat(EditSetCamZ.Text);
+  FViewer.GLDummyCamPos.Position.SetPoint(x,y,z);
+
+  x := strtofloat(EditSetCamLookX.Text);
+  y := strtofloat(EditSetCamLookY.Text);
+  z := strtofloat(EditSetCamLookZ.Text);
+  FViewer.GLDummyTargetCam.Position.SetPoint(x,y,z);
+  //FViewer.GLCamera.TargetObject.Position.SetPoint(x,y,z);
+end;
+
+procedure TFParams.BGetCamPosClick(Sender: TObject);
+begin
+  EditSetCamX.Text := EditCamX.Text;
+  EditSetCamY.Text := EditCamY.Text;
+  EditSetCamZ.Text := EditCamZ.Text;
+end;
+
+procedure TFParams.Button1Click(Sender: TObject);
+begin
+  EditSetCamLookX.Text := EditCamLookX.Text;
+  EditSetCamLookY.Text := EditCamLookY.Text;
+  EditSetCamLookZ.Text := EditCamLookZ.Text;
 end;
 
 end.
