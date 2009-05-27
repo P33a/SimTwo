@@ -465,7 +465,7 @@ end;
 procedure TFEditor.MenuAboutClick(Sender: TObject);
 begin
   ShowMessage(SimTwoVersion + crlf + crlf+
-              'Copyright (C) 2008 Paulo Costa' + crlf + crlf+
+              'Copyright (C) 2008-2009 Paulo Costa' + crlf + crlf+
               'Special thanks to:' + crlf+
               'José Luís Lima, José Alexandre Gonçalves,' + crlf+
               'Paulo Malheiros, Paulo Marques,' + crlf+
@@ -699,6 +699,9 @@ procedure TFEditor.PSScript_Compile(Sender: TPSScript);
 var i: integer;
     s: string;
 begin
+  Sender.AddMethod(Self, @arcsin, 'function arcsin(x: Extended): Extended');
+  Sender.AddMethod(Self, @arccos, 'function arccos(x: Extended): Extended');
+  Sender.AddMethod(Self, @tan, 'function tan(x: Extended): Extended');
   Sender.AddMethod(Self, @ATan2, 'function ATan2(y,x: double): double');
   Sender.AddMethod(Self, @DiffAngle, 'function DiffAngle(a1,a2: double): double;');
   Sender.AddMethod(Self, @Dist, 'function Dist(x,y: double): double');

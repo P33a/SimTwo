@@ -772,6 +772,37 @@ begin
   result:=cos(v[0]);
 end;
 
+function PaTan(const v: array of double): double;
+begin
+  result:=tan(v[0]);
+end;
+
+function PaAtan(const v: array of double): double;
+begin
+  result:=arctan(v[0]);
+end;
+
+function PaArcSin(const v: array of double): double;
+begin
+  result:=arcsin(v[0]);
+end;
+
+function PaArcCos(const v: array of double): double;
+begin
+  result:=arccos(v[0]);
+end;
+
+
+function PaDeg(const v: array of double): double;
+begin
+  result:=RadTodeg(v[0]);
+end;
+
+function PaRad(const v: array of double): double;
+begin
+  result:=degToRad(v[0]);
+end;
+
 function PaMax(const v: array of double): double;
 begin
   result:=max(v[0],v[1]);
@@ -826,6 +857,14 @@ begin
 
   RegisterFunction('sin', PaSin, 1);
   RegisterFunction('cos', PaCos, 1);
+  RegisterFunction('tan', PaTan, 1);
+
+  RegisterFunction('atan', PaAtan, 1);
+  RegisterFunction('arcsin', PaArcSin, 1);
+  RegisterFunction('arccos', PaArcCos, 1);
+
+  RegisterFunction('deg', PaDeg, 1);
+  RegisterFunction('rad', PaRad, 1);
 
   RegisterFunction('not', PaNot, 1);
   RegisterFunction(' if', PaIf,3);
