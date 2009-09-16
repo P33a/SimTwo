@@ -59,7 +59,7 @@ type
     Encoder: TEncoder;
     Controller: TMotController;
     voltage, PowerDrain, EnergyDrain: double;
-    active: boolean;
+    active, simple: boolean;
   end;
 
   TMatterPropertie = (smMetallic, smFerroMagnetic);

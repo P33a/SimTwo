@@ -169,46 +169,35 @@ object FParams: TFParams
           end
           object Label1: TLabel
             Left = 4
-            Top = 32
+            Top = 44
             Width = 64
             Height = 13
             Caption = 'Script Period:'
-          end
-          object CBGLObject: TCheckBox
-            Left = 4
-            Top = 4
-            Width = 97
-            Height = 17
-            Caption = 'GL Objects'
-            Checked = True
-            State = cbChecked
-            TabOrder = 0
-            OnClick = CBGLObjectClick
           end
           object EditRemoteIP: TEdit
             Left = 28
             Top = 370
             Width = 109
             Height = 21
-            TabOrder = 1
+            TabOrder = 0
             Text = '127.0.0.1'
             OnChange = EditRemoteIPChange
           end
           object EditScriptPeriod: TEdit
             Left = 72
-            Top = 28
+            Top = 40
             Width = 41
             Height = 21
-            TabOrder = 2
+            TabOrder = 1
             Text = '40'
           end
           object BGlobalSet: TButton
             Left = 200
-            Top = 28
+            Top = 40
             Width = 47
             Height = 21
             Caption = 'Set'
-            TabOrder = 3
+            TabOrder = 2
             OnClick = BGlobalSetClick
           end
         end
@@ -731,7 +720,7 @@ object FParams: TFParams
             Width = 149
             Height = 21
             Style = csDropDownList
-            ItemHeight = 13
+            ItemHeight = 0
             TabOrder = 8
           end
           object BJointWayPointsSave: TButton
@@ -924,6 +913,22 @@ object FParams: TFParams
         Height = 13
         Caption = 'Look at:'
       end
+      object Label54: TLabel
+        Left = 184
+        Top = 34
+        Width = 29
+        Height = 13
+        Alignment = taRightJustify
+        Caption = 'Trails:'
+      end
+      object Label55: TLabel
+        Left = 168
+        Top = 56
+        Width = 46
+        Height = 13
+        Alignment = taRightJustify
+        Caption = 'Trail Size:'
+      end
       object CBShadows: TCheckBox
         Left = 8
         Top = 68
@@ -1060,8 +1065,8 @@ object FParams: TFParams
         TabOrder = 13
       end
       object MemoCameraConfig: TMemo
-        Left = 112
-        Top = 32
+        Left = 116
+        Top = 116
         Width = 145
         Height = 61
         Lines.Strings = (
@@ -1220,6 +1225,45 @@ object FParams: TFParams
         Caption = 'Get'
         TabOrder = 31
         OnClick = Button1Click
+      end
+      object EditTrailsCount: TEdit
+        Left = 216
+        Top = 30
+        Width = 45
+        Height = 21
+        TabOrder = 32
+        Text = '8'
+      end
+      object EditTrailSize: TEdit
+        Left = 216
+        Top = 52
+        Width = 45
+        Height = 21
+        TabOrder = 33
+        Text = '200'
+      end
+      object BSetTrailPars: TButton
+        Left = 216
+        Top = 4
+        Width = 45
+        Height = 21
+        Caption = 'Set'
+        TabOrder = 34
+        OnClick = BSetTrailParsClick
+      end
+      object RGGLObjects: TRadioGroup
+        Left = 168
+        Top = 80
+        Width = 93
+        Height = 65
+        Caption = 'GLObjects'
+        ItemIndex = 1
+        Items.Strings = (
+          'Original'
+          'Mesh'
+          'Both')
+        TabOrder = 35
+        OnClick = RGGLObjectsClick
       end
     end
     object TabDebug: TTabSheet
@@ -1529,7 +1573,10 @@ object FParams: TFParams
       'EditSetCamLookZ.Text'
       'EditSetCamX.Text'
       'EditSetCamY.Text'
-      'EditSetCamZ.Text')
+      'EditSetCamZ.Text'
+      'EditTrailsCount.Text'
+      'EditTrailSize.Text'
+      'RGGLObjects.ItemIndex')
     StoredValues = <>
     Left = 236
     Top = 60

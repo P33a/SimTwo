@@ -174,6 +174,11 @@ procedure DelAxisTrajPoint(R, i, idx: integer);
 function CountAxisTrajPoints(R, i: integer): integer;
 procedure ClearAxisTrajPoints(R, i: integer; LP: TAxisPoint);
 
+procedure SetTrailColor(T: integer; Red, Green, Blue: byte);
+procedure AddTrailNode(T: integer; x, y, z: double);
+procedure DelTrailNode(T: integer);
+procedure ClearTrail(T: integer);
+
 {
 
 getsolidindex
@@ -329,7 +334,7 @@ const
 
 implementation
 
-uses Math, Viewer, odeimport, utils, Keyboard;
+uses Math, Viewer, odeimport, utils, Keyboard, GLObjects;
 
 function Deg(angle: double): double;
 begin
@@ -1027,6 +1032,33 @@ begin
   FViewer.GLFireFXManager.Disabled := true;
   FViewer.GLFireFXManager.Reference := nil;
 end;
+
+
+
+procedure SetTrailColor(T: integer; Red, Green, Blue: byte);
+begin
+  (FViewer.GLDTrails.Children[T] as TGLLines).linecolor.SetColor(red/255, green/255, blue/255);
+end;
+
+
+procedure AddTrailNode(T: integer; x, y, z: double);
+begin
+  FViewer.AddTrailNode(T, x, y, z);
+end;
+
+
+procedure DelTrailNode(T: integer);
+begin
+  FViewer.DelTrailNode(T);
+end;
+
+
+procedure ClearTrail(T: integer);
+begin
+  (FViewer.GLDTrails.Children[T] as TGLLines).Nodes.Clear;
+end;
+
+
 
 
 {

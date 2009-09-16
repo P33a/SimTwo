@@ -63,6 +63,14 @@ UNIT odeimport;
   ***********************************************************************
 
   Change history
+  2008.12.04 - PR - Updated to work with latest ODE from svn Rev(1606) (massive bug fixes and cleanup)
+                    Breakable joints are no longer availed until patch is updated
+                    ODE no longer allows multiple init's this is now checked for
+                    ODE no longer allows zero mass objects
+                    joint parms now have a 1 appended to them for first parm
+                       example dParamLoStop is now dParamLoStop1 (old joint names remain for compatablity but should be updated
+
+  2008.10.16 - UweR - Compatibility fix for Delphi 2009
   2008.02.06 - Mrqzzz - Upgrade to ODE 0.9 (upgrade by Paul Robello; "InitOde" and "CloseODE" in public interface declaration)
   2008.02.05 - PR - Fixes to breakable joints and class id's
   2008.01.23 - PR - Massive update for ode 0.9x
@@ -120,7 +128,7 @@ UNIT odeimport;
 
 interface
 // remove . from line below if you are using a generic ODE DLL
-{.$DEFINE VanillaODE}
+{$DEFINE VanillaODE}
 {$IFNDEF VanillaODE}
    {$DEFINE PARODE}
 {$ENDIF}
@@ -206,8 +214,9 @@ const
     dContactSoftCFM: TdContactType  	= $0010;
     dContactMotion1: TdContactType  	= $0020;
     dContactMotion2: TdContactType	= $0040;
-    dContactSlip1: TdContactType	= $0080;
-    dContactSlip2: TdContactType	= $0100;
+    dContactMotionN: TdContactType	= $0080;
+    dContactSlip1: TdContactType	= $0100;
+    dContactSlip2: TdContactType	= $0200;
 
     dContactApprox0: TdContactType	= $0000;
     dContactApprox1_1: TdContactType	= $1000;
@@ -624,6 +633,7 @@ type
 
     firstjoint : TdJointID;	// list of attached joints
     flags : integer;			  // some dxBodyFlagXXX flags
+    geom : PdxGeom;          // first collision geom associated with body
     mass : TdMass;			    // mass parameters about POR
     invI : TdMatrix3 ;		  // inverse of mass.I
     invMass : TdReal;		    // 1 / mass.mass
@@ -679,13 +689,6 @@ type
   end;
 
 
-(*  typedef struct dJointFeedback {
-  dVector3 f1;       // force that joint applies to body 1
-  dVector3 t1;       // torque that joint applies to body 1
-  dVector3 f2;       // force that joint applies to body 2
-  dVector3 t2;       // torque that joint applies to body 2
-} dJointFeedback;)*)
-
   TdJointFeedback = record
     f1 : TdVector3;       // force that joint applies to body 1
     t1 : TdVector3;       // torque that joint applies to body 1
@@ -716,6 +719,7 @@ type
     dJointTypeLMotor,
     dJointTypePlane2D,
     dJointTypePR,
+    dJointTypePU,
     dJointTypePiston
     );
 
@@ -726,7 +730,7 @@ type
 
   TdSurfaceParameters = record
     // must always be defined
-    mode : cardinal;
+    mode : integer;
     mu : TdReal;
 
     // only defined if the corresponding flag is set in mode
@@ -735,24 +739,9 @@ type
     bounce_vel,
     soft_erp,
     soft_cfm,
-    motion1,motion2,
+    motion1,motion2,motionN,
     slip1,slip2 : TdReal
   end;
-
-(*typedef struct dContactGeom {
-  dVector3 pos;
-  dVector3 normal;
-  dReal depth;
-  dGeomID g1,g2;
-} dContactGeom;*)
-
-//***********
-{  TdContactGeom = record
-    pos : TdVector3;
-    normal : TdVector3;
-    depth : TdReal;
-    g1,g2 : PdxGeom;
-  end;} // OLD
 
   TdContactGeom = record
     pos : TdVector3;
@@ -764,11 +753,6 @@ type
 
   PdContactGeom = ^TdContactGeom;
 
-  (*struct dContact {
-  dSurfaceParameters surface;
-  dContactGeom geom;
-  dVector3 fdir1;
-};*)
   TdContact = record
     surface : TdSurfaceParameters;
     geom : TdContactGeom;
@@ -1024,9 +1008,26 @@ struct dxHashSpace : public dxSpace {
     // parameters for suspension
     dParamSuspensionERP: TJointParams = _priv_dParamLoStop + 9;
     dParamSuspensionCFM: TJointParams = _priv_dParamLoStop + 10;
+    dParamERP: TJointParams = _priv_dParamLoStop + 11;
+
+    dParamGroup1: TJointParams = $000;
+    dParamLoStop1: TJointParams = _priv_dParamLoStop;
+    dParamHiStop1: TJointParams = _priv_dParamLoStop + 1;
+    dParamVel1: TJointParams = _priv_dParamLoStop + 2;
+    dParamFMax1: TJointParams = _priv_dParamLoStop + 3;
+    dParamFudgeFactor1: TJointParams = _priv_dParamLoStop + 4;
+    dParamBounce1: TJointParams = _priv_dParamLoStop + 5;
+    dParamCFM1: TJointParams = _priv_dParamLoStop + 6;
+    dParamStopERP1: TJointParams = _priv_dParamLoStop + 7;
+    dParamStopCFM1: TJointParams = _priv_dParamLoStop + 8;
+    // parameters for suspension
+    dParamSuspensionERP1: TJointParams = _priv_dParamLoStop + 9;
+    dParamSuspensionCFM1: TJointParams = _priv_dParamLoStop + 10;
+    dParamERP1: TJointParams = _priv_dParamLoStop + 11;
 
     // SECOND AXEL
     // parameters for limits and motors
+    dParamGroup2: TJointParams = $100;
     dParamLoStop2: TJointParams = _priv_dParamLoStop2;
     dParamHiStop2: TJointParams = _priv_dParamLoStop2 + 1;
     dParamVel2: TJointParams = _priv_dParamLoStop2 + 2;
@@ -1039,9 +1040,11 @@ struct dxHashSpace : public dxSpace {
     // parameters for suspension
     dParamSuspensionERP2: TJointParams = _priv_dParamLoStop2 + 9;
     dParamSuspensionCFM2: TJointParams = _priv_dParamLoStop2 + 10;
+    dParamERP2: TJointParams = _priv_dParamLoStop2 + 11;
 
     // THIRD AXEL
     // parameters for limits and motors
+    dParamGroup3: TJointParams = $200;
     dParamLoStop3: TJointParams = _priv_dParamLoStop3;
     dParamHiStop3: TJointParams = _priv_dParamLoStop3 + 1;
     dParamVel3: TJointParams = _priv_dParamLoStop3 + 2;
@@ -1054,10 +1057,10 @@ struct dxHashSpace : public dxSpace {
     // parameters for suspension
     dParamSuspensionERP3: TJointParams = _priv_dParamLoStop3 + 9;
     dParamSuspensionCFM3: TJointParams = _priv_dParamLoStop3 + 10;
+    dParamERP3: TJointParams = _priv_dParamLoStop3 + 11;
 
-    // AGAIN!
-    // dParamGroup * 2 + dParamBounce = dParamBounce2
     dParamGroup: TJointParams = $100;
+
 
 
   // added by PAR
@@ -1074,7 +1077,9 @@ struct dxHashSpace : public dxSpace {
    function dGeomTransformGetClass: integer; cdecl; external {$IFDEF __GPC__}name 'dGeomTransformGetClass'{$ELSE} ODEDLL{$ENDIF __GPC__};
    {$ENDIF}
 
-  procedure dInitODE; cdecl; external {$IFDEF __GPC__}name 'dInitODE'{$ELSE} ODEDLL{$ENDIF __GPC__};
+   procedure dInitODE; cdecl; external {$IFDEF __GPC__}name 'dInitODE'{$ELSE} ODEDLL{$ENDIF __GPC__};
+   function dInitODE2(uiInitFlags : longword) : integer; cdecl; external {$IFDEF __GPC__}name 'dInitODE2'{$ELSE} ODEDLL{$ENDIF __GPC__};
+
   procedure dCloseODE; cdecl; external {$IFDEF __GPC__}name 'dCloseODE'{$ELSE} ODEDLL{$ENDIF __GPC__};
 
 
@@ -1092,7 +1097,7 @@ struct dxHashSpace : public dxSpace {
   function dWorldGetContactMaxCorrectingVel(const World: PdxWorld): TdReal; cdecl; external {$IFDEF __GPC__}name 'dWorldGetContactMaxCorrectingVel'{$ELSE} ODEDLL{$ENDIF __GPC__};
   procedure dWorldSetContactSurfaceLayer(const World: PdxWorld; const depth: TdReal); cdecl; external {$IFDEF __GPC__}name 'dWorldSetContactSurfaceLayer'{$ELSE} ODEDLL{$ENDIF __GPC__};
   function dWorldGetContactSurfaceLayer(const World: PdxWorld): TdReal; cdecl; external {$IFDEF __GPC__}name 'dWorldGetContactSurfaceLayer'{$ELSE} ODEDLL{$ENDIF __GPC__};
-  procedure dWorldExportDIF(const World: PdxWorld; fileHandle: cardinal; const world_name:pchar); cdecl; external {$IFDEF __GPC__}name 'dWorldExportDIF'{$ELSE} ODEDLL{$ENDIF __GPC__};
+  procedure dWorldExportDIF(const World: PdxWorld; fileHandle: cardinal; const world_name:PAnsiChar); cdecl; external {$IFDEF __GPC__}name 'dWorldExportDIF'{$ELSE} ODEDLL{$ENDIF __GPC__};
 
   // Damping
   function dWorldGetLinearDampingThreshold(const World: PdxWorld): TdReal; cdecl; external {$IFDEF __GPC__}name 'dWorldGetLinearDampingThreshold'{$ELSE} ODEDLL{$ENDIF __GPC__};
@@ -1232,7 +1237,7 @@ struct dxHashSpace : public dxSpace {
   procedure dJointGetBreakForce(const dJointID : TdJointID; body : integer; var force: TdVector3); cdecl; external {$IFDEF __GPC__}name 'dJointGetBreakForce'{$ELSE} ODEDLL{$ENDIF __GPC__};
   procedure dJointGetBreakTorque(const dJointID : TdJointID; body : integer; var torque: TdVector3); cdecl; external {$IFDEF __GPC__}name 'dJointGetBreakTorque'{$ELSE} ODEDLL{$ENDIF __GPC__};
   {$ENDIF}
-                   
+
   // normal joints
   procedure dJointGroupDestroy(const dJointGroupID : TdJointGroupID); cdecl; external {$IFDEF __GPC__}name 'dJointGroupDestroy'{$ELSE} ODEDLL{$ENDIF __GPC__};
   function dJointGroupCreate(const max_size: Integer): TdJointGroupID; cdecl; external {$IFDEF __GPC__}name 'dJointGroupCreate'{$ELSE} ODEDLL{$ENDIF __GPC__};
@@ -1363,13 +1368,13 @@ struct dxHashSpace : public dxSpace {
   function dJointGetPRParam(const dJointID : TdJointID; parameter: integer): TdReal; cdecl; external {$IFDEF __GPC__}name 'dJointGetPRParam'{$ELSE} ODEDLL{$ENDIF __GPC__};
   procedure dJointAddPRTorque (const dJointID : TdJointID; torque: TdReal); cdecl; external  {$IFDEF __GPC__}name 'dJointAddPRTorque'{$ELSE} ODEDLL{$ENDIF __GPC__};
 
-  //Pistion
+  //Piston
   function dJointCreatePiston(const World : PdxWorld; dJointGroupID : TdJointGroupID): TdJointID; cdecl; external {$IFDEF __GPC__}name 'dJointCreatePiston'{$ELSE} ODEDLL{$ENDIF __GPC__};
   procedure dJointSetPistonAnchor(const dJointID : TdJointID; const x, y, z: TdReal); cdecl; external {$IFDEF __GPC__}name 'dJointSetPistonAnchor'{$ELSE} ODEDLL{$ENDIF __GPC__};
-  procedure dJointGetPistionAnchor(const dJointID : TdJointID; var result: TdVector3); cdecl; external {$IFDEF __GPC__}name 'dJointGetPistionAnchor'{$ELSE} ODEDLL{$ENDIF __GPC__};
-  procedure dJointGetPistionAnchor2(const dJointID : TdJointID; var result: TdVector3); cdecl; external {$IFDEF __GPC__}name 'dJointGetPistionAnchor2'{$ELSE} ODEDLL{$ENDIF __GPC__};
+  procedure dJointGetPistonAnchor(const dJointID : TdJointID; var result: TdVector3); cdecl; external {$IFDEF __GPC__}name 'dJointGetPistonAnchor'{$ELSE} ODEDLL{$ENDIF __GPC__};
+  procedure dJointGetPistonAnchor2(const dJointID : TdJointID; var result: TdVector3); cdecl; external {$IFDEF __GPC__}name 'dJointGetPistonAnchor2'{$ELSE} ODEDLL{$ENDIF __GPC__};
   procedure dJointSetPistonAxis(const dJointID : TdJointID; const x, y, z: TdReal); cdecl; external {$IFDEF __GPC__}name 'dJointSetPistonAxis'{$ELSE} ODEDLL{$ENDIF __GPC__};
-  procedure dJointGetPistionAxis(const dJointID : TdJointID; var result: TdVector3); cdecl; external {$IFDEF __GPC__}name 'dJointGetPistionAxis'{$ELSE} ODEDLL{$ENDIF __GPC__};
+  procedure dJointGetPistonAxis(const dJointID : TdJointID; var result: TdVector3); cdecl; external {$IFDEF __GPC__}name 'dJointGetPistonAxis'{$ELSE} ODEDLL{$ENDIF __GPC__};
   procedure dJointSetPistonParam(const dJointID : TdJointID; const parameter: TJointParams; const value: TdReal); cdecl; external {$IFDEF __GPC__}name 'dJointSetPistonParam'{$ELSE} ODEDLL{$ENDIF __GPC__};
   function dJointGetPistonParam(const dJointID : TdJointID; parameter : integer): TdReal; cdecl; external {$IFDEF __GPC__}name 'dJointGetPistonParam'{$ELSE} ODEDLL{$ENDIF __GPC__};
   procedure dJointSetPistonAxisDelta(const dJointID : TdJointID; const x, y, z, ax, ay, az: TdReal); cdecl; external {$IFDEF __GPC__}name 'dJointSetPistonAxis'{$ELSE} ODEDLL{$ENDIF __GPC__};
@@ -1927,18 +1932,22 @@ begin
 end;
 
 function InitODE(ADllName : PChar) : boolean;
+var isODELoaded : boolean;
 begin
+  result := IsODEInitialized;
+  if IsODEInitialized then exit;
+
   if ADllName = '' then ADllName := ODEDLL;
 
-  IsODEInitialized := LoadModule( vODEHandle, ADllName );
-  result := IsODEInitialized;
+  isODELoaded := LoadModule( vODEHandle, ADllName );
+  if not isODELoaded then exit;
 
-  if IsODEInitialized then begin
-     dInitODE;
+  if isODELoaded and not IsODEInitialized then begin
+     dInitODE2(0);
      GetODEClassIDs;
-
-    {DynamicLoadMarker}
+     IsODEInitialized:=True;
   end;
+  result:=IsODEInitialized;
 end;
 
 procedure CloseODE;
