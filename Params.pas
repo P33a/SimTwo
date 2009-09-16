@@ -165,7 +165,6 @@ type
     Label48: TLabel;
     EditODE_ERP: TEdit;
     TabGlobal: TTabSheet;
-    CBGLObject: TCheckBox;
     Label8: TLabel;
     EditRemoteIP: TEdit;
     Label1: TLabel;
@@ -192,6 +191,12 @@ type
     EditSetCamLookZ: TEdit;
     BGetCamPos: TButton;
     Button1: TButton;
+    Label54: TLabel;
+    EditTrailsCount: TEdit;
+    Label55: TLabel;
+    EditTrailSize: TEdit;
+    BSetTrailPars: TButton;
+    RGGLObjects: TRadioGroup;
     procedure CBShadowsClick(Sender: TObject);
     procedure CBVsyncClick(Sender: TObject);
     procedure BSetFPSClick(Sender: TObject);
@@ -234,13 +239,14 @@ type
     procedure CBUDPConnectClick(Sender: TObject);
     procedure UDPGenericUDPRead(Sender: TObject; AData: TStream;
       ABinding: TIdSocketHandle);
-    procedure CBGLObjectClick(Sender: TObject);
     procedure UDPGenericStatus(ASender: TObject; const AStatus: TIdStatus;
       const AStatusText: String);
     procedure BGlobalSetClick(Sender: TObject);
     procedure BSetCamParsClick(Sender: TObject);
     procedure BGetCamPosClick(Sender: TObject);
     procedure Button1Click(Sender: TObject);
+    procedure BSetTrailParsClick(Sender: TObject);
+    procedure RGGLObjectsClick(Sender: TObject);
   private
     procedure FillEditArray(ProtoName: string;
       var EditArray: array of TEdit);
@@ -446,7 +452,8 @@ begin
       SGJoints.Cells[0,i+1] := Axes[i].ParentLink.ID;
       SGJoints.Cells[1,i+1] := Axes[i].ParentLink.description;
 
-      if dJointGetType(Axes[i].ParentLink.joint) = ord(dJointTypeHinge) then begin
+      if (dJointGetType(Axes[i].ParentLink.joint) = ord(dJointTypeHinge)) or
+         (dJointGetType(Axes[i].ParentLink.joint) = ord(dJointTypeUniversal)) then begin
         theta := radtodeg(Axes[i].GetPos);
         SGJoints.Cells[3,i+1] := format('%.1f',[radtodeg(Axes[i].ref.theta)]);
       end else if dJointGetType(Axes[i].ParentLink.joint) = ord(dJointTypeSlider) then begin
@@ -518,7 +525,7 @@ begin
   FillEditArray('EditIR', EditsIR);
   CBIRNoiseClick(Sender);
   BPhysicsSetClick(Sender);
-  CBGLObjectClick(Sender);
+  RGGLObjectsClick(Sender);
 
   try
     if FileExists('params.cfg') then begin
@@ -536,8 +543,11 @@ begin
   end;
 
   // Vista hack?
-  if PageControl.Height + PageControl.Top > ClientHeight - (EditDebug.Height + 4) then begin
-    PageControl.Height := - PageControl.Top + ClientHeight - (EditDebug.Height + 4);
+  if PageControl.Height + PageControl.Top > ClientHeight - (EditDebug.Height + 8) then begin
+    PageControl.Height := - PageControl.Top + ClientHeight - (EditDebug.Height + 8);
+    EditDebug.Top := ClientHeight - (EditDebug.Height + 4);
+    //EditDebug.Anchors := EditDebug.Anchors - [akbottom];
+    //EditDebug.Anchors := EditDebug.Anchors + [akbottom];
   end;
 
   try
@@ -937,25 +947,6 @@ begin
   UDPGenData.CopyFrom(AData, 0);
 end;
 
-procedure TFParams.CBGLObjectClick(Sender: TObject);
-var r, i: integer;
-begin
-  for r := 0 to WorldODE.Robots.Count - 1 do begin
-    for i := 0 to WorldODE.Robots[r].Solids.Count - 1 do begin
-      with WorldODE.Robots[r].Solids[i] do begin
-        if AltGLObj <> nil then
-          AltGLObj.Visible := CBGLObject.Checked;
-        if ShadowGlObj <> nil then
-          ShadowGlObj.Visible := CBGLObject.Checked;
-          //idx := (WorldODE.OdeScene as TGLShadowVolume).Occluders.IndexOfCaster(ShadowGlObj);
-          //if idx >= 0 then begin
-          //  (WorldODE.OdeScene as TGLShadowVolume).Occluders[idx].CastingMode := scmVisible;
-          //end;
-      end;
-    end;
-  end;
-end;
-
 procedure TFParams.UDPGenericStatus(ASender: TObject;
   const AStatus: TIdStatus; const AStatusText: String);
 begin
@@ -1007,6 +998,33 @@ begin
   EditSetCamLookX.Text := EditCamLookX.Text;
   EditSetCamLookY.Text := EditCamLookY.Text;
   EditSetCamLookZ.Text := EditCamLookZ.Text;
+end;
+
+procedure TFParams.BSetTrailParsClick(Sender: TObject);
+begin
+  FViewer.SetTrailCount(strtointdef(FParams.EditTrailsCount.Text, 8), strtointdef(FParams.EditTrailSize.Text, 200));
+end;
+
+procedure TFParams.RGGLObjectsClick(Sender: TObject);
+var r, i: integer;
+begin
+  for r := 0 to WorldODE.Robots.Count - 1 do begin
+    for i := 0 to WorldODE.Robots[r].Solids.Count - 1 do begin
+      with WorldODE.Robots[r].Solids[i] do begin
+        GLObj.Visible := true;
+        if AltGLObj <> nil then begin
+          AltGLObj.Visible := RGGLObjects.ItemIndex in [1, 2];   // 0 - Original  1 - Mesh  2 - Both
+          GLObj.Visible := RGGLObjects.ItemIndex in [0, 2];
+        end;
+        //if ShadowGlObj <> nil then
+        //  ShadowGlObj.Visible := RGGLObjects.ItemIndex > 0;
+          //idx := (WorldODE.OdeScene as TGLShadowVolume).Occluders.IndexOfCaster(ShadowGlObj);
+          //if idx >= 0 then begin
+          //  (WorldODE.OdeScene as TGLShadowVolume).Occluders[idx].CastingMode := scmVisible;
+          //end;
+      end;
+    end;
+  end;
 end;
 
 end.

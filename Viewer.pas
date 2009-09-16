@@ -166,6 +166,8 @@ type
     GLCube1: TGLCube;
     MenuScene: TMenuItem;
     GLHUDTextGeneric: TGLHUDText;
+    GLDTrails: TGLDummyCube;
+    GLFreeForm1: TGLFreeForm;
     procedure FormCreate(Sender: TObject);
     procedure GLSceneViewerMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -200,7 +202,10 @@ type
     procedure ShowOrRestoreForm(Fm: TForm);
   public
     HUDStrings: TStringList;
-
+    TrailsCount: integer;
+    procedure SetTrailCount(NewCount, NodeCount: integer);
+    procedure AddTrailNode(T: integer; x, y, z: double);
+    procedure DelTrailNode(T: integer);
   end;
 
 
@@ -1229,7 +1234,7 @@ begin
           end;
           PositionSceneObject(newBone.ShadowGlObj, newBone.Geom);
           with (OdeScene as TGLShadowVolume).Occluders.AddCaster(newBone.ShadowGlObj) do begin
-            CastingMode := scmVisible;
+            CastingMode := scmParentVisible;// scmAlways; //scmVisible;
           end;
         end;
 
@@ -1301,6 +1306,7 @@ begin
 
   with DefMotor do begin
     active := true;
+    simple := false;
     Encoder.PPR := 1000;
     Encoder.NoiseMean := 0;
     Encoder.NoiseStDev := -1;
@@ -1904,6 +1910,7 @@ begin
       Vmax := GetNodeAttrRealParse(prop, 'vmax', Vmax, Parser);
       Imax := GetNodeAttrRealParse(prop, 'imax', Imax, Parser);
       active := GetNodeAttrBool(prop, 'active', active);
+      simple := GetNodeAttrBool(prop, 'simple', simple);
     end;
     if prop.NodeName = 'gear' then begin
       GearRatio := GetNodeAttrRealParse(prop, 'ratio', GearRatio, Parser);
@@ -2873,6 +2880,7 @@ begin
 
   //Execute Create physic
   WorldODE := TWorld_ODE.create;
+
   //WorldODE.SampleCount := 0;
   WorldODE.ODEEnable := True;
 
@@ -3009,7 +3017,6 @@ begin
           end;
         end;
       end;
-
       // Voltage with saturation
       Motor.voltage := max(-Motor.Vmax, min(Motor.Vmax, ref.volts));
       // Motor Model
@@ -3020,32 +3027,27 @@ begin
       end;
 
       old_Im := Motor.Im;
-      if Motor.Ri <> 0 then begin
-        if Motor.Li/Motor.Ri < dt then begin
-          Motor.Im := (Motor.voltage - w * Motor.GearRatio * Motor.Ki) / Motor.Ri;
+
+      if not Motor.simple then begin
+        if Motor.Ri <> 0 then begin
+          if Motor.Li/Motor.Ri < dt then begin
+            Motor.Im := (Motor.voltage - w * Motor.GearRatio * Motor.Ki) / Motor.Ri;
+          end else begin
+            dI := dt / Motor.Li * (Motor.voltage - w * Motor.GearRatio * Motor.Ki - Motor.Ri* Motor.Im);
+            Motor.Im := Motor.Im + dI;
+          end;
         end else begin
-          dI := dt / Motor.Li * (Motor.voltage - w * Motor.GearRatio * Motor.Ki - Motor.Ri* Motor.Im);
-          Motor.Im := Motor.Im + dI;
+          if Motor.Li <> 0 then begin
+            dI := dt / Motor.Li * (Motor.voltage - w * Motor.GearRatio * Motor.Ki);
+            Motor.Im := Motor.Im + dI;
+          end else begin
+            Motor.Im := Motor.Imax * sign(Motor.voltage);
+          end;
         end;
       end else begin
-        if Motor.Li <> 0 then begin
-          dI := dt / Motor.Li * (Motor.voltage - w * Motor.GearRatio * Motor.Ki);
-          Motor.Im := Motor.Im + dI;
-        end else begin
-          Motor.Im := Motor.Imax * sign(Motor.voltage);
-        end;
+        Motor.Im := Motor.voltage / Motor.Ri;
       end;
 
-{      if Motor.Li = 0 then begin
-        if Motor.Ri <> 0 then begin
-          Motor.Im := (Motor.voltage - w * Motor.GearRatio * Motor.Ki) / Motor.Ri;
-        end else begin
-          Motor.Im := Motor.Imax;
-        end;
-      end else begin
-        dI := dt / Motor.Li * (Motor.voltage - w * Motor.GearRatio * Motor.Ki - Motor.Ri* Motor.Im);
-        Motor.Im := Motor.Im + dI;
-      end;}
 
       if Motor.Im > old_Im + max_delta_Im then Motor.Im := old_Im + max_delta_Im;
       if Motor.Im < old_Im - max_delta_Im then Motor.Im := old_Im - max_delta_Im;
@@ -3054,8 +3056,8 @@ begin
         //iw := max(-Pars.Imax , min(Pars.Imax , iw));
         // this limit is dependent on the current sensor placement
         // Here is assumed that it is only active on the "on" time of the PWM
-        Motor.Im := max(-Motor.Imax / duty, min(Motor.Imax / duty, Motor.Im));
-        //Motor.Im := max(-Motor.Imax, min(Motor.Imax, Motor.Im));
+        //Motor.Im := max(-Motor.Imax / duty, min(Motor.Imax / duty, Motor.Im));
+        Motor.Im := max(-Motor.Imax, min(Motor.Imax, Motor.Im));
       end;
     end else begin
       Motor.Im := 0;
@@ -3073,7 +3075,9 @@ begin
     //  Tq := max(-Friction.CoulombLimit * abs(w), min(Friction.CoulombLimit * abs(w), Tq));
     //T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Tq - Spring.K * diffangle(Theta, Spring.ZeroPos);
     //T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Tq - Spring.K * (Theta - Spring.ZeroPos);
-    T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Spring.K * (Theta - Spring.ZeroPos);
+    T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * filt_speed - Spring.K * (Theta - Spring.ZeroPos);
+    //T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Spring.K * (Theta - Spring.ZeroPos);
+
   end;
 end;
 
@@ -3267,7 +3271,7 @@ var theta, w, Tq: double;
     t_i1, t_i2, t_itot: int64;
     v1, v2: TdVector3;
 //    txt: string;
-    vs: TVector;
+    vs: TVector;                              
     Curpos: TPoint;
     newFixedTime: double;
 begin
@@ -3582,6 +3586,9 @@ begin
     FXMLEdit.LBErrors.Items.AddStrings(WorldODE.XMLErrors);
   end;
 
+  //SetTrailCount(strtointdef(FParams.EditTrailsCount.Text, 8), strtointdef(FParams.EditTrailSize.Text, 200));
+  FParams.BSetTrailParsClick(Sender);
+
   MakeFullyVisible();
   UpdateGLScene;
 
@@ -3671,6 +3678,41 @@ end;
 procedure TFViewer.FormDestroy(Sender: TObject);
 begin
   HUDStrings.Free;
+end;
+
+procedure TFViewer.SetTrailCount(NewCount, NodeCount: integer);
+var i, OldCount: integer;
+    GLLines: TGLLines;
+begin
+  oldCount := GLDTrails.Count;
+  if OldCount = NewCount then exit;
+  if OldCount > NewCount then begin
+    for i := 1 to OldCount - NewCount do begin
+      GLDTrails.Children[NewCount-1].Free;
+    end;
+  end;
+  if OldCount < NewCount then begin
+    for i := 1 to NewCount - OldCount  do begin
+      GLLines := TGLLines.CreateAsChild(GLDTrails);
+      GLLines.LineWidth := 1;
+      GLLines.NodesAspect := lnaInvisible;
+      GLLines.Tag := NodeCount; //Stores maximum number of nodes
+    end;
+  end;
+end;
+
+procedure TFViewer.AddTrailNode(T: integer; x, y, z: double);
+var GLLines: TGLLines;
+begin
+  GLLines := (GLDTrails.Children[T] as TGLLines);
+  GLLines.AddNode(x, y, z);
+  while GLLines.Nodes.Count > GLLines.Tag do GLLines.Nodes.Delete(0);
+end;
+
+
+procedure TFViewer.DelTrailNode(T: integer);
+begin
+  (GLDTrails.Children[T] as TGLLines).Nodes.Delete(0);
 end;
 
 end.
@@ -3939,7 +3981,6 @@ end;
 
 
 // TODO
-// trails  (2D( height), 3D (offset), length, color, tolerance)
 // Things scriptable
 // Sensores sem ser num robot  (???)
 // Zona morta no PID

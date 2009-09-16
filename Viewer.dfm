@@ -680,6 +680,11 @@ object FViewer: TFViewer
       Position.Coordinates = {00000000000000000000003F0000803F}
       Visible = False
     end
+    object GLDTrails: TGLDummyCube
+      CubeSize = 1.000000000000000000
+    end
+    object GLFreeForm1: TGLFreeForm
+    end
     object GLCamera: TGLCamera
       DepthOfView = 1000000000.000000000000000000
       FocalLength = 76.633468627929690000
