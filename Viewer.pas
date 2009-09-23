@@ -73,7 +73,7 @@ type
     procedure CreateShellBox(var Solid: TSolid; motherbody: PdxBody; posX, posY, posZ, L, W, H: double);
     procedure CreateShellCylinder(var Solid: TSolid; motherbody: PdxBody; posX, posY, posZ, R, H: double);
 
-    procedure UpdateOdometry(var Link: TSolidLink);
+    procedure UpdateOdometry(Axis: TAxis);
     procedure CreateWheel(Robot: TRobot; Wheel: TWheel; const Pars: TWheelPars; const wFriction: TFriction; const wMotor: TMotor);
     procedure CreateIRSensor(motherbody: PdxBody; IRSensor: TSensor; posX, posY, posZ,
       IR_teta, IR_length, InitialWidth, FinalWidth: double);
@@ -222,7 +222,7 @@ implementation
 {$R *.dfm}
 
 uses ODEGL, Params, Editor, FastChart, RemoteControl, utils, StdCtrls, VerInfo,
-  SceneEdit;
+  SceneEdit, Sheets;
 
 
 
@@ -945,12 +945,12 @@ begin
 end;
 }
 
-procedure TWorld_ODE.UpdateOdometry(var Link: TSolidLink);
+procedure TWorld_ODE.UpdateOdometry(Axis: TAxis);
 var rot: double;
 begin
-  with Link.Axis[0] do begin
+  with Axis do begin
     Odo.LastAngle := Odo.Angle;
-    Odo.Angle := dJointGetHingeAngle(Link.joint);
+    Odo.Angle := Axis.GetPos;
     rot := Odo.Angle - Odo.LastAngle;
     if rot >= pi then rot := rot - 2*pi;
     if rot <= -pi then rot := rot + 2*pi;
@@ -3296,8 +3296,8 @@ begin
           with WorldODE.Robots[r] do begin
 
             // Read Odometry
-            for i := 0 to Wheels.Count-1 do begin
-              WorldODE.UpdateOdometry(Wheels[i].axle);
+            for i := 0 to Axes.Count-1 do begin
+              WorldODE.UpdateOdometry(Axes[i]);
             end;
 
             // Fill remote IR sensors noise
@@ -3579,7 +3579,7 @@ begin
   FParams.show;
   FEditor.show;
   FChart.show;
-
+  FSheets.show;
 
   FXMLEdit.Show;
   if WorldODE.XMLErrors.Count > 0 then begin

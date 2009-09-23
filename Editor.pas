@@ -132,7 +132,7 @@ type
     procedure WriteUDPData(ToIP: string; ToPort: integer; s: string);
     procedure ProjectSave(FileName: string);
     function ProjectOpen(FileName: string): boolean;
-    { Private declarations }
+    procedure SetRCString(r, c: integer; s: string);
   public
     ProgCyclesCount: integer;
     ProgTime: double;
@@ -170,7 +170,7 @@ var
 implementation
 
 //uses Viewer, ProjManage, Params, FastChart, uPSDebugger;
-uses uPSDebugger, Viewer, Utils, Params, uPSI_ODERobotsPublished, uPSI_PathFinder,
+uses uPSDebugger, Sheets, Viewer, Utils, Params, uPSI_ODERobotsPublished, uPSI_PathFinder,
   uPSCompiler, IdUDPBase;
 
 {$R *.dfm}
@@ -720,6 +720,8 @@ begin
 
   Sender.AddMethod(Self, @TFEditor.ReadUDPData, 'function ReadUDPData: string;');
   Sender.AddMethod(Self, @TFEditor.WriteUDPData, 'procedure WriteUDPData(ToIP: string; ToPort: integer; s: string);');
+  Sender.AddMethod(Self, @TFEditor.SetRCString, 'procedure SetSheetRCString(r, c: integer; s: string);');
+
 
 //function IsKeyDown(vk : TVirtualKeyCode) : Boolean;
 //  Sender.AddMethod(Self, @IsKeyDown, 'function IsKeyDown(c : Char) : Boolean');
@@ -1010,6 +1012,11 @@ begin
   end;
 end;
 
+
+procedure TFEditor.SetRCString(r, c: integer; s: string);
+begin
+  FSheets.SetRCString(r, c, s);
+end;
 
 end.
 
