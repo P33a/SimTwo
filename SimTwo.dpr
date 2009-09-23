@@ -19,7 +19,8 @@ uses
   VerInfo in 'VerInfo.pas',
   AStar in 'AStar.pas',
   PathFinder in 'PathFinder.pas',
-  SceneEdit in 'SceneEdit.pas' {FXMLEdit};
+  SceneEdit in 'SceneEdit.pas' {FXMLEdit},
+  Sheets in 'Sheets.pas' {FSheets};
 
 {$R *.res}
 
@@ -34,5 +35,6 @@ begin
   Application.CreateForm(TFRemoteControl, FRemoteControl);
   Application.CreateForm(TFWayPointsEdit, FWayPointsEdit);
   Application.CreateForm(TFXMLEdit, FXMLEdit);
+  Application.CreateForm(TFSheets, FSheets);
   Application.Run;
 end.
