@@ -390,15 +390,16 @@ begin
 end;
 
 procedure TRobot.GetXYZTeta(out x, y, z, teta: double);
-var v1, v2: TdVector3;
+var v0, v1, v2: TdVector3;
 begin
   if (MainBody <> nil) and
      (MainBody.Body <> nil) then begin
+    v0 := MainBody.ZeroPosition;
     v1 := dBodyGetPosition(MainBody.Body)^;
     dBodyGetRelPointPos(MainBody.Body, 1,0,0, v2);
-    x := v1[0];
-    y := v1[1];
-    z := v1[2];
+    x := v1[0] - V0[0];
+    y := v1[1] - V0[1];
+    z := v1[2] - V0[2];
     teta := atan2(v2[1]-v1[1], v2[0]-v1[0]);
   end;
 end;
@@ -432,6 +433,8 @@ begin
     dBodySetAngularVel(Solids[i].Body, 0, 0, 0);
   end;
 
+
+  // deal with links to the world
   for i := 0 to Solids.Count - 1 do begin
     for j := 0 to Links.Count - 1 do begin
       if (dJointGetBody(Links[j].joint, 0) = Solids[i].Body) and (dJointGetBody(Links[j].joint, 1)= nil) then begin

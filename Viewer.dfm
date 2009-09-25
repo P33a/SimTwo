@@ -10196,6 +10196,10 @@ object FViewer: TFViewer
       Caption = '&Scene'
       OnClick = MenuSceneClick
     end
+    object MenuSheets: TMenuItem
+      Caption = 'S&heet'
+      OnClick = MenuSheetsClick
+    end
   end
   object GLMaterialLibrary3ds: TGLMaterialLibrary
     Left = 40
