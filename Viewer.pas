@@ -168,6 +168,7 @@ type
     GLHUDTextGeneric: TGLHUDText;
     GLDTrails: TGLDummyCube;
     GLFreeForm1: TGLFreeForm;
+    MenuSheets: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure GLSceneViewerMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -187,6 +188,7 @@ type
     procedure MenuEditorClick(Sender: TObject);
     procedure MenuSceneClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure MenuSheetsClick(Sender: TObject);
   private
     { Private declarations }
     OldPick : TGLCustomSceneObject;
@@ -1800,6 +1802,7 @@ var sensor, prop: IXMLNode;
     MotherSolidId: string;
     MotherSolid: TSolid;
     SolidIdx: integer;
+    AbsoluteCoords: boolean;
 begin
   if root = nil then exit;
 
@@ -1809,6 +1812,7 @@ begin
       // default values
       MotherSolidId := '';
       SLen := 0.8; SInitialWidth := 0.01; SFinalWidth := 0.015;
+      AbsoluteCoords := false;
       with Noise do begin
         var_k := 0; var_d := 0; offset := 0; gain := 1; active := false;
       end;
@@ -1818,6 +1822,9 @@ begin
 
       prop := sensor.FirstChild;
       while prop <> nil do begin
+        if prop.NodeName = 'absolute_coords' then begin
+          AbsoluteCoords := true;
+        end;
         if prop.NodeName = 'solid' then begin
           MotherSolidId := GetNodeAttrStr(prop, 'id', MotherSolidId);
         end;
@@ -1866,8 +1873,14 @@ begin
       CreateIRSensor(MotherSolid.Body, newIRSensor, posX, posY, posZ, angZ, SLen, SInitialWidth, SFinalWidth);
 
       RFromZYXRotRel(R, angX, angY + pi/2, AngZ);
-      dGeomSetOffsetRotation(newIRSensor.Geom, R);
-      dGeomSetOffsetPosition(newIRSensor.Geom, posX, posY, posZ);
+
+      if AbsoluteCoords then begin
+        dGeomSetOffsetWorldRotation(newIRSensor.Geom, R);
+        dGeomSetOffsetWorldPosition(newIRSensor.Geom, posX, posY, posZ);
+      end else begin
+        dGeomSetOffsetRotation(newIRSensor.Geom, R);
+        dGeomSetOffsetPosition(newIRSensor.Geom, posX, posY, posZ);
+      end;
 
       newIRSensor.SetColor(colorR, colorG, colorB);
     end;
@@ -3675,6 +3688,12 @@ begin
   ShowOrRestoreForm(FXMLEdit);
 end;
 
+procedure TFViewer.MenuSheetsClick(Sender: TObject);
+begin
+  ShowOrRestoreForm(FSheets);
+end;
+
+
 procedure TFViewer.FormDestroy(Sender: TObject);
 begin
   HUDStrings.Free;
@@ -3714,6 +3733,7 @@ procedure TFViewer.DelTrailNode(T: integer);
 begin
   (GLDTrails.Children[T] as TGLLines).Nodes.Delete(0);
 end;
+
 
 end.
 
