@@ -212,6 +212,7 @@ type
 
 
 procedure RFromZYXRotRel(var R: TdMatrix3; angX, angY, angZ: TDreal);
+function LoadXML(XMLFile: string; ErrorList: TStringList): IXMLDocument;
 
 var
   FViewer: TFViewer;
