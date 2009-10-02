@@ -9,7 +9,7 @@ uses
   rxPlacemnt, ProjConfig, StrUtils;
 
 type
-  TFXMLEdit = class(TForm)
+  TFSceneEdit = class(TForm)
     StatusBar: TStatusBar;
     LBErrors: TListBox;
     Splitter: TSplitter;
@@ -44,6 +44,7 @@ type
     OpenDialog: TOpenDialog;
     SaveDialog: TSaveDialog;
     FormStorage: TFormStorage;
+    MenuChange: TMenuItem;
     procedure FormShow(Sender: TObject);
     procedure MenuReBuildClick(Sender: TObject);
     procedure SynEditXMLStatusChange(Sender: TObject;
@@ -64,6 +65,7 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure LBErrorsDblClick(Sender: TObject);
+    procedure MenuChangeClick(Sender: TObject);
   private
     function GetSynEdit: TSynEdit;
     function ActSynEdit: TSynEdit;
@@ -73,18 +75,22 @@ type
     { Private declarations }
   public
     { Public declarations }
+    MustReSpawn: boolean;
+    ReSpawnPars: string;
+
+    procedure ReSpawn;
   end;
 
 var
-  FXMLEdit: TFXMLEdit;
+  FSceneEdit: TFSceneEdit;
 
 implementation
 
-uses Viewer, Editor;
+uses Viewer, Editor, ChooseScene;
 
 {$R *.dfm}
 
-procedure TFXMLEdit.CreateXMLTabEdit(SL: TStringList; i: integer);
+procedure TFSceneEdit.CreateXMLTabEdit(SL: TStringList; i: integer);
 var NewTabSheet: TTabSheet;
     NewSynEdit: TSynEdit;
 begin
@@ -103,7 +109,7 @@ begin
 end;
 
 
-procedure TFXMLEdit.FormShow(Sender: TObject);
+procedure TFSceneEdit.FormShow(Sender: TObject);
 var i: integer;
 //    NewTabSheet: TTabSheet;
 //    NewSynEdit: TSynEdit;
@@ -130,10 +136,9 @@ begin
   TmpSynEdit.SetFocus;
 end;
 
-procedure TFXMLEdit.MenuReBuildClick(Sender: TObject);
+procedure TFSceneEdit.MenuReBuildClick(Sender: TObject);
 var i: integer;
     TmpSynEdit: TSynEdit;
-    prs: string;
 begin
   for i := 0 to WorldODE.XMLFiles.Count -1 do begin
     if not (WorldODE.XMLFiles.Objects[i] is TSynEdit) then continue;
@@ -145,17 +150,11 @@ begin
   end;
   FEditor.MenuSaveClick(Sender);
 
-  prs := '';
-  for i := 1 to ParamCount do begin
-    prs := ' ' + AnsiQuotedStr(AnsiDequotedStr(ParamStr(i), '"'), '"');
-    //prs := ' "' + ParamStr(i) + '"';
-  end;
-
+  MustReSpawn := true;
   FViewer.Close;
-  ShellExecute(Handle, 'open', pchar(Application.ExeName), pchar(prs), nil,  SW_SHOWNORMAL);
 end;
 
-function TFXMLEdit.GetSynEdit: TSynEdit;
+function TFSceneEdit.GetSynEdit: TSynEdit;
 var i: integer;
 begin
   result := nil; 
@@ -167,7 +166,7 @@ begin
 end;
 
 // Same as GetSynEdit but returns a dummy SynEdit instead of nil
-function TFXMLEdit.ActSynEdit: TSynEdit;
+function TFSceneEdit.ActSynEdit: TSynEdit;
 var i: integer;
 begin
   i := PageControlXML.TabIndex;
@@ -177,7 +176,7 @@ begin
 end;
 
 
-procedure TFXMLEdit.SynEditXMLStatusChange(Sender: TObject; Changes: TSynStatusChanges);
+procedure TFSceneEdit.SynEditXMLStatusChange(Sender: TObject; Changes: TSynStatusChanges);
 var TmpSynEdit: TSynEdit;
 begin
   TmpSynEdit := GetSynEdit();
@@ -206,7 +205,7 @@ begin
 
 end;
 
-procedure TFXMLEdit.PageControlXMLChange(Sender: TObject);
+procedure TFSceneEdit.PageControlXMLChange(Sender: TObject);
 var TmpSynEdit: TSynEdit;
 begin
   TmpSynEdit := GetSynEdit();
@@ -215,22 +214,22 @@ begin
   TmpSynEdit.OnStatusChange(self, [scAll]);
 end;
 
-procedure TFXMLEdit.MenuUndoClick(Sender: TObject);
+procedure TFSceneEdit.MenuUndoClick(Sender: TObject);
 begin
   ActSynEdit.Undo;
 end;
 
-procedure TFXMLEdit.MenuRedoClick(Sender: TObject);
+procedure TFSceneEdit.MenuRedoClick(Sender: TObject);
 begin
   ActSynEdit.Redo;
 end;
 
-procedure TFXMLEdit.MenuFindClick(Sender: TObject);
+procedure TFSceneEdit.MenuFindClick(Sender: TObject);
 begin
   FindDialog.Execute;
 end;
 
-procedure TFXMLEdit.FindDialogFind(Sender: TObject);
+procedure TFSceneEdit.FindDialogFind(Sender: TObject);
 var TmpSynEdit: TSynEdit;
 begin
   TmpSynEdit := GetSynEdit();
@@ -239,7 +238,7 @@ begin
   FindReplaceDialog(TmpSynEdit, FindDialog);
 end;
 
-procedure TFXMLEdit.MenuReplaceClick(Sender: TObject);
+procedure TFSceneEdit.MenuReplaceClick(Sender: TObject);
 begin
   ReplaceDialog.Execute;
 end;
@@ -251,7 +250,7 @@ end;
 //  TSynSearchOption = (ssoMatchCase, ssoWholeWord, ssoBackwards,
 //    ssoEntireScope, ssoSelectedOnly, ssoReplace, ssoReplaceAll, ssoPrompt);
 
-procedure TFXMLEdit.FindReplaceDialog(TmpSynEdit: TSynEdit; Dialog: TFindDialog);
+procedure TFSceneEdit.FindReplaceDialog(TmpSynEdit: TSynEdit; Dialog: TFindDialog);
 var SynSearchOptions: TSynSearchOptions;
     replace_txt: string;
 begin
@@ -282,7 +281,7 @@ begin
 end;
 
 
-procedure TFXMLEdit.ReplaceDialogAction(Sender: TObject);
+procedure TFSceneEdit.ReplaceDialogAction(Sender: TObject);
 var TmpSynEdit: TSynEdit;
 begin
   TmpSynEdit := GetSynEdit();
@@ -291,7 +290,7 @@ begin
   FindReplaceDialog(TmpSynEdit, ReplaceDialog);
 end;
 
-procedure TFXMLEdit.MenuSaveClick(Sender: TObject);
+procedure TFSceneEdit.MenuSaveClick(Sender: TObject);
 var i: integer;
     TmpSynEdit: TSynEdit;
 begin
@@ -304,7 +303,7 @@ begin
   TmpSynEdit.Modified := false;
 end;
 
-procedure TFXMLEdit.MenuSaveAsClick(Sender: TObject);
+procedure TFSceneEdit.MenuSaveAsClick(Sender: TObject);
 var i: integer;
     TmpSynEdit: TSynEdit;
 begin
@@ -324,7 +323,7 @@ begin
 end;
 
 
-procedure TFXMLEdit.MenuNewClick(Sender: TObject);
+procedure TFSceneEdit.MenuNewClick(Sender: TObject);
 var i: integer;
     sname: string;
     SL: TStringlist;
@@ -351,7 +350,7 @@ begin
   CreateXMLTabEdit(WorldODE.XMLFiles, i);
 end;
 
-procedure TFXMLEdit.MenuOpenClick(Sender: TObject);
+procedure TFSceneEdit.MenuOpenClick(Sender: TObject);
 var i: integer;
     sname: string;
 begin
@@ -368,17 +367,19 @@ begin
 end;
 
 
-procedure TFXMLEdit.MenuExitClick(Sender: TObject);
+procedure TFSceneEdit.MenuExitClick(Sender: TObject);
 begin
   FViewer.close;
 end;
 
-procedure TFXMLEdit.FormCreate(Sender: TObject);
+procedure TFSceneEdit.FormCreate(Sender: TObject);
 begin
   FormStorage.IniFileName := GetIniFineName;
+  MustReSpawn := false;
+  ReSpawnPars := '';
 end;
 
-procedure TFXMLEdit.FormClose(Sender: TObject; var Action: TCloseAction);
+procedure TFSceneEdit.FormClose(Sender: TObject; var Action: TCloseAction);
 var TmpSynEdit: TSynEdit;
 begin
   TmpSynEdit := GetSynEdit();
@@ -390,7 +391,7 @@ begin
   //end;
 end;
 
-procedure TFXMLEdit.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+procedure TFSceneEdit.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   if CheckModified then begin
     if MessageDlg('Some XML Files were changed.'+crlf+
@@ -401,7 +402,7 @@ begin
 end;
 
 
-function TFXMLEdit.CheckModified: boolean;
+function TFSceneEdit.CheckModified: boolean;
 var i: integer;
     TmpSynEdit: TSynEdit;
     AnyModified: boolean;
@@ -443,7 +444,7 @@ begin
   end;
 end;
 
-procedure TFXMLEdit.LBErrorsDblClick(Sender: TObject);
+procedure TFSceneEdit.LBErrorsDblClick(Sender: TObject);
 var i, col, idx: integer;
     TmpSynEdit: TSynEdit;
     ErrLineNumber: integer;
@@ -475,6 +476,29 @@ begin
 
   TmpSynEdit.UpdateCaret;
   TmpSynEdit.setfocus;
+end;
+
+procedure TFSceneEdit.ReSpawn;
+begin
+  if not MustReSpawn then exit;
+
+  if ReSpawnPars = '' then begin
+    ShellExecute(Handle, 'open', pchar(Application.ExeName), CmdLine, pchar(ExtractFilePath(Application.ExeName)),  SW_SHOWNORMAL);
+  end else begin
+    ShellExecute(Handle, 'open', pchar(Application.ExeName), pchar(ReSpawnPars), pchar(ExtractFilePath(Application.ExeName)),  SW_SHOWNORMAL);
+  end;
+end;
+
+procedure TFSceneEdit.MenuChangeClick(Sender: TObject);
+begin
+  FChooseScene.showmodal;
+
+  if FChooseScene.ModalResult = mrCancel then exit;
+  if FChooseScene.SelectedDir = '' then exit;
+
+  ReSpawnPars := FChooseScene.SelectedDir;
+  MustReSpawn := true;
+  FViewer.Close;
 end;
 
 end.

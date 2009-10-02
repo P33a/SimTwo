@@ -1,4 +1,4 @@
-object FXMLEdit: TFXMLEdit
+object FSceneEdit: TFSceneEdit
   Left = 253
   Top = 338
   Width = 770
@@ -222,6 +222,11 @@ object FXMLEdit: TFXMLEdit
         Caption = '&Rebuild'
         ShortCut = 16450
         OnClick = MenuReBuildClick
+      end
+      object MenuChange: TMenuItem
+        Caption = '&Change'
+        ShortCut = 16453
+        OnClick = MenuChangeClick
       end
     end
     object MenuWindow: TMenuItem

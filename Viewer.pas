@@ -10,7 +10,7 @@ uses
   GLShadowVolume, GLSkydome, GLGraph, OmniXML, OmniXMLUtils, Contnrs, ODERobots,
   rxPlacemnt, ProjConfig, GLHUDObjects, Menus, GLVectorFileObjects,
   GLFireFX, GlGraphics, OpenGL1x, SimpleParser, GLBitmapFont,
-  GLMultiPolygon, GLMesh, AppEvnts;
+  GLMultiPolygon, GLMesh, jpeg;
 
 type
   TRGBfloat = record
@@ -169,6 +169,8 @@ type
     GLDTrails: TGLDummyCube;
     GLFreeForm1: TGLFreeForm;
     MenuSheets: TMenuItem;
+    MenuSnapshot: TMenuItem;
+    MenuChangeScene: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure GLSceneViewerMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -189,6 +191,10 @@ type
     procedure MenuSceneClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure MenuSheetsClick(Sender: TObject);
+    procedure MenuSnapshotClick(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure MenuChangeSceneClick(Sender: TObject);
   private
     { Private declarations }
     OldPick : TGLCustomSceneObject;
@@ -2856,31 +2862,32 @@ end;
 
 
 procedure TFViewer.FormCreate(Sender: TObject);
-var s: string;
+var s, fl: string;
     Slist: TStringList;
 begin
   if ParamCount > 0 then begin
     s := ParamStr(1);
   end else begin
     s := 'default';
-  end;
-
-  if ExtractFileExt(s) = '.sim2' then begin
-    Slist := TStringList.Create;
-    try
+    fl := extractfilepath(application.exename) + 'Scene.cfg';
+    if fileexists(extractfilepath(application.exename) + 'Scene.cfg') then begin
+      Slist := TStringList.Create;
       try
-        Slist.LoadFromFile(s);
-        if Slist.Count > 0 then begin
-          s := Slist[0];
+        try
+          Slist.LoadFromFile(fl);
+          if Slist.Count > 0 then begin
+            s := Slist[0];
+          end;
+        finally
+          Slist.Free;
         end;
-      finally
-        Slist.Free;
+      except
+        on E: Exception do showmessage(E.Message);
       end;
-    except
-      on E: Exception do showmessage(E.Message);
     end;
   end;
 
+  //showmessage(getCurrentDir);
   if DirectoryExists(s) then begin
     SetCurrentDir(s);
   end;
@@ -2902,6 +2909,8 @@ begin
   HUDStrings := TStringlist.Create;
   GetVersionInfo;
   SimTwoVersion := 'SimTwo v' + InfoData[3];
+
+  Timer.Enabled := true;
 end;
 
 procedure TFViewer.GLSceneViewerMouseDown(Sender: TObject;
@@ -3566,12 +3575,14 @@ end;
 
 procedure TFViewer.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  FXMLEdit.Close;
+  FSceneEdit.Close;
 
   //Execute Destroy Physics
   GLCadencer.Enabled := False;
   WorldODE.ODEEnable := False;
   WorldODE.destroy;
+
+  FSceneEdit.ReSpawn;
 end;
 
 procedure TFViewer.FormMouseWheel(Sender: TObject; Shift: TShiftState;
@@ -3595,9 +3606,9 @@ begin
   FChart.show;
   FSheets.show;
 
-  FXMLEdit.Show;
+  FSceneEdit.Show;
   if WorldODE.XMLErrors.Count > 0 then begin
-    FXMLEdit.LBErrors.Items.AddStrings(WorldODE.XMLErrors);
+    FSceneEdit.LBErrors.Items.AddStrings(WorldODE.XMLErrors);
   end;
 
   //SetTrailCount(strtointdef(FParams.EditTrailsCount.Text, 8), strtointdef(FParams.EditTrailSize.Text, 200));
@@ -3657,7 +3668,7 @@ procedure TFViewer.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   FEditor.FormCloseQuery(Sender, CanClose);
   if CanClose then
-    FXMLEdit.FormCloseQuery(Sender, CanClose);
+    FSceneEdit.FormCloseQuery(Sender, CanClose);
 end;
 
 procedure TFViewer.ShowOrRestoreForm(Fm: TForm);
@@ -3686,7 +3697,7 @@ end;
 
 procedure TFViewer.MenuSceneClick(Sender: TObject);
 begin
-  ShowOrRestoreForm(FXMLEdit);
+  ShowOrRestoreForm(FSceneEdit);
 end;
 
 procedure TFViewer.MenuSheetsClick(Sender: TObject);
@@ -3736,133 +3747,45 @@ begin
 end;
 
 
+procedure TFViewer.MenuSnapshotClick(Sender: TObject);
+var GLBitmap: TBitmap;
+    JPEGImage: TJPEGImage;  //Requires the "jpeg" unit added to "uses" clause.
+begin
+  GLBitmap := GLSceneViewer.Buffer.CreateSnapShotBitmap;
+  try
+    //GLBitmap.SaveToFile('snapshot.bmp');
+    JPEGImage := TJPEGImage.Create;
+    try
+      JPEGImage.Assign(GLBitmap);
+      JPEGImage.CompressionQuality := 90;
+      JPEGImage.SaveToFile('snapshot.jpg');
+    finally
+      JPEGImage.free;
+    end;
+  finally
+    GLBitmap.free;
+  end;
+end;
+
+procedure TFViewer.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if (ssctrl in Shift) then begin
+    if (key = ord('I')) then MenuSnapshot.Click;
+    if (key = ord('G')) then MenuChangeScene.Click;
+  end;
+end;
+
+procedure TFViewer.MenuChangeSceneClick(Sender: TObject);
+begin
+  FSceneEdit.MenuChange.Click;
+end;
+
 end.
 
 
 {
-procedure TFMain.BTrackLoadClick(Sender: TObject);
-var i,act,ns: integer;
-    s: string;
-    x0,y0,xn,yn,d,teta,ra,teta_i: double;
-    ParList: TStrings;
-begin
-  //Memo.lines.insert(0,'##'); // Anti count=0 bug!!??
-  Memo.Lines.LoadFromFile(JvFilenameEditTrack.Text);
-  GLMultiPolygonTrack.Contours.Clear;
-  ParList := TStringList.Create;
-  try    x0:=0;
-    y0:=0;
-    for i:=0 to Memo.Lines.Count-1 do begin
-      s:=trim(Memo.lines[i]);
-      if s='' then continue;
-      if s[1] in ['/','#','%'] then continue; // ignore comments
-      ParseString(s,' ;',ParList);
-      if s[1] in['O','L','A'] then begin // Absolute coordinates -> offset is null
-        x0:=0;
-        y0:=0;
-      end;
-      if s[1] in ['O','o'] then begin  // Open new contour
-        if ParList.Count<3 then continue;
-        act:=GLMultiPolygonTrack.Contours.count-1;
-        if act>=0 then
-          if GLMultiPolygonTrack.Contours.Items[act].Description<>'C' then
-             closeContour(GLMultiPolygonTrack,act);
-        GLMultiPolygonTrack.Contours.Add;
 
-        x0 := x0 + strtofloatDef(ParList[1],x0);
-        y0 := y0 + strtofloatDef(ParList[2],y0);
-        act:=GLMultiPolygonTrack.Contours.count-1;
-        if act<0 then continue;
-
-        GLMultiPolygonTrack.Contours.Items[act].Nodes.AddNode(AffineVectorMake(x0,y0,0));
-
-      end else if s[1] in ['C','c'] then begin  // Close a contour
-        act:=GLMultiPolygonTrack.Contours.count-1;
-        if act>=0 then closeContour(GLMultiPolygonTrack,act);
-
-      end else if s[1] in ['L','l'] then begin  // Insert Line: L x y width
-        if ParList.Count<4 then continue;
-        xn := x0 + strtofloatDef(ParList[1],x0);
-        yn := y0 + strtofloatDef(ParList[2],y0);
-        d := strtofloatDef(ParList[3],0.1);
-
-        act:=GLMultiPolygonTrack.Contours.count-1;
-        if act<0 then continue;
-
-        GLMultiPolygonTrack.Contours.Items[act].Nodes.AddNode(AffineVectorMake(xn,yn,d));
-        x0:=xn;
-        y0:=yn;
-
-      end else if s[1] in ['R','r'] then begin  // Insert Line: d teta width
-        if ParList.Count<4 then continue;
-        ra := strtofloatDef(ParList[1],x0);
-        teta := strtofloatDef(ParList[2],0);
-        d := strtofloatDef(ParList[3],0.1);
-
-        xn := x0 + ra*cos(degTorad(teta));
-        yn := y0 + ra*sin(degTorad(teta));
-
-        act:=GLMultiPolygonTrack.Contours.count-1;
-        if act<0 then continue;
-
-        GLMultiPolygonTrack.Contours.Items[act].Nodes.AddNode(AffineVectorMake(xn,yn,d));
-        x0:=xn;
-        y0:=yn;
-
-      end else if s[1] in ['A','a'] then begin  // insert arc: A xc yc width angle numSegments
-        if ParList.Count<6 then continue;
-        xn := x0 + strtofloatDef(ParList[1],x0);
-        yn := y0 + strtofloatDef(ParList[2],y0);
-        d := strtofloatDef(ParList[3],0.1);
-        teta := strtofloatDef(ParList[4],pi/2);
-        ns := strtointDef(ParList[5],16);
-
-        act:=GLMultiPolygonTrack.Contours.count-1;
-        if act<0 then continue;
-
-        ra:=dist(x0-xn,y0-yn);
-        teta_i:=RadToDeg(atan2(y0-yn,x0-xn));
-        GLMultiPolygonTrack.Contours.Items[act].Nodes.AddXYArc(ra,ra,teta_i+0.1,teta_i+teta,ns,AffineVectorMake(xn,yn,d));
-        RotateAroundPoint(x0,y0,x0,y0,xn,yn,degToRad(teta));
-      end;
-
-    end;
-  finally
-    ParList.Free;
-  end;
-end;
-
-procedure TFMain.CloseContour(var MPoly: TGLMultiPolygon; act: integer);
-var i,n: integer;
-    x0,y0,d0,xn,yn,rot: double;
-    vec0,vec1,vec2: TAffineVector;
-begin
-  n:=MPoly.Contours.Items[act].Nodes.Count;
-  if n<2 then exit;
-  if act=0 then rot:=pi/2 else rot:=-pi/2;
-
-  with MPoly.Contours.Items[act] do begin
-    for i:=n-1 downto 1 do begin
-      x0:=Nodes[i].x;
-      y0:=Nodes[i].y;
-      d0:=Nodes[i].Z;
-      Nodes[i].Z:=0;
-      xn:=Nodes[i-1].x;
-      yn:=Nodes[i-1].y;
-
-      vec0:=AffineVectorMake(x0,y0,0);
-      vec1:=AffineVectorMake(xn-x0,yn-y0,0);
-      vec2:=VectorScale(VectorNormalize(VectorRotateAroundZ(vec1,rot)),d0);
-
-      vec0:=VectorAdd(vec0,vec2);
-      MPoly.Contours.Items[act].Nodes.AddNode(vec0);
-      vec0:=VectorAdd(vec0,vec1);
-      MPoly.Contours.Items[act].Nodes.AddNode(vec0);
-    end;
-    Nodes[0].Z:=0;
-  end;
-  MPoly.Contours.Items[act].Description:='C';  // Mark it Closed
-end;
 
 procedure TFMain.GLCadencerProgress(Sender: TObject; const deltaTime, newTime: Double);
 var acttime: Dword;
@@ -3924,6 +3847,7 @@ begin
     LastCadencerTime:=ActTime;
   end;
 end;
+
 procedure TFMain.BuildLineScan;
 const ScanRes = 64;
 var Vo, Vp, V, V1, V2 : TAffineVector;
