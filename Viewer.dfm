@@ -17,6 +17,7 @@ object FViewer: TFViewer
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnKeyDown = FormKeyDown
   OnMouseWheel = FormMouseWheel
   OnShow = FormShow
   PixelsPerInch = 96
@@ -705,6 +706,7 @@ object FViewer: TFViewer
     Top = 32
   end
   object Timer: TTimer
+    Enabled = False
     OnTimer = TimerTimer
     Left = 72
     Top = 36
@@ -10199,6 +10201,16 @@ object FViewer: TFViewer
     object MenuSheets: TMenuItem
       Caption = 'S&heet'
       OnClick = MenuSheetsClick
+    end
+    object MenuSnapshot: TMenuItem
+      Caption = 'S&napshot'
+      ShortCut = 16457
+      OnClick = MenuSnapshotClick
+    end
+    object MenuChangeScene: TMenuItem
+      Caption = 'Chan&ge Scene'
+      ShortCut = 16455
+      OnClick = MenuChangeSceneClick
     end
   end
   object GLMaterialLibrary3ds: TGLMaterialLibrary
