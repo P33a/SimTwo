@@ -132,7 +132,6 @@ type
     procedure WriteUDPData(ToIP: string; ToPort: integer; s: string);
     procedure ProjectSave(FileName: string);
     function ProjectOpen(FileName: string): boolean;
-    procedure SetRCString(r, c: integer; s: string);
   public
     ProgCyclesCount: integer;
     ProgTime: double;
@@ -678,9 +677,9 @@ begin
 
     for i := 0 to Funclist.Count -1 do begin
       if integer(Funclist.Objects[i]) = 1 then begin
-        Funclist.Strings[i] := ' function  ' + Funclist.Strings[i];
-      end else begin
         Funclist.Strings[i] := ' procedure ' + Funclist.Strings[i];
+      end else begin
+        Funclist.Strings[i] := ' function ' + Funclist.Strings[i];
       end;
     end;
 
@@ -699,34 +698,31 @@ procedure TFEditor.PSScript_Compile(Sender: TPSScript);
 var i: integer;
     s: string;
 begin
-  Sender.AddMethod(Self, @arcsin, 'function arcsin(x: Extended): Extended');
-  Sender.AddMethod(Self, @arccos, 'function arccos(x: Extended): Extended');
-  Sender.AddMethod(Self, @tan, 'function tan(x: Extended): Extended');
-  Sender.AddMethod(Self, @ATan2, 'function ATan2(y,x: double): double');
-  Sender.AddMethod(Self, @DiffAngle, 'function DiffAngle(a1,a2: double): double;');
-  Sender.AddMethod(Self, @Dist, 'function Dist(x,y: double): double');
-  Sender.AddMethod(Self, @Sign, 'function Sign(a: double): double');
-  Sender.AddMethod(Self, @Sat, 'function Sat(a,limit: double): double');
-  Sender.AddMethod(Self, @NormalizeAngle, 'function NormalizeAngle(ang: double): double');
-  Sender.AddMethod(Self, @TranslateAndRotate, 'function TranslateAndRotate(var rx,ry: double; px,py,tx,ty,teta: double): double');
-  Sender.AddMethod(Self, @RotateAndTranslate, 'function RotateAndTranslate(var rx,ry: double; px,py,tx,ty,teta: double): double');
-  Sender.AddMethod(Self, @RotateAroundPoint, 'function RotateAroundPoint(var rx,ry: double; px,py,cx,cy,teta: double): double');
+  Sender.AddFunction(@arcsin, 'function arcsin(x: Extended): Extended');
+  Sender.AddFunction(@arccos, 'function arccos(x: Extended): Extended');
+  Sender.AddFunction(@tan, 'function tan(x: Extended): Extended');
+  Sender.AddFunction(@ATan2, 'function ATan2(y,x: double): double');
+  Sender.AddFunction(@DiffAngle, 'function DiffAngle(a1,a2: double): double;');
+  Sender.AddFunction(@Dist, 'function Dist(x,y: double): double');
+  Sender.AddFunction(@Sign, 'function Sign(a: double): double');
+  Sender.AddFunction(@Sat, 'function Sat(a,limit: double): double');
+  Sender.AddFunction(@NormalizeAngle, 'function NormalizeAngle(ang: double): double');
+  Sender.AddFunction(@TranslateAndRotate, 'function TranslateAndRotate(var rx,ry: double; px,py,tx,ty,teta: double): double');
+  Sender.AddFunction(@RotateAndTranslate, 'function RotateAndTranslate(var rx,ry: double; px,py,tx,ty,teta: double): double');
+  Sender.AddFunction(@RotateAroundPoint, 'function RotateAroundPoint(var rx,ry: double; px,py,cx,cy,teta: double): double');
 
   Sender.AddMethod(Self, @TFEditor.Writeln, 'procedure WriteLn(S: string)');
-  // Functions with string parameters work only in this case: as TFEditor members !!!???
   Sender.AddMethod(Self, @TFEditor.myformat, 'function Format(const sFormat: string; const Args: array of const): string;');
   Sender.AddMethod(Self, @TFEditor.ReadComPort, 'function ReadComPort: string;');
   Sender.AddMethod(Self, @TFEditor.WriteComPort, 'procedure WriteComPort(s: string);');
 
   Sender.AddMethod(Self, @TFEditor.ReadUDPData, 'function ReadUDPData: string;');
   Sender.AddMethod(Self, @TFEditor.WriteUDPData, 'procedure WriteUDPData(ToIP: string; ToPort: integer; s: string);');
-  Sender.AddMethod(Self, @TFEditor.SetRCString, 'procedure SetSheetRCString(r, c: integer; s: string);');
 
+  Sender.AddFunction(@SetRCString, 'procedure SetRCString(r, c: integer; s: string);');
+  Sender.AddFunction(@GetRCValue, 'function GetRCValue(r, c: integer): double;');
+  Sender.AddFunction(@RCButtonPressed, 'function RCButtonPressed(r, c: integer): boolean;');
 
-//function IsKeyDown(vk : TVirtualKeyCode) : Boolean;
-//  Sender.AddMethod(Self, @IsKeyDown, 'function IsKeyDown(c : Char) : Boolean');
-
-//  Sender.AddMethod(Self, @IsKeyDown, 'function IsKeyDown(c : Char) : Boolean');
 
   Sender.AddRegisteredPTRVariable('Time', 'Double');
   Sender.AddRegisteredPTRVariable('UDPDataRead', 'TMemoryStream');
@@ -1010,12 +1006,6 @@ begin
     UDPGenData.ReadBuffer(Pointer(result)^, UDPGenData.Size);
     UDPGenData.Clear;
   end;
-end;
-
-
-procedure TFEditor.SetRCString(r, c: integer; s: string);
-begin
-  FSheets.SetRCString(r, c, s);
 end;
 
 end.

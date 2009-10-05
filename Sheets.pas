@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, rxPlacemnt, Grids, ComCtrls, StdCtrls, ExtCtrls, Menus, Buttons, OmniXML,
-  OmniXMLUtils, SimpleParser;
+  OmniXMLUtils, SimpleParser, math;
 
 type
   TSheet = class;
@@ -17,19 +17,26 @@ type
   TSheetCell = class
     sheet: TSheet;
     row, col: integer;
-    text, name, formula: string;
+    text, name, expression: string;    // Text: the raw edit text
     value: double;
     NumberFormat: string;
     CellType: TCellType;
     CellButtonState: TCellButtonState;
 
-    SourceCellsList, DependentCellsList: TSheetCellList;
+    //SourceCellsList, DependentCellsList: TSheetCellList;
+    SourceCellsList: TStringList;
+    SourceCellsListObjectsHaveReference: boolean;
+    level: integer;
 
     constructor Create;
     destructor Destroy; override;
-    function DisplayText: string;
+    function DisplayText_: string;
     procedure ParseText(txt: string);
+    function CalcSourceLevel: integer;
+    function ColFromPack(v: TObject): integer;
+    function RowFromPack(v: TObject): integer;
   end;
+
 
   TSheetCellList = class(TList)
   private
@@ -47,6 +54,7 @@ type
     property Items[Index: Integer]: TSheetCell read GetItems write SetItems; default;
     procedure ClearAll;
     function IndexFromName(aName: string): integer;
+    function IndexFromRC(aRow, aCol: integer): integer;
   end;
 
   TSheet = class
@@ -55,12 +63,17 @@ type
     SGrid: TSTringGrid;
     DefaultSheetCell: TSheetCell;
     Parser: TSimpleParser;
+    TmpSourceCells: TStringList;
+    CalcSequence: TSheetCellList;
 
     constructor Create;
     destructor Destroy; override;
 
     function Cell(r, c: integer): TSheetCell;
     function EditCell(r, c: integer): TSheetCell;
+    procedure BuildCalcSequence;
+    procedure ShowCalcSequence(SL: TStrings);
+    procedure ReCalc;
   end;
 
 
@@ -74,7 +87,7 @@ type
     TabGlobal: TTabSheet;
     SGGlobal: TStringGrid;
     FormStorage: TFormStorage;
-    MainMenu1: TMainMenu;
+    MainMenu: TMainMenu;
     PopupMenu: TPopupMenu;
     MenuButton: TMenuItem;
     SpeedButtonOK: TSpeedButton;
@@ -103,6 +116,7 @@ type
       Shift: TShiftState);
     procedure SGGlobalKeyPress(Sender: TObject; var Key: Char);
     procedure EditFormulaExit(Sender: TObject);
+    procedure PanelFormulaClick(Sender: TObject);
   private
     procedure FillHeaders(SGrid: TStringGrid);
     //procedure ParseFormulaText;
@@ -114,16 +128,21 @@ type
     MouseDown: boolean;
     Escaping: boolean;
 
-    procedure SetRCString(r, c: integer; s: string);
 
     procedure SaveSheet(XMLFile: string; Sheet: TSheet);
     procedure LoadSheet(Sheet: TSheet; XMLFile: string);
+    procedure EnterFormula;
   end;
 
 var
   FSheets: TFSheets;
 
-function GetRCValue(const v: array of double): double;
+procedure SetRCString(r, c: integer; s: string);
+function GetRCValue(r, c: integer): double;
+function RCButtonPressed(r, c: integer): boolean;
+
+
+function RCValue(const v: array of double): double;
 
 implementation
 
@@ -131,11 +150,21 @@ implementation
 
 uses Viewer, ProjConfig;
 
-
-function GetRCValue(const v: array of double): double;
+// This function is regietered on the simpleparser to evaluate the RC(r,c) function
+// EVIL: a global (SourceCells) is being used to create a side effect where when
+//       there is an evaluation, the evaluated cell is added to the SourceCells list
+function RCValue(const v: array of double): double;
 var SheetCell: TSheetCell;
+    r, c: integer;
 begin
-  SheetCell :=  FSheets.ActSheet.Cell(round(v[0]), round(v[1]));
+  r := round(v[0]);
+  c := round(v[1]);
+  SheetCell :=  FSheets.ActSheet.Cell(r, c);
+
+  if FSheets.ActSheet.TmpSourceCells <> nil then begin
+    FSheets.ActSheet.TmpSourceCells.AddObject(format('%4d,%4d',[r, c]), TObject(((r and $FFFF) shl 16) or (c and $FFFF)));
+  end;
+
   //   TCellType = (ctText, ctFormula, ctButton);
   case SheetCell.CellType  of
     ctText:
@@ -194,6 +223,18 @@ begin
   end;
 end;
 
+function TSheetCellList.IndexFromRC(aRow, aCol: integer): integer;
+var i: integer;
+begin
+  result := -1;
+  for i := 0 to Count - 1 do begin
+    if (Items[i].row = aRow) and (Items[i].col = aCol) then begin
+      result := i;
+      exit;
+    end;
+  end;
+end;
+
 function TSheetCellList.IndexOf(ASheetCell: TSheetCell): Integer;
 begin
   Result := inherited IndexOf(ASheetCell);
@@ -220,9 +261,10 @@ begin
 end;
 
 
-procedure TFSheets.SetRCString(r, c: integer; s: string);
+procedure SetRCString(r, c: integer; s: string);
 begin
-  ActSheet.SGrid.cells[c, r] := s;
+  FSheets.ActSheet.EditCell(r, c).ParseText(s);
+  //ActSheet.SGrid.cells[c, r] := s;
 end;
 
 
@@ -244,6 +286,7 @@ begin
   FillHeaders(SGGlobal);
   if FileExists('Global.S2Sheet') then
     LoadSheet(ActSheet, 'Global.S2Sheet');
+  StatusBar.Panels[0].Text := format('%3d: %3d',[1, 1]);
 end;
 
 procedure TFSheets.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -264,11 +307,14 @@ begin
 end;
 
 
+
+
 procedure TFSheets.SGGlobalMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-var r, c: integer;
+var i, r, c: integer;
     Grid: TStringGrid;
     SheetCell: TSheetCell;
-    RClkPoint: TPoint;
+    o: Tobject;
+//    RClkPoint: TPoint;
 begin
   MouseDown := true;
   Last_x := x;
@@ -276,27 +322,37 @@ begin
 
   Grid:= TStringGrid(Sender);
   Grid.MouseToCell(x, y, c, r);
+  StatusBar.Panels[0].Text := format('%3d: %3d',[r, c]);
+
   if (c < 0) or (r < 0) then exit;  //  The user's right-click was not within a cell.
 
   Last_r := r;
   Last_c := c;
-  //Grid.Cells[c, r] := 'x';
   SheetCell := ActSheet.Cell(r, c);
 
-  if (Button = mbRight) then begin
+  {if (Button = mbRight) then begin
     if (c < Grid.FixedCols) or (r < Grid.FixedRows) then exit; //  The user clicked on a fixed cell
     RClkPoint := Grid.ClientToScreen(Point(x, y));
     MenuButton.Checked := (SheetCell.CellType = ctButton);
     PopupMenu.Popup(RClkPoint.X, RClkPoint.Y);
-  end;
+  end;}
 
-  //if (Button = mbLEft)  and  (SheetCell.CellType = ctButton) then begin
   if SheetCell.CellType = ctButton then begin
     SheetCell.CellButtonState := cstButtonDown;
+    SheetCell.value := SheetCell.value + 1;
     grid.Invalidate;
   end;
 
-  EditFormula.Text := SheetCell.DisplayText;
+  EditFormula.Text := SheetCell.Text;
+
+  CBNames.Items.Clear;
+  CBNames.Items.add(inttostr(SheetCell.SourceCellsList.Count));
+  //CBNames.Items.AddStrings(SheetCell.SourceCellsList);
+  for i := 0 to  SheetCell.SourceCellsList.Count -1 do begin
+    o := SheetCell.SourceCellsList.Objects[i];
+    CBNames.Items.add(format('(%d,%d)', [ SheetCell.rowFRomPack(o), SheetCell.colFromPack(o)]));
+  end;
+
 end;
 
 
@@ -380,6 +436,7 @@ begin
   // set default values for the parameters,
   // get the values depending on the grid settings.
   sText := grdColored.Cells[ACol, ARow];
+
   myAlignment := taLeftJustify;
   if (ARow < grdColored.FixedRows) or (ACol < grdColored.FixedCols) then begin
     myBackColor := grdColored.FixedColor;
@@ -391,16 +448,17 @@ begin
     myTextColor := clBtnText;
   end;
   // draw the text in the cell
-  Sto_DrawCellText(grdColored.Canvas, Rect, sText, myBackColor, myTextColor, myAlignment);
-
-  //if (Acol = 2) and (Arow = 2) then begin
-  if SheetCell.CellType = ctButton then begin
+  if (SheetCell.CellType = ctText) or (SheetCell.CellType = ctFormula) then begin
+    Sto_DrawCellText(grdColored.Canvas, Rect, sText, myBackColor, myTextColor, myAlignment);
+  end else if SheetCell.CellType = ctButton then begin
     if SheetCell.CellButtonState = cstButtonDown then begin
       DrawFrameControl(grdColored.Canvas.Handle, Rect, DFC_BUTTON, DFCS_BUTTONPUSH or DFCS_PUSHED);
-      DrawButtonText(grdColored.Canvas, Rect, SheetCell.text, myBackColor, myTextColor, true);
+      DrawButtonText(grdColored.Canvas, Rect, sText, myBackColor, myTextColor, true);
+      //DrawButtonText(grdColored.Canvas, Rect, SheetCell.DisplayText, myBackColor, myTextColor, true);
     end else begin
       DrawFrameControl(grdColored.Canvas.Handle, Rect, DFC_BUTTON, DFCS_BUTTONPUSH);
-      DrawButtonText(grdColored.Canvas, Rect, SheetCell.text, myBackColor, myTextColor, false);
+      DrawButtonText(grdColored.Canvas, Rect, sText, myBackColor, myTextColor, false);
+      //DrawButtonText(grdColored.Canvas, Rect, SheetCell.DisplayText, myBackColor, myTextColor, false);
     end;
   end;
   //end;
@@ -425,8 +483,7 @@ end;
 
 procedure TFSheets.SpeedButtonOKClick(Sender: TObject);
 begin
-  //ParseFormulaText;
-  ActSheet.EditCell(Last_r, Last_c).ParseText(EditFormula.Text);
+  EnterFormula; // 1st way on accepting an edited formula
 end;
 
 
@@ -529,6 +586,8 @@ begin
     node := node.NextSibling;
   end;
 
+  Sheet.BuildCalcSequence;
+  Sheet.ReCalc;
 end;
 
 procedure TFSheets.MenuSaveClick(Sender: TObject);
@@ -543,6 +602,41 @@ end;
 
 { TSheet }
 
+procedure TSheet.BuildCalcSequence;
+var i, lvl, FormulaCount, added: integer;
+    SheetCell: TSheetCell;
+begin
+  CalcSequence.Clear;   // New start
+
+  FormulaCount := 0;
+  for i := 0 to CellList.Count -1 do begin
+    CellList[i].level := 0;
+    if CellList[i].CellType = ctFormula then begin        // We only need to recalc formulas,
+      if CellList[i].SourceCellsList.Count > 0 then begin // that are dependent on other cells
+        inc(FormulaCount);
+        CellList[i].level := maxint;   // These are the cells that must be in the CalcSequence
+      end;
+    end;
+  end;
+
+  while CalcSequence.Count < FormulaCount do begin // We  must add FormulaCount cells to the CalcSequence list;
+    added := 0;
+    for i := 0 to CellList.Count -1 do begin
+      SheetCell := CellList[i];
+      if SheetCell.level <> maxint then continue; // These are cells already taken care
+      lvl := SheetCell.CalcSourceLevel;
+      if lvl < maxint then begin        // If all the parents have level (that mean they are on the list)
+        CalcSequence.Add(SheetCell);  // then it can be on the list
+        SheetCell.level := lvl + 1;   // And have level
+        inc(added);
+      end;
+    end;
+    if added = 0 then
+      raise Exception.Create('Circular Reference');
+  end;
+
+end;
+
 function TSheet.Cell(r, c: integer): TSheetCell;
 begin
   result := DefaultSheetCell;
@@ -554,13 +648,15 @@ end;
 constructor TSheet.Create;
 begin
   DefaultSheetCell := TSheetCell.Create;
-  CellList:= TSheetCellList.Create;
+  CellList := TSheetCellList.Create;
   Parser := TSimpleParser.Create;
-  Parser.RegisterFunction('RC', @getRCValue, 2);
+  Parser.RegisterFunction('RC', @RCValue, 2);
+  CalcSequence := TSheetCellList.Create;
 end;
 
 destructor TSheet.Destroy;
 begin
+  CalcSequence.Free;
   Parser.free;
   CellList.ClearAll;
   CellList.Free;
@@ -584,29 +680,102 @@ begin
   end;
 end;
 
+procedure TSheet.ReCalc;
+var i: integer;
+    SheetCell: TSheetCell;
+begin
+  for i := 0 to CalcSequence.Count - 1 do begin
+    SheetCell := CalcSequence[i];
+    with SheetCell do begin
+      value := Sheet.Parser.Calc(expression);
+      Sheet.SGrid.Cells[col, row] := format(NumberFormat, [value]);
+    end;
+  end;
+end;
+
+procedure TSheet.ShowCalcSequence(SL: TStrings);
+var i: integer;
+    //SheetCell: TSheetCell;
+begin
+  with Fsheets do begin
+    SL.Clear;
+    SL.add(inttostr(CalcSequence.Count));
+    for i := 0 to CalcSequence.Count -1 do begin
+      SL.add(format('(%d,%d)', [ CalcSequence[i].row, CalcSequence[i].col]));
+    end;
+  end;
+end;
+{
+procedure TSheet.ShowCalcSequence(SL: TStringList);
+var i: integer;
+    //SheetCell: TSheetCell;
+begin
+  with Fsheets do begin
+    CBNames.Items.Clear;
+    CBNames.Items.add(inttostr(CalcSequence.Count));
+    for i := 0 to CalcSequence.Count -1 do begin
+      CBNames.Items.add(format('(%d,%d)', [ CalcSequence[i].row, CalcSequence[i].col]));
+    end;
+  end;
+end;
+}
 { TSheetCell }
+
+function TSheetCell.RowFromPack(v: TObject): integer;
+begin
+  result := (integer(v) shr 16) and $FFFF;
+end;
+
+function TSheetCell.ColFromPack(v: TObject): integer;
+begin
+  result := integer(v) and $FFFF;
+end;
+
+function TSheetCell.CalcSourceLevel: integer;
+var i, row, col, idx: integer;
+    o: TObject;
+    SheetCell: TSheetCell;
+begin
+  result := 0;
+  for i := 0 to SourceCellsList.Count -1 do begin
+    if not SourceCellsListObjectsHaveReference then begin
+      o := SourceCellsList.Objects[i];
+      row := RowFromPack(o);
+      col := ColFromPack(o);
+      idx := Sheet.CellList.IndexFromRC(row, col);
+      SourceCellsList.Objects[i] := Sheet.CellList[idx];
+    end;
+    SheetCell := TSheetCell(SourceCellsList.Objects[i]);
+    result := max(result, SheetCell.level);
+  end;
+  SourceCellsListObjectsHaveReference := true;
+end;
 
 constructor TSheetCell.Create;
 begin
   row := -1;
   col := -1;
   NumberFormat := '%g';
-  SourceCellsList := TSheetCellList.Create;
-  DependentCellsList := TSheetCellList.Create;
+  SourceCellsList := TStringList.Create;
+  SourceCellsListObjectsHaveReference := false;
+  //SourceCellsList := TSheetCellList.Create;
+  //DependentCellsList := TSheetCellList.Create;
 end;
 
 destructor TSheetCell.Destroy;
 begin
   SourceCellsList.Free;
-  DependentCellsList.Free;
+  //DependentCellsList.Free;
 
   inherited;
 end;
 
-function TSheetCell.DisplayText: string;
+function TSheetCell.DisplayText_: string;
 begin
   if CellType = ctFormula then begin
-    result := '=' + formula;
+    result := '=' + expression;
+  end else if CellType = ctButton then begin
+    result := expression;
   end else begin
     result := text;
   end;
@@ -624,9 +793,9 @@ end;
 procedure TFSheets.EditFormulaKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  if key = VK_RETURN then begin
-    //ParseFormulaText;
-    ActSheet.EditCell(Last_r, Last_c).ParseText(EditFormula.Text);
+  if key = VK_RETURN then begin // 2nd way of accepting an edited formula
+    //ActSheet.EditCell(Last_r, Last_c).ParseText(EditFormula.Text);
+    EnterFormula;
     ActSheet.SGrid.SetFocus;
   end else if key = VK_ESCAPE then begin
     Escaping := true;
@@ -640,13 +809,14 @@ procedure TFSheets.SGGlobalKeyUp(Sender: TObject; var Key: Word;
 begin
   Last_c := ActSheet.SGrid.Selection.Left;
   Last_r := ActSheet.SGrid.Selection.Top;
+  StatusBar.Panels[0].Text := format('%3d: %3d',[Last_r, Last_c]);
 
-  EditFormula.Text := ActSheet.Cell(Last_r, Last_c).DisplayText;
+  EditFormula.Text := ActSheet.Cell(Last_r, Last_c).Text;
 end;
 
 procedure TFSheets.SGGlobalKeyPress(Sender: TObject; var Key: Char);
 begin
-  if ord(key) < ord(' ') then exit;
+  if ord(key) < ord(' ') then exit;  // Filter non printable codes
   EditFormula.SetFocus;
   EditFormula.Text := key;
   EditFormula.SelStart := maxint;
@@ -654,15 +824,32 @@ end;
 
 procedure TSheetCell.ParseText(txt: string);
 var s: string;
+    len: integer;
 begin
+  if txt = text then exit; //No change!
   text := txt;
   s := trim(txt);
-  if (s <> '') and (s[1] = '=') then begin
-    formula := copy(s, 2, maxint);
-    value := Sheet.Parser.Calc(formula);
+  len := length(s);
+
+  if (len > 0) and (s[1] = '=') then begin
+    expression := copy(s, 2, maxint);
+    try
+      SourceCellsList.Clear;
+      SourceCellsListObjectsHaveReference := false;
+      Sheet.TmpSourceCells := SourceCellsList;
+      value := Sheet.Parser.Calc(expression);
+    finally
+      Sheet.TmpSourceCells := nil;
+    end;
     Sheet.SGrid.Cells[col, row] := format(NumberFormat, [value]);
     CellType := ctFormula;
+  end else if (len > 0) and (s[1] = '[') and (s[len] = ']') then begin
+    expression := copy(s, 2, len - 2);
+    value := 0;
+    Sheet.SGrid.Cells[col, row] := expression;
+    CellType := ctButton;
   end else begin
+    expression := '';
     value := strToFloatDef(s, 0);
     Sheet.SGrid.Cells[col, row] := text;
     CellType := ctText;
@@ -671,9 +858,45 @@ end;
 
 procedure TFSheets.EditFormulaExit(Sender: TObject);
 begin
-  if not escaping then
-    ActSheet.EditCell(Last_r, Last_c).ParseText(EditFormula.Text);
+  if not escaping then // 3rd way of accepting an edited formula
+    EnterFormula;
+    //ActSheet.EditCell(Last_r, Last_c).ParseText(EditFormula.Text);
   Escaping := false;
+end;
+
+function GetRCValue(r, c: integer): double;
+begin
+  result := FSheets.ActSheet.Cell(r, c).value;
+end;
+
+function RCButtonPressed(r, c: integer): boolean;
+var SheetCell: TSheetCell;
+begin
+  result := false;
+  SheetCell := FSheets.ActSheet.Cell(r, c);
+
+  if SheetCell.CellType = ctButton then begin
+    if SheetCell.value > 0 then begin
+      result := true;
+      SheetCell.value := 0;
+    end;
+  end;
+end;
+
+
+procedure TFSheets.PanelFormulaClick(Sender: TObject);
+begin
+  ActSheet.ShowCalcSequence(CBNames.Items);
+  ActSheet.ReCalc;
+  ActSheet.SGrid.Invalidate;
+end;
+
+procedure TFSheets.EnterFormula;
+begin
+  ActSheet.EditCell(Last_r, Last_c).ParseText(EditFormula.Text);
+  ActSheet.BuildCalcSequence;
+  ActSheet.ReCalc;
+  ActSheet.SGrid.Invalidate;
 end;
 
 end.

@@ -2995,7 +2995,7 @@ begin
 end;
 
 procedure AxisTorqueModel(axis: TAxis; Theta, w, dt: double; var T: double);
-var duty, old_Im, dI, err: double;
+var old_Im, dI, err: double;
     max_delta_Im: double;
     minLim, maxLim: double;
 begin
@@ -3043,11 +3043,11 @@ begin
       // Voltage with saturation
       Motor.voltage := max(-Motor.Vmax, min(Motor.Vmax, ref.volts));
       // Motor Model
-      if Motor.Vmax <> 0 then begin
+      {if Motor.Vmax <> 0 then begin
         duty := abs(Motor.voltage / Motor.Vmax);
       end else begin
         duty := 0;
-      end;
+      end;}
 
       old_Im := Motor.Im;
 

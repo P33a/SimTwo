@@ -10,7 +10,7 @@ object FSheets: TFSheets
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  Menu = MainMenu1
+  Menu = MainMenu
   OldCreateOrder = False
   OnClose = FormClose
   OnCreate = FormCreate
@@ -25,6 +25,7 @@ object FSheets: TFSheets
     Height = 29
     Align = alTop
     TabOrder = 0
+    OnClick = PanelFormulaClick
     object SpeedButtonOK: TSpeedButton
       Left = 176
       Top = 2
@@ -50,6 +51,7 @@ object FSheets: TFSheets
       Top = 4
       Width = 145
       Height = 21
+      Style = csDropDownList
       ItemHeight = 13
       TabOrder = 0
     end
@@ -76,12 +78,10 @@ object FSheets: TFSheets
       end
       item
         Alignment = taCenter
-        Text = 'Modified'
         Width = 50
       end
       item
         Alignment = taCenter
-        Text = 'Insert'
         Width = 55
       end
       item
@@ -116,7 +116,6 @@ object FSheets: TFSheets
         RowCount = 128
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goDrawFocusSelected, goColSizing]
         ParentCtl3D = False
-        PopupMenu = PopupMenu
         TabOrder = 0
         OnDrawCell = SGGlobalDrawCell
         OnKeyDown = SGGlobalKeyDown
@@ -169,7 +168,7 @@ object FSheets: TFSheets
     Left = 236
     Top = 60
   end
-  object MainMenu1: TMainMenu
+  object MainMenu: TMainMenu
     Left = 272
     Top = 61
     object MenuFile: TMenuItem
