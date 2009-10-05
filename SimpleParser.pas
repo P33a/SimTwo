@@ -82,13 +82,15 @@ type
 
     procedure RegisterVariable(VarName: string; pvar: pdouble);
     procedure RegisterConst(ConstName: string; value: double);
-    procedure RegisterFunction(FuncName: string; pFunc: TParserFunction; numArgs: integer);
+    function RegisterFunction(FuncName: string; pFunc: TParserFunction; numArgs: integer): integer;
 
   end;
 
 
 
 implementation
+
+function BuildHashTable(const SList: TStrings; var HashTable: THash256): integer; forward;
 
 
 procedure TSimpleParser.Push(v: double);
@@ -150,9 +152,10 @@ begin
 end;
 
 //procedure RegisterFunction(Funcs: TStrings; pFunc: TParserFunction; FuncName: string; numArgs: integer);
-procedure TSimpleParser.RegisterFunction(FuncName: string; pFunc: TParserFunction; numArgs: integer);
+function TSimpleParser.RegisterFunction(FuncName: string; pFunc: TParserFunction; numArgs: integer): integer;
 begin
-  FuncsList.AddObject(uppercase(FuncName)+'_'+inttostr(numargs), Tobject(@pFunc));
+  result := FuncsList.AddObject(uppercase(FuncName)+'_'+inttostr(numargs), Tobject(@pFunc));
+  HashFuncsColisions := BuildHashTable(FuncsList, HashFuncs);
 end;
 
 // Generic hash functions
