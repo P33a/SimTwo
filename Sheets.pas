@@ -18,6 +18,7 @@ type
     sheet: TSheet;
     row, col: integer;
     text, name, expression: string;    // Text: the raw edit text
+    CompiledExpr: TStringList;
     value: double;
     NumberFormat: string;
     CellType: TCellType;
@@ -25,6 +26,7 @@ type
 
     //SourceCellsList, DependentCellsList: TSheetCellList;
     SourceCellsList: TStringList;
+    MotherCells: TSheetCellList;
     SourceCellsListObjectsHaveReference: boolean;
     level: integer;
 
@@ -33,8 +35,8 @@ type
     function DisplayText_: string;
     procedure ParseText(txt: string);
     function CalcSourceLevel: integer;
-    function ColFromPack(v: TObject): integer;
-    function RowFromPack(v: TObject): integer;
+    //function ColFromPack(v: TObject): integer;
+    //function RowFromPack(v: TObject): integer;
   end;
 
 
@@ -64,6 +66,8 @@ type
     DefaultSheetCell: TSheetCell;
     Parser: TSimpleParser;
     TmpSourceCells: TStringList;
+    TmpSourceCellsIdx: integer;
+    MustRebuildSourceCells: boolean;
     CalcSequence: TSheetCellList;
 
     constructor Create;
@@ -73,7 +77,7 @@ type
     function EditCell(r, c: integer): TSheetCell;
     procedure BuildCalcSequence;
     procedure ShowCalcSequence(SL: TStrings);
-    procedure ReCalc;
+    function ReCalc: integer;
   end;
 
 
@@ -137,10 +141,13 @@ type
 var
   FSheets: TFSheets;
 
-procedure SetRCString(r, c: integer; s: string);
+procedure SetRCValue(r, c: integer; s: string);
 function GetRCValue(r, c: integer): double;
 function RCButtonPressed(r, c: integer): boolean;
+procedure RefreshSheets;
 
+function ColFromPack(v: TObject): integer;
+function RowFromPack(v: TObject): integer;
 
 function RCValue(const v: array of double): double;
 
@@ -156,13 +163,28 @@ uses Viewer, ProjConfig;
 function RCValue(const v: array of double): double;
 var SheetCell: TSheetCell;
     r, c: integer;
+    o: TObject;
 begin
   r := round(v[0]);
   c := round(v[1]);
   SheetCell :=  FSheets.ActSheet.Cell(r, c);
 
   if FSheets.ActSheet.TmpSourceCells <> nil then begin
-    FSheets.ActSheet.TmpSourceCells.AddObject(format('%4d,%4d',[r, c]), TObject(((r and $FFFF) shl 16) or (c and $FFFF)));
+    if FSheets.ActSheet.TmpSourceCellsIdx = -1 then begin   // Building the dependency list;
+      FSheets.ActSheet.TmpSourceCells.AddObject(format('%4d,%4d',[r, c]), TObject(((r and $FFFF) shl 16) or (c and $FFFF)));
+    end else begin
+      with FSheets.ActSheet do begin                        // Checking the dependency list;
+        //MotherCell := TSheetCell(TmpSourceCells.Objects[TmpSourceCellsIdx]);
+        o := TmpSourceCells.Objects[TmpSourceCellsIdx];
+        //if (MotherCell.row <> r) or (MotherCell.col <> c) then begin
+        if (rowfromPack(o) <> r) or (colfromPack(o) <> c) then begin
+          MustRebuildSourceCells := true;
+          TmpSourceCells.Objects[TmpSourceCellsIdx] :=  TObject(((r and $FFFF) shl 16) or (c and $FFFF));
+          //TmpSourceCells.Objects[TmpSourceCellsIdx] :=  TObject(FSheets.ActSheet.Cell(MotherCell.row, MotherCell.col));
+        end;
+        inc(TmpSourceCellsIdx);
+      end;
+    end;
   end;
 
   //   TCellType = (ctText, ctFormula, ctButton);
@@ -261,10 +283,9 @@ begin
 end;
 
 
-procedure SetRCString(r, c: integer; s: string);
+procedure SetRCValue(r, c: integer; s: string);
 begin
   FSheets.ActSheet.EditCell(r, c).ParseText(s);
-  //ActSheet.SGrid.cells[c, r] := s;
 end;
 
 
@@ -350,7 +371,7 @@ begin
   //CBNames.Items.AddStrings(SheetCell.SourceCellsList);
   for i := 0 to  SheetCell.SourceCellsList.Count -1 do begin
     o := SheetCell.SourceCellsList.Objects[i];
-    CBNames.Items.add(format('(%d,%d)', [ SheetCell.rowFRomPack(o), SheetCell.colFromPack(o)]));
+    CBNames.Items.add(format('(%d,%d)', [ rowFRomPack(o), colFromPack(o)]));
   end;
 
 end;
@@ -587,7 +608,10 @@ begin
   end;
 
   Sheet.BuildCalcSequence;
-  Sheet.ReCalc;
+  //Sheet.ReCalc;
+  while ActSheet.ReCalc <> ActSheet.CalcSequence.Count do begin
+    ActSheet.BuildCalcSequence;
+  end;
 end;
 
 procedure TFSheets.MenuSaveClick(Sender: TObject);
@@ -619,13 +643,13 @@ begin
     end;
   end;
 
-  while CalcSequence.Count < FormulaCount do begin // We  must add FormulaCount cells to the CalcSequence list;
+  while CalcSequence.Count < FormulaCount do begin // We  must add FormulaCount cells to the CalcSequence list
     added := 0;
     for i := 0 to CellList.Count -1 do begin
       SheetCell := CellList[i];
-      if SheetCell.level <> maxint then continue; // These are cells already taken care
+      if SheetCell.level <> maxint then continue; // These cells already have been processed
       lvl := SheetCell.CalcSourceLevel;
-      if lvl < maxint then begin        // If all the parents have level (that mean they are on the list)
+      if lvl < maxint then begin      // If all the parents have level (that means they are on the list)
         CalcSequence.Add(SheetCell);  // then it can be on the list
         SheetCell.level := lvl + 1;   // And have level
         inc(added);
@@ -652,6 +676,7 @@ begin
   Parser := TSimpleParser.Create;
   Parser.RegisterFunction('RC', @RCValue, 2);
   CalcSequence := TSheetCellList.Create;
+  TmpSourceCellsIdx := -1;
 end;
 
 destructor TSheet.Destroy;
@@ -680,17 +705,37 @@ begin
   end;
 end;
 
-procedure TSheet.ReCalc;
+function TSheet.ReCalc: integer;
 var i: integer;
     SheetCell: TSheetCell;
 begin
+  result := 0;
   for i := 0 to CalcSequence.Count - 1 do begin
     SheetCell := CalcSequence[i];
     with SheetCell do begin
-      value := Sheet.Parser.Calc(expression);
+      //value := Sheet.Parser.Calc(expression);
+        //value := Sheet.Parser.Run(CompiledExpr);
+      try
+        Sheet.TmpSourceCells := SourceCellsList;
+        Sheet.TmpSourceCellsIdx := 0;
+        MustRebuildSourceCells := false;
+        value := Sheet.Parser.Calc(expression);
+      finally
+        Sheet.TmpSourceCells := nil;
+        Sheet.TmpSourceCellsIdx := -1;
+      end;
+
       Sheet.SGrid.Cells[col, row] := format(NumberFormat, [value]);
+
+      if MustRebuildSourceCells then begin
+        SourceCellsListObjectsHaveReference := false;
+        result := i;
+        exit;
+      end;
+
     end;
   end;
+  result := CalcSequence.Count;
 end;
 
 procedure TSheet.ShowCalcSequence(SL: TStrings);
@@ -721,12 +766,12 @@ end;
 }
 { TSheetCell }
 
-function TSheetCell.RowFromPack(v: TObject): integer;
+function RowFromPack(v: TObject): integer;
 begin
   result := (integer(v) shr 16) and $FFFF;
 end;
 
-function TSheetCell.ColFromPack(v: TObject): integer;
+function ColFromPack(v: TObject): integer;
 begin
   result := integer(v) and $FFFF;
 end;
@@ -738,14 +783,20 @@ var i, row, col, idx: integer;
 begin
   result := 0;
   for i := 0 to SourceCellsList.Count -1 do begin
-    if not SourceCellsListObjectsHaveReference then begin
+    //if not SourceCellsListObjectsHaveReference then begin
       o := SourceCellsList.Objects[i];
       row := RowFromPack(o);
       col := ColFromPack(o);
       idx := Sheet.CellList.IndexFromRC(row, col);
-      SourceCellsList.Objects[i] := Sheet.CellList[idx];
-    end;
-    SheetCell := TSheetCell(SourceCellsList.Objects[i]);
+      if idx >= 0 then begin
+        MotherCells.Add(Sheet.CellList[idx]);
+        SheetCell := Sheet.CellList[idx];
+      end else begin
+        MotherCells.Add(Sheet.DefaultSheetCell);
+        SheetCell := Sheet.DefaultSheetCell;
+      end;
+    //end;
+    //SheetCell := MotherCells[i];
     result := max(result, SheetCell.level);
   end;
   SourceCellsListObjectsHaveReference := true;
@@ -758,12 +809,16 @@ begin
   NumberFormat := '%g';
   SourceCellsList := TStringList.Create;
   SourceCellsListObjectsHaveReference := false;
+  CompiledExpr := TStringList.Create;
+  MotherCells := TSheetCellList.Create;
   //SourceCellsList := TSheetCellList.Create;
   //DependentCellsList := TSheetCellList.Create;
 end;
 
 destructor TSheetCell.Destroy;
 begin
+  MotherCells.Free;
+  CompiledExpr.Free;
   SourceCellsList.Free;
   //DependentCellsList.Free;
 
@@ -836,8 +891,12 @@ begin
     try
       SourceCellsList.Clear;
       SourceCellsListObjectsHaveReference := false;
+      MotherCells.Clear;
+      
       Sheet.TmpSourceCells := SourceCellsList;
       value := Sheet.Parser.Calc(expression);
+      //Sheet.Parser.Compile(expression, CompiledExpr);
+      //value := Sheet.Parser.Run(CompiledExpr);
     finally
       Sheet.TmpSourceCells := nil;
     end;
@@ -892,13 +951,35 @@ begin
 end;
 
 procedure TFSheets.EnterFormula;
+var i64_start, i64_end, i64_freq: int64;
+    i: integer;
 begin
   ActSheet.EditCell(Last_r, Last_c).ParseText(EditFormula.Text);
   ActSheet.BuildCalcSequence;
-  ActSheet.ReCalc;
-  ActSheet.SGrid.Invalidate;
+
+  QueryPerformanceCounter(i64_start);
+
+  //ActSheet.ReCalc;
+  while ActSheet.ReCalc <> ActSheet.CalcSequence.Count do begin
+    ActSheet.BuildCalcSequence;
+  end;
+
+  QueryPerformanceCounter(i64_end);
+  QueryPerformanceFrequency(i64_freq);
+
+  StatusBar.Panels[3].Text := format('%f',[1e6*(i64_end-i64_start)/i64_freq]);
+//  ActSheet.SGrid.Invalidate;
 end;
 
+procedure RefreshSheets;
+begin
+  FSheets.ActSheet.BuildCalcSequence;
+  FSheets.ActSheet.ReCalc;
+end;
+
+
 end.
+
+
 
 

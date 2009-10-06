@@ -719,10 +719,10 @@ begin
   Sender.AddMethod(Self, @TFEditor.ReadUDPData, 'function ReadUDPData: string;');
   Sender.AddMethod(Self, @TFEditor.WriteUDPData, 'procedure WriteUDPData(ToIP: string; ToPort: integer; s: string);');
 
-  Sender.AddFunction(@SetRCString, 'procedure SetRCString(r, c: integer; s: string);');
+  Sender.AddFunction(@SetRCValue, 'procedure SetRCValue(r, c: integer; s: string);');
   Sender.AddFunction(@GetRCValue, 'function GetRCValue(r, c: integer): double;');
   Sender.AddFunction(@RCButtonPressed, 'function RCButtonPressed(r, c: integer): boolean;');
-
+  Sender.AddFunction(@RefreshSheets, 'procedure RefreshSheets;');
 
   Sender.AddRegisteredPTRVariable('Time', 'Double');
   Sender.AddRegisteredPTRVariable('UDPDataRead', 'TMemoryStream');

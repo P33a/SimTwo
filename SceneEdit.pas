@@ -479,11 +479,17 @@ begin
 end;
 
 procedure TFSceneEdit.ReSpawn;
+var s: string;
 begin
   if not MustReSpawn then exit;
 
   if ReSpawnPars = '' then begin
-    ShellExecute(Handle, 'open', pchar(Application.ExeName), CmdLine, pchar(ExtractFilePath(Application.ExeName)),  SW_SHOWNORMAL);
+    if ParamCount > 0 then
+      s:=ansiquotedstr(ParamStr(1),'"')
+    else
+      s:='';
+    //ShellExecute(Handle, 'open', pchar(Application.ExeName), pchar(AnsiquotedStr(AnsiDequotedStr(s,''''),'''')) , pchar(ExtractFilePath(Application.ExeName)),  SW_SHOWNORMAL);
+    ShellExecute(Handle, 'open', pchar(Application.ExeName), pchar(s) , pchar(ExtractFilePath(Application.ExeName)),  SW_SHOWNORMAL);
   end else begin
     ShellExecute(Handle, 'open', pchar(Application.ExeName), pchar(ReSpawnPars), pchar(ExtractFilePath(Application.ExeName)),  SW_SHOWNORMAL);
   end;
@@ -496,7 +502,7 @@ begin
   if FChooseScene.ModalResult = mrCancel then exit;
   if FChooseScene.SelectedDir = '' then exit;
 
-  ReSpawnPars := FChooseScene.SelectedDir;
+  ReSpawnPars := ansiquotedstr(FChooseScene.SelectedDir,'"');
   MustReSpawn := true;
   FViewer.Close;
 end;

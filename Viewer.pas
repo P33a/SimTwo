@@ -2333,7 +2333,7 @@ procedure TWorld_ODE.LoadArcFromXML(const root: IXMLNode; Parser: TSimpleParser)
 var PolyNode: IXMLNode;
     Xc, Yc, Zc: double;
     innerRadius, outerRadius: double;
-    StartAngle, StopAngle, steps: double;
+    StartAngle, StopAngle, step: double;
     aWinColor: longWord;
     GLPolygon: TGLPolygon;
     ang: double;
@@ -2354,7 +2354,7 @@ begin
   Xc := 0; Yc := 0; Zc := 0;
   aWinColor := $808080;
   innerRadius := 0; outerRadius := 1;
-  StartAngle := 0; StopAngle := 180; steps := 20;
+  StartAngle := 0; StopAngle := 180; step := 15;
 
   while PolyNode <> nil do begin
     if PolyNode.NodeName = 'center' then begin
@@ -2367,6 +2367,7 @@ begin
     end else if PolyNode.NodeName = 'angle_deg' then begin
       StartAngle := GetNodeAttrRealParse(PolyNode, 'start', StartAngle, Parser);
       StopAngle := GetNodeAttrRealParse(PolyNode, 'stop', StopAngle, Parser);
+      step := GetNodeAttrRealParse(PolyNode, 'step', step, Parser);
     end else if PolyNode.NodeName = 'color' then begin
       aWinColor := StrToIntDef('$'+GetNodeAttrStr(PolyNode, 'rgb24', inttohex(aWinColor,6)), aWinColor);
       GLPolygon.Material.FrontProperties.Diffuse.AsWinColor := aWinColor;
@@ -2377,7 +2378,7 @@ begin
 
   StartAngle := DegToRad(StartAngle);
   StopAngle := DegToRad(StopAngle);
-  steps := DegToRad(steps);
+  step := DegToRad(step);
 
   // Draw outer arc
   GLPolygon.BeginUpdate;
@@ -2386,7 +2387,7 @@ begin
   while true do begin
     GLPolygon.AddNode(Xc + outerRadius * cos(ang), Yc + outerRadius * sin(ang), ang); // Z stores the angle temporarily
     if over then break;
-    ang := ang + steps;
+    ang := ang + step;
     if ang > StopAngle then begin
       ang :=  StopAngle;
       over := true;
@@ -2887,7 +2888,7 @@ begin
     end;
   end;
 
-  //showmessage(getCurrentDir);
+  //showmessage(getCurrentDir + ' ' + s);
   if DirectoryExists(s) then begin
     SetCurrentDir(s);
   end;
