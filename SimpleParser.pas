@@ -78,7 +78,7 @@ type
     function Assign(e: string): double;
 
     procedure Compile(e: string; nResultList: TStrings);
-    function Run(const rpnOps: string; rpnList: TStrings): double;
+    function Run(const rpnList: TStrings): double;
 
     procedure RegisterVariable(VarName: string; pvar: pdouble);
     procedure RegisterConst(ConstName: string; value: double);
@@ -384,8 +384,8 @@ var v1,v2: double;
 begin
   case Action of
     saCompile:
-      if ResultList<>nil then begin
-        ResultList.add(command + data);
+      if ResultList <> nil then begin
+        ResultList.AddObject(data, TObject(ord(command)));
       end;
     saEval: begin
       case command of
@@ -717,22 +717,28 @@ begin
 end;
 
 //function SimpleRun(const rpnOps: string; rpnList, nVarsList: TStrings): double;
-function TSimpleParser.Run(const rpnOps: string; rpnList: TStrings): double;
+//function TSimpleParser.Run(const rpnOps: string; rpnList: TStrings): double;
+function TSimpleParser.Run(const rpnList: TStrings): double;
 var i: integer;
 //    s: string;
 begin
-  Action:=saEval;
-  StackIndex:=0;
-  for i:=0 to length(rpnOps)-1 do begin
+  Action := saEval;
+  StackIndex := 0;
+  //for i:=0 to length(rpnOps)-1 do begin
+  for i := 0 to rpnList.Count - 1 do begin
+
     //s:=rpnOps.Strings[i];
     //if s='' then break;
     //EmitAction(s[1],copy(s,2,length(s)-1));
 
     //if rpnList[i]='' then break;
-    EmitAction(rpnOps[i+1],rpnList[i]);
+
+//    EmitAction(rpnOps[i+1],rpnList[i]);
+    EmitAction(chr(integer(rpnList.objects[i])), rpnList[i]);
+
     //EmitAction(rpnOps[i][1],copy(rpnOps[i],2,10000));
   end;
-  result:=Stack[0];
+  result := Stack[0];
 end;
 
 function TSimpleParser.Assign(e: string): double;
