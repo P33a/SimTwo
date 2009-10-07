@@ -26,8 +26,6 @@ type
 
     //SourceCellsList, DependentCellsList: TSheetCellList;
     SourceCellsList: TStringList;
-    MotherCells: TSheetCellList;
-    SourceCellsListObjectsHaveReference: boolean;
     level: integer;
 
     constructor Create;
@@ -35,8 +33,6 @@ type
     function DisplayText_: string;
     procedure ParseText(txt: string);
     function CalcSourceLevel: integer;
-    //function ColFromPack(v: TObject): integer;
-    //function RowFromPack(v: TObject): integer;
   end;
 
 
@@ -61,14 +57,14 @@ type
 
   TSheet = class
     name: string;
-    CellList: TSheetCellList;
+    CellList: TSheetCellList; // List of all, non empty, cells (owns each TSheetCell)
     SGrid: TSTringGrid;
-    DefaultSheetCell: TSheetCell;
+    DefaultSheetCell: TSheetCell;  // Empty TSheetCell
     Parser: TSimpleParser;
-    TmpSourceCells: TStringList;
-    TmpSourceCellsIdx: integer;
-    MustRebuildSourceCells: boolean;
-    CalcSequence: TSheetCellList;
+    TmpSourceCells: TStringList;   // "Global" that holds the SourceList that is being filled by the parser activity
+    TmpSourceCellsIdx: integer;    // "Global" position in the SourceList for the dependency checks
+    MustRebuildSourceCells: boolean; // "Global" that signals a change in the source cells list
+    CalcSequence: TSheetCellList;    // Recalc sequence that only evaluates each cell once  (does not owns each TSheetCell)
 
     constructor Create;
     destructor Destroy; override;
@@ -123,8 +119,6 @@ type
     procedure PanelFormulaClick(Sender: TObject);
   private
     procedure FillHeaders(SGrid: TStringGrid);
-    //procedure ParseFormulaText;
-    { Private declarations }
   public
     ActSheet: TSheet;
     Last_x, Last_y: integer;
@@ -160,6 +154,9 @@ uses Viewer, ProjConfig;
 // This function is regietered on the simpleparser to evaluate the RC(r,c) function
 // EVIL: a global (SourceCells) is being used to create a side effect where when
 //       there is an evaluation, the evaluated cell is added to the SourceCells list
+// EVEN MORE EVIL: Another global (TmpSourceCellsIdx) is used to signal that the evaluation
+//                 should check if the the source cells are the same or there was a change:
+//                 In that case the calc sequence may be invalid and should be recalculated
 function RCValue(const v: array of double): double;
 var SheetCell: TSheetCell;
     r, c: integer;
@@ -174,13 +171,10 @@ begin
       FSheets.ActSheet.TmpSourceCells.AddObject(format('%4d,%4d',[r, c]), TObject(((r and $FFFF) shl 16) or (c and $FFFF)));
     end else begin
       with FSheets.ActSheet do begin                        // Checking the dependency list;
-        //MotherCell := TSheetCell(TmpSourceCells.Objects[TmpSourceCellsIdx]);
         o := TmpSourceCells.Objects[TmpSourceCellsIdx];
-        //if (MotherCell.row <> r) or (MotherCell.col <> c) then begin
         if (rowfromPack(o) <> r) or (colfromPack(o) <> c) then begin
           MustRebuildSourceCells := true;
           TmpSourceCells.Objects[TmpSourceCellsIdx] :=  TObject(((r and $FFFF) shl 16) or (c and $FFFF));
-          //TmpSourceCells.Objects[TmpSourceCellsIdx] :=  TObject(FSheets.ActSheet.Cell(MotherCell.row, MotherCell.col));
         end;
         inc(TmpSourceCellsIdx);
       end;
@@ -396,7 +390,7 @@ begin
 
 end;
 
-procedure Sto_DrawCellText(const Canvas: TCanvas; const Rect: TRect;
+procedure MyDrawCellText(const Canvas: TCanvas; const Rect: TRect;
   const Text: String; const BackColor, TextColor: TColor;
   const Alignment: TAlignment);
 const
@@ -470,16 +464,14 @@ begin
   end;
   // draw the text in the cell
   if (SheetCell.CellType = ctText) or (SheetCell.CellType = ctFormula) then begin
-    Sto_DrawCellText(grdColored.Canvas, Rect, sText, myBackColor, myTextColor, myAlignment);
+    MyDrawCellText(grdColored.Canvas, Rect, sText, myBackColor, myTextColor, myAlignment);
   end else if SheetCell.CellType = ctButton then begin
     if SheetCell.CellButtonState = cstButtonDown then begin
       DrawFrameControl(grdColored.Canvas.Handle, Rect, DFC_BUTTON, DFCS_BUTTONPUSH or DFCS_PUSHED);
       DrawButtonText(grdColored.Canvas, Rect, sText, myBackColor, myTextColor, true);
-      //DrawButtonText(grdColored.Canvas, Rect, SheetCell.DisplayText, myBackColor, myTextColor, true);
     end else begin
       DrawFrameControl(grdColored.Canvas.Handle, Rect, DFC_BUTTON, DFCS_BUTTONPUSH);
       DrawButtonText(grdColored.Canvas, Rect, sText, myBackColor, myTextColor, false);
-      //DrawButtonText(grdColored.Canvas, Rect, SheetCell.DisplayText, myBackColor, myTextColor, false);
     end;
   end;
   //end;
@@ -608,9 +600,8 @@ begin
   end;
 
   Sheet.BuildCalcSequence;
-  //Sheet.ReCalc;
-  while ActSheet.ReCalc <> ActSheet.CalcSequence.Count do begin
-    ActSheet.BuildCalcSequence;
+  while Sheet.ReCalc <> Sheet.CalcSequence.Count do begin
+    Sheet.BuildCalcSequence;
   end;
 end;
 
@@ -709,7 +700,7 @@ function TSheet.ReCalc: integer;
 var i: integer;
     SheetCell: TSheetCell;
 begin
-  result := 0;
+  result := CalcSequence.Count;
   for i := 0 to CalcSequence.Count - 1 do begin
     SheetCell := CalcSequence[i];
     with SheetCell do begin
@@ -728,14 +719,12 @@ begin
       Sheet.SGrid.Cells[col, row] := format(NumberFormat, [value]);
 
       if MustRebuildSourceCells then begin
-        SourceCellsListObjectsHaveReference := false;
         result := i;
         exit;
       end;
 
     end;
   end;
-  result := CalcSequence.Count;
 end;
 
 procedure TSheet.ShowCalcSequence(SL: TStrings);
@@ -783,23 +772,17 @@ var i, row, col, idx: integer;
 begin
   result := 0;
   for i := 0 to SourceCellsList.Count -1 do begin
-    //if not SourceCellsListObjectsHaveReference then begin
-      o := SourceCellsList.Objects[i];
-      row := RowFromPack(o);
-      col := ColFromPack(o);
-      idx := Sheet.CellList.IndexFromRC(row, col);
-      if idx >= 0 then begin
-        MotherCells.Add(Sheet.CellList[idx]);
-        SheetCell := Sheet.CellList[idx];
-      end else begin
-        MotherCells.Add(Sheet.DefaultSheetCell);
-        SheetCell := Sheet.DefaultSheetCell;
-      end;
-    //end;
-    //SheetCell := MotherCells[i];
+    o := SourceCellsList.Objects[i];
+    row := RowFromPack(o);
+    col := ColFromPack(o);
+    idx := Sheet.CellList.IndexFromRC(row, col);
+    if idx >= 0 then begin
+      SheetCell := Sheet.CellList[idx];
+    end else begin
+      SheetCell := Sheet.DefaultSheetCell;
+    end;
     result := max(result, SheetCell.level);
   end;
-  SourceCellsListObjectsHaveReference := true;
 end;
 
 constructor TSheetCell.Create;
@@ -808,16 +791,13 @@ begin
   col := -1;
   NumberFormat := '%g';
   SourceCellsList := TStringList.Create;
-  SourceCellsListObjectsHaveReference := false;
   CompiledExpr := TStringList.Create;
-  MotherCells := TSheetCellList.Create;
   //SourceCellsList := TSheetCellList.Create;
   //DependentCellsList := TSheetCellList.Create;
 end;
 
 destructor TSheetCell.Destroy;
 begin
-  MotherCells.Free;
   CompiledExpr.Free;
   SourceCellsList.Free;
   //DependentCellsList.Free;
@@ -845,13 +825,21 @@ begin
 
 end;
 
-procedure TFSheets.EditFormulaKeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
+procedure TFSheets.EditFormulaKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+var SelRect: TGridRect;
 begin
-  if key = VK_RETURN then begin // 2nd way of accepting an edited formula
+  if key in [VK_RETURN, VK_DOWN, VK_UP] then begin // 2nd way of accepting an edited formula
     //ActSheet.EditCell(Last_r, Last_c).ParseText(EditFormula.Text);
     EnterFormula;
     ActSheet.SGrid.SetFocus;
+    if (key = VK_DOWN) then begin
+      SelRect := ActSheet.SGrid.Selection;
+      if SelRect.Top < ActSheet.SGrid.RowCount then begin
+        SelRect.Top := SelRect.Top + 1;
+        SelRect.Bottom := SelRect.Bottom + 1;
+        ActSheet.SGrid.Selection := SelRect;
+      end;
+    end;
   end else if key = VK_ESCAPE then begin
     Escaping := true;
     ActSheet.SGrid.SetFocus;
@@ -889,11 +877,11 @@ begin
   if (len > 0) and (s[1] = '=') then begin
     expression := copy(s, 2, maxint);
     try
-      SourceCellsList.Clear;
-      SourceCellsListObjectsHaveReference := false;
-      MotherCells.Clear;
-      
-      Sheet.TmpSourceCells := SourceCellsList;
+      SourceCellsList.Clear;  // Clean dependencies
+
+      Sheet.TmpSourceCells := SourceCellsList;  // Pass it, to build the source cells for this expression
+      Sheet.TmpSourceCellsIdx := -1;
+
       value := Sheet.Parser.Calc(expression);
       //Sheet.Parser.Compile(expression, CompiledExpr);
       //value := Sheet.Parser.Run(CompiledExpr);
@@ -952,7 +940,6 @@ end;
 
 procedure TFSheets.EnterFormula;
 var i64_start, i64_end, i64_freq: int64;
-    i: integer;
 begin
   ActSheet.EditCell(Last_r, Last_c).ParseText(EditFormula.Text);
   ActSheet.BuildCalcSequence;
@@ -973,8 +960,12 @@ end;
 
 procedure RefreshSheets;
 begin
-  FSheets.ActSheet.BuildCalcSequence;
-  FSheets.ActSheet.ReCalc;
+  with FSheets.ActSheet do begin
+    BuildCalcSequence;
+    while ReCalc <> CalcSequence.Count do begin
+      BuildCalcSequence;
+    end;
+  end;
 end;
 
 
