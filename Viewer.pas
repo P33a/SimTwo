@@ -1928,6 +1928,7 @@ begin
       Li := GetNodeAttrRealParse(prop, 'li', Li, Parser);
       Ki := GetNodeAttrRealParse(prop, 'ki', Ki, Parser);
       Vmax := GetNodeAttrRealParse(prop, 'vmax', Vmax, Parser);
+      Controller.y_sat := Vmax;
       Imax := GetNodeAttrRealParse(prop, 'imax', Imax, Parser);
       active := GetNodeAttrBool(prop, 'active', active);
       simple := GetNodeAttrBool(prop, 'simple', simple);
@@ -1947,7 +1948,7 @@ begin
         Ki := GetNodeAttrRealParse(prop, 'ki', Ki, Parser);
         Kd := GetNodeAttrRealParse(prop, 'kd', Kd, Parser);
         Kf := GetNodeAttrRealParse(prop, 'kf', Kf, Parser);
-        Y_sat := GetNodeAttrRealParse(prop, 'ysat', Y_sat, Parser);
+        //Y_sat := GetNodeAttrRealParse(prop, 'ysat', Y_sat, Parser);
         controlPeriod := GetNodeAttrRealParse(prop, 'period', controlPeriod, Parser)/1000;
         str := GetNodeAttrStr(prop, 'mode', 'pidspeed');
         if str = 'pidspeed' then ControlMode := cmPIDSpeed
@@ -3538,6 +3539,8 @@ begin
     FParams.ShowCameraConfig(GLCamera);
 
     GLSceneViewer.Invalidate;
+
+    //GLMemoryViewer.Render(nil);
   end;
 end;
 
@@ -3574,7 +3577,21 @@ begin
   end;
 end;
 
+function PosLastChar(c: char; S: string): Integer;
+var i: integer;
+begin
+//  result := 0;
+  i := length(s);
+  while i > 0 do begin
+    if s[i] = c then break;
+  end;
+  result := i;
+end;
+
+
 procedure TFViewer.FormClose(Sender: TObject; var Action: TCloseAction);
+var fl: string;
+    Slist: TStringList;
 begin
   FSceneEdit.Close;
 
@@ -3582,6 +3599,19 @@ begin
   GLCadencer.Enabled := False;
   WorldODE.ODEEnable := False;
   WorldODE.destroy;
+
+  fl := extractfilepath(application.exename) + 'Scene.cfg';
+  Slist := TStringList.Create;
+  try
+    try
+      Slist.Add(extractfilename(GetCurrentDir));
+      Slist.SaveToFile(fl);
+    finally
+      Slist.Free;
+    end;
+  except
+    on E: Exception do showmessage(E.Message);
+  end;
 
   FSceneEdit.ReSpawn;
 end;
@@ -3942,6 +3972,21 @@ end;
 // rotation only in z for the robots
 // 3ds offset
 
-// Optional walls
-// Sensores indutivos, capcitivos
+// Optional walls ??
+
+// Sensores indutivos
+// Sensores capacitivos
+// Sensores de linha branca
+// Sonar
+// Beacons
+// Receptores de beacons
+//  digitais
+//  analógicos
+//  indicandor de direcção
+// Bussola
+// Giroscopios
+// Acelerometros
+
 // Solve color input mess
+// Show tags not used
+// Show scene tree
