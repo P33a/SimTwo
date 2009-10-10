@@ -306,7 +306,7 @@ end;
 
 procedure TFSheets.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-//
+  SaveSheet('Global.S2Sheet', ActSheet);
 end;
 
 
