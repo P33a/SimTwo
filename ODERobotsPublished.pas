@@ -50,10 +50,10 @@ type
   end;
 
   TRGBAColor = record
-    Red: byte;
-    Green: byte;
-    Blue: byte;
-    alpha: byte;
+    Red: integer;
+    Green: integer;
+    Blue: integer;
+    alpha: integer;
   end;
 
 procedure SetFirePosition(x, y, z: double);
@@ -667,7 +667,7 @@ end;
 
 procedure SetThingColor(T, c: integer; Red, Green, Blue: byte);
 begin
-  WorldODE.Things[T].SetColor(Red, Green, Blue);
+  WorldODE.Things[T].SetColor(Red/255, Green/255, Blue/255);
 end;
 
 
@@ -679,7 +679,7 @@ end;
 
 procedure SetSolidColor(R, I: integer; Red, Green, Blue: byte);
 begin
-  WorldODE.Robots[R].Solids[i].SetColor(Red, Green, Blue);
+  WorldODE.Robots[R].Solids[i].SetColor(Red/255, Green/255, Blue/255);
 end;
 
 function GetAxisOdo(R, i: integer): integer;

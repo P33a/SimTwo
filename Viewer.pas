@@ -211,6 +211,8 @@ type
   public
     HUDStrings: TStringList;
     TrailsCount: integer;
+    CurrentProject: string;
+    
     procedure SetTrailCount(NewCount, NodeCount: integer);
     procedure AddTrailNode(T: integer; x, y, z: double);
     procedure DelTrailNode(T: integer);
@@ -2892,6 +2894,7 @@ begin
   //showmessage(getCurrentDir + ' ' + s);
   if DirectoryExists(s) then begin
     SetCurrentDir(s);
+    CurrentProject := s;
   end;
 
   FormStorage.IniFileName := GetIniFineName;
@@ -3665,7 +3668,7 @@ begin
   end else begin
     script := '';
   end;
-  Caption:=Format('SimTwo - v%s (%.1f FPS)%s', [InfoData[3], fps, script]);
+  Caption:=Format('SimTwo - v%s [%s] (%.1f FPS)%s', [InfoData[3], CurrentProject, fps, script]);
 end;
 
 

@@ -90,7 +90,7 @@ type
     procedure SetRotation(R: TdMatrix3); overload;
     procedure SetZeroState;
     procedure SetColor(R, G, B: single; A: single = 1);
-    procedure GetColor(out R, G, B, A: byte);
+    procedure GetColor(out R, G, B, A: integer);
     procedure SetTexture(TextureName: string; TextureScale: double);
     function GetPosition: TdVector3;
     function GetRotation: TdMatrix3;
@@ -636,12 +636,12 @@ begin
   GLObj.Material.FrontProperties.Diffuse.SetColor(R, G, B, A);
 end;
 
-procedure TSolid.GetColor(out R, G, B, A: byte);
+procedure TSolid.GetColor(out R, G, B, A: integer);
 begin
   if GLObj = nil then exit;
   with GLObj.Material.FrontProperties.Diffuse do begin
     R := round(255 * Red);
-    G := round(255 * Green);
+    G := round(255 * green);
     B := round(255 * Blue);
     A := round(255 * Alpha);
   end;
