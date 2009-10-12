@@ -224,9 +224,13 @@ object FSceneEdit: TFSceneEdit
         OnClick = MenuReBuildClick
       end
       object MenuChange: TMenuItem
-        Caption = '&Change'
+        Caption = '&Change...'
         ShortCut = 16453
         OnClick = MenuChangeClick
+      end
+      object MenuNewScene: TMenuItem
+        Caption = '&New...'
+        OnClick = MenuNewSceneClick
       end
     end
     object MenuWindow: TMenuItem

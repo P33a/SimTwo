@@ -45,6 +45,7 @@ type
     SaveDialog: TSaveDialog;
     FormStorage: TFormStorage;
     MenuChange: TMenuItem;
+    MenuNewScene: TMenuItem;
     procedure FormShow(Sender: TObject);
     procedure MenuReBuildClick(Sender: TObject);
     procedure SynEditXMLStatusChange(Sender: TObject;
@@ -66,6 +67,7 @@ type
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure LBErrorsDblClick(Sender: TObject);
     procedure MenuChangeClick(Sender: TObject);
+    procedure MenuNewSceneClick(Sender: TObject);
   private
     function GetSynEdit: TSynEdit;
     function ActSynEdit: TSynEdit;
@@ -503,6 +505,44 @@ begin
   if FChooseScene.SelectedDir = '' then exit;
 
   ReSpawnPars := ansiquotedstr(FChooseScene.SelectedDir,'"');
+  MustReSpawn := true;
+  FViewer.Close;
+end;
+
+procedure TFSceneEdit.MenuNewSceneClick(Sender: TObject);
+var s, od: string;
+    i: integer;
+    fo: _SHFILEOPSTRUCT;
+begin
+  i := 1;
+  s := 'Project' + inttostr(i);
+  while true do begin
+    if not (DirectoryExists('..\' + s) or FileExists('..\' + s)) then break;
+    inc(i);
+    s := 'Project' + inttostr(i);
+  end;
+
+  inputQuery('Choose new project name', '', s);
+
+  if DirectoryExists('..\' + s) or FileExists('..\' + s) then begin
+    showMessage('Project: ' + s  + ' already exists!');
+    exit;
+  end;
+
+  CreateDir('..\' + s);
+
+  od := GetCurrentDir;
+
+  fo.Wnd := handle;
+  fo.wFunc := FO_COPY;
+  fo.pFrom := pchar(od + '\..\base\*.*');
+  fo.pTo := pchar(od + '\..\' + s);
+  fo.fFlags := FOF_NOCONFIRMATION or FOF_SILENT;
+  fo.hNameMappings := nil;
+  fo.lpszProgressTitle := nil;
+  SHFileOperation(fo);
+
+  ReSpawnPars := ansiquotedstr(s,'"');
   MustReSpawn := true;
   FViewer.Close;
 end;
