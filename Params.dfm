@@ -154,7 +154,7 @@ object FParams: TFParams
         Top = 168
         Width = 261
         Height = 425
-        ActivePage = TabGlobal
+        ActivePage = TabAxis
         Anchors = [akLeft, akTop, akBottom]
         TabOrder = 4
         object TabGlobal: TTabSheet

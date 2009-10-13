@@ -619,7 +619,8 @@ begin
   if (i < 0) or (i >= WorldODE.Robots[r].Axes.Count) then exit;
 
   with WorldODE.Robots[r].Axes[i] do begin
-    if dJointGetType(ParentLink.joint) = ord(dJointTypeHinge) then begin
+    if (dJointGetType(ParentLink.joint) = ord(dJointTypeHinge)) or
+       (dJointGetType(ParentLink.joint) = ord(dJointTypeUniversal)) then begin
       ref.theta := degtorad(strtofloatdef(EditJointTetaRef.Text, 0));
     end else if dJointGetType(ParentLink.joint) = ord(dJointTypeSlider) then begin
       ref.theta := strtofloatdef(EditJointTetaRef.Text, 0);
