@@ -450,23 +450,23 @@ begin
   with WorldODE.Robots[idx] do begin
     for i := 0 to Axes.Count -1 do begin
       SGJoints.Cells[0,i+1] := Axes[i].ParentLink.ID;
-      SGJoints.Cells[1,i+1] := Axes[i].ParentLink.description;
+      SGJoints.Cells[4,i+1] := Axes[i].ParentLink.description;
 
       if (dJointGetType(Axes[i].ParentLink.joint) = ord(dJointTypeHinge)) or
          (dJointGetType(Axes[i].ParentLink.joint) = ord(dJointTypeUniversal)) then begin
         theta := radtodeg(Axes[i].GetPos);
-        SGJoints.Cells[3,i+1] := format('%.1f',[radtodeg(Axes[i].ref.theta)]);
+        SGJoints.Cells[2,i+1] := format('%.1f',[radtodeg(Axes[i].ref.theta)]);
       end else if dJointGetType(Axes[i].ParentLink.joint) = ord(dJointTypeSlider) then begin
         theta := Axes[i].GetPos;
-        SGJoints.Cells[3,i+1] := format('%.1f',[Axes[i].ref.theta]);
+        SGJoints.Cells[2,i+1] := format('%.1f',[Axes[i].ref.theta]);
       end;
-      SGJoints.Cells[2,i+1] := format('%.1f',[theta]);
+      SGJoints.Cells[1,i+1] := format('%.1f',[theta]);
 
       if wp_idx >= 0 then
-        SGJoints.Cells[4,i+1] := format('%.1f',[radtodeg(Axes[i].WayPoints[wp_idx].pos)]);
+        SGJoints.Cells[3,i+1] := format('%.1f',[radtodeg(Axes[i].WayPoints[wp_idx].pos)]);
 
       if i+1 = SGJoints.Selection.Top then begin
-        EditJointTeta.Text := SGJoints.Cells[2,i+1];
+        EditJointTeta.Text := SGJoints.Cells[1,i+1];
       end;
     end;
   end;
@@ -506,10 +506,10 @@ begin
   FormStorage.IniFileName := GetIniFineName;
 
   SGJoints.Cells[0,0] := 'ID';
-  SGJoints.Cells[1,0] := 'Description';
-  SGJoints.Cells[2,0] := 'Pos';
-  SGJoints.Cells[3,0] := 'Ref';
-  SGJoints.Cells[4,0] := 'WP';
+  SGJoints.Cells[1,0] := 'Pos';
+  SGJoints.Cells[2,0] := 'Ref';
+  SGJoints.Cells[3,0] := 'WP';
+  SGJoints.Cells[4,0] := 'Description';
 
   UDPGenData := TMemoryStream.Create;
 end;
@@ -975,14 +975,14 @@ procedure TFParams.BSetCamParsClick(Sender: TObject);
 var x, y, z: double;
 begin
   //FViewer.GLCamera.Position.SetPoint
-  x := strtofloat(EditSetCamX.Text);
-  y := strtofloat(EditSetCamY.Text);
-  z := strtofloat(EditSetCamZ.Text);
+  x := strtofloatdef(EditSetCamX.Text, 1);
+  y := strtofloatdef(EditSetCamY.Text, -1);
+  z := strtofloatdef(EditSetCamZ.Text, 1);
   FViewer.GLDummyCamPos.Position.SetPoint(x,y,z);
 
-  x := strtofloat(EditSetCamLookX.Text);
-  y := strtofloat(EditSetCamLookY.Text);
-  z := strtofloat(EditSetCamLookZ.Text);
+  x := strtofloatdef(EditSetCamLookX.Text, 0);
+  y := strtofloatdef(EditSetCamLookY.Text, 0);
+  z := strtofloatdef(EditSetCamLookZ.Text, 0);
   FViewer.GLDummyTargetCam.Position.SetPoint(x,y,z);
   //FViewer.GLCamera.TargetObject.Position.SetPoint(x,y,z);
 end;

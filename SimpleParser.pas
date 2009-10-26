@@ -771,6 +771,16 @@ begin
   result:=exp(1);
 end;
 
+function PaSqrt(const v: array of double): double;
+begin
+  result:=sqrt(v[0]);
+end;
+
+function PaSqr(const v: array of double): double;
+begin
+  result:=sqr(v[0]);
+end;
+
 function PaSin(const v: array of double): double;
 begin
   result:=sin(v[0]);
@@ -842,6 +852,31 @@ begin
   if v[0]<>0 then result:=0 else result:=1;
 end;
 
+function PaPow(const v: array of double): double;
+begin
+  result:=Power(v[0], v[1]);
+end;
+
+function PaExp(const v: array of double): double;
+begin
+  result:=exp(v[0]);
+end;
+
+function PaFrac(const v: array of double): double;
+begin
+  result:=Frac(v[0]);
+end;
+
+function PaLn(const v: array of double): double;
+begin
+  result:=ln(v[0]);
+end;
+
+function PaSign(const v: array of double): double;
+begin
+  result:=sign(v[0]);
+end;
+
 { TSimpleParser }
 
 procedure TSimpleParser.CopyVarList(const SourceParser: TSimpleParser);
@@ -864,6 +899,10 @@ begin
   RegisterFunction('pi', PaPi, 0);
   RegisterFunction('e', PaE, 0);
 
+  RegisterFunction('sqrt', PaSqrt, 1);
+  RegisterFunction('sqr', PaSqr, 1);
+  RegisterFunction('pow', PaPow, 2);
+
   RegisterFunction('sin', PaSin, 1);
   RegisterFunction('cos', PaCos, 1);
   RegisterFunction('tan', PaTan, 1);
@@ -883,6 +922,14 @@ begin
 
   RegisterFunction('int', PaInt, 1);
   RegisterFunction('abs', PaAbs, 1);
+  RegisterFunction('sign', PaSign, 1);
+
+  RegisterFunction('exp', PaExp, 1);
+  RegisterFunction('frac', PaFrac, 1);
+
+  RegisterFunction('ln', PaLn, 1);
+
+
   HashFuncsColisions := BuildHashTable(FuncsList, HashFuncs);
 
   ConstsCount := 0;

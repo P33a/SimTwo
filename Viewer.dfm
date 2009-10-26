@@ -1,6 +1,6 @@
 object FViewer: TFViewer
-  Left = 244
-  Top = 196
+  Left = 366
+  Top = 207
   AutoScroll = False
   Caption = 'SimTwo View'
   ClientHeight = 572

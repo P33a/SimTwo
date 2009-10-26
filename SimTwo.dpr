@@ -21,7 +21,12 @@ uses
   PathFinder in 'PathFinder.pas',
   SceneEdit in 'SceneEdit.pas' {FSceneEdit},
   Sheets in 'Sheets.pas' {FSheets},
-  ChooseScene in 'ChooseScene.pas' {FChooseScene};
+  ChooseScene in 'ChooseScene.pas' {FChooseScene},
+  dynmatrix in 'dynmatrix.pas',
+  odeimport in 'ODEImport.pas',
+  SimpleParser in 'SimpleParser.pas',
+  uPSI_PathFinder in 'uPSI_PathFinder.pas',
+  uPSI_dynmatrix in 'uPSI_dynmatrix.pas';
 
 {$R *.res}
 
