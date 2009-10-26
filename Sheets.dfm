@@ -1,6 +1,6 @@
 object FSheets: TFSheets
-  Left = 247
-  Top = 120
+  Left = 371
+  Top = 127
   Width = 870
   Height = 640
   Caption = 'Sheets'

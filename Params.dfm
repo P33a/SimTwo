@@ -1,6 +1,6 @@
 object FParams: TFParams
-  Left = 988
-  Top = 155
+  Left = 998
+  Top = 113
   Width = 281
   Height = 679
   Caption = 'Config'
@@ -649,11 +649,11 @@ object FParams: TFParams
             Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSelect]
             TabOrder = 0
             ColWidths = (
-              31
-              89
+              68
+              39
               38
               36
-              35)
+              47)
           end
           object EditJointTeta: TEdit
             Left = 22

@@ -1,6 +1,6 @@
 object FChart: TFChart
-  Left = 185
-  Top = 580
+  Left = 278
+  Top = 612
   Width = 715
   Height = 416
   Caption = 'Chart'

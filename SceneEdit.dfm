@@ -1,6 +1,6 @@
 object FSceneEdit: TFSceneEdit
-  Left = 253
-  Top = 338
+  Left = 380
+  Top = 356
   Width = 770
   Height = 606
   Caption = 'XML Scene Edit'

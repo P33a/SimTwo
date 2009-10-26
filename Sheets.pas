@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, rxPlacemnt, Grids, ComCtrls, StdCtrls, ExtCtrls, Menus, Buttons, OmniXML,
-  OmniXMLUtils, SimpleParser, math;
+  OmniXMLUtils, SimpleParser, math, dynmatrix;
 
 type
   TSheet = class;
@@ -138,6 +138,8 @@ var
 procedure SetRCValue(r, c: integer; s: string);
 function GetRCValue(r, c: integer): double;
 function RCButtonPressed(r, c: integer): boolean;
+function RangeToMatrix(r, c, rows, cols: integer): TDMatrix;
+procedure MatrixToRange(r, c: integer; const M: TDMatrix);
 procedure RefreshSheets;
 
 function ColFromPack(v: TObject): integer;
@@ -926,6 +928,27 @@ begin
     if SheetCell.value > 0 then begin
       result := true;
       SheetCell.value := 0;
+    end;
+  end;
+end;
+
+function RangeToMatrix(r, c, rows, cols: integer): TDMatrix;
+var ir, ic: integer;
+begin
+  result := Mzeros(rows, cols);
+  for ir := 0 to rows - 1 do begin
+    for ic := 0 to cols - 1 do begin
+      Msetv(result, ir, ic, FSheets.ActSheet.Cell(r + ir, c + ic).value);
+    end;
+  end;
+end;
+
+procedure MatrixToRange(r, c: integer; const M: TDMatrix);
+var ir, ic: integer;
+begin
+  for ir := 0 to M.rows - 1 do begin
+    for ic := 0 to M.cols - 1 do begin
+      FSheets.ActSheet.EditCell(r + ir, c + ic).ParseText(format('%g',[MGetv(M, ir ,ic)]));
     end;
   end;
 end;

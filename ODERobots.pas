@@ -280,10 +280,11 @@ type
   TSensorKind = (skGeneric, skIR, skIRSharp, skSonar);
 
   TSensor = class
-    Geom : PdxGeom;
+    //Geom : PdxGeom;
+    Geoms: TGeomList;
     GLObj: TGLSceneObject;
     measure: double;
-    pos: TdVector3;
+    pos, normal: TdVector3;
     kind: TSensorKind;
     Noise: TSensorNoise;
     has_measure: boolean;
@@ -1134,12 +1135,13 @@ end;
 
 constructor TSensor.Create;
 begin
-
+  Geoms := TGeomList.Create;
 end;
 
 destructor TSensor.Destroy;
 begin
-
+  Geoms.DeleteAllGeoms();
+  Geoms.Free;
   inherited;
 end;
 

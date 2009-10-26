@@ -9,7 +9,7 @@ uses
   Menus, SynEditPrint, ShellAPI, IniFiles, math, uPSComponent, uPSUtils, uPSRuntime,
   SynCompletionProposal, uPSComponent_Default, uPSComponent_StdCtrls,
   uPSComponent_Controls, uPSComponent_Forms, rxPlacemnt, ProjConfig,
-  SynEditMiscClasses, SynEditSearch;
+  SynEditMiscClasses, SynEditSearch, Dynmatrix;
 
 
 type
@@ -124,9 +124,11 @@ type
       X, Y, Line: Integer; Mark: TSynEditMark);
     procedure PopUpClearAllClick(Sender: TObject);
     procedure FindDialogFind(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
   private
+    FuncList, InsertList: TStringList;
+
     procedure writeLn(S: string);
-    function myFormat(const sFormat: string; const Args: array of const): string;
     procedure BuildRegFuncList(Sender: TPSScript);
     function ReadUDPData: string;
     procedure WriteUDPData(ToIP: string; ToPort: integer; s: string);
@@ -169,7 +171,7 @@ var
 implementation
 
 //uses Viewer, ProjManage, Params, FastChart, uPSDebugger;
-uses uPSDebugger, Sheets, Viewer, Utils, Params, uPSI_ODERobotsPublished, uPSI_PathFinder,
+uses uPSDebugger, Sheets, Viewer, Utils, Params, uPSI_ODERobotsPublished, uPSI_PathFinder, uPSI_dynmatrix,
   uPSCompiler, IdUDPBase;
 
 {$R *.dfm}
@@ -398,10 +400,13 @@ begin
 end;
 
 procedure TFEditor.FormCreate(Sender: TObject);
-var Plugin, PathPlugin: TPSPlugin;
+var Plugin, PathPlugin, MatrixPlugin: TPSPlugin;
 begin
   FormStorage.IniFileName := GetIniFineName;
   //TabPascal.TabVisible:=false;
+  FuncList := TStringList.Create;
+  InsertList := TStringList.Create;
+
 
   with PrintDialog do begin
     Collate := True;
@@ -416,6 +421,9 @@ begin
 
   PathPlugin := TPSImport_PathFinder.Create(Self);
   TPSPluginItem(PSScript.Plugins.add).Plugin := PathPlugin;
+
+  MatrixPlugin := TPSImport_dynmatrix.Create(Self);
+  TPSPluginItem(PSScript.Plugins.add).Plugin := MatrixPlugin;
 end;
 
 procedure TFEditor.UpdateStatusLine;
@@ -639,60 +647,62 @@ end;
 
 procedure TFEditor.BuildRegFuncList(Sender: TPSScript);
 var i, j, typ: integer;
-    Funclist: TStringList;
+    SaveFunclist: TStringList;
     S: string;
 begin
-  Funclist := TStringList.Create;
-  try
-    for i := 0 to Sender.Comp.GetRegProcCount-1 do  begin
-      //procedure Getdecl(decl : TPSParametersDecl; var T,v :string);
-      s:= Sender.Comp.GetRegProc(i).OrgName;
-      if (s <> '') and (s[1] <> '_') and (UpperCase(s) <> s) then begin
-        if Sender.Comp.GetRegProc(i).Decl.Result <> nil then begin
-          //s := 'function ' + s;
-          typ := 0;
-        end else begin
-          //s := 'procedure ' + s;
-          typ := 1;
-        end;
-        s := s + '(';
-        for j := 0 to Sender.Comp.GetRegProc(i).Decl.ParamCount - 1 do begin
-          if j <> 0 then s := s + ' ';
-          s := s + Sender.Comp.GetRegProc(i).Decl.Params[j].OrgName;
-          if Sender.Comp.GetRegProc(i).Decl.Params[j].aType <> nil then begin
-            s := s + ': ' + Sender.Comp.GetRegProc(i).Decl.Params[j].aType.OriginalName;
-            if j <> Sender.Comp.GetRegProc(i).Decl.ParamCount - 1 then s := s + ';';
-          end;
-        end;
-        if Sender.Comp.GetRegProc(i).Decl.Result <> nil then begin
-          s := s + '): ' + Sender.Comp.GetRegProc(i).Decl.Result.OriginalName + ';';
-        end else begin
-          s := s + ');';
-        end;
-        Funclist.AddObject(S, TObject(typ));
-      end;
-    end;
 
-    Funclist.Sort;
-
-    for i := 0 to Funclist.Count -1 do begin
-      if integer(Funclist.Objects[i]) = 1 then begin
-        Funclist.Strings[i] := ' procedure ' + Funclist.Strings[i];
+  for i := 0 to Sender.Comp.GetRegProcCount-1 do  begin
+    //procedure Getdecl(decl : TPSParametersDecl; var T,v :string);
+    s:= Sender.Comp.GetRegProc(i).OrgName;
+    if (s <> '') and (s[1] <> '_') and (UpperCase(s) <> s) then begin
+      if Sender.Comp.GetRegProc(i).Decl.Result <> nil then begin
+        //s := 'function ' + s;
+        typ := 0;
       end else begin
-        Funclist.Strings[i] := ' function ' + Funclist.Strings[i];
+        //s := 'procedure ' + s;
+        typ := 1;
       end;
-    end;
 
-    Funclist.SaveToFile('funclist.txt');
+      Insertlist.Add(s);
+
+      s := s + '(';
+      for j := 0 to Sender.Comp.GetRegProc(i).Decl.ParamCount - 1 do begin
+        if j <> 0 then s := s + ' ';
+        s := s + Sender.Comp.GetRegProc(i).Decl.Params[j].OrgName;
+        if Sender.Comp.GetRegProc(i).Decl.Params[j].aType <> nil then begin
+          s := s + ': ' + Sender.Comp.GetRegProc(i).Decl.Params[j].aType.OriginalName;
+          if j <> Sender.Comp.GetRegProc(i).Decl.ParamCount - 1 then s := s + ';';
+        end;
+      end;
+      if Sender.Comp.GetRegProc(i).Decl.Result <> nil then begin
+        s := s + '): ' + Sender.Comp.GetRegProc(i).Decl.Result.OriginalName + ';';
+      end else begin
+        s := s + ');';
+      end;
+      Funclist.AddObject(S, TObject(typ));
+    end;
+  end;
+
+  Insertlist.Sort;
+  Funclist.Sort;
+
+  for i := 0 to Funclist.Count -1 do begin
+    if integer(Funclist.Objects[i]) = 1 then begin
+      Funclist.Strings[i] := ' procedure ' + Funclist.Strings[i];
+    end else begin
+      Funclist.Strings[i] := ' function ' + Funclist.Strings[i];
+    end;
+  end;
+
+  SaveFunclist := TStringList.Create;
+  try
+    SaveFunclist.AddStrings(Funclist);
+    SaveFunclist.SaveToFile('funclist.txt');
   finally
-    Funclist.Free;
+    SaveFunclist.Free;
   end;
 end;
 
-function TFEditor.myFormat(const sFormat: string; const Args: array of const): string;
-begin
-  result := format(sFormat, Args);
-end;
 
 procedure TFEditor.PSScript_Compile(Sender: TPSScript);
 var i: integer;
@@ -712,7 +722,8 @@ begin
   Sender.AddFunction(@RotateAroundPoint, 'function RotateAroundPoint(var rx,ry: double; px,py,cx,cy,teta: double): double');
 
   Sender.AddMethod(Self, @TFEditor.Writeln, 'procedure WriteLn(S: string)');
-  Sender.AddMethod(Self, @TFEditor.myformat, 'function Format(const sFormat: string; const Args: array of const): string;');
+//  Sender.AddMethod(Self, @TFEditor.myformat, 'function Format(const sFormat: string; const Args: array of const): string;');
+  Sender.AddFunction(@format, 'function Format(const sFormat: string; const Args: array of const): string;');
   Sender.AddMethod(Self, @TFEditor.ReadComPort, 'function ReadComPort: string;');
   Sender.AddMethod(Self, @TFEditor.WriteComPort, 'procedure WriteComPort(s: string);');
 
@@ -722,6 +733,9 @@ begin
   Sender.AddFunction(@SetRCValue, 'procedure SetRCValue(r, c: integer; s: string);');
   Sender.AddFunction(@GetRCValue, 'function GetRCValue(r, c: integer): double;');
   Sender.AddFunction(@RCButtonPressed, 'function RCButtonPressed(r, c: integer): boolean;');
+  Sender.AddFunction(@RangeToMatrix, 'function RangeToMatrix(r, c, rows, cols: integer): TDMatrix;');
+  Sender.AddFunction(@MatrixToRange, 'procedure MatrixToRange(r, c: integer; const M: TDMatrix);');
+
   Sender.AddFunction(@RefreshSheets, 'procedure RefreshSheets;');
 
   Sender.AddRegisteredPTRVariable('Time', 'Double');
@@ -747,20 +761,31 @@ begin
   SynCompletionProposal.ItemList.BeginUpdate;
   SynCompletionProposal.ItemList.Clear;
 
+  SynCompletionProposal.InsertList.BeginUpdate;
+  SynCompletionProposal.InsertList.Clear;
+
   for i := 0 to PSScript.Exec.GlobalVarNames.Count - 1 do begin
     s:= PSScript.Exec.GlobalVarNames.Items[i];
-    if s <> '' then SynCompletionProposal.ItemList.Add(s);
+    if s <> '' then begin
+      SynCompletionProposal.ItemList.Add(s);
+      SynCompletionProposal.InsertList.Add(s);
+    end;
   end;
 
-  for i := 0 to sender.Comp.GetRegProcCount-1 do  begin
+ { for i := 0 to sender.Comp.GetRegProcCount-1 do  begin
     //procedure Getdecl(decl : TPSParametersDecl; var T,v :string);
     s:= Sender.Comp.GetRegProc(i).OrgName;
     if s <> '' then SynCompletionProposal.ItemList.Add(s);
-  end;
-  //SynCompletionProposal.ItemList.Add('Sek');
-  SynCompletionProposal.ItemList.EndUpdate;
+  end;}
+//  SynCompletionProposal.ItemList.Add('test_proc(var x: integer)');
+//  SynCompletionProposal.InsertList.Add('test_proc()');
 
   BuildRegFuncList(Sender);
+  SynCompletionProposal.ItemList.AddStrings(FuncList);
+  SynCompletionProposal.InsertList.AddStrings(InsertList);
+
+  SynCompletionProposal.ItemList.EndUpdate;
+  SynCompletionProposal.InsertList.EndUpdate;
 end;
 
 
@@ -1006,6 +1031,12 @@ begin
     UDPGenData.ReadBuffer(Pointer(result)^, UDPGenData.Size);
     UDPGenData.Clear;
   end;
+end;
+
+procedure TFEditor.FormDestroy(Sender: TObject);
+begin
+  FuncList.Free;
+  InsertList.Free;
 end;
 
 end.

@@ -1,6 +1,6 @@
 object FEditor: TFEditor
-  Left = 271
-  Top = 414
+  Left = 407
+  Top = 437
   Width = 775
   Height = 522
   Caption = 'Editor'
@@ -14,6 +14,7 @@ object FEditor: TFEditor
   OldCreateOrder = False
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnShow = FormShow
   DesignSize = (
     767
@@ -521,12 +522,14 @@ object FEditor: TFEditor
     Top = 36
   end
   object SynCompletionProposal: TSynCompletionProposal
+    Options = [scoLimitToMatchedText, scoUseInsertList, scoEndCharCompletion, scoCompleteWithTab, scoCompleteWithEnter]
     ItemList.Strings = (
       'Y1'
       'Y2'
       'R1'
       'R2'
       'Sek')
+    Width = 400
     EndOfTokenChr = '()[]. '
     TriggerChars = '.'
     Font.Charset = DEFAULT_CHARSET

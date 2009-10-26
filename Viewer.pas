@@ -268,11 +268,14 @@ begin
   if (n > 0) then  begin
     //FParams.EditDEbug2.Text := '';
     //if((dGeomGetClass(o1) = dRayClass) or (dGeomGetClass(o2) = dRayClass)) then begin
+
     if dGeomGetClass(o1) = dRayClass then begin
       if (o1.data <> nil) then begin
         with TSensor(o1.data) do begin
           pos := contact[0].geom.pos;
-          measure := min(measure, contact[0].geom.depth);
+          normal := contact[0].geom.normal;
+          measure := contact[0].geom.depth;
+          //measure := min(measure, contact[0].geom.depth);
           has_measure:= true;
         end;
       end;
@@ -283,7 +286,9 @@ begin
       if (o2.data <> nil) then begin
         with TSensor(o2.data) do begin
           pos := contact[0].geom.pos;
-          measure := min(measure, contact[0].geom.depth);
+          normal := contact[0].geom.normal;
+          measure := contact[0].geom.depth;
+          //measure := min(measure, contact[0].geom.depth);
           has_measure:= true;
         end;
       end;
@@ -709,9 +714,10 @@ end;
 procedure TWorld_ODE.CreateIRSensor(motherbody: PdxBody; IRSensor: TSensor; posX, posY, posZ: double; IR_teta, IR_length, InitialWidth, FinalWidth: double);
 //var R: TdMatrix3;
 begin
-  IRSensor.Geom := dCreateRay(space, IR_length);
-  dGeomSetBody(IRSensor.Geom, motherbody);
-  IRSensor.Geom.data := IRSensor;
+  //IRSensor.Geom := dCreateRay(space, IR_length);
+  IRSensor.Geoms.Add(dCreateRay(space, IR_length));
+  dGeomSetBody(IRSensor.Geoms[0], motherbody);
+  IRSensor.Geoms[0].data := IRSensor;
 
 //  dRFromAxisAndAngle(R, -sin(IR_teta), cos(IR_teta), 0, pi/2);
 //  dGeomSetOffsetRotation(IRSensor.Geom, R);
@@ -1884,11 +1890,11 @@ begin
       RFromZYXRotRel(R, angX, angY + pi/2, AngZ);
 
       if AbsoluteCoords then begin
-        dGeomSetOffsetWorldRotation(newIRSensor.Geom, R);
-        dGeomSetOffsetWorldPosition(newIRSensor.Geom, posX, posY, posZ);
+        dGeomSetOffsetWorldRotation(newIRSensor.Geoms[0], R);
+        dGeomSetOffsetWorldPosition(newIRSensor.Geoms[0], posX, posY, posZ);
       end else begin
-        dGeomSetOffsetRotation(newIRSensor.Geom, R);
-        dGeomSetOffsetPosition(newIRSensor.Geom, posX, posY, posZ);
+        dGeomSetOffsetRotation(newIRSensor.Geoms[0], R);
+        dGeomSetOffsetPosition(newIRSensor.Geoms[0], posX, posY, posZ);
       end;
 
       newIRSensor.SetColor(colorR, colorG, colorB);
@@ -3241,7 +3247,7 @@ begin
         //IRSensors
         for i := 0 to IRSensors.Count-1 do begin
           if IRSensors[i].GLObj = nil then continue;
-          PositionSceneObject(IRSensors[i].GLObj, IRSensors[i].Geom);
+          PositionSceneObject(IRSensors[i].GLObj, IRSensors[i].Geoms[0]);
           if IRSensors[i].GLObj is TGLCylinder then IRSensors[i].GLObj.pitch(90);
         end;
 
@@ -3299,7 +3305,7 @@ var theta, w, Tq: double;
     t_i1, t_i2, t_itot: int64;
     v1, v2: TdVector3;
 //    txt: string;
-    vs: TVector;                              
+    vs: TVector;
     Curpos: TPoint;
     newFixedTime: double;
 begin
@@ -3340,10 +3346,6 @@ begin
             FParams.ShowRobotPosition(r);
 
             // Default Control values are zero
-            //for i := 0 to Wheels.Count-1 do begin
-            //  Wheels[i].Axle.Axis[0].ref.volts := 0;
-            //  Wheels[i].Axle.Axis[0].ref.w := 0;
-            //end;
             for i := 0 to Axes.Count-1 do begin
               Axes[i].ref.volts := 0;
               Axes[i].ref.w := 0;
@@ -3487,7 +3489,7 @@ begin
           WorldODE.Robots[r].IRSensors[i].measure := 1e6;
           WorldODE.Robots[r].IRSensors[i].has_measure := false;
         end;
-      end;
+      end; //end robot loop
 
       if WorldODE.PickSolid <> nil then with WorldODE do begin
         if Focused then begin
@@ -3596,6 +3598,7 @@ procedure TFViewer.FormClose(Sender: TObject; var Action: TCloseAction);
 var fl: string;
     Slist: TStringList;
 begin
+  FSheets.Close;
   FSceneEdit.Close;
 
   //Execute Destroy Physics
@@ -3977,18 +3980,18 @@ end;
 
 // Optional walls ??
 
-// Sensores indutivos
-// Sensores capacitivos
-// Sensores de linha branca
-// Sonar
-// Beacons
-// Receptores de beacons
+// Sensores indutivos    1
+// Sensores capacitivos  1
+// Sensores de linha branca  1
+// Sonar 1-n
+// Beacons  0
+// Receptores de beacons  1-nb
 //  digitais
 //  analógicos
 //  indicandor de direcção
-// Bussola
-// Giroscopios
-// Acelerometros
+// Bussola       0
+// Giroscopios   0
+// Acelerometros 0
 
 // Solve color input mess
 // Show tags not used
