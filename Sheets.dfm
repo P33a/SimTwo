@@ -1,6 +1,6 @@
 object FSheets: TFSheets
-  Left = 371
-  Top = 127
+  Left = 370
+  Top = 168
   Width = 870
   Height = 640
   Caption = 'Sheets'
@@ -63,6 +63,7 @@ object FSheets: TFSheets
       TabOrder = 1
       OnExit = EditFormulaExit
       OnKeyDown = EditFormulaKeyDown
+      OnKeyPress = EditFormulaKeyPress
     end
   end
   object StatusBar: TStatusBar
@@ -114,8 +115,9 @@ object FSheets: TFSheets
         DefaultColWidth = 50
         DefaultRowHeight = 16
         RowCount = 128
-        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goDrawFocusSelected, goColSizing]
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goColSizing]
         ParentCtl3D = False
+        PopupMenu = PopupMenu
         TabOrder = 0
         OnDrawCell = SGGlobalDrawCell
         OnKeyDown = SGGlobalKeyDown
@@ -188,10 +190,57 @@ object FSheets: TFSheets
   object PopupMenu: TPopupMenu
     Left = 304
     Top = 61
-    object MenuButton: TMenuItem
-      AutoCheck = True
-      Caption = '&Button'
-      OnClick = MenuButtonClick
+    object Edit1: TMenuItem
+      Caption = '&Edit'
+      Visible = False
+      object Undo1: TMenuItem
+        Caption = '&Undo'
+        ShortCut = 16474
+      end
+      object Repeatcommand1: TMenuItem
+        Caption = '&Repeat <command>'
+      end
+      object N3: TMenuItem
+        Caption = '-'
+      end
+      object PasteSpecial1: TMenuItem
+        Caption = 'Paste &Special...'
+      end
+      object N2: TMenuItem
+        Caption = '-'
+      end
+      object Find1: TMenuItem
+        Caption = '&Find...'
+      end
+      object Replace1: TMenuItem
+        Caption = 'R&eplace...'
+      end
+      object GoTo1: TMenuItem
+        Caption = '&Go To...'
+      end
+    end
+    object Cut1: TMenuItem
+      Caption = 'Cu&t'
+      ShortCut = 16472
+      Visible = False
+    end
+    object MenuCopy: TMenuItem
+      Caption = '&Copy'
+      ShortCut = 16451
+      Visible = False
+    end
+    object MenuPaste: TMenuItem
+      Caption = '&Paste'
+      ShortCut = 16470
+      Visible = False
+    end
+    object N1: TMenuItem
+      Caption = '-'
+    end
+    object MenuDelete: TMenuItem
+      Caption = '&Delete Contents'
+      ShortCut = 46
+      OnClick = MenuDeleteClick
     end
   end
 end

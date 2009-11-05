@@ -518,7 +518,7 @@ object FEditor: TFEditor
     UsePreProcessor = True
     OnNeedFile = PSScriptNeedFile
     OnBreakpoint = PSScriptBreakpoint
-    Left = 260
+    Left = 256
     Top = 36
   end
   object SynCompletionProposal: TSynCompletionProposal

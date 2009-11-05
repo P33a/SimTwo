@@ -68,6 +68,8 @@ procedure SetRobotPos(R: integer; x, y, z, teta: double);
 function GetRobotPos2D(R: integer): TState2D;
 function GetRobotVel2D(R: integer): TState2D;
 
+function GetRobotCenterOfMass(R: integer): TPoint3D;
+
 function GetSolidIndex(R: integer; ID: string): integer;
 
 function GetSolidMass(R, i: integer): double;
@@ -132,6 +134,9 @@ procedure ResetAxisEnergy(R, i: integer);
 
 procedure SetMotorControllerPars(R, i: integer; nKi, nKd, nKp, nKf: double);
 function GetMotorControllerPars(R, i: integer): TMotorControllerPars;
+
+procedure SetMotorControllerMode(R, i: integer; newMode: string);
+function GetMotorControllerMode(R, i: integer): string;
 
 procedure SetMotorActive(R, i: integer; nState: boolean);
 function IsMotorActive(R, i: integer): boolean;
@@ -334,7 +339,7 @@ const
 
 implementation
 
-uses Math, Viewer, odeimport, utils, Keyboard, GLObjects;
+uses Math, Viewer, odeimport, utils, Keyboard, GLObjects, SysUtils;
 
 function Deg(angle: double): double;
 begin
@@ -391,6 +396,15 @@ begin
   end;
 end;
 
+
+function GetRobotCenterOfMass(R: integer): TPoint3D;
+var v0: TdVector3;
+begin
+  v0 := WorldODE.Robots[R].CalcCenterOfMass;
+  result.x := v0[0];
+  result.y := v0[1];
+  result.z := v0[2];
+end;
 
 function GetThingPos(T: integer): TPoint3D;
 var v1: TdVector3;
@@ -657,7 +671,7 @@ end;
 
 function GetSensorVal(R, i: integer): double;
 begin
-  result := WorldODE.Robots[r].IRSensors[i].measure;
+  result := WorldODE.Robots[r].Sensors[i].measure;
 end;
 
 function GetThingColor(T, c: integer): TRGBAColor;
@@ -790,6 +804,14 @@ begin
   end;
 end;
 
+function GetMotorControllerMode(R, i: integer): string;
+begin
+  with WorldODE.Robots[r].Axes[i].Motor.Controller do begin
+    // cmPIDPosition, cmPIDSpeed, cmState
+    result :=  ControlModeNames[ControlMode];
+  end;
+end;
+
 
 procedure SetAxisSpring(R, i: integer; k, ZeroPos: double);
 begin
@@ -835,8 +857,27 @@ begin
     Kd := nKd;
     Kp := nKp;
     Kf := nKf;
+    Sek := 0;
   end;
 end;
+
+procedure SetMotorControllerMode(R, i: integer; newMode: string);
+var s: string;
+begin
+  s := LowerCase(newMode);
+  with WorldODE.Robots[r].Axes[i].Motor.Controller do begin
+    // cmPIDPosition, cmPIDSpeed, cmState
+    if s = 'pidposition' then begin
+      ControlMode := cmPIDPosition;
+    end else if s = 'pidspeed' then begin
+      ControlMode := cmPIDSpeed;
+    end else if (s = 'state') or (s = 'statefeedback') then begin
+      ControlMode := cmState;
+    end else raise Exception.Create('Invalid SetMotorControllerMode parameter: ' + newMode);
+    Sek := 0;
+  end;
+end;
+
 
 procedure SetAxisStateRef(R, i: integer; aState: TAxisState);
 begin

@@ -154,7 +154,7 @@ object FParams: TFParams
         Top = 168
         Width = 261
         Height = 425
-        ActivePage = TabAxis
+        ActivePage = TabRobot
         Anchors = [akLeft, akTop, akBottom]
         TabOrder = 4
         object TabGlobal: TTabSheet
@@ -1576,7 +1576,8 @@ object FParams: TFParams
       'EditSetCamZ.Text'
       'EditTrailsCount.Text'
       'EditTrailSize.Text'
-      'RGGLObjects.ItemIndex')
+      'RGGLObjects.ItemIndex'
+      'PGRobots.TabIndex')
     StoredValues = <>
     Left = 236
     Top = 60
