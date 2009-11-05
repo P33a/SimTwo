@@ -267,6 +267,7 @@ type
     procedure ComboWayPointNameUpdate(robot: TRobot);
 
     procedure ShowCameraConfig(GLCamera: TGLCamera);
+    procedure ShowParsedScene;
 //    procedure ShowIRValues;
   end;
 
@@ -438,9 +439,9 @@ begin
   end;
 
   for i := low(EditsIR) to high(EditsIR) do begin
-    if (WorldODE.Robots[idx].IRSensors.Count > i) and
-       WorldODE.Robots[idx].IRSensors[i].has_measure then begin
-      EditsIR[i].Text := format('%.2f',[WorldODE.Robots[idx].IRSensors[i].measure]);
+    if (WorldODE.Robots[idx].Sensors.Count > i) and
+       WorldODE.Robots[idx].Sensors[i].has_measure then begin
+      EditsIR[i].Text := format('%.2f',[WorldODE.Robots[idx].Sensors[i].measure]);
     end else begin
       EditsIR[i].Text := '';
     end;
@@ -581,6 +582,24 @@ begin
   end;
 end;
 
+procedure TFParams.ShowParsedScene;
+var r, i: integer;
+begin
+  MemoDebug.Lines.Add(format('Robots: %d',[WorldODE.Robots.Count]));
+  for r:=0 to WorldODE.Robots.Count-1 do begin
+    MemoDebug.Lines.Add(format('Robot[%d]',[r]));
+    MemoDebug.Lines.Add(format('  axes: %d',[WorldODE.Robots[r].Axes.Count]));
+    for i:=0 to WorldODE.Robots[r].Axes.Count-1 do begin
+      with WorldODE.Robots[r].Axes[i] do begin
+        MemoDebug.Lines.Add(format('  axis[%d]: %s',[i, ParentLink.ID]));
+        MemoDebug.Lines.Add(format('    %s',[ControlModeNames[Motor.Controller.ControlMode]]));
+        MemoDebug.Lines.Add(format('    Active: %d',[ord(Motor.Controller.active)]));
+        MemoDebug.Lines.Add(format('    kp: %g',[Motor.Controller.Kp]));
+        MemoDebug.Lines.Add(format('    Gear: %g, Vmax: %g, Imax: %g',[Motor.GearRatio, Motor.Vmax, Motor.Imax]));
+      end;
+    end;
+  end;
+end;
 
 procedure TFParams.FillLBLinks(LB: TListBox; r: integer);
 var i: integer;
@@ -676,8 +695,8 @@ begin
   r := LBRobots.ItemIndex;
   if (r < 0) or (r >= WorldODE.Robots.Count) then exit;
 
-  for i := 0 to WorldODE.Robots[r].IRSensors.Count - 1 do begin
-    WorldODE.Robots[r].IRSensors[i].Noise.active := CBIRNoise.Checked;
+  for i := 0 to WorldODE.Robots[r].Sensors.Count - 1 do begin
+    WorldODE.Robots[r].Sensors[i].Noise.active := CBIRNoise.Checked;
   end;
 end;
 

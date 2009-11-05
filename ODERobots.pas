@@ -27,6 +27,10 @@ type
 
 type
   TControlMode = (cmPIDPosition, cmPIDSpeed, cmState);
+const
+  ControlModeNames: array[TControlMode] of string = ('PIDPosition', 'PIDSpeed', 'State');
+
+type
 
   TFriction = record
     Bv, Fc: double;
@@ -283,7 +287,7 @@ type
     //Geom : PdxGeom;
     Geoms: TGeomList;
     GLObj: TGLSceneObject;
-    measure: double;
+    dist, measure: double;
     pos, normal: TdVector3;
     kind: TSensorKind;
     Noise: TSensorNoise;
@@ -291,7 +295,7 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-    procedure SetColor(R, G, B: single; A: single = 1);
+    procedure SetColor(R, G, B: single; A: single = -1);
   end;
   //pTIRSensor = ^TIRSensor;
 
@@ -326,7 +330,7 @@ type
     MainBody: TSolid;
     Shells: TSolidList;
     Wheels: TWheelList;
-    IRSensors: TSensorList;
+    Sensors: TSensorList;
     Kind: TRobotKind;
     //SamplesCount, DecPeriodSamples: integer;
     //SecondsCount, DecPeriod: double;
@@ -337,6 +341,7 @@ type
     destructor Destroy; override;
     procedure SetXYZTeta(new_x, new_y, new_z, new_teta: double);
     procedure GetXYZTeta(out x, y, z, teta: double);
+    function CalcCenterOfMass: TdVector3;
   end;
 
   TRobotList = class(TList)
@@ -361,6 +366,7 @@ uses Utils;
 
 { TRobot }
 
+
 constructor TRobot.Create;
 begin
   Solids := TSolidList.Create;
@@ -369,13 +375,13 @@ begin
   AxesWayPointsIDs := TStringList.Create;
   Links := TSolidLinkList.Create;
   Wheels := TWheelList.Create;
-  IRSensors := TSensorList.Create;
+  Sensors := TSensorList.Create;
 end;
 
 destructor TRobot.Destroy;
 begin
-  IRSensors.ClearAll;
-  IRSensors.Free;
+  Sensors.ClearAll;
+  Sensors.Free;
   AxesWayPointsIDs.Free;
   //Axes.ClearAll; // TAxisList does not owns the axis
   Axes.Free;
@@ -483,6 +489,26 @@ begin
   end;
 
   ForceMoved := true;
+end;
+
+function TRobot.CalcCenterOfMass: TdVector3;
+var v0, vi: TdVector3;
+    m0, mi: double;
+    i: integer;
+begin
+  v0 := Vector3Make(0, 0, 0);
+  m0 := 0;
+
+  for i := 0 to Solids.Count - 1 do begin
+    vi := dBodyGetPosition(Solids[i].Body)^;
+    mi := Solids[i].Body.mass.mass;
+    v0 := Vector3ADD(v0, Vector3ScalarMul(vi, mi));
+    m0 := m0 + mi;
+  end;
+  if m0 > 0 then begin
+    v0 := Vector3ScalarMul(v0, 1/m0);
+  end;
+  result := v0;
 end;
 
 
@@ -1145,11 +1171,12 @@ begin
   inherited;
 end;
 
-procedure TSensor.SetColor(R, G, B: single; A: single = 1);
+procedure TSensor.SetColor(R, G, B: single; A: single = -1);
 begin
   if GLObj = nil then exit;
 //  with GLObj as TGLCylinder do begin
-    GLObj.Material.FrontProperties.Diffuse.SetColor(R, G, B, A);
+  if A = -1 then A := GLObj.Material.FrontProperties.Diffuse.Alpha;
+  GLObj.Material.FrontProperties.Diffuse.SetColor(R, G, B, A);
 //  end;
 end;
 

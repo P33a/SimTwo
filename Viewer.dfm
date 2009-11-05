@@ -686,6 +686,14 @@ object FViewer: TFViewer
     end
     object GLFreeForm1: TGLFreeForm
     end
+    object GLCone1: TGLCone
+      Material.FrontProperties.Diffuse.Color = {CDCC4C3FCDCC4C3FCDCC4C3F0000003F}
+      Material.BlendingMode = bmTransparency
+      Scale.Coordinates = {0000003F0000803F0000803F00000000}
+      Visible = False
+      BottomRadius = 0.500000000000000000
+      Height = 1.000000000000000000
+    end
     object GLCamera: TGLCamera
       DepthOfView = 1000000000.000000000000000000
       FocalLength = 76.633468627929690000

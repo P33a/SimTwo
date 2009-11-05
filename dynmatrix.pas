@@ -27,9 +27,9 @@ uses
 
 type
 
-  { TDMatrix }
+  { Matrix }
 
-  TDMatrix = record
+  Matrix = record
     data: array of double;
     rows: Longword;
     cols: Longword;
@@ -38,60 +38,60 @@ type
 //  TDoubleFunc = function(v: double): double;
 
 
-procedure MInit(var Mat: TDMatrix; newrows, newcols: Longword);
-procedure MTestData(const Mat: TDMatrix; out NRows, NCols: Longword);
+procedure MInit(var Mat: Matrix; newrows, newcols: Longword);
+procedure MTestData(const Mat: Matrix; out NRows, NCols: Longword);
 
-procedure MSetSize(var Mat: TDMatrix; newrows, newcols: Longword);
-procedure Msetv(var Mat: TDMatrix; r, c: Longword; v: double);
-function Mgetv(const Mat: TDMatrix; r, c: Longword): double;
-procedure MUsetv(var Mat: TDMatrix; r, c: Longword; v: double);
-function MUgetv(const Mat: TDMatrix; r, c: Longword): double;
+procedure MSetSize(var Mat: Matrix; newrows, newcols: Longword);
+procedure Msetv(var Mat: Matrix; r, c: Longword; v: double);
+function Mgetv(const Mat: Matrix; r, c: Longword): double;
+procedure MUsetv(var Mat: Matrix; r, c: Longword; v: double);
+function MUgetv(const Mat: Matrix; r, c: Longword): double;
 
-function MIsGood(const Mat: TDMatrix): boolean;
-function MNumCols(const Mat: TDMatrix): Longword;
-function MNumRows(const Mat: TDMatrix): Longword;
+function MIsGood(const Mat: Matrix): boolean;
+function MNumCols(const Mat: Matrix): Longword;
+function MNumRows(const Mat: Matrix): Longword;
 
-function Mzeros(numrows, numcols: LongWord): TDMatrix;
-function Meye(n: Longword): TDMatrix;
-function Mrandom(numrows, numcols: LongWord): TDMatrix;
-function Minc(numrows, numcols: LongWord): TDMatrix;
+function Mzeros(numrows, numcols: LongWord): Matrix;
+function Meye(n: Longword): Matrix;
+function Mrandom(numrows, numcols: LongWord): Matrix;
+function Minc(numrows, numcols: LongWord): Matrix;
 
-procedure ArrayToMatrix(var M: TDMatrix; const D: array of double);
+procedure ArrayToMatrix(var M: Matrix; const D: array of double);
 
-function Madd(const A, B: TDMatrix): TDMatrix;
-function MaddReal(const A: TDMatrix; k: double): TDMatrix;
-function Mneg(const A: TDMatrix): TDMatrix;
-function Msub(const A, B: TDMatrix): TDMatrix;
-function MsubReal(const A: TDMatrix; k: double): TDMatrix;
-function MmultReal(const A: TDMatrix; k: double): TDMatrix;
-function Mmult(const A, B: TDMatrix): TDMatrix;
-function MPower(const M: TDMatrix; const n: integer): TDMatrix;
+function Madd(const A, B: Matrix): Matrix;
+function MaddReal(const A: Matrix; k: double): Matrix;
+function Mneg(const A: Matrix): Matrix;
+function Msub(const A, B: Matrix): Matrix;
+function MsubReal(const A: Matrix; k: double): Matrix;
+function MmultReal(const A: Matrix; k: double): Matrix;
+function Mmult(const A, B: Matrix): Matrix;
+function MPower(const M: Matrix; const n: integer): Matrix;
 
-function Mtran(const M: TDMatrix): TDMatrix;
-function Minv(const M: TDMatrix): TDMatrix;
-function Minv_fast(const M: TDMatrix): TDMatrix;
+function Mtran(const M: Matrix): Matrix;
+function Minv(const M: Matrix): Matrix;
+function Minv_fast(const M: Matrix): Matrix;
 
-function MelementMult(const A, B: TDMatrix): TDMatrix;
+function MelementMult(const A, B: Matrix): Matrix;
 
-function Mmin(const M: TDMatrix): double;
-function Mmax(const M: TDMatrix): double;
-function MmaxAbs(const M: TDMatrix): double;
+function Mmin(const M: Matrix): double;
+function Mmax(const M: Matrix): double;
+function MmaxAbs(const M: Matrix): double;
 
-//function Mfunc(const A: TDMatrix; f: TDoubleFunc): TDMatrix;
+//function Mfunc(const A: Matrix; f: TDoubleFunc): Matrix;
 
-function MHflip(const M: TDMatrix): TDMatrix;
-function MConv(const A, B: TDMatrix): TDMatrix;
+function MHflip(const M: Matrix): Matrix;
+function MConv(const A, B: Matrix): Matrix;
 
-function MCrop(const M: TDMatrix; uprow, leftcol, downrow, rightcol: Longword): TDMatrix;
-function MOneCol(const M:TDMatrix; col: Longword): TDMatrix;
-function MOneRow(const M:TDMatrix; row: Longword): TDMatrix;
+function MCrop(const M: Matrix; uprow, leftcol, downrow, rightcol: Longword): Matrix;
+function MOneCol(const M:Matrix; col: Longword): Matrix;
+function MOneRow(const M:Matrix; row: Longword): Matrix;
 
-function MStamp(const M, S: TDMatrix; drow, dcol: Longword): TDMatrix;
-function MStampCol(const M, S: TDMatrix; col: Longword): TDMatrix;
-function MStampRow(const M, S: TDMatrix; row: Longword): TDMatrix;
+function MStamp(const M, S: Matrix; drow, dcol: Longword): Matrix;
+function MStampCol(const M, S: Matrix; col: Longword): Matrix;
+function MStampRow(const M, S: Matrix; row: Longword): Matrix;
 
-function MColsum(const M: TDMatrix): TDMatrix;
-function MRowsum(const M: TDMatrix): TDMatrix;
+function MColsum(const M: Matrix): Matrix;
+function MRowsum(const M: Matrix): Matrix;
 
 
 // Missing:
@@ -103,11 +103,11 @@ function MRowsum(const M: TDMatrix): TDMatrix;
 //procedure MShape2col(M:Matrix);
 //procedure MShape2row(M:Matrix);
 
-//function VDotProduct(A: TDMatrix; B: TDMatrix): TDMatrix;
-//function VExtProduct(A: TDMatrix; B: TDMatrix): TDMatrix;
-//function VNorm1(A: TDMatrix; B: TDMatrix): TDMatrix;
-//function VNorm2(A: TDMatrix; B: TDMatrix): TDMatrix;
-//function VNormInf(A: TDMatrix; B: TDMatrix): TDMatrix;
+//function VDotProduct(A: Matrix; B: Matrix): Matrix;
+//function VExtProduct(A: Matrix; B: Matrix): Matrix;
+//function VNorm1(A: Matrix; B: Matrix): Matrix;
+//function VNorm2(A: Matrix; B: Matrix): Matrix;
+//function VNormInf(A: Matrix; B: Matrix): Matrix;
 
 
 implementation
@@ -117,7 +117,7 @@ uses math;
 //{ $RANGECHECKS OFF }
 
 // <- Transpose of M
-function MTran(const M: TDMatrix): TDMatrix;
+function MTran(const M: Matrix): Matrix;
 var
   r,c: Longword;
 begin
@@ -129,13 +129,13 @@ begin
 end;
 
 // Zeros matrix
-function Mzeros(numrows, numcols: LongWord): TDMatrix;
+function Mzeros(numrows, numcols: LongWord): Matrix;
 begin
   MSetSize(result, numrows, numcols);
 end;
 
 // Identity matrix
-function Meye(n: Longword): TDMatrix;
+function Meye(n: Longword): Matrix;
 var i: Longword;
 begin
   MInit(result, n, n);
@@ -145,7 +145,7 @@ begin
 end;
 
 // Returns a Matrix with (numrows, numcols) elements with random values between 0 e 1
-function Mrandom(numrows, numcols: LongWord): TDMatrix;
+function Mrandom(numrows, numcols: LongWord): Matrix;
 var i: Longword;
 begin
   MInit(result, numrows, numcols);
@@ -154,7 +154,7 @@ begin
   end;
 end;
 
-function Minc(numrows, numcols: LongWord): TDMatrix;
+function Minc(numrows, numcols: LongWord): Matrix;
 var i: Longword;
 begin
   MInit(result, numrows, numcols);
@@ -165,13 +165,13 @@ end;
 
 
 // <- M^n (power n of a square matrix M) with non-negative, integer n.
-//function Mpow(const M: TDMatrix; n: longword): TDMatrix;
+//function Mpow(const M: Matrix; n: longword): Matrix;
 //begin
 //  result := M ** n;
 //end;
 
 
-function Madd(const A, B: TDMatrix): TDMatrix;
+function Madd(const A, B: Matrix): Matrix;
 var i : LongWord;
 begin
   if (A.rows <> B.rows) or (A.cols <> B.cols) then
@@ -186,7 +186,7 @@ begin
 end;
 
 
-function MaddReal(const A: TDMatrix; k: double): TDMatrix;
+function MaddReal(const A: Matrix; k: double): Matrix;
 var i: LongWord;
 begin
   MInit(result, A.rows, A.cols);
@@ -200,7 +200,7 @@ end;
 
 
 // <- -A  ie R(i,j) := -A(i,j)
-function Mneg(const A: TDMatrix): TDMatrix;
+function Mneg(const A: Matrix): Matrix;
 var i: LongWord;
 begin
   MInit(result, A.rows, A.cols);
@@ -212,7 +212,7 @@ begin
 end;
 
 // <- A-B  ie R(i,j) := A(i,j) - B(i,j)
-function Msub(const A, B: TDMatrix): TDMatrix;
+function Msub(const A, B: Matrix): Matrix;
 var i: LongWord;
 begin
   if (A.rows <> B.rows) or (A.cols <> B.cols) then
@@ -226,7 +226,7 @@ begin
 
 end;
 
-function MsubReal(const A: TDMatrix; k: double): TDMatrix;
+function MsubReal(const A: Matrix; k: double): Matrix;
 var i: LongWord;
 begin
   MInit(result, A.rows, A.cols);
@@ -239,7 +239,7 @@ end;
 
 
 // <- A * k (k: double) ie R(i,j) := A(i,j) * k
-function MmultReal(const A: TDMatrix; k: double): TDMatrix;
+function MmultReal(const A: Matrix; k: double): Matrix;
 var i: LongWord;
 begin
   MInit(result, A.rows, A.cols);
@@ -252,7 +252,7 @@ end;
 
 
 // <- A*B
-function Mmult(const A, B: TDMatrix): TDMatrix;
+function Mmult(const A, B: Matrix): Matrix;
 var r,c,i: LongWord;
   sum: double;
 begin
@@ -274,9 +274,9 @@ end;
 
 
 // <- M^n (power n of a square matrix M) with non-negative, integer n.
-function MPower(const M: TDMatrix; const n: integer): TDMatrix;
+function MPower(const M: Matrix; const n: integer): Matrix;
 var np: longword;
-    P: TDMatrix;
+    P: Matrix;
 begin
   if n < 0 then begin
     result := Mpower(Minv(M), -n);
@@ -307,9 +307,9 @@ begin
 end;
 
 
-{ TDMatrix }
+{ Matrix }
 
-procedure MInit(var Mat: TDMatrix; newrows, newcols: Longword);
+procedure MInit(var Mat: Matrix; newrows, newcols: Longword);
 begin
   with Mat do begin
     rows := NewRows;
@@ -319,7 +319,7 @@ begin
 end;
 
 // Inicializes a matrix with numrows lines and numcols columns
-procedure MSetSize(var Mat: TDMatrix; newrows, newcols: Longword);
+procedure MSetSize(var Mat: Matrix; newrows, newcols: Longword);
 begin
   with Mat do begin
     rows := NewRows;
@@ -330,7 +330,7 @@ end;
 
 
 // Write v to Element [r,c]
-procedure Msetv(var Mat: TDMatrix; r, c: Longword; v: double);
+procedure Msetv(var Mat: Matrix; r, c: Longword; v: double);
 begin
   with Mat do begin
     Setlength(data, rows * cols); // Make unique
@@ -341,7 +341,7 @@ begin
 end;
 
 // Get Element [r,c]
-function Mgetv(const Mat: TDMatrix; r, c: Longword): double;
+function Mgetv(const Mat: Matrix; r, c: Longword): double;
 begin
   with Mat do begin
     if (r >= Rows) or (c >= Cols) then
@@ -351,7 +351,7 @@ begin
 end;
 
 // Write to v Element [r,c] , ignore operation if r,c is out of bounds
-procedure MUsetv(var Mat: TDMatrix; r, c: Longword; v: double);
+procedure MUsetv(var Mat: Matrix; r, c: Longword; v: double);
 begin
   with Mat do begin
     Setlength(data, rows * cols);  // Make unique
@@ -361,7 +361,7 @@ begin
 end;
 
 // Get Element [r,c], 0 if r,c out of bounds
-function MUgetv(const Mat: TDMatrix; r, c: Longword): double;
+function MUgetv(const Mat: Matrix; r, c: Longword): double;
 begin
   with Mat do begin
     if (r >= Rows) or (c >= Cols) then begin
@@ -373,7 +373,7 @@ begin
 end;
 
 
-procedure MTestData(const Mat: TDMatrix; out NRows, NCols: Longword);
+procedure MTestData(const Mat: Matrix; out NRows, NCols: Longword);
 begin
   with Mat do begin
     NRows := rows;
@@ -394,14 +394,14 @@ begin
 end;
 
 // Get total number of columns
-function MNumCols(const Mat: TDMatrix): Longword;
+function MNumCols(const Mat: Matrix): Longword;
 begin
   result := Mat.cols;
 end;
 
 
 // Get total number of rows
-function MNumRows(const Mat: TDMatrix): Longword;
+function MNumRows(const Mat: Matrix): Longword;
 begin
   result := Mat.rows;
 end;
@@ -410,7 +410,7 @@ end;
 //  if the number of row and cols is not zero
 //  if the string size is compatible with expected embeded array
 // <- true if it is good
-function MIsGood(const Mat: TDMatrix): boolean;
+function MIsGood(const Mat: Matrix): boolean;
 begin
   with Mat do begin
     result:=false;
@@ -422,17 +422,17 @@ end;
 
 
 // <- A+B
-//function MAdd(A: TDMatrix; B: TDMatrix): TDMatrix; inline;
+//function MAdd(A: Matrix; B: Matrix): Matrix; inline;
 //begin
 //  result := A + B;
 //end;
 
 
 // <- M^-1
-function Minv(const M: TDMatrix): TDMatrix;
+function Minv(const M: Matrix): Matrix;
 var
   ROW, COL: array of Longword;
-  MatINV, MatTMP: TDmatrix;
+  MatINV, MatTMP: Matrix;
   HOLD , I_pivot , J_pivot: Longword;
   fv, pivot, abs_pivot, rel_eps: double;
   n, i, j, k, {r, c,} rin, rkn, ck, cj: Longword;
@@ -552,10 +552,10 @@ end;
 
 // <- M^-1
 // Faster and less acurate version
-function Minv_fast(const M: TDMatrix): TDMatrix;
+function Minv_fast(const M: Matrix): Matrix;
 var dim,r,c,t,pivrow,k: Longword;
   pivmax,pivot: double;
-  INV,TMP: TDmatrix;
+  INV,TMP: Matrix;
   ex,pdisp,cdisp:Longword;
   dtmp,victim,rk,norm,invnorm: double;
   Mzero : double;
@@ -624,7 +624,7 @@ end;
 
 
 // <- max M(i,j)
-function Mmax(const M: TDMatrix): double;
+function Mmax(const M: Matrix): double;
 var i: Longword;
 begin
   result := M.data[0];
@@ -635,7 +635,7 @@ end;
 
 
 // <- max |M(i,j)|
-function MmaxAbs(const M: TDMatrix): double;
+function MmaxAbs(const M: Matrix): double;
 var i: Longword;
 begin
   result := abs(M.data[0]);
@@ -646,7 +646,7 @@ end;
 
 
 // <- A .* B (Element-wise mutiplication)
-function MelementMult(const A, B: TDMatrix): TDMatrix;
+function MelementMult(const A, B: Matrix): Matrix;
 var i: LongWord;
 begin
   if (A.rows <> B.rows) or (A.cols <> B.cols) then
@@ -661,7 +661,7 @@ begin
 end;
 
 // <- min M(i,j)
-function Mmin(const M: TDMatrix): double;
+function Mmin(const M: Matrix): double;
 var i: Longword;
 begin
   result := M.data[0];
@@ -671,7 +671,7 @@ begin
 end;
 
 
-{function Mfunc(const A: TDMatrix; f: TDoubleFunc): TDMatrix;
+{function Mfunc(const A: Matrix; f: TDoubleFunc): Matrix;
 var i: Longword;
 begin
   result := A;
@@ -686,7 +686,7 @@ end;}
 
 
 // <- Reverse Columns
-function Mhflip(const M: TDMatrix): TDMatrix;
+function Mhflip(const M: Matrix): Matrix;
 var r,c: Longword;
 begin
   MInit(result, M.rows, M.cols);
@@ -699,7 +699,7 @@ end;
 
 
 // <- row convolution between A and B
-function MConv(const A, B: TDMatrix): TDMatrix;
+function MConv(const A, B: Matrix): Matrix;
 var ar,br,disp,r,c,i: Longword;
     pivot,prod: double;
 begin
@@ -722,7 +722,7 @@ end;
 
 
 // Fill matrix A with the elements from array D
-procedure ArrayToMatrix(var M: TDMatrix; const D: array of double);
+procedure ArrayToMatrix(var M: Matrix; const D: array of double);
 var i: Longword;
 begin
   if M.rows * M.cols <> Longword(high(D) - low(D) + 1) then
@@ -736,7 +736,7 @@ end;
 
 
 // <- A submatrix from M
-function MCrop(const M: TDMatrix; uprow, leftcol, downrow, rightcol: Longword): TDMatrix;
+function MCrop(const M: Matrix; uprow, leftcol, downrow, rightcol: Longword): Matrix;
 var rowsize,colsize,r,c: Longword;
 begin
   rowsize:=downrow-uprow+1;
@@ -758,14 +758,14 @@ end;
 
 
 // <- one col from M
-function MOneCol(const M:TDMatrix; col: Longword): TDMatrix;
+function MOneCol(const M:Matrix; col: Longword): Matrix;
 begin
   result := Mcrop(M, 0, col, M.rows - 1, col)
 end;
 
 
 // <- one row from M
-function MOneRow(const M:TDMatrix; row: Longword): TDMatrix;
+function MOneRow(const M:Matrix; row: Longword): Matrix;
 begin
   result := Mcrop(M, row, 0, row, M.cols - 1)
 end;
@@ -773,7 +773,7 @@ end;
 
 
 // <- Replace part of matrix M with matrix S
-function MStamp(const M, S: TDMatrix; drow, dcol: Longword): TDMatrix;
+function MStamp(const M, S: Matrix; drow, dcol: Longword): Matrix;
 var r,c: Longword;
 begin
   if (drow + S.rows > M.rows) or (dcol + S.cols > M.cols) then
@@ -790,13 +790,13 @@ begin
 end;
 
 // <-  (column of M with index col) := S
-function MStampCol(const M, S: TDMatrix; col: Longword): TDMatrix;
+function MStampCol(const M, S: Matrix; col: Longword): Matrix;
 begin
   result := MStamp(M, S, 0, col);
 end;
 
 // <- (row of M with index row) := S
-function MStampRow(const M, S: TDMatrix; row: Longword): TDMatrix;
+function MStampRow(const M, S: Matrix; row: Longword): Matrix;
 begin
   result := MStamp(M, S, row, 0);
 end;
@@ -804,7 +804,7 @@ end;
 
 
 // <- matrix with the sum of all M columns
-function MColsum(const M: TDMatrix): TDMatrix;
+function MColsum(const M: Matrix): Matrix;
 var r,c: Longword;
 begin
   result := MZeros(1, M.cols);
@@ -817,7 +817,7 @@ begin
 end;
 
 // <- matrix with the sum of all M rows
-function MRowsum(const M: TDMatrix): TDMatrix;
+function MRowsum(const M: Matrix): Matrix;
 var r,c: Longword;
 begin
   result := MZeros(M.rows, 1);

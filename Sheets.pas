@@ -89,11 +89,24 @@ type
     FormStorage: TFormStorage;
     MainMenu: TMainMenu;
     PopupMenu: TPopupMenu;
-    MenuButton: TMenuItem;
     SpeedButtonOK: TSpeedButton;
     MenuFile: TMenuItem;
     MenuSave: TMenuItem;
     MenuReLoad: TMenuItem;
+    Edit1: TMenuItem;
+    GoTo1: TMenuItem;
+    Replace1: TMenuItem;
+    Find1: TMenuItem;
+    N2: TMenuItem;
+    PasteSpecial1: TMenuItem;
+    MenuPaste: TMenuItem;
+    MenuCopy: TMenuItem;
+    Cut1: TMenuItem;
+    N3: TMenuItem;
+    Repeatcommand1: TMenuItem;
+    Undo1: TMenuItem;
+    N1: TMenuItem;
+    MenuDelete: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure SGGlobalMouseDown(Sender: TObject; Button: TMouseButton;
@@ -104,7 +117,6 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure FormDestroy(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure MenuButtonClick(Sender: TObject);
     procedure SpeedButtonOKClick(Sender: TObject);
     procedure MenuSaveClick(Sender: TObject);
     procedure MenuReLoadClick(Sender: TObject);
@@ -117,6 +129,8 @@ type
     procedure SGGlobalKeyPress(Sender: TObject; var Key: Char);
     procedure EditFormulaExit(Sender: TObject);
     procedure PanelFormulaClick(Sender: TObject);
+    procedure EditFormulaKeyPress(Sender: TObject; var Key: Char);
+    procedure MenuDeleteClick(Sender: TObject);
   private
     procedure FillHeaders(SGrid: TStringGrid);
   public
@@ -138,8 +152,9 @@ var
 procedure SetRCValue(r, c: integer; s: string);
 function GetRCValue(r, c: integer): double;
 function RCButtonPressed(r, c: integer): boolean;
-function RangeToMatrix(r, c, rows, cols: integer): TDMatrix;
-procedure MatrixToRange(r, c: integer; const M: TDMatrix);
+procedure ClearButtons;
+function RangeToMatrix(r, c, rows, cols: integer): Matrix;
+procedure MatrixToRange(r, c: integer; const M: Matrix);
 procedure RefreshSheets;
 
 function ColFromPack(v: TObject): integer;
@@ -290,6 +305,8 @@ procedure TFSheets.FormCreate(Sender: TObject);
 begin
   FormStorage.IniFileName := GetIniFineName;
   ActSheet := TSheet.Create;
+  Last_r := 1;
+  Last_c := 1;
 end;
 
 procedure TFSheets.FormDestroy(Sender: TObject);
@@ -298,11 +315,20 @@ begin
 end;
 
 procedure TFSheets.FormShow(Sender: TObject);
+var Sel: TGridRect;
 begin
   ActSheet.SGrid := SGGlobal;
   FillHeaders(SGGlobal);
+
+  Sel.Left := 1;
+  Sel.Top := 1;
+  Sel.Right := 1;
+  Sel.Bottom := 1;
+  SGGlobal.Selection := sel;
+
   if FileExists('Global.S2Sheet') then
     LoadSheet(ActSheet, 'Global.S2Sheet');
+
   StatusBar.Panels[0].Text := format('%3d: %3d',[1, 1]);
 end;
 
@@ -460,14 +486,20 @@ begin
     myAlignment := taCenter;
     myTextColor := grdColored.Font.Color;
   end else begin
-    myBackColor := grdColored.Color;
-    // set your own values...
-    myTextColor := clBtnText;
+    if (acol >= grdColored.Selection.Left) and (acol <= grdColored.Selection.Right) and
+       (arow >= grdColored.Selection.top) and (arow <= grdColored.Selection.bottom) then begin
+      myBackColor := clHighlight;
+      myTextColor := clHighlightText;
+    end else begin
+      myBackColor := grdColored.Color;
+      myTextColor := clWindowText;
+    end;
   end;
   // draw the text in the cell
   if (SheetCell.CellType = ctText) or (SheetCell.CellType = ctFormula) then begin
     MyDrawCellText(grdColored.Canvas, Rect, sText, myBackColor, myTextColor, myAlignment);
   end else if SheetCell.CellType = ctButton then begin
+    myTextColor := clBtnText;
     if SheetCell.CellButtonState = cstButtonDown then begin
       DrawFrameControl(grdColored.Canvas.Handle, Rect, DFC_BUTTON, DFCS_BUTTONPUSH or DFCS_PUSHED);
       DrawButtonText(grdColored.Canvas, Rect, sText, myBackColor, myTextColor, true);
@@ -479,21 +511,6 @@ begin
   //end;
 end;
 
-
-
-procedure TFSheets.MenuButtonClick(Sender: TObject);
-var SheetCell: TSheetCell;
-begin
-  SheetCell := ActSheet.EditCell(Last_r, Last_c);
-  if MenuButton.checked then begin
-    SheetCell.CellType := ctButton;
-    SheetCell.CellButtonState := cstButtonUp;
-  end else begin
-    // TODO: must reparse?
-    SheetCell.CellType := ctText;
-  end;
-  //ActGrid.Cells[Last_c, Last_r] := '0';
-end;
 
 
 procedure TFSheets.SpeedButtonOKClick(Sender: TObject);
@@ -832,6 +849,7 @@ var SelRect: TGridRect;
 begin
   if key in [VK_RETURN, VK_DOWN, VK_UP] then begin // 2nd way of accepting an edited formula
     //ActSheet.EditCell(Last_r, Last_c).ParseText(EditFormula.Text);
+    key := 0;
     EnterFormula;
     ActSheet.SGrid.SetFocus;
     if (key = VK_DOWN) then begin
@@ -932,7 +950,20 @@ begin
   end;
 end;
 
-function RangeToMatrix(r, c, rows, cols: integer): TDMatrix;
+procedure ClearButtons;
+var i: integer;
+    SheetCell: TSheetCell;
+begin
+  for i := 0 to FSheets.ActSheet.CellList.Count -1 do begin
+    SheetCell := FSheets.ActSheet.CellList[i];
+    if SheetCell.CellType = ctButton then begin
+      SheetCell.value := 0;
+    end;
+  end;
+end;
+
+
+function RangeToMatrix(r, c, rows, cols: integer): Matrix;
 var ir, ic: integer;
 begin
   result := Mzeros(rows, cols);
@@ -943,7 +974,7 @@ begin
   end;
 end;
 
-procedure MatrixToRange(r, c: integer; const M: TDMatrix);
+procedure MatrixToRange(r, c: integer; const M: Matrix);
 var ir, ic: integer;
 begin
   for ir := 0 to M.rows - 1 do begin
@@ -990,6 +1021,33 @@ begin
     end;
   end;
 end;
+
+
+procedure TFSheets.EditFormulaKeyPress(Sender: TObject; var Key: Char);
+begin
+  if key = #13 then begin // Eat beep
+    key := #0;
+  end;
+end;
+
+
+procedure ClearCells(CellsRect: TGridRect);
+var r, c: integer;
+//    SheetCell: TSheetCell;
+begin
+  for r := CellsRect.top to CellsRect.bottom do begin
+    for c := CellsRect.Left to CellsRect.Right do begin
+      FSheets.ActSheet.EditCell(r, c).ParseText('');
+    end;
+  end;
+end;
+
+
+procedure TFSheets.MenuDeleteClick(Sender: TObject);
+begin
+  ClearCells(ActSheet.SGrid.Selection);
+end;
+
 
 
 end.
