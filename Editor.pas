@@ -809,6 +809,10 @@ begin
   result := true;
 end;
 
+function random01: double;
+begin
+  result := random;
+end;
 
 procedure TFEditor.PSScript_Compile(Sender: TPSScript);
 var i: integer;
@@ -826,6 +830,10 @@ begin
   Sender.AddFunction(@TranslateAndRotate, 'function TranslateAndRotate(var rx,ry: double; px,py,tx,ty,teta: double): double');
   Sender.AddFunction(@RotateAndTranslate, 'function RotateAndTranslate(var rx,ry: double; px,py,tx,ty,teta: double): double');
   Sender.AddFunction(@RotateAroundPoint, 'function RotateAroundPoint(var rx,ry: double; px,py,cx,cy,teta: double): double');
+  Sender.AddFunction(@RandG, 'function RandG(Mean, StdDev: Extended): Extended;');
+  Sender.AddFunction(@random01, 'function random01: double;');
+  Sender.AddFunction(@Randomize, 'procedure Randomize;');
+
 
   Sender.AddMethod(Self, @TFEditor.Writeln, 'procedure WriteLn(S: string)');
 //  Sender.AddMethod(Self, @TFEditor.myformat, 'function Format(const sFormat: string; const Args: array of const): string;');
@@ -848,6 +856,8 @@ begin
   Sender.AddRegisteredPTRVariable('Time', 'Double');
   Sender.AddRegisteredPTRVariable('UDPDataRead', 'TMemoryStream');
   Sender.AddRegisteredPTRVariable('HUDStrings', 'TStringList');
+
+  Sender.AddRegisteredPTRVariable('RandSeed', 'LongInt');
 
 {  Sender.comp.AddTypeS('TMotVoltArray', 'array[1..4] of integer').ExportName := true;
   Sender.AddRegisteredPTRVariable('U', 'TMotVoltArray');
@@ -913,6 +923,8 @@ begin
   PSScript.SetPointerToData('Time', @(ProgTime), PSScript.FindBaseType(btDouble));
   PSScript.SetPointerToData('UDPDataRead', @(FParams.UDPGenData), PSScript.FindNamedType('TMemoryStream'));
   PSScript.SetPointerToData('HUDStrings', @(FViewer.HUDStrings), PSScript.FindNamedType('TStringList'));
+  PSScript.SetPointerToData('RandSeed', @RandSeed, PSScript.FindBaseType(btS32));
+
 //  PSScript.SetPointerToData('ScannerAngle', @(RemState.Robot.ScannerAngle), PSScript.FindBaseType(btDouble));
 
 {  PSScript.SetPointerToData('IO1', @(FParams.CBIO1), PSScript.FindNamedType('TCheckBox'));
