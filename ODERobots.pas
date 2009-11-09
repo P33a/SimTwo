@@ -276,6 +276,33 @@ type
     procedure ClearAll;
   end;
 
+  TSensorRay = class
+    Geom: PdxGeom;
+    HitSolid: TSolid;
+    dist, measure: double;
+    pos, normal: TdVector3;
+  public
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
+  TSensorRayList = class(TList)
+  private
+  protected
+    function GetItems(Index: Integer): TSensorRay;
+    procedure SetItems(Index: Integer; ASensorRay: TSensorRay);
+  public
+    function Add(ASensorRay: TSensorRay): Integer;
+    function Extract(Item: TSensorRay): TSensorRay;
+    function Remove(ASensorRay: TSensorRay): Integer;
+    function IndexOf(ASensorRay: TSensorRay): Integer;
+    function First: TSensorRay;
+    function Last: TSensorRay;
+    procedure Insert(Index: Integer; ASensorRay: TSensorRay);
+    property Items[Index: Integer]: TSensorRay read GetItems write SetItems; default;
+    procedure ClearAll;
+  end;
+
   TSensorNoise = record
     var_k, var_d, offset, gain: double;
     active: boolean;
@@ -1391,4 +1418,74 @@ begin
   end;
 end;
 
+{ TSensorRay }
+
+constructor TSensorRay.Create;
+begin
+
+end;
+
+destructor TSensorRay.Destroy;
+begin
+
+  inherited;
+end;
+
+{ TSensorRayList }
+
+function TSensorRayList.Add(ASensorRay: TSensorRay): Integer;
+begin
+  Result := inherited Add(ASensorRay);
+end;
+
+procedure TSensorRayList.ClearAll;
+var i: integer;
+begin
+  For i := 0 to count-1 do begin
+    GetItems(i).Free;
+  end;
+  clear;
+end;
+
+function TSensorRayList.Extract(Item: TSensorRay): TSensorRay;
+begin
+  Result := TSensorRay(inherited Extract(Item));
+end;
+
+function TSensorRayList.First: TSensorRay;
+begin
+  Result := TSensorRay(inherited First);
+end;
+
+function TSensorRayList.GetItems(Index: Integer): TSensorRay;
+begin
+  Result := TSensorRay(inherited Items[Index]);
+end;
+
+function TSensorRayList.IndexOf(ASensorRay: TSensorRay): Integer;
+begin
+  Result := inherited IndexOf(ASensorRay);
+end;
+
+procedure TSensorRayList.Insert(Index: Integer; ASensorRay: TSensorRay);
+begin
+  inherited Insert(Index, ASensorRay);
+end;
+
+function TSensorRayList.Last: TSensorRay;
+begin
+  Result := TSensorRay(inherited Last);
+end;
+
+function TSensorRayList.Remove(ASensorRay: TSensorRay): Integer;
+begin
+  Result := inherited Remove(ASensorRay);
+end;
+
+procedure TSensorRayList.SetItems(Index: Integer; ASensorRay: TSensorRay);
+begin
+  inherited Items[Index] := ASensorRay;
+end;
+
 end.
+
