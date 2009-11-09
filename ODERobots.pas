@@ -281,7 +281,7 @@ type
     active: boolean;
   end;
 
-  TSensorKind = (skGeneric, skIR, skIRSharp, skSonar);
+  TSensorKind = (skGeneric, skIR, skIRSharp, skSonar, skCapacitive, skInductive);
 
   TSensor = class
     //Geom : PdxGeom;
@@ -292,6 +292,7 @@ type
     kind: TSensorKind;
     Noise: TSensorNoise;
     has_measure: boolean;
+    MeasuredSolid: TSolid;
   public
     constructor Create;
     destructor Destroy; override;

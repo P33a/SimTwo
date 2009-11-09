@@ -592,10 +592,14 @@ begin
     for i:=0 to WorldODE.Robots[r].Axes.Count-1 do begin
       with WorldODE.Robots[r].Axes[i] do begin
         MemoDebug.Lines.Add(format('  axis[%d]: %s',[i, ParentLink.ID]));
-        MemoDebug.Lines.Add(format('    %s',[ControlModeNames[Motor.Controller.ControlMode]]));
-        MemoDebug.Lines.Add(format('    Active: %d',[ord(Motor.Controller.active)]));
-        MemoDebug.Lines.Add(format('    kp: %g',[Motor.Controller.Kp]));
-        MemoDebug.Lines.Add(format('    Gear: %g, Vmax: %g, Imax: %g',[Motor.GearRatio, Motor.Vmax, Motor.Imax]));
+        with Motor.Controller do begin
+          MemoDebug.Lines.Add(format('    Mode: %s, Active: %d, Period: %g ms',[ControlModeNames[ControlMode], ord(active), 1000*ControlPeriod]));
+          MemoDebug.Lines.Add(format('    kp: %g, ki: %g, kd: %g, kf: %g',[Kp, Ki, Kd, Kf]));
+        end;
+        with Motor do begin
+          MemoDebug.Lines.Add(format('    Ri: %g, Li: %g, K: %g',[Ri, Li, Ki]));
+          MemoDebug.Lines.Add(format('    Gear: %g, Vmax: %g, Imax: %g',[GearRatio, Vmax, Imax]));
+        end;
       end;
     end;
   end;
