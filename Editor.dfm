@@ -129,7 +129,7 @@ object FEditor: TFEditor
         Top = 329
         Width = 761
         Height = 100
-        ActivePage = TabErrors
+        ActivePage = TabOutput
         Align = alBottom
         TabOrder = 1
         TabPosition = tpBottom
@@ -138,16 +138,16 @@ object FEditor: TFEditor
           DesignSize = (
             753
             74)
-          object MemoResult: TMemo
+          object LBResult: TListBox
             Left = 0
             Top = 0
-            Width = 752
+            Width = 753
             Height = 73
             Anchors = [akLeft, akTop, akRight, akBottom]
+            ItemHeight = 13
+            MultiSelect = True
             PopupMenu = PopupMenuOutput
-            ReadOnly = True
             TabOrder = 0
-            WordWrap = False
           end
         end
         object TabErrors: TTabSheet
@@ -590,6 +590,19 @@ object FEditor: TFEditor
   object PopupMenuOutput: TPopupMenu
     Left = 192
     Top = 100
+    object MenuCut: TMenuItem
+      Caption = 'Cu&t'
+      ShortCut = 16472
+      OnClick = MenuCutClick
+    end
+    object MenuCopy: TMenuItem
+      Caption = '&Copy'
+      ShortCut = 16451
+      OnClick = MenuCopyClick
+    end
+    object N6: TMenuItem
+      Caption = '-'
+    end
     object PopUpClearAll: TMenuItem
       Caption = 'Clear &All'
       ShortCut = 16449

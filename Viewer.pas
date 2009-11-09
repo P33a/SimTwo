@@ -278,6 +278,7 @@ begin
           dist := contact[0].geom.depth;
           //measure := min(measure, contact[0].geom.depth);
           has_measure:= true;
+          MeasuredSolid := o2.data;
         end;
       end;
       //FParams.EditDEbug2.Text := format('%.2f, %.2f %.2f',[contact[0].geom.pos[0], contact[0].geom.pos[1], contact[0].geom.pos[2]]);;
@@ -291,6 +292,7 @@ begin
           dist := contact[0].geom.depth;
           //measure := min(measure, contact[0].geom.depth);
           has_measure:= true;
+          MeasuredSolid := o1.data;
         end;
       end;
       exit;
@@ -1213,6 +1215,8 @@ begin
         if bone.NodeName = 'belt' then newBone.kind := skMotorBelt;
         if bone.NodeName = 'propeller' then newBone.kind := skPropeller;
 
+        newBone.MatterProperties := MatterProps;
+
         // create mesh file
         if MeshFile <> '' then begin
           //newBone.GLObj.Visible := false;
@@ -1843,7 +1847,10 @@ begin
 
   sensor := root.FirstChild;
   while sensor <> nil do begin
-    if (sensor.NodeName = 'IR') or (sensor.NodeName = 'IRSharp') then begin
+    if (sensor.NodeName = 'IR') or
+       (sensor.NodeName = 'IRSharp') or
+       (sensor.NodeName = 'capacitive') or
+       (sensor.NodeName = 'inductive') then begin
       // default values
       MotherSolidId := '';
       SLen := 0.8; SInitialWidth := 0.01; SFinalWidth := 0.015;
@@ -1895,7 +1902,10 @@ begin
       // Create and position the sensor
       newSensor := TSensor.Create;
       newSensor.kind := skIR;
-      if sensor.NodeName = 'IRSharp' then newSensor.kind := skIRSharp;
+      if sensor.NodeName = 'IRSharp' then newSensor.kind := skIRSharp
+      else if sensor.NodeName = 'capacitive' then newSensor.kind := skCapacitive
+      else if sensor.NodeName = 'inductive' then newSensor.kind := skInductive;
+
       newSensor.Noise := Noise;
       Robot.Sensors.Add(newSensor);
 
@@ -2160,6 +2170,7 @@ var ShellNode, prop: IXMLNode;
     CompMass, NewMass: TdMass;
     PGeomPos: PdVector3;
     i: integer;
+    MatterProps: TMatterProperties;
 begin
   if root = nil then exit;
 
@@ -2175,6 +2186,7 @@ begin
       posX := 0; posY := 0; posZ := 0;
       angX := 0; angY := 0; angZ := 0;
       colorR := 128/255; colorG := 128/255; colorB := 128/255;
+      MatterProps := [];
       MotherSolidId := '';
       while prop <> nil do begin
         if prop.NodeName = 'ID' then begin
@@ -2208,6 +2220,12 @@ begin
           colorR := GetNodeAttrInt(prop, 'r', 128)/255;
           colorG := GetNodeAttrInt(prop, 'g', 128)/255;
           colorB := GetNodeAttrInt(prop, 'b', 128)/255;
+        end;
+        if prop.NodeName = 'metallic' then begin
+          MatterProps := MatterProps + [smMetallic];
+        end;
+        if prop.NodeName = 'ferromagnetic' then begin
+          MatterProps := MatterProps + [smFerromagnetic];
         end;
         prop := prop.NextSibling;
       end;
@@ -2244,6 +2262,7 @@ begin
         CreateShellSphere(newShell, MotherSolid.Body, posX, posY, posZ, radius);
         if mass > 0 then dMassSetSphereTotal(NewMass, mass, radius);
       end;
+      newShell.MatterProperties := MatterProps;
 
       RFromZYXRotRel(R, angX, angY, AngZ);
       dGeomSetOffsetRotation(newShell.Geom, R);
@@ -3029,7 +3048,7 @@ procedure AxisTorqueModel(axis: TAxis; Theta, w, dt: double; var T: double);
 var old_Im, dI, err: double;
     max_delta_Im: double;
     minLim, maxLim: double;
-    ev: double;
+    ev, ebt: double;
 begin
   max_delta_Im := 0.15; // A/ms
   with Axis do begin
@@ -3084,14 +3103,33 @@ begin
       old_Im := Motor.Im;
 
       if not Motor.simple then begin
-        ev := w * Motor.GearRatio * Motor.Ki;
+        ev := w * Motor.GearRatio * Motor.Ki ;
         ev := max(-Motor.Vmax, min(Motor.Vmax, ev));
-        if Motor.Ri <> 0 then begin
-          if Motor.Li/Motor.Ri < dt then begin
+
+        if Motor.Li <> 0 then begin
+          if Motor.Ri <> 0 then begin
+            ebt := exp(-dt*Motor.Ri / Motor.Li);
+            Motor.Im := ebt * Motor.Im + (1 - ebt) * (Motor.voltage - ev) / Motor.Ri;
+          end else begin
+            dI := dt / Motor.Li * (Motor.voltage - ev);
+            Motor.Im := Motor.Im + dI;
+          end;
+        end else begin
+          if Motor.Ri <> 0 then begin
             Motor.Im := (Motor.voltage - ev) / Motor.Ri;
           end else begin
-            dI := dt / Motor.Li * (Motor.voltage - ev - Motor.Ri* Motor.Im);
-            Motor.Im := Motor.Im + dI;
+            Motor.Im := Motor.Imax * sign(Motor.voltage);
+          end;
+        end;
+
+{        if Motor.Ri <> 0 then begin
+          if Motor.Li/Motor.Ri > 1/(5*dt) then begin
+            Motor.Im := (Motor.voltage - ev) / Motor.Ri;
+          end else begin
+            //dI := dt / Motor.Li * (Motor.voltage - ev - Motor.Ri* Motor.Im);
+            //Motor.Im := Motor.Im + dI;
+            ebt := exp(-dt*Motor.Ri / Motor.Li);
+            Motor.Im := ebt * Motor.Im + (1 - ebt) * (Motor.voltage - ev) / Motor.Ri;
           end;
         end else begin
           if Motor.Li <> 0 then begin
@@ -3101,6 +3139,7 @@ begin
             Motor.Im := Motor.Imax * sign(Motor.voltage);
           end;
         end;
+}
       end else begin
         Motor.Im := Motor.voltage / Motor.Ri;
       end;
@@ -3180,7 +3219,7 @@ end;
 procedure TFViewer.IRSharpNoiseModel(r, i: integer);
 var v, iv, var_v, m, var_dist: double;
 begin
-  v := 0;
+  //v := 0;
   with WorldODE.Robots[r].Sensors[i] do begin
     if kind <> skIRSharp then exit;
     if not has_measure then exit;
@@ -3262,7 +3301,7 @@ begin
           PositionSceneObject(Shells[i].GLObj, Shells[i].Geom);
           if Shells[i].GLObj is TGLCylinder then Shells[i].GLObj.pitch(90);
         end;
-        //IRSensors
+        //Sensors
         for i := 0 to Sensors.Count-1 do begin
           if Sensors[i].GLObj = nil then continue;
           PositionSceneObject(Sensors[i].GLObj, Sensors[i].Geoms[0]);
@@ -3344,6 +3383,7 @@ begin
         t_last := t_act;
         QueryPerformanceCounter(t_act);
 
+        // Before control block
         for r := 0 to WorldODE.Robots.Count-1 do begin
           with WorldODE.Robots[r] do begin
 
@@ -3382,6 +3422,8 @@ begin
 
             // Call the selected Decision System
             if Fparams.RGControlBlock.ItemIndex = 0 then begin
+              zeromemory(@KeyVals[0], sizeof(KeyVals));
+              ReadKeyVals(KeyVals);
               if r = Fparams.LBRobots.ItemIndex then begin
                 for i := 0 to WorldODE.Robots[r].Wheels.Count-1 do begin
                   Wheels[i].Axle.Axis[0].ref.volts := Keyvals[i] * Wheels[i].Axle.Axis[0].Motor.Vmax;
@@ -3389,7 +3431,11 @@ begin
                 end;
               end;
             end else if Fparams.RGControlBlock.ItemIndex = 1 then begin  // Script controller
-              if r = 0 then FEditor.RunOnce;
+              if r = 0 then FEditor.RunOnce; // One call to the script, in the begining, for all robots
+              if FEditor.SimTwoCloseRequested then begin
+                close;
+                exit;
+              end;
             end else if Fparams.RGControlBlock.ItemIndex = 2 then begin  // LAN controller
               Fparams.UDPServer.SendBuffer(Fparams.EditRemoteIP.Text, 9801, RemState, sizeof(RemState));
               // Test if A new position was requested
@@ -3539,7 +3585,30 @@ begin
       for r := 0 to WorldODE.Robots.Count-1 do begin
         for i := 0 to WorldODE.Robots[r].Sensors.Count - 1 do begin
           with WorldODE.Robots[r].Sensors[i] do begin
-            measure := min(measure, dist);
+            //measure := min(measure, dist);
+            case kind of
+              skIRSharp:
+                measure := min(measure, dist);
+              skCapacitive: begin
+                if has_measure then begin
+                  measure := 1
+                end else begin
+                  measure := 0;
+                  has_measure := true;
+                end;
+              end;
+              skInductive: begin
+                if has_measure then begin
+                  if (MeasuredSolid <> nil) and
+                     (smMetallic in MeasuredSolid.MatterProperties) then
+                        measure := 1
+                  else measure := 0;
+                end else begin
+                  measure := 0;
+                  has_measure := true;
+                end;
+              end;
+            end;
           end;
         end;
       end;
@@ -4013,8 +4082,6 @@ end;
 
 // Optional walls ??
 
-// Sensores indutivos    1
-// Sensores capacitivos  1
 // Sensores de linha branca  1
 // Sonar 1-n
 // Beacons  0

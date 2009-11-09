@@ -9,7 +9,7 @@ uses
   Menus, SynEditPrint, ShellAPI, IniFiles, math, uPSComponent, uPSUtils, uPSRuntime,
   SynCompletionProposal, uPSComponent_Default, uPSComponent_StdCtrls,
   uPSComponent_Controls, uPSComponent_Forms, rxPlacemnt, ProjConfig,
-  SynEditMiscClasses, SynEditSearch, Dynmatrix, uPSCompiler;
+  SynEditMiscClasses, SynEditSearch, Dynmatrix, uPSCompiler, Clipbrd;
 
 
 type
@@ -22,7 +22,6 @@ type
     SynEditST: TSynEdit;
     PageControlBottom: TPageControl;
     TabOutput: TTabSheet;
-    MemoResult: TMemo;
     TabErrors: TTabSheet;
     LBErrors: TListBox;
     TabPascal: TTabSheet;
@@ -85,6 +84,10 @@ type
     SynEditSearch: TSynEditSearch;
     Label3: TLabel;
     MemoDescription: TMemo;
+    LBResult: TListBox;
+    MenuCopy: TMenuItem;
+    MenuCut: TMenuItem;
+    N6: TMenuItem;
     procedure SynEditSTMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
     procedure SynEditSTStatusChange(Sender: TObject;
@@ -125,6 +128,8 @@ type
     procedure PopUpClearAllClick(Sender: TObject);
     procedure FindDialogFind(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure MenuCutClick(Sender: TObject);
+    procedure MenuCopyClick(Sender: TObject);
   private
     FuncList, InsertList: TStringList;
     TypeList: TStringList;
@@ -147,6 +152,7 @@ type
 //    IOControl: TIOControl;
     compiled, LocalInspector: boolean;
     LocalInspectorLine: integer;
+    SimTwoCloseRequested: boolean;
 
     procedure RunOnce;
     function Compile: boolean;
@@ -271,12 +277,11 @@ end;
 
 procedure TFEditor.writeLn(S: string);
 begin
-  MemoResult.Lines.Add(S);
-  //MemoResult.Lines.BeginUpdate;
-  while MemoResult.Lines.Count > 100 do begin
-    MemoResult.Lines.Delete(0);
+  while LBResult.Items.Count > 1000 do begin
+    LBResult.Items.Delete(0);
   end;
-  //MemoResult.Lines.EndUpdate;
+  LBResult.Items.Add(S);
+  LBResult.ItemIndex := LBResult.Items.Count-1;
 end;
 
 
@@ -814,6 +819,12 @@ begin
   result := random;
 end;
 
+procedure CloseSimTwo;
+begin
+  FEditor.SimTwoCloseRequested := true;
+end;
+
+
 procedure TFEditor.PSScript_Compile(Sender: TPSScript);
 var i: integer;
     s: string;
@@ -852,6 +863,8 @@ begin
   Sender.AddFunction(@ClearButtons, 'procedure ClearButtons;');
 
   Sender.AddFunction(@RefreshSheets, 'procedure RefreshSheets;');
+
+  Sender.AddFunction(@CloseSimTwo, 'procedure CloseSimTwo;');
 
   Sender.AddRegisteredPTRVariable('Time', 'Double');
   Sender.AddRegisteredPTRVariable('UDPDataRead', 'TMemoryStream');
@@ -1156,6 +1169,31 @@ begin
   FuncList.Free;
   InsertList.Free;
 end;
+
+procedure CopySelectedToClipboard(LB: TListBox);
+var s: string;
+    i: integer;
+begin
+  s := '';
+  for i := 0 to LB.Count - 1 do begin
+    if LB.Selected[i] then begin
+      s := s + LB.Items[i] + #$0D + #$0A;
+    end;
+  end;
+  clipboard.AsText := s;
+end;
+
+procedure TFEditor.MenuCopyClick(Sender: TObject);
+begin
+  CopySelectedToClipboard(LBResult);
+end;
+
+procedure TFEditor.MenuCutClick(Sender: TObject);
+begin
+  CopySelectedToClipboard(LBResult);
+  LBResult.DeleteSelected;
+end;
+
 
 end.
 
