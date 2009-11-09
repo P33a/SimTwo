@@ -1275,7 +1275,6 @@ object FParams: TFParams
         Width = 269
         Height = 21
         TabOrder = 0
-        Text = 'EditDebug2'
       end
       object EditDebug3: TEdit
         Left = 0
@@ -1283,7 +1282,6 @@ object FParams: TFParams
         Width = 269
         Height = 21
         TabOrder = 1
-        Text = 'EditDebug'
       end
       object MemoDebug: TMemo
         Left = 0
