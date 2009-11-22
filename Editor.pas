@@ -658,6 +658,8 @@ var i, j, typ: integer;
     SaveFunclist: TStringList;
     S: string;
 begin
+  FuncList.Clear;
+  InsertList.Clear;
   for i := 0 to Sender.Comp.GetRegProcCount-1 do  begin
     //procedure Getdecl(decl : TPSParametersDecl; var T,v :string);
     s:= Sender.Comp.GetRegProc(i).OrgName;
@@ -1107,8 +1109,8 @@ end;
 
 procedure TFEditor.PopUpClearAllClick(Sender: TObject);
 begin
-  if PopupMenuOutput.PopupComponent is TMemo then begin
-    TMemo(PopupMenuOutput.PopupComponent).Lines.Clear;
+  if PopupMenuOutput.PopupComponent is TListBox then begin
+    TListBox(PopupMenuOutput.PopupComponent).Items.Clear;
   end;
 end;
 
