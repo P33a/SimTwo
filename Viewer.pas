@@ -75,8 +75,8 @@ type
 
     procedure UpdateOdometry(Axis: TAxis);
     procedure CreateWheel(Robot: TRobot; Wheel: TWheel; const Pars: TWheelPars; const wFriction: TFriction; const wMotor: TMotor);
-    procedure CreateIRSensor(motherbody: PdxBody; IRSensor: TSensor; posX, posY, posZ,
-      IR_teta, IR_length, InitialWidth, FinalWidth: double);
+    procedure CreateOneRaySensor(motherbody: PdxBody; Sensor: TSensor; posX, posY, posZ,
+      SensorTeta, SensorLength, InitialWidth, FinalWidth: double);
 
     procedure LoadObstaclesFromXML(XMLFile: string; Parser: TSimpleParser);
     procedure LoadSensorsFromXML(Robot: TRobot; const root: IXMLNode; Parser: TSimpleParser);
@@ -272,13 +272,13 @@ begin
 
     if dGeomGetClass(o1) = dRayClass then begin
       if (o1.data <> nil) then begin
-        with TSensor(o1.data) do begin
+        with TSensorRay(o1.data) do begin
           pos := contact[0].geom.pos;
           normal := contact[0].geom.normal;
           dist := contact[0].geom.depth;
           //measure := min(measure, contact[0].geom.depth);
           has_measure:= true;
-          MeasuredSolid := o2.data;
+          HitSolid := o2.data;
         end;
       end;
       //FParams.EditDEbug2.Text := format('%.2f, %.2f %.2f',[contact[0].geom.pos[0], contact[0].geom.pos[1], contact[0].geom.pos[2]]);;
@@ -286,13 +286,13 @@ begin
     end;
     if dGeomGetClass(o2) = dRayClass then begin
       if (o2.data <> nil) then begin
-        with TSensor(o2.data) do begin
+        with TSensorRay(o2.data) do begin
           pos := contact[0].geom.pos;
           normal := contact[0].geom.normal;
           dist := contact[0].geom.depth;
           //measure := min(measure, contact[0].geom.depth);
           has_measure:= true;
-          MeasuredSolid := o1.data;
+          HitSolid := o1.data;
         end;
       end;
       exit;
@@ -714,23 +714,23 @@ begin
 end;
 
 
-procedure TWorld_ODE.CreateIRSensor(motherbody: PdxBody; IRSensor: TSensor; posX, posY, posZ: double; IR_teta, IR_length, InitialWidth, FinalWidth: double);
+procedure TWorld_ODE.CreateOneRaySensor(motherbody: PdxBody; Sensor: TSensor; posX, posY, posZ: double; SensorTeta, SensorLength, InitialWidth, FinalWidth: double);
 //var R: TdMatrix3;
+var newRay: TSensorRay;
 begin
-  //IRSensor.Geom := dCreateRay(space, IR_length);
-  IRSensor.Geoms.Add(dCreateRay(space, IR_length));
-  dGeomSetBody(IRSensor.Geoms[0], motherbody);
-  IRSensor.Geoms[0].data := IRSensor;
+  newRay := TSensorRay.Create;
+  newRay.ParentSensor := Sensor;
+  newRay.Geom := dCreateRay(space, SensorLength);
+  dGeomSetBody(newRay.Geom, motherbody);
+  newRay.Geom.data := newRay;
+  Sensor.Rays.Add(newRay);
 
-//  dRFromAxisAndAngle(R, -sin(IR_teta), cos(IR_teta), 0, pi/2);
-//  dGeomSetOffsetRotation(IRSensor.Geom, R);
-//  dGeomSetOffsetPosition(IRSensor.Geom, posX, posY, posZ);
-  IRSensor.GLObj := TGLSceneObject(ODEScene.AddNewChild(TGLCylinder));
+  Sensor.GLObj := TGLSceneObject(ODEScene.AddNewChild(TGLCylinder));
 
-  with (IRSensor.GLObj as TGLCylinder) do begin
+  with (Sensor.GLObj as TGLCylinder) do begin
     TopRadius := InitialWidth;
     BottomRadius := FinalWidth;
-    Height := IR_length;
+    Height := SensorLength;
     Alignment := caTop;
     Material.FrontProperties.Diffuse.AsWinColor := clred;
     Material.FrontProperties.Diffuse.Alpha := 0.5;
@@ -1915,16 +1915,16 @@ begin
       end else begin
         MotherSolid := Robot.Solids[SolidIdx];
       end;
-      CreateIRSensor(MotherSolid.Body, newSensor, posX, posY, posZ, angZ, SLen, SInitialWidth, SFinalWidth);
+      CreateOneRaySensor(MotherSolid.Body, newSensor, posX, posY, posZ, angZ, SLen, SInitialWidth, SFinalWidth);
 
       RFromZYXRotRel(R, angX, angY + pi/2, AngZ);
 
       if AbsoluteCoords then begin
-        dGeomSetOffsetWorldRotation(newSensor.Geoms[0], R);
-        dGeomSetOffsetWorldPosition(newSensor.Geoms[0], posX, posY, posZ);
+        dGeomSetOffsetWorldRotation(newSensor.Rays[0].Geom, R);
+        dGeomSetOffsetWorldPosition(newSensor.Rays[0].Geom, posX, posY, posZ);
       end else begin
-        dGeomSetOffsetRotation(newSensor.Geoms[0], R);
-        dGeomSetOffsetPosition(newSensor.Geoms[0], posX, posY, posZ);
+        dGeomSetOffsetRotation(newSensor.Rays[0].Geom, R);
+        dGeomSetOffsetPosition(newSensor.Rays[0].Geom, posX, posY, posZ);
       end;
 
       newSensor.SetColor(colorR, colorG, colorB);
@@ -3304,7 +3304,7 @@ begin
         //Sensors
         for i := 0 to Sensors.Count-1 do begin
           if Sensors[i].GLObj = nil then continue;
-          PositionSceneObject(Sensors[i].GLObj, Sensors[i].Geoms[0]);
+          PositionSceneObject(Sensors[i].GLObj, Sensors[i].Rays[0].Geom);
           if Sensors[i].GLObj is TGLCylinder then Sensors[i].GLObj.pitch(90);
         end;
 
@@ -3357,7 +3357,7 @@ end;
 
 procedure TFViewer.GLCadencerProgress(Sender: TObject; const deltaTime, newTime: Double);
 var theta, w, Tq: double;
-    i, r: integer;
+    i, r, j: integer;
     t_start, t_end, t_end_gl: int64;
     t_i1, t_i2, t_itot: int64;
     v1, v2: TdVector3;
@@ -3553,9 +3553,15 @@ begin
 
 
         // Reset sensors measure
-        for i:=0 to WorldODE.Robots[r].Sensors.Count-1 do begin
-          WorldODE.Robots[r].Sensors[i].measure := 1e6;
-          WorldODE.Robots[r].Sensors[i].has_measure := false;
+        with WorldODE.Robots[r] do begin
+          for i:=0 to Sensors.Count - 1 do begin
+            Sensors[i].measure := 1e6;
+            Sensors[i].has_measure := false;
+            for j := 0 to Sensors[i].Rays.Count - 1 do begin
+              Sensors[i].Rays[j].dist := -1;
+              Sensors[i].Rays[j].has_measure := false;
+            end;
+          end;
         end;
       end; //end robot loop
 
@@ -3587,9 +3593,19 @@ begin
           with WorldODE.Robots[r].Sensors[i] do begin
             //measure := min(measure, dist);
             case kind of
-              skIRSharp:
-                measure := min(measure, dist);
+
+              skIRSharp: begin
+                //measure := Rays[0].measure;
+                dist := Rays[0].dist;
+                has_measure := Rays[0].has_measure;
+                if has_measure then
+                  measure := min(measure, dist);
+              end;
+
               skCapacitive: begin
+                measure := Rays[0].measure;
+                dist := Rays[0].dist;
+                has_measure := Rays[0].has_measure;
                 if has_measure then begin
                   measure := 1
                 end else begin
@@ -3597,7 +3613,12 @@ begin
                   has_measure := true;
                 end;
               end;
+
               skInductive: begin
+                measure := Rays[0].measure;
+                dist := Rays[0].dist;
+                has_measure := Rays[0].has_measure;
+                MeasuredSolid := Rays[0].HitSolid;
                 if has_measure then begin
                   if (MeasuredSolid <> nil) and
                      (smMetallic in MeasuredSolid.MatterProperties) then
@@ -3608,6 +3629,7 @@ begin
                   has_measure := true;
                 end;
               end;
+
             end;
           end;
         end;
@@ -4100,3 +4122,4 @@ end;
 // Quaternions
 // charts for the spreadsheet
 // multiple spreadsheets
+// Decorations

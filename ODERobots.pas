@@ -276,11 +276,15 @@ type
     procedure ClearAll;
   end;
 
+  TSensor = class;
+
   TSensorRay = class
+    ParentSensor: TSensor;
     Geom: PdxGeom;
     HitSolid: TSolid;
     dist, measure: double;
     pos, normal: TdVector3;
+    has_measure: boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -312,7 +316,8 @@ type
 
   TSensor = class
     //Geom : PdxGeom;
-    Geoms: TGeomList;
+    //Geoms: TGeomList;
+    Rays: TSensorRayList;
     GLObj: TGLSceneObject;
     dist, measure: double;
     pos, normal: TdVector3;
@@ -1189,13 +1194,14 @@ end;
 
 constructor TSensor.Create;
 begin
-  Geoms := TGeomList.Create;
+  Rays := TSensorRayList.Create;
 end;
 
 destructor TSensor.Destroy;
 begin
-  Geoms.DeleteAllGeoms();
-  Geoms.Free;
+  //Geoms.DeleteAllGeoms();
+  Rays.ClearAll;
+  Rays.Free;
   inherited;
 end;
 
@@ -1427,7 +1433,7 @@ end;
 
 destructor TSensorRay.Destroy;
 begin
-
+  if geom <> nil then dGeomDestroy(geom);
   inherited;
 end;
 
