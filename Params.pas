@@ -197,6 +197,7 @@ type
     EditTrailSize: TEdit;
     BSetTrailPars: TButton;
     RGGLObjects: TRadioGroup;
+    SGGlobalSensors: TStringGrid;
     procedure CBShadowsClick(Sender: TObject);
     procedure CBVsyncClick(Sender: TObject);
     procedure BSetFPSClick(Sender: TObject);
@@ -265,6 +266,7 @@ type
     procedure ShowRobotState;
     procedure ShowRobotPosition(r: integer);
     procedure ComboWayPointNameUpdate(robot: TRobot);
+    procedure ShowGlobalState;
 
     procedure ShowCameraConfig(GLCamera: TGLCamera);
     procedure ShowParsedScene;
@@ -511,6 +513,10 @@ begin
   SGJoints.Cells[2,0] := 'Ref';
   SGJoints.Cells[3,0] := 'WP';
   SGJoints.Cells[4,0] := 'Description';
+
+  SGGlobalSensors.Cells[0,0] := 'Sensor ID';
+  SGGlobalSensors.Cells[1,0] := 'Value';
+  SGGlobalSensors.Cells[2,0] := 'Kind';
 
   UDPGenData := TMemoryStream.Create;
 end;
@@ -1047,6 +1053,29 @@ begin
           //  (WorldODE.OdeScene as TGLShadowVolume).Occluders[idx].CastingMode := scmVisible;
           //end;
       end;
+    end;
+  end;
+end;
+
+procedure TFParams.ShowGlobalState;
+var i: integer;
+begin
+  with WorldODE do begin
+    for i := 0 to Sensors.Count - 1 do begin
+
+      SGGlobalSensors.Cells[0,i+1] := Sensors[i].ID;
+      SGGlobalSensors.Cells[2,i+1] := SensorKindStrings[Sensors[i].kind];
+
+      if Sensors[i].kind = skIRSharp then begin
+        if Sensors[i].has_measure then begin
+          SGGlobalSensors.Cells[1,i+1] := format('%.2f', [Sensors[i].measure]);
+        end else begin
+          SGGlobalSensors.Cells[1,i+1] := '';
+        end;
+      end else begin
+        SGGlobalSensors.Cells[1,i+1] := format('%g', [Sensors[i].measure]);
+      end;
+
     end;
   end;
 end;

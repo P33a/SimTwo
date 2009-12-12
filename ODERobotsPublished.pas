@@ -168,8 +168,11 @@ function GetAxisIndex(R: integer; ID: string; i: integer): integer;
 
 procedure LoadJointWayPoints(r: integer; JointPointsFileName: string);
 procedure SaveJointWayPoints(r: integer; JointPointsFileName: string);
-function CountAxisWayPoints(R, i: integer): integer;
-function GetAxisWayPoint(R, i, idx: integer): TAxisPoint;
+//function CountAxisWayPoints(R, i: integer): integer;
+//function GetAxisWayPoint(R, i, idx: integer): TAxisPoint;
+function CountJointWayPoints(R, i: integer): integer;
+function GetJointWayPoint(R, i, idx: integer): TAxisPoint;
+procedure SetJointWayPoint(R, i, idx: integer; apos, aspeed, atime: double);
 
 function GetAxisTrajPoint(R, i, idx: integer): TAxisPoint;
 
@@ -177,7 +180,7 @@ procedure SetAxisTrajPoint(R, i, idx: integer; LP: TAxisPoint);
 procedure AddAxisTrajPoint(R, i: integer; LP: TAxisPoint);
 procedure DelAxisTrajPoint(R, i, idx: integer);
 function CountAxisTrajPoints(R, i: integer): integer;
-procedure ClearAxisTrajPoints(R, i: integer; LP: TAxisPoint);
+procedure ClearAxisTrajPoints(R, i: integer);
 
 procedure SetTrailColor(T: integer; Red, Green, Blue: byte);
 procedure AddTrailNode(T: integer; x, y, z: double);
@@ -946,7 +949,6 @@ begin
   result := WorldODE.Robots[R].Axes.IndexFromAxisID(ID, i);
 end;
 
-
 procedure LoadJointWayPoints(r: integer; JointPointsFileName: string);
 var i: integer;
 begin
@@ -966,13 +968,13 @@ begin
 end;
 
 
-function CountAxisWayPoints(R, i: integer): integer;
+function CountJointWayPoints(R, i: integer): integer;
 begin
   result := WorldODE.Robots[r].Axes[i].WayPoints.Count;
 end;
 
 
-function GetAxisWayPoint(R, i, idx: integer): TAxisPoint;
+function GetJointWayPoint(R, i, idx: integer): TAxisPoint;
 begin
   with WorldODE.Robots[r].Axes[i].WayPoints[idx] do begin
     result.pos := pos;
@@ -980,6 +982,17 @@ begin
     result.final_time := t;
   end;
 end;
+
+procedure SetJointWayPoint(R, i, idx: integer; apos, aspeed, atime: double);
+begin
+  with WorldODE.Robots[r].Axes[i].WayPoints[idx] do begin
+    pos := apos;
+    speed := aspeed;
+    t := atime;
+  end;
+end;
+
+
 
 function GetAxisTrajPoint(R, i, idx: integer): TAxisPoint;
 begin
@@ -1029,7 +1042,7 @@ begin
   result := WorldODE.Robots[r].Axes[i].TrajectPoints.Count;
 end;
 
-procedure ClearAxisTrajPoints(R, i: integer; LP: TAxisPoint);
+procedure ClearAxisTrajPoints(R, i: integer);
 begin
   WorldODE.Robots[r].Axes[i].TrajectPoints.ClearAll;
 end;

@@ -36,6 +36,7 @@ type
     Robots: TRobotList;
     Obstacles: TSolidList;
     Things: TSolidList;
+    Sensors: TSensorList;
 
     PickSolid: TSolid;
     PickJoint: TdJointID;
@@ -75,8 +76,7 @@ type
 
     procedure UpdateOdometry(Axis: TAxis);
     procedure CreateWheel(Robot: TRobot; Wheel: TWheel; const Pars: TWheelPars; const wFriction: TFriction; const wMotor: TMotor);
-    procedure CreateOneRaySensor(motherbody: PdxBody; Sensor: TSensor; posX, posY, posZ,
-      SensorTeta, SensorLength, InitialWidth, FinalWidth: double);
+    procedure CreateOneRaySensor(motherbody: PdxBody; Sensor: TSensor; SensorLength, InitialWidth, FinalWidth: double);
 
     procedure LoadObstaclesFromXML(XMLFile: string; Parser: TSimpleParser);
     procedure LoadSensorsFromXML(Robot: TRobot; const root: IXMLNode; Parser: TSimpleParser);
@@ -111,6 +111,8 @@ type
     procedure LoadLineFromXML(const root: IXMLNode; Parser: TSimpleParser);
     procedure CreateShellSphere(var Solid: TSolid; motherbody: PdxBody;
       posX, posY, posZ, R: double);
+    procedure LoadGlobalSensorsFromXML(XMLFile: string;
+      Parser: TSimpleParser);
 //    procedure AxisGLCreate(axis: Taxis; aRadius, aHeight: double);
 //    procedure AxisGLSetPosition(axis: Taxis);
   public
@@ -204,11 +206,13 @@ type
     KeyVals: TKeyVals;
     procedure UpdateCamPos(CMode: integer);
     procedure FillRemote(r: integer);
-    procedure IRSharpNoiseModel(r, i: integer);
+    procedure IRSharpNoiseModel(aSensor: TSensor);
     procedure UpdateGLScene;
     function GLSceneViewerPick(X, Y: Integer): TGLCustomSceneObject;
     procedure TestTexture;
     procedure ShowOrRestoreForm(Fm: TForm);
+    procedure PostProcessSensors(aSensor: TSensor);
+    procedure PreProcessSensors(aSensor: TSensor);
   public
     HUDStrings: TStringList;
     TrailsCount: integer;
@@ -714,8 +718,7 @@ begin
 end;
 
 
-procedure TWorld_ODE.CreateOneRaySensor(motherbody: PdxBody; Sensor: TSensor; posX, posY, posZ: double; SensorTeta, SensorLength, InitialWidth, FinalWidth: double);
-//var R: TdMatrix3;
+procedure TWorld_ODE.CreateOneRaySensor(motherbody: PdxBody; Sensor: TSensor; SensorLength, InitialWidth, FinalWidth: double);
 var newRay: TSensorRay;
 begin
   newRay := TSensorRay.Create;
@@ -1323,6 +1326,7 @@ var JointNode, prop: IXMLNode;
     Motor, DefMotor: TMotor;
     Motor2: TMotor;
     descr: string;
+    AxisCanWrap, AxisCanWrap2: boolean;
 begin
   if root = nil then exit;
 
@@ -1330,6 +1334,9 @@ begin
   DefaGL.Radius := -1;
   DefaGL.height:= 0.05;
   DefaGL.Color := RGB(0, 0, $80);
+
+  AxisCanWrap := true;
+  AxisCanWrap2 := true;
 
   with DefMotor do begin
     active := true;
@@ -1404,11 +1411,13 @@ begin
           axisX := GetNodeAttrRealParse(prop, 'x', axisX, Parser);
           axisY := GetNodeAttrRealParse(prop, 'y', axisY, Parser);
           axisZ := GetNodeAttrRealParse(prop, 'z', axisZ, Parser);
+          AxisCanWrap := GetNodeAttrBool(prop, 'wrap', AxisCanWrap);
         end;
         if prop.NodeName = 'axis2' then begin
           axis2X := GetNodeAttrRealParse(prop, 'x', axis2X, Parser);
           axis2Y := GetNodeAttrRealParse(prop, 'y', axis2Y, Parser);
           axis2Z := GetNodeAttrRealParse(prop, 'z', axis2Z, Parser);
+          AxisCanWrap2 := GetNodeAttrBool(prop, 'wrap', AxisCanWrap2);
         end;
         if prop.NodeName = 'limits' then begin
           LimitMin := GetNodeAttrRealParse(prop, 'Min', LimitMin, Parser);
@@ -1527,8 +1536,9 @@ begin
               Robot.Axes.Add(newAxis);
               newAxis.ParentLink := newLink;
               newAxis.Friction := Friction2;
-              newAxis.Spring := Spring; //TODO Deal with different parameters for each axis
+              newAxis.Spring := Spring2;
               newAxis.Motor := Motor2;
+              newAxis.canWrap := AxisCanWrap2;
               newLink.Axis[1] := newAxis;
 
               if aGL.Radius > 0 then begin
@@ -1545,6 +1555,7 @@ begin
             newAxis.Friction := Friction;
             newAxis.Spring := Spring;
             newAxis.Motor := Motor;
+            newAxis.canWrap := AxisCanWrap;
             newLink.Axis[0] := newAxis;
 
             if aGL.Radius > 0 then begin
@@ -1692,7 +1703,7 @@ begin
           jointID := GetNodeAttrStr(prop, 'ID', '-1');
           axis_idx := GetNodeAttrInt(prop, 'axis', axis_idx) - 1;
           ang := DegToRad(GetNodeAttrReal(prop, 'theta', ang));
-          speed := GetNodeAttrReal(prop, 'w', speed);
+          speed := DegToRad(GetNodeAttrReal(prop, 'w', speed));
 
           i :=  Robots[r].Links.IndexOf(jointID);
           if i >= 0 then begin
@@ -1832,6 +1843,7 @@ end;
 
 procedure TWorld_ODE.LoadSensorsFromXML(Robot: TRobot; const root: IXMLNode; Parser: TSimpleParser);
 var sensor, prop: IXMLNode;
+    IDValue: string;
     SLen, SInitialWidth, SFinalWidth, posX, posY, posZ, angX, angY, angZ: double;
     Noise: TSensorNoise;
     colorR, colorG, colorB: double;
@@ -1852,6 +1864,7 @@ begin
        (sensor.NodeName = 'capacitive') or
        (sensor.NodeName = 'inductive') then begin
       // default values
+      IDValue := '';
       MotherSolidId := '';
       SLen := 0.8; SInitialWidth := 0.01; SFinalWidth := 0.015;
       AbsoluteCoords := false;
@@ -1864,6 +1877,9 @@ begin
 
       prop := sensor.FirstChild;
       while prop <> nil do begin
+        if prop.NodeName = 'ID' then begin
+          IDValue := GetNodeAttrStr(prop, 'value', IDValue);
+        end;
         if prop.NodeName = 'absolute_coords' then begin
           AbsoluteCoords := true;
         end;
@@ -1901,31 +1917,40 @@ begin
       end;
       // Create and position the sensor
       newSensor := TSensor.Create;
-      newSensor.kind := skIR;
+      newSensor.ID := IDValue;
+      newSensor.kind := skGeneric;
       if sensor.NodeName = 'IRSharp' then newSensor.kind := skIRSharp
       else if sensor.NodeName = 'capacitive' then newSensor.kind := skCapacitive
-      else if sensor.NodeName = 'inductive' then newSensor.kind := skInductive;
+      else if sensor.NodeName = 'inductive' then newSensor.kind := skInductive
+      else if sensor.NodeName = 'beacon' then newSensor.kind := skBeacon;
 
       newSensor.Noise := Noise;
-      Robot.Sensors.Add(newSensor);
 
-      SolidIdx := Robot.Solids.IndexFromID(MotherSolidId);
-      if SolidIdx = -1 then  begin
-        MotherSolid := Robot.MainBody;
-      end else begin
-        MotherSolid := Robot.Solids[SolidIdx];
-      end;
-      CreateOneRaySensor(MotherSolid.Body, newSensor, posX, posY, posZ, angZ, SLen, SInitialWidth, SFinalWidth);
+      if Robot <> nil then begin // It is a Robot sensor
+        Robot.Sensors.Add(newSensor);
 
-      RFromZYXRotRel(R, angX, angY + pi/2, AngZ);
-
-      if AbsoluteCoords then begin
-        dGeomSetOffsetWorldRotation(newSensor.Rays[0].Geom, R);
-        dGeomSetOffsetWorldPosition(newSensor.Rays[0].Geom, posX, posY, posZ);
-      end else begin
-        dGeomSetOffsetRotation(newSensor.Rays[0].Geom, R);
-        dGeomSetOffsetPosition(newSensor.Rays[0].Geom, posX, posY, posZ);
-      end;
+        SolidIdx := Robot.Solids.IndexFromID(MotherSolidId);
+        if SolidIdx = -1 then  begin
+          MotherSolid := Robot.MainBody;
+        end else begin
+          MotherSolid := Robot.Solids[SolidIdx];
+        end;
+        CreateOneRaySensor(MotherSolid.Body, newSensor, SLen, SInitialWidth, SFinalWidth);
+        RFromZYXRotRel(R, angX, angY + pi/2, AngZ);
+        if AbsoluteCoords then begin
+          dGeomSetOffsetWorldRotation(newSensor.Rays[0].Geom, R);
+          dGeomSetOffsetWorldPosition(newSensor.Rays[0].Geom, posX, posY, posZ);
+        end else begin
+          dGeomSetOffsetRotation(newSensor.Rays[0].Geom, R);
+          dGeomSetOffsetPosition(newSensor.Rays[0].Geom, posX, posY, posZ);
+        end;
+      end else begin // It is a global sensor
+        Sensors.Add(newSensor);
+        CreateOneRaySensor(nil, newSensor, SLen, SInitialWidth, SFinalWidth);
+        RFromZYXRotRel(R, angX, angY + pi/2, AngZ);
+        dGeomSetRotation(newSensor.Rays[0].Geom, R);
+        dGeomSetPosition(newSensor.Rays[0].Geom, posX, posY, posZ);
+    end;
 
       newSensor.SetColor(colorR, colorG, colorB);
     end;
@@ -2332,6 +2357,27 @@ begin
 end;
 
 
+procedure TWorld_ODE.LoadGlobalSensorsFromXML(XMLFile: string; Parser: TSimpleParser);
+var XML: IXMLDocument;
+    root: IXMLNode;
+    LocalParser: TSimpleParser;
+begin
+  XML := LoadXML(XMLFile, XMLErrors);
+  if XML = nil then exit;
+
+
+  root:=XML.SelectSingleNode('/sensors');
+  if root = nil then exit;
+
+  LocalParser:= TSimpleParser.Create;
+  try
+    LocalParser.CopyVarList(Parser);
+    LoadSensorsFromXML(nil, root, LocalParser);
+  finally
+    LocalParser.Free;
+  end;
+end;
+
 
 procedure TWorld_ODE.LoadTrackFromXML(XMLFile: string; Parser: TSimpleParser);
 var XML: IXMLDocument;
@@ -2694,6 +2740,15 @@ begin
           LoadTrackFromXML(filename, Parser);
         end;
 
+      end else if objNode.NodeName = 'sensors' then begin
+        // Create track
+        filename := GetNodeAttrStr(objNode, 'file', filename);
+        if fileexists(filename) then begin
+          XMLFiles.Add(filename);
+          //LoadTrackFromXML(filename, Parser);
+          LoadGlobalSensorsFromXML(filename, Parser);
+        end;
+
       end else if objNode.NodeName = 'ball' then begin
         prop := objNode.FirstChild;
         // default values
@@ -2818,6 +2873,7 @@ begin
   Robots := TRobotList.Create;
   Obstacles := TSolidList.Create;
   Things := TSolidList.Create;
+  Sensors := TSensorList.Create;
 
   XMLFiles := TStringList.Create;
   XMLErrors := TStringList.Create;
@@ -2870,6 +2926,9 @@ destructor TWorld_ODE.Destroy;
 begin
   //Destroy the physic
   dJointGroupDestroy(contactgroup);
+
+  Sensors.ClearAll;
+  Sensors.Free;
 
   Things.ClearAll;
   Things.Free;
@@ -3066,7 +3125,7 @@ begin
               cmPIDPosition: begin
                 if axis.isCircular then begin   // If it is a circular joint
                   axis.GetLimits(minLim, maxLim);
-                  if (minlim < -pi) and (maxlim > pi) then begin  // and it has no limits
+                  if (minlim < -pi) and (maxlim > pi) and axis.canWrap then begin  // and it has no limits
                     err := DiffAngle(ref.theta, theta);           // Use the shortest path solution
                   end else begin
                     err := ref.theta - theta;                     // Else use the standard path
@@ -3216,11 +3275,11 @@ begin
   end;
 end;
 
-procedure TFViewer.IRSharpNoiseModel(r, i: integer);
+procedure TFViewer.IRSharpNoiseModel(aSensor: TSensor);
 var v, iv, var_v, m, var_dist: double;
 begin
   //v := 0;
-  with WorldODE.Robots[r].Sensors[i] do begin
+  with aSensor do begin
     if kind <> skIRSharp then exit;
     if not has_measure then exit;
     if not Noise.active then exit;
@@ -3343,11 +3402,18 @@ begin
       end;
     end;
 
+    // Global Objects
     with WorldODE do begin
       for i := 0 to Things.Count-1 do begin
         if Things[i].GLObj = nil then continue;
         PositionSceneObject(Things[i].GLObj, Things[i].Geom);
         if Things[i].GLObj is TGLCylinder then Things[i].GLObj.pitch(90);
+      end;
+      //Sensors
+      for i := 0 to Sensors.Count-1 do begin
+        if Sensors[i].GLObj = nil then continue;
+        PositionSceneObject(Sensors[i].GLObj, Sensors[i].Rays[0].Geom);
+        if Sensors[i].GLObj is TGLCylinder then Sensors[i].GLObj.pitch(90);
       end;
     end;
 //    if WorldODE.ball_geom <> nil then
@@ -3355,9 +3421,68 @@ begin
 end;
 
 
+procedure TFViewer.PreProcessSensors(aSensor: TSensor);
+var j: integer;
+begin
+  aSensor.measure := 1e6;
+  aSensor.has_measure := false;
+  for j := 0 to aSensor.Rays.Count - 1 do begin
+    aSensor.Rays[j].dist := -1;
+    aSensor.Rays[j].has_measure := false;
+  end;
+end;
+
+
+procedure TFViewer.PostProcessSensors(aSensor: TSensor);
+begin
+  with aSensor do begin
+    //measure := min(measure, dist);
+    case kind of
+
+      skIRSharp: begin
+        //measure := Rays[0].measure;
+        dist := Rays[0].dist;
+        has_measure := Rays[0].has_measure;
+        if has_measure then
+          measure := min(measure, dist);
+      end;
+
+      skCapacitive: begin
+        measure := Rays[0].measure;
+        dist := Rays[0].dist;
+        has_measure := Rays[0].has_measure;
+        if has_measure then begin
+          measure := 1
+        end else begin
+          measure := 0;
+          has_measure := true;
+        end;
+      end;
+
+      skInductive: begin
+        measure := Rays[0].measure;
+        dist := Rays[0].dist;
+        has_measure := Rays[0].has_measure;
+        MeasuredSolid := Rays[0].HitSolid;
+        if has_measure then begin
+          if (MeasuredSolid <> nil) and
+             (smMetallic in MeasuredSolid.MatterProperties) then
+                measure := 1
+          else measure := 0;
+        end else begin
+          measure := 0;
+          has_measure := true;
+        end;
+      end;
+
+    end;
+  end;
+end;
+
+
 procedure TFViewer.GLCadencerProgress(Sender: TObject; const deltaTime, newTime: Double);
 var theta, w, Tq: double;
-    i, r, j: integer;
+    i, r: integer;
     t_start, t_end, t_end_gl: int64;
     t_i1, t_i2, t_itot: int64;
     v1, v2: TdVector3;
@@ -3395,7 +3520,7 @@ begin
             for i := 0 to Sensors.Count - 1 do begin
               if Sensors[i].kind = skIRSharp then begin
                 // Process IR sensors noise
-                IRSharpNoiseModel(r, i);
+                IRSharpNoiseModel(Sensors[i]);
               end;
             end;
 
@@ -3416,6 +3541,17 @@ begin
 
           end;
         end;
+
+        // Model Global Sensor Noise
+        with WorldODE do begin
+          for i := 0 to Sensors.Count - 1 do begin
+            if Sensors[i].kind = skIRSharp then begin
+              // Process IR sensors noise
+              IRSharpNoiseModel(Sensors[i]);
+            end;
+          end;
+        end;
+        FParams.ShowGlobalState;
 
         for r := 0 to WorldODE.Robots.Count-1 do begin
           with WorldODE.Robots[r] do begin
@@ -3555,15 +3691,16 @@ begin
         // Reset sensors measure
         with WorldODE.Robots[r] do begin
           for i:=0 to Sensors.Count - 1 do begin
-            Sensors[i].measure := 1e6;
-            Sensors[i].has_measure := false;
-            for j := 0 to Sensors[i].Rays.Count - 1 do begin
-              Sensors[i].Rays[j].dist := -1;
-              Sensors[i].Rays[j].has_measure := false;
-            end;
+            PreProcessSensors(Sensors[i]);
           end;
         end;
       end; //end robot loop
+
+      with WorldODE do begin
+        for i:=0 to Sensors.Count - 1 do begin
+          PreProcessSensors(Sensors[i]);
+        end;
+      end;
 
       if WorldODE.PickSolid <> nil then with WorldODE do begin
         if Focused then begin
@@ -3587,65 +3724,17 @@ begin
       QueryPerformanceCounter(t_i2);
       t_itot := t_itot + t_i2 - t_i1;
 
-      // Process Sensors
+      // Process Robot Sensors
       for r := 0 to WorldODE.Robots.Count-1 do begin
         for i := 0 to WorldODE.Robots[r].Sensors.Count - 1 do begin
-          with WorldODE.Robots[r].Sensors[i] do begin
-            //measure := min(measure, dist);
-            case kind of
-
-              skIRSharp: begin
-                //measure := Rays[0].measure;
-                dist := Rays[0].dist;
-                has_measure := Rays[0].has_measure;
-                if has_measure then
-                  measure := min(measure, dist);
-              end;
-
-              skCapacitive: begin
-                measure := Rays[0].measure;
-                dist := Rays[0].dist;
-                has_measure := Rays[0].has_measure;
-                if has_measure then begin
-                  measure := 1
-                end else begin
-                  measure := 0;
-                  has_measure := true;
-                end;
-              end;
-
-              skInductive: begin
-                measure := Rays[0].measure;
-                dist := Rays[0].dist;
-                has_measure := Rays[0].has_measure;
-                MeasuredSolid := Rays[0].HitSolid;
-                if has_measure then begin
-                  if (MeasuredSolid <> nil) and
-                     (smMetallic in MeasuredSolid.MatterProperties) then
-                        measure := 1
-                  else measure := 0;
-                end else begin
-                  measure := 0;
-                  has_measure := true;
-                end;
-              end;
-
-            end;
-          end;
+          PostProcessSensors(WorldODE.Robots[r].Sensors[i]);
         end;
       end;
 
-      // Debug IR sensors
-      {txt := '';
-      for r := 0 to WorldODE.Robots.Count-1 do begin
-        txt := txt + format('[%d] ',[r]);
-        for i := 0 to WorldODE.Robots[r].IRSensors.Count - 1 do begin
-          if WorldODE.Robots[r].IRSensors[i].has_measure then begin
-            txt := txt + format('%d: (%.2f) ',[i, WorldODE.Robots[r].IRSensors[i].measure]);;
-          end;
-        end;
+      // Process World Sensors
+      for i := 0 to WorldODE.Sensors.Count - 1 do begin
+        PostProcessSensors(WorldODE.Sensors[i]);
       end;
-      FParams.EditDEbug2.Text := txt;}
 
     end;
     //End Physics Loop
@@ -4087,10 +4176,10 @@ end;
 
 
 // TODO
+// Actuator: Electromagnet
 // Things scriptable
 // Sensores sem ser num robot  (???)
 // Zona morta no PID
-// Calcular centro de gravidade
 // -Passadeiras- (falta controlar a aceleração delas)
 // -Thrusters- + turbulence
 // alternate globject {For TSolids only now}
@@ -4102,7 +4191,7 @@ end;
 // rotation only in z for the robots
 // 3ds offset
 
-// Optional walls ??
+// Optional/configurable walls ??
 
 // Sensores de linha branca  1
 // Sonar 1-n
@@ -4111,12 +4200,13 @@ end;
 //  digitais
 //  analógicos
 //  indicandor de direcção
+//  indicandor de orientação do beacon
 // Bussola       0
 // Giroscopios   0
 // Acelerometros 0
 
 // Solve color input confusion
-// Show scene tree
+// Show scene tree  +
 // Show tags not used
 
 // Quaternions

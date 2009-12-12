@@ -173,6 +173,7 @@ type
     ref: TAxisInputs;
     torque: double;
     speed_lambda, filt_speed: double;
+    canWrap: boolean;
   private
   public
     constructor Create;
@@ -279,7 +280,7 @@ type
   TSensor = class;
 
   TSensorRay = class
-    ParentSensor: TSensor;
+    ParentSensor, TargetBeacon: TSensor;
     Geom: PdxGeom;
     HitSolid: TSolid;
     dist, measure: double;
@@ -312,11 +313,12 @@ type
     active: boolean;
   end;
 
-  TSensorKind = (skGeneric, skIR, skIRSharp, skSonar, skCapacitive, skInductive);
+  TSensorKind = (skGeneric, skIR, skIRSharp, skSonar, skCapacitive, skInductive, skBeacon);
 
   TSensor = class
     //Geom : PdxGeom;
     //Geoms: TGeomList;
+    ID: string;
     Rays: TSensorRayList;
     GLObj: TGLSceneObject;
     dist, measure: double;
@@ -330,8 +332,11 @@ type
     destructor Destroy; override;
     procedure SetColor(R, G, B: single; A: single = -1);
   end;
-  //pTIRSensor = ^TIRSensor;
 
+const
+  SensorKindStrings: array[TSensorKind] of string = ('Generic', 'IR', 'IRSharp', 'Sonar', 'Capacitive', 'Inductive', 'Beacon');
+
+type
   TSensorList = class(TList)
   private
   protected
@@ -828,6 +833,7 @@ begin
   TrajectPoints := TAxisTrajList.Create;
   WayPoints := TAxisTrajList.Create;
   speed_lambda := 0.95;
+  canWrap := true;
 end;
 
 destructor TAxis.Destroy;
