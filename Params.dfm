@@ -154,28 +154,31 @@ object FParams: TFParams
         Top = 168
         Width = 261
         Height = 425
-        ActivePage = TabRobot
+        ActivePage = TabGlobal
         Anchors = [akLeft, akTop, akBottom]
         TabOrder = 4
         object TabGlobal: TTabSheet
           Caption = 'Global'
           ImageIndex = 2
+          DesignSize = (
+            253
+            397)
           object Label8: TLabel
-            Left = 8
+            Left = 0
             Top = 374
             Width = 14
             Height = 13
             Caption = 'IP:'
           end
           object Label1: TLabel
-            Left = 4
-            Top = 44
+            Left = 8
+            Top = 8
             Width = 64
             Height = 13
             Caption = 'Script Period:'
           end
           object EditRemoteIP: TEdit
-            Left = 28
+            Left = 20
             Top = 370
             Width = 109
             Height = 21
@@ -184,21 +187,39 @@ object FParams: TFParams
             OnChange = EditRemoteIPChange
           end
           object EditScriptPeriod: TEdit
-            Left = 72
-            Top = 40
+            Left = 76
+            Top = 4
             Width = 41
             Height = 21
             TabOrder = 1
             Text = '40'
           end
           object BGlobalSet: TButton
-            Left = 200
-            Top = 40
+            Left = 204
+            Top = 4
             Width = 47
             Height = 21
             Caption = 'Set'
             TabOrder = 2
             OnClick = BGlobalSetClick
+          end
+          object SGGlobalSensors: TStringGrid
+            Left = 0
+            Top = 56
+            Width = 157
+            Height = 313
+            Anchors = [akLeft, akTop, akBottom]
+            ColCount = 3
+            DefaultColWidth = 61
+            DefaultRowHeight = 14
+            FixedCols = 0
+            RowCount = 128
+            Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSelect]
+            TabOrder = 3
+            ColWidths = (
+              53
+              31
+              49)
           end
         end
         object TabRobot: TTabSheet
