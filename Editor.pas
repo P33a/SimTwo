@@ -846,6 +846,8 @@ begin
   Sender.AddFunction(@RandG, 'function RandG(Mean, StdDev: Extended): Extended;');
   Sender.AddFunction(@random01, 'function random01: double;');
   Sender.AddFunction(@Randomize, 'procedure Randomize;');
+  Sender.AddFunction(@BiLinInterp, 'function BiLinInterp(Surf: matrix; xmin, xmax, ymin, ymax, x,y: double): double;');
+
 
 
   Sender.AddMethod(Self, @TFEditor.Writeln, 'procedure WriteLn(S: string)');

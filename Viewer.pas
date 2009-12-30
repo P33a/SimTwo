@@ -113,6 +113,8 @@ type
       posX, posY, posZ, R: double);
     procedure LoadGlobalSensorsFromXML(XMLFile: string;
       Parser: TSimpleParser);
+    procedure CreateSensorBody(Sensor: TSensor; GLBaseObject: TGLBaseSceneObject; SensorHeight,
+      SensorRadius, posX, posY, posZ: double);
 //    procedure AxisGLCreate(axis: Taxis; aRadius, aHeight: double);
 //    procedure AxisGLSetPosition(axis: Taxis);
   public
@@ -174,6 +176,7 @@ type
     MenuSnapshot: TMenuItem;
     MenuChangeScene: TMenuItem;
     GLCone1: TGLCone;
+    GLMemoryViewer: TGLMemoryViewer;
     procedure FormCreate(Sender: TObject);
     procedure GLSceneViewerMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -742,6 +745,29 @@ begin
 
 end;
 
+
+
+procedure TWorld_ODE.CreateSensorBody(Sensor: TSensor; GLBaseObject: TGLBaseSceneObject; SensorHeight, SensorRadius, posX, posY, posZ: double);
+begin
+  Sensor.GLObj := TGLSceneObject(GLBaseObject.AddNewChild(TGLCylinder));
+  with (Sensor.GLObj as TGLCylinder) do begin
+    TopRadius := SensorRadius;
+    BottomRadius := SensorRadius;
+    Height := SensorHeight;
+    Alignment := caTop;
+    Material.FrontProperties.Diffuse.Alpha := 0.5;
+    //Material.FrontProperties.Emission.AsWinColor := clred;
+    //Material.FrontProperties.Emission.Alpha := 0.5;
+    Material.BlendingMode := bmTransparency;
+    if GLBaseObject is TGLCylinder then begin
+      Sensor.GLObj.Position.SetPoint(posX, -posZ, posY); // 90 degree rotation makes this ugly thing (TODO?)
+    end else begin
+      Sensor.GLObj.Position.SetPoint(posX, posY, posZ);
+      PitchAngle := 90;
+    end;
+  end;
+
+end;
 
 procedure TWorld_ODE.CreateBoxObstacle(var Obstacle: TSolid; sizeX, sizeY, sizeZ, posX, posY, posZ: double);
 //var R: TdMatrix3;
@@ -1784,6 +1810,9 @@ begin
 
   obstacle := root.FirstChild;
   while obstacle <> nil do begin
+    //if obstacle.NodeName = 'defines' then begin
+    //  LoadDefinesFromXML(Parser, obstacle);
+    //end;
     if obstacle.NodeName = 'cuboid' then begin
       prop := obstacle.FirstChild;
       // default values
@@ -1862,7 +1891,8 @@ begin
     if (sensor.NodeName = 'IR') or
        (sensor.NodeName = 'IRSharp') or
        (sensor.NodeName = 'capacitive') or
-       (sensor.NodeName = 'inductive') then begin
+       (sensor.NodeName = 'inductive') or
+       (sensor.NodeName = 'beacon') then begin
       // default values
       IDValue := '';
       MotherSolidId := '';
@@ -1935,21 +1965,37 @@ begin
         end else begin
           MotherSolid := Robot.Solids[SolidIdx];
         end;
-        CreateOneRaySensor(MotherSolid.Body, newSensor, SLen, SInitialWidth, SFinalWidth);
-        RFromZYXRotRel(R, angX, angY + pi/2, AngZ);
-        if AbsoluteCoords then begin
-          dGeomSetOffsetWorldRotation(newSensor.Rays[0].Geom, R);
-          dGeomSetOffsetWorldPosition(newSensor.Rays[0].Geom, posX, posY, posZ);
-        end else begin
-          dGeomSetOffsetRotation(newSensor.Rays[0].Geom, R);
-          dGeomSetOffsetPosition(newSensor.Rays[0].Geom, posX, posY, posZ);
+        if newSensor.kind in [skIRSharp, skCapacitive, skInductive] then begin
+          CreateOneRaySensor(MotherSolid.Body, newSensor, SLen, SInitialWidth, SFinalWidth);
+          RFromZYXRotRel(R, angX, angY + pi/2, AngZ);
+          if AbsoluteCoords then begin
+            dGeomSetOffsetWorldRotation(newSensor.Rays[0].Geom, R);
+            dGeomSetOffsetWorldPosition(newSensor.Rays[0].Geom, posX, posY, posZ);
+          end else begin
+            dGeomSetOffsetRotation(newSensor.Rays[0].Geom, R);
+            dGeomSetOffsetPosition(newSensor.Rays[0].Geom, posX, posY, posZ);
+          end;
+        end;
+        if newSensor.kind in [skBeacon] then begin
+          CreateSensorBody(newSensor, MotherSolid.GLObj, 0.1, 0.02, posX, posY, posZ);
+          //if MotherSolid.GLObj is TGLCylinder then begin
+          //  newSensor.GLObj.Position.SetPoint(posX, -posZ, posY); // 90 degree rotation makes this ugly thing (TODO?)
+          //end else begin
+          //  newSensor.GLObj.Position.SetPoint(posX, posY, posZ); // As it should be
+          //end;
         end;
       end else begin // It is a global sensor
         Sensors.Add(newSensor);
-        CreateOneRaySensor(nil, newSensor, SLen, SInitialWidth, SFinalWidth);
-        RFromZYXRotRel(R, angX, angY + pi/2, AngZ);
-        dGeomSetRotation(newSensor.Rays[0].Geom, R);
-        dGeomSetPosition(newSensor.Rays[0].Geom, posX, posY, posZ);
+        if newSensor.kind in [skIRSharp, skCapacitive, skInductive] then begin
+          CreateOneRaySensor(nil, newSensor, SLen, SInitialWidth, SFinalWidth);
+          RFromZYXRotRel(R, angX, angY + pi/2, AngZ);
+          dGeomSetRotation(newSensor.Rays[0].Geom, R);
+          dGeomSetPosition(newSensor.Rays[0].Geom, posX, posY, posZ);
+        end;
+        if newSensor.kind in [skBeacon] then begin
+          CreateSensorBody(newSensor, ODEScene, 0.1, 0.02, posX, posY, posZ);
+          //newSensor.GLObj.Position.SetPoint(posX, posY, posZ);
+        end;
     end;
 
       newSensor.SetColor(colorR, colorG, colorB);
@@ -2956,12 +3002,10 @@ begin
   //Update the physic
   dSpaceCollide(space, nil, nearCallback);
   if FParams.CBWorldQuickStep.Checked then begin
-    //dWorldSetQuickStepNumIterations(world, 10);
     dWorldQuickStep(world, Ode_dt);
   end else begin
     dWorldStep(world, Ode_dt);
   end;
-  //dWorldStep (world, Ode_dt);
   physTime := physTime + Ode_dt;
 
   // remove all contact joints
@@ -3363,8 +3407,10 @@ begin
         //Sensors
         for i := 0 to Sensors.Count-1 do begin
           if Sensors[i].GLObj = nil then continue;
-          PositionSceneObject(Sensors[i].GLObj, Sensors[i].Rays[0].Geom);
-          if Sensors[i].GLObj is TGLCylinder then Sensors[i].GLObj.pitch(90);
+          if Sensors[i].Rays.Count > 0 then begin
+            PositionSceneObject(Sensors[i].GLObj, Sensors[i].Rays[0].Geom);
+            if Sensors[i].GLObj is TGLCylinder then Sensors[i].GLObj.pitch(90);
+          end;
         end;
 
         // Solids
@@ -3412,8 +3458,10 @@ begin
       //Sensors
       for i := 0 to Sensors.Count-1 do begin
         if Sensors[i].GLObj = nil then continue;
-        PositionSceneObject(Sensors[i].GLObj, Sensors[i].Rays[0].Geom);
-        if Sensors[i].GLObj is TGLCylinder then Sensors[i].GLObj.pitch(90);
+        if Sensors[i].Rays.Count > 0 then begin
+          PositionSceneObject(Sensors[i].GLObj, Sensors[i].Rays[0].Geom);
+          if Sensors[i].GLObj is TGLCylinder then Sensors[i].GLObj.pitch(90);
+        end;
       end;
     end;
 //    if WorldODE.ball_geom <> nil then
@@ -3496,6 +3544,9 @@ begin
     QueryPerformanceCounter(t_start);
     t_itot := 0;
 
+    t_last := t_act;
+    QueryPerformanceCounter(t_act);
+
     // while WorldODE.physTime < newtime do begin
     newFixedTime := WorldODE.physTime + GLCadencer.FixedDeltaTime * WorldODE.TimeFactor;
     while WorldODE.physTime < newFixedTime do begin
@@ -3505,8 +3556,8 @@ begin
       if WorldODE.SecondsCount > WorldODE.DecPeriod then begin
         WorldODE.SecondsCount := WorldODE.SecondsCount - WorldODE.DecPeriod;
 
-        t_last := t_act;
-        QueryPerformanceCounter(t_act);
+        //t_last := t_act;
+        //QueryPerformanceCounter(t_act);
 
         // Before control block
         for r := 0 to WorldODE.Robots.Count-1 do begin
@@ -3746,17 +3797,19 @@ begin
 
     //Update all GLscene Parts.
     UpdateGLScene;
-    QueryPerformanceCounter(t_end_gl);
-    FParams.EditDebug.text := format('%.2f (%.2f) %.2f [%.2f]',[(t_end - t_start)/t_delta, t_itot/t_delta, (t_end_gl - t_end)/t_delta, (t_act - t_last)/t_delta]);
 
     // Update Camera Position
     UpdateCamPos(FParams.RGCamera.ItemIndex);
 
     FParams.ShowCameraConfig(GLCamera);
 
-    GLSceneViewer.Invalidate;
-
     //GLMemoryViewer.Render(nil);
+
+    QueryPerformanceCounter(t_end_gl);
+    FParams.EditDebug.text := format('%.2f (%.2f) %.2f [%.2f]',[(t_end_gl - t_start)/t_delta, t_itot/t_delta, (t_end_gl - t_end)/t_delta, (t_act - t_last)/t_delta]);
+
+    //GLSceneViewer.Invalidate;
+
   end;
 end;
 
@@ -4176,6 +4229,7 @@ end;
 
 
 // TODO
+// lembrar o estado fechado de janelas 
 // Actuator: Electromagnet
 // Things scriptable
 // Sensores sem ser num robot  (???)
@@ -4192,6 +4246,7 @@ end;
 // 3ds offset
 
 // Optional/configurable walls ??
+// axis turn count for better limits
 
 // Sensores de linha branca  1
 // Sonar 1-n

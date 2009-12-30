@@ -49,6 +49,76 @@ object FViewer: TFViewer
       Slices = 48
       Stacks = 24
     end
+    object GLLightSource: TGLLightSource
+      Ambient.Color = {BEC0403FBEC0403FBEC0403F0000803F}
+      ConstAttenuation = 1.000000000000000000
+      Position.Coordinates = {9A99993F666626C00000F0400000803F}
+      LightStyle = lsOmni
+      Specular.Color = {0000803F0000803F0000803F0000803F}
+      SpotCutOff = 180.000000000000000000
+    end
+    object GLDummyCFire: TGLDummyCube
+      CubeSize = 1.000000000000000000
+      EffectsData = {
+        0201060A54474C424669726546580200060F474C4669726546584D616E616765
+        72}
+    end
+    object GLHUDTextObjName: TGLHUDText
+      Position.Coordinates = {0000A04100002041000000000000803F}
+      Scale.Coordinates = {0000003F3333333F0000803F00000000}
+      BitmapFont = GLStoredBitmapFont
+      Text = 'ObjectName'
+      Alignment = taLeftJustify
+      Layout = tlTop
+    end
+    object GLHUDTextGeneric: TGLHUDText
+      Position.Coordinates = {0000A04100002042000000000000803F}
+      Scale.Coordinates = {0000003F3333333F0000803F00000000}
+      BitmapFont = GLStoredBitmapFont
+      Alignment = taLeftJustify
+      Layout = tlTop
+    end
+    object GLXYZGrid: TGLXYZGrid
+      ObjectsSorting = osNone
+      Position.Coordinates = {00000000000000406F12833A0000803F}
+      AntiAliased = True
+      LineColor.Color = {3333333F3333333F3333333F0000803F}
+      LineWidth = 2.000000000000000000
+      XSamplingScale.Min = -5.000000000000000000
+      XSamplingScale.Max = 5.000000000000000000
+      XSamplingScale.Step = 1.000000000000000000
+      YSamplingScale.Min = -5.000000000000000000
+      YSamplingScale.Max = 5.000000000000000000
+      YSamplingScale.Step = 1.000000000000000000
+      ZSamplingScale.Step = 0.100000001490116100
+    end
+    object GLCylinder2: TGLCylinder
+      Material.MaterialLibrary = GLMaterialLibrary
+      Material.LibMaterialName = 'LibMaterialFeup'
+      Direction.Coordinates = {000000000000803F0000000000000000}
+      PitchAngle = 90.000000000000000000
+      Up.Coordinates = {0000000000000000000080BF00000000}
+      Visible = False
+      BottomRadius = 0.100000001490116100
+      Height = 1.000000000000000000
+      TopRadius = 0.100000001490116100
+      Alignment = caTop
+    end
+    object GLCube1: TGLCube
+      Material.TextureEx = <
+        item
+          Texture.MappingMode = tmmObjectLinear
+          Texture.MappingTCoordinates.Coordinates = {00000000000000000000803F00000000}
+          Texture.Disabled = False
+          TextureIndex = 0
+          TextureOffset.Coordinates = {0000003F0000003F0000000000000000}
+        end>
+      Position.Coordinates = {00000000000000000000003F0000803F}
+      Visible = False
+    end
+    object GLDTrails: TGLDummyCube
+      CubeSize = 1.000000000000000000
+    end
     object ODEScene: TGLDummyCube
       CubeSize = 1.000000000000000000
       object GLDummyTargetCam: TGLDummyCube
@@ -616,73 +686,6 @@ object FViewer: TFViewer
             X = 0.500000000000000000
           end>
       end
-    end
-    object GLLightSource: TGLLightSource
-      Ambient.Color = {BEC0403FBEC0403FBEC0403F0000803F}
-      ConstAttenuation = 1.000000000000000000
-      Position.Coordinates = {9A99993F666626C00000F0400000803F}
-      LightStyle = lsOmni
-      Specular.Color = {0000803F0000803F0000803F0000803F}
-      SpotCutOff = 180.000000000000000000
-    end
-    object GLXYZGrid: TGLXYZGrid
-      Position.Coordinates = {00000000000000406F12833A0000803F}
-      AntiAliased = True
-      LineWidth = 2.000000000000000000
-      XSamplingScale.Min = -5.000000000000000000
-      XSamplingScale.Max = 5.000000000000000000
-      XSamplingScale.Step = 1.000000000000000000
-      YSamplingScale.Min = -5.000000000000000000
-      YSamplingScale.Max = 5.000000000000000000
-      YSamplingScale.Step = 1.000000000000000000
-      ZSamplingScale.Step = 0.100000001490116100
-    end
-    object GLDummyCFire: TGLDummyCube
-      CubeSize = 1.000000000000000000
-      EffectsData = {
-        0201060A54474C424669726546580200060F474C4669726546584D616E616765
-        72}
-    end
-    object GLHUDTextObjName: TGLHUDText
-      Position.Coordinates = {0000A04100002041000000000000803F}
-      Scale.Coordinates = {0000003F3333333F0000803F00000000}
-      BitmapFont = GLStoredBitmapFont
-      Text = 'ObjectName'
-      Alignment = taLeftJustify
-      Layout = tlTop
-    end
-    object GLHUDTextGeneric: TGLHUDText
-      Position.Coordinates = {0000A04100002042000000000000803F}
-      Scale.Coordinates = {0000003F3333333F0000803F00000000}
-      BitmapFont = GLStoredBitmapFont
-      Alignment = taLeftJustify
-      Layout = tlTop
-    end
-    object GLCylinder2: TGLCylinder
-      Material.MaterialLibrary = GLMaterialLibrary
-      Material.LibMaterialName = 'LibMaterialFeup'
-      Direction.Coordinates = {000000000000803F0000000000000000}
-      PitchAngle = 90.000000000000000000
-      Up.Coordinates = {0000000000000000000080BF00000000}
-      Visible = False
-      BottomRadius = 0.100000001490116100
-      Height = 1.000000000000000000
-      TopRadius = 0.100000001490116100
-    end
-    object GLCube1: TGLCube
-      Material.TextureEx = <
-        item
-          Texture.MappingMode = tmmObjectLinear
-          Texture.MappingTCoordinates.Coordinates = {00000000000000000000803F00000000}
-          Texture.Disabled = False
-          TextureIndex = 0
-          TextureOffset.Coordinates = {0000003F0000003F0000000000000000}
-        end>
-      Position.Coordinates = {00000000000000000000003F0000803F}
-      Visible = False
-    end
-    object GLDTrails: TGLDummyCube
-      CubeSize = 1.000000000000000000
     end
     object GLFreeForm1: TGLFreeForm
     end
@@ -10243,5 +10246,12 @@ object FViewer: TFViewer
     UseInterval = True
     Left = 40
     Top = 120
+  end
+  object GLMemoryViewer: TGLMemoryViewer
+    Camera = GLCamera
+    Width = 240
+    Height = 320
+    Buffer.AmbientColor.Color = {9A99993E9A99993E9A99993E0000803F}
+    Left = 32
   end
 end
