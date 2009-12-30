@@ -93,6 +93,8 @@ function MStampRow(const M, S: Matrix; row: Longword): Matrix;
 function MColsum(const M: Matrix): Matrix;
 function MRowsum(const M: Matrix): Matrix;
 
+function  Mload(const fname: string): Matrix;
+procedure Msave(M: Matrix; const fname: string);
 
 // Missing:
 //function Mvflip(M:Matrix): Matrix;
@@ -827,6 +829,67 @@ begin
       result.data[r] := result.data[r]+ M.data[c + r * M.cols];
     end
   end;
+end;
+
+
+function Mload(const fname: string): Matrix;
+var
+  r,c,lines,rxc: integer;
+  F: TextFile;
+  dum: double;
+begin
+  result := Mzeros(0,0);
+  AssignFile(F, fname);
+  Reset(F);
+  lines:=0;
+  while not eof(F) do begin
+    readln(F);
+    inc(lines);
+  end;
+  CloseFile(F);
+
+  AssignFile(F, fname);
+  Reset(F);
+  rxc:=-1;
+  //dum:=0;  // para cortar com o warning
+  while not eof(F) do begin
+    read(F,dum);
+    inc(rxc);
+  end;
+  CloseFile(F);
+
+  if (lines<=0) or (rxc<=0) or (((rxc div lines)*lines)<>rxc) then
+     raise  Exception.Create('Bad file format: cannot load matrix');
+
+  result:=Mzeros(lines,rxc div lines);
+
+  AssignFile(F, fname);
+  Reset(F);
+  for r:=0 to lines-1 do begin
+    for c:=0 to (rxc div lines)-1 do begin
+      read(F,dum);
+      Msetv(result, r,c,dum);
+    end;
+  end;
+  CloseFile(F);
+
+end;
+
+procedure Msave(M: matrix; const fname: string);
+var
+  r,c: integer;
+  F: TextFile;
+begin
+  AssignFile(F, fname);
+  Rewrite(F);
+  for r:=0 to MNumRows(M)-1 do begin
+    for c:=0 to MNumRows(M)-1 do begin
+      write(F,Mgetv(M, r,c));
+      write(F,' ');
+    end;
+    write(F,chr($0d)+chr($0a));
+  end;
+  CloseFile(F);
 end;
 
 //{$R+}

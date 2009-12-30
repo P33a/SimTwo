@@ -31,7 +31,7 @@ type
     Action:TSimpleAction;
 
     Stack, Consts: array[0..maxDoubleStack-1] of double;   // TODO: change to dynamic array
-    StackIndex, ConstsCount: integer;
+    StackIndex{, ConstsCount}: integer;
 
     HashFuncs, HashVars: THash256;
     HashFuncsColisions: integer;
@@ -120,16 +120,17 @@ begin
 end;
 
 procedure TSimpleParser.RegisterConst(ConstName: string; value: double);
-var idx: integer;
+var idx, ConstsCount: integer;
 begin
   //Test if constname already exists
   idx := VarsList.IndexOf(uppercase(ConstName));
   if idx = -1 then begin
+    ConstsCount := VarsList.Count;
     if ConstsCount >=  maxDoubleStack then exit; //BAaaaad...
     consts[ConstsCount] := value;
-    inc(ConstsCount);
+    //inc(ConstsCount);
 
-    VarsList.AddObject(uppercase(ConstName), Tobject(@consts[ConstsCount-1]));
+    VarsList.AddObject(uppercase(ConstName), Tobject(@consts[ConstsCount]));
   end else begin
     //VarsList.Strings[idx] :=
     //VarsList.Objects[idx] :=
@@ -932,7 +933,7 @@ begin
 
   HashFuncsColisions := BuildHashTable(FuncsList, HashFuncs);
 
-  ConstsCount := 0;
+//  ConstsCount := 0;
 end;
 
 destructor TSimpleParser.Destroy;

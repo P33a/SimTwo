@@ -2,7 +2,7 @@ unit Utils;
 
 interface
 
-uses Classes, sysutils, Math, graphics, Grids, VectorGeometry;
+uses Classes, sysutils, Math, graphics, Grids, VectorGeometry, dynmatrix;
 
 //function strtofloatDef(s: string; def: double): double;
 procedure ParseString(s,sep: string; sl: TStrings);
@@ -40,6 +40,9 @@ procedure RotateAroundPoint(var rx,ry: double; px,py,cx,cy,teta: double);
 function InternalProductCosine(v1x,v1y,v2x,v2y: double): double;
 
 function NormalizeAngle(ang: double): double;
+
+function LinInterp(x0, x1, y0, y1, x: double): double;
+function BiLinInterp(Surf: matrix; xmin, xmax, ymin, ymax, x,y: double): double;
 
 //procedure DrawCovElipse(x,y,cov_x,cov_y, cov_xy: double; n: integer; CNV: TCanvas);
 procedure RotateCov( const incov_x,incov_y,incov_xy: double; out cov_x,cov_y, cov_xy: double; teta: double);
@@ -469,6 +472,41 @@ end;
   if b>c then SwapInts(b,c);
   if a>b then SwapInts(a,b);
   result:=b;
+end;
+
+function LinInterp(x0, x1, y0, y1, x: double): double;
+begin
+  result := y0 + (x - x0) * (y1 - y0) / (x1 - x0);
+end;
+
+
+function BiLinInterp(Surf: matrix; xmin, xmax, ymin, ymax, x,y: double): double;
+var dx, dy: double;
+    nx, ny, ix, iy: integer;
+    A, B, C, D: double;
+    yt0, yt1: double;
+begin
+  result := 0;
+  nx := MNumRows(Surf);
+  ny := MNumCols(Surf);
+  if (nx = 0) or (ny = 0) then exit;
+  if ((xmax - xmin) = 0) or ((ymax - ymin) = 0) then exit;
+
+  dx := (nx - 1) / (xmax - xmin);
+  dy := (ny - 1) / (ymax - ymin);
+
+  ix := floor((x - xmin) * dx);
+  iy := floor((y - ymin) * dy);
+
+  A := Mgetv(Surf, iy, ix);
+  B := Mgetv(Surf, iy, ix+1);
+  C := Mgetv(Surf, iy+1, ix);
+  D := Mgetv(Surf, iy+1, ix+1);
+
+  yt0 := LinInterp(ix * dx, (ix + 1) * dx, A, B, x);
+  yt1 := LinInterp(ix * dx, (ix + 1) * dx, C, D, x);
+  result := LinInterp(iy * dy, (iy + 1) * dy, yt0, yt1, y);
+
 end;
 
 end.
