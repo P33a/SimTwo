@@ -10185,6 +10185,7 @@ object FViewer: TFViewer
   end
   object FormStorage: TFormStorage
     IniSection = 'Viewer'
+    Options = [fpPosition]
     UseRegistry = False
     StoredProps.Strings = (
       'GLDummyCamPos.Position')
