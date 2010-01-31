@@ -97,8 +97,7 @@ type
     procedure LoadShellsFromXML(Robot: TRobot;  const root: IXMLNode; Parser: TSimpleParser);
     procedure LoadSceneFromXML(XMLFile: string);
     function LoadRobotFromXML(XMLFile: string; Parser: TSimpleParser): TRobot;
-    procedure CreateSliderJoint(var Link: TSolidLink; Solid1,
-      Solid2: TSolid; axis_x, axis_y, axis_z: double);
+    procedure CreateSliderJoint(var Link: TSolidLink; Solid1, Solid2: TSolid; axis_x, axis_y, axis_z: double);
     procedure SetSliderLimits(var Link: TSolidLink; LimitMin, LimitMax: double);
     procedure UpdatePickJoint;
     procedure LoadThingsFromXML(XMLFile: string; Parser: TSimpleParser);
@@ -109,12 +108,14 @@ type
     procedure LoadPolygonFromXML(const root: IXMLNode; Parser: TSimpleParser);
     procedure LoadArcFromXML(const root: IXMLNode; Parser: TSimpleParser);
     procedure LoadLineFromXML(const root: IXMLNode; Parser: TSimpleParser);
-    procedure CreateShellSphere(var Solid: TSolid; motherbody: PdxBody;
-      posX, posY, posZ, R: double);
-    procedure LoadGlobalSensorsFromXML(XMLFile: string;
-      Parser: TSimpleParser);
+    procedure CreateShellSphere(var Solid: TSolid; motherbody: PdxBody; posX, posY, posZ, R: double);
+    procedure LoadGlobalSensorsFromXML(XMLFile: string; Parser: TSimpleParser);
     procedure CreateSensorBody(Sensor: TSensor; GLBaseObject: TGLBaseSceneObject; SensorHeight,
       SensorRadius, posX, posY, posZ: double);
+    function CreateGLPolygoLine(aWinColor: longWord; posX, posY, posZ,
+      lineLength, lineWidth, angle: double): TGLPolygon;
+    function CreateGLArc(aWinColor: longWord; Xc, Yc, Zc, StartAngle,
+      StopAngle, step, innerRadius, outerRadius: double): TGLPolygon;
 //    procedure AxisGLCreate(axis: Taxis; aRadius, aHeight: double);
 //    procedure AxisGLSetPosition(axis: Taxis);
   public
@@ -2469,56 +2470,23 @@ end;
     <angle_deg start='0' stop='90' steps='15'/>
   </arc>
 }
-procedure TWorld_ODE.LoadArcFromXML(const root: IXMLNode; Parser: TSimpleParser);
-var PolyNode: IXMLNode;
-    Xc, Yc, Zc: double;
-    innerRadius, outerRadius: double;
-    StartAngle, StopAngle, step: double;
-    aWinColor: longWord;
-    GLPolygon: TGLPolygon;
+
+function TWorld_ODE.CreateGLArc(aWinColor: longWord; Xc, Yc, Zc, StartAngle, StopAngle, step, innerRadius, outerRadius: double): TGLPolygon;
+var GLPolygon: TGLPolygon;
     ang: double;
     over: boolean;
     i: integer;
 begin
-  if root = nil then exit;
-
-  PolyNode := root.FirstChild;
-  if PolyNode = nil then exit;
-
-  // Start a new contour
-  //GLPolygon := TGLPolygon.CreateAsChild(FViewer.GLPlaneFloor);
-  GLPolygon := TGLPolygon.CreateAsChild(OdeScene.FindChild('GLPlaneFloor',false));
-  GLPolygon.Position.Z := 0.0005;
-
-  // default values
-  Xc := 0; Yc := 0; Zc := 0;
-  aWinColor := $808080;
-  innerRadius := 0; outerRadius := 1;
-  StartAngle := 0; StopAngle := 180; step := 15;
-
-  while PolyNode <> nil do begin
-    if PolyNode.NodeName = 'center' then begin
-      Xc := GetNodeAttrRealParse(PolyNode, 'x', Xc, Parser);
-      Yc := GetNodeAttrRealParse(PolyNode, 'y', Yc, Parser);
-      Zc := GetNodeAttrRealParse(PolyNode, 'z', Zc, Parser);
-    end else if PolyNode.NodeName = 'radius' then begin
-      innerRadius := GetNodeAttrRealParse(PolyNode, 'inner', innerRadius, Parser);
-      outerRadius := GetNodeAttrRealParse(PolyNode, 'outer', outerRadius, Parser);
-    end else if PolyNode.NodeName = 'angle_deg' then begin
-      StartAngle := GetNodeAttrRealParse(PolyNode, 'start', StartAngle, Parser);
-      StopAngle := GetNodeAttrRealParse(PolyNode, 'stop', StopAngle, Parser);
-      step := GetNodeAttrRealParse(PolyNode, 'step', step, Parser);
-    end else if PolyNode.NodeName = 'color' then begin
-      aWinColor := StrToIntDef('$'+GetNodeAttrStr(PolyNode, 'rgb24', inttohex(aWinColor,6)), aWinColor);
-      GLPolygon.Material.FrontProperties.Diffuse.AsWinColor := aWinColor;
-    end;
-
-    PolyNode := PolyNode.NextSibling;
-  end;
 
   StartAngle := DegToRad(StartAngle);
   StopAngle := DegToRad(StopAngle);
   step := DegToRad(step);
+
+  // Start a new contour
+  //GLPolygon := TGLPolygon.CreateAsChild(FViewer.GLPlaneFloor);
+  GLPolygon := TGLPolygon.CreateAsChild(OdeScene.FindChild('GLPlaneFloor',false));
+  GLPolygon.Position.Z := 0;
+  GLPolygon.Material.FrontProperties.Diffuse.AsWinColor := aWinColor;
 
   // Draw outer arc
   GLPolygon.BeginUpdate;
@@ -2546,6 +2514,86 @@ begin
   end;
   GLPolygon.EndUpdate;
 
+  result := GLPolygon;
+end;
+
+procedure TWorld_ODE.LoadArcFromXML(const root: IXMLNode; Parser: TSimpleParser);
+var PolyNode: IXMLNode;
+    Xc, Yc, Zc: double;
+    innerRadius, outerRadius: double;
+    StartAngle, StopAngle, step: double;
+    aWinColor: longWord;
+    over: boolean;
+    x_disp, y_disp, angle_disp: double;
+    repeat_times: integer;
+    i: integer;
+    clone_hflip, clone_vflip, clone_hvflip: boolean;
+begin
+  if root = nil then exit;
+
+  PolyNode := root.FirstChild;
+  if PolyNode = nil then exit;
+
+  // default values
+  Xc := 0; Yc := 0; Zc := 0;
+  aWinColor := $808080;
+  innerRadius := 0; outerRadius := 1;
+  StartAngle := 0; StopAngle := 180; step := 15;
+  x_disp := 0; y_disp := 0; angle_disp := 0;
+  repeat_times := 0;
+  clone_hflip := false; clone_vflip := false; clone_hvflip := false;
+
+  while PolyNode <> nil do begin
+    if PolyNode.NodeName = 'center' then begin
+      Xc := GetNodeAttrRealParse(PolyNode, 'x', Xc, Parser);
+      Yc := GetNodeAttrRealParse(PolyNode, 'y', Yc, Parser);
+      Zc := GetNodeAttrRealParse(PolyNode, 'z', Zc, Parser);
+    end else if PolyNode.NodeName = 'radius' then begin
+      innerRadius := GetNodeAttrRealParse(PolyNode, 'inner', innerRadius, Parser);
+      outerRadius := GetNodeAttrRealParse(PolyNode, 'outer', outerRadius, Parser);
+    end else if PolyNode.NodeName = 'angle_deg' then begin
+      StartAngle := GetNodeAttrRealParse(PolyNode, 'start', StartAngle, Parser);
+      StopAngle := GetNodeAttrRealParse(PolyNode, 'stop', StopAngle, Parser);
+      step := GetNodeAttrRealParse(PolyNode, 'step', step, Parser);
+    end else if PolyNode.NodeName = 'color' then begin
+      aWinColor := StrToIntDef('$'+GetNodeAttrStr(PolyNode, 'rgb24', inttohex(aWinColor,6)), aWinColor);
+    end else if PolyNode.NodeName = 'repeat' then begin
+      repeat_times := GetNodeAttrInt(PolyNode, 'times', repeat_times);
+      x_disp := GetNodeAttrRealParse(PolyNode, 'x_disp', x_disp, Parser);
+      y_disp := GetNodeAttrRealParse(PolyNode, 'y_disp', y_disp, Parser);
+      angle_disp := GetNodeAttrRealParse(PolyNode, 'angle_disp', angle_disp, Parser);
+    end else if PolyNode.NodeName = 'clone_hflip' then begin
+      clone_hflip := true;
+    end else if PolyNode.NodeName = 'clone_vflip' then begin
+      clone_vflip := true;
+    end else if PolyNode.NodeName = 'clone_hvflip' then begin
+      clone_hvflip := true;
+    end;
+
+    PolyNode := PolyNode.NextSibling;
+  end;
+
+  //CreateGLArc(aWinColor, Xc, Yc, Zc, StartAngle, StopAngle, step, innerRadius, outerRadius);
+  for i:= 0 to repeat_times do begin
+    CreateGLArc(aWinColor, Xc, Yc, Zc, StartAngle, StopAngle, step, innerRadius, outerRadius);
+    if clone_hvflip then begin
+      CreateGLArc(aWinColor, -Xc, -Yc, Zc, StartAngle - 180, StopAngle - 180, step, innerRadius, outerRadius);
+      //CreateGLPolygoLine(aWinColor, -posX, -posY, posZ, lineLength, lineWidth, angle - 180);
+    end;
+    if clone_hflip then begin
+      CreateGLArc(aWinColor, Xc, -Yc, Zc, -StopAngle, -StartAngle, step, innerRadius, outerRadius);
+      //CreateGLPolygoLine(aWinColor, posX, -posY, posZ, lineLength, lineWidth, -angle);
+    end;
+    if clone_vflip then begin
+      CreateGLArc(aWinColor, -Xc, Yc, Zc, 180 - StopAngle, 180 - StartAngle, step, innerRadius, outerRadius);
+      //CreateGLPolygoLine(aWinColor, -posX, posY, posZ, lineLength, lineWidth, 180 - angle);
+    end;
+
+    Xc := Xc + x_disp;
+    Yc := Yc + y_disp;
+    StartAngle := StartAngle + angle_disp;
+    StopAngle := StopAngle + angle_disp;
+  end;
 end;
 
 procedure TWorld_ODE.LoadPolygonFromXML(const root: IXMLNode; Parser: TSimpleParser);
@@ -2589,28 +2637,49 @@ end;
     <size width='0' lenght='0'/>
   </line>
 }
+
+function TWorld_ODE.CreateGLPolygoLine(aWinColor: longWord; posX, posY, posZ, lineLength, lineWidth, angle: double): TGLPolygon;
+var GLPolygon: TGLPolygon;
+begin
+  // Start a new contour
+  //GLPolygon := TGLPolygon.CreateAsChild(FViewer.GLPlaneFloor);
+  GLPolygon := TGLPolygon.CreateAsChild(OdeScene.FindChild('GLPlaneFloor',false));
+  with GLPolygon do begin
+    Position.Z := 0.0;
+    Material.FrontProperties.Diffuse.AsWinColor := aWinColor;
+    AddNode(0, 0, 0);
+    AddNode(lineLength, 0, 0);
+    AddNode(lineLength, lineWidth, 0);
+    AddNode(0, lineWidth, 0);
+
+    RotateAbsolute(zvector, -angle);
+    Position.SetPoint(posX, posY, posZ);
+  end;
+  result := GLPolygon;
+end;
+
 procedure TWorld_ODE.LoadLineFromXML(const root: IXMLNode; Parser: TSimpleParser);
 var PolyNode: IXMLNode;
     posX, posY, posZ, angle: double;
     lineWidth, lineLength: double;
     aWinColor: longWord;
-    GLPolygon: TGLPolygon;
-//    x, y: double;
+    x_disp, y_disp, angle_disp: double;
+    repeat_times: integer;
+    i: integer;
+    clone_hflip, clone_vflip, clone_hvflip: boolean;
 begin
   if root = nil then exit;
 
   PolyNode := root.FirstChild;
   if PolyNode = nil then exit;
 
-  // Start a new contour
-  //GLPolygon := TGLPolygon.CreateAsChild(FViewer.GLPlaneFloor);
-  GLPolygon := TGLPolygon.CreateAsChild(OdeScene.FindChild('GLPlaneFloor',false));
-  GLPolygon.Position.Z := 0.0005;
-
   // default values
   posX := 0; posY := 0; posZ := 0; angle := 0;
   lineWidth := 0.1; lineLength := 1;
   aWinColor := $808080;
+  x_disp := 0; y_disp := 0; angle_disp := 0;
+  repeat_times := 0;
+  clone_hflip := false; clone_vflip := false; clone_hvflip := false;
 
   while PolyNode <> nil do begin
     if PolyNode.NodeName = 'position' then begin
@@ -2623,7 +2692,17 @@ begin
       lineLength := GetNodeAttrRealParse(PolyNode, 'length', lineLength, Parser);
     end else if PolyNode.NodeName = 'color' then begin
       aWinColor := StrToIntDef('$'+GetNodeAttrStr(PolyNode, 'rgb24', inttohex(aWinColor,6)), aWinColor);
-      GLPolygon.Material.FrontProperties.Diffuse.AsWinColor := aWinColor;
+    end else if PolyNode.NodeName = 'repeat' then begin
+      repeat_times := GetNodeAttrInt(PolyNode, 'times', repeat_times);
+      x_disp := GetNodeAttrRealParse(PolyNode, 'x_disp', x_disp, Parser);
+      y_disp := GetNodeAttrRealParse(PolyNode, 'y_disp', y_disp, Parser);
+      angle_disp := GetNodeAttrRealParse(PolyNode, 'angle_disp', angle_disp, Parser);
+    end else if PolyNode.NodeName = 'clone_hflip' then begin
+      clone_hflip := true;
+    end else if PolyNode.NodeName = 'clone_vflip' then begin
+      clone_vflip := true;
+    end else if PolyNode.NodeName = 'clone_hvflip' then begin
+      clone_hvflip := true;
     end;
 
     PolyNode := PolyNode.NextSibling;
@@ -2646,7 +2725,7 @@ begin
   x := posX - lineWidth * sin(angle);
   y := posY + lineWidth * cos(angle);
   GLPolygon.AddNode(x, y, posZ);}
-
+  {
   GLPolygon.AddNode(0, 0, 0);
   GLPolygon.AddNode(lineLength, 0, 0);
   GLPolygon.AddNode(lineLength, lineWidth, 0);
@@ -2654,6 +2733,24 @@ begin
 
   GLPolygon.RotateAbsolute(zvector, -angle);
   GLPolygon.Position.SetPoint(posX, posY, posZ);
+  }
+
+  for i:= 0 to repeat_times do begin
+    CreateGLPolygoLine(aWinColor, posX, posY, posZ, lineLength, lineWidth, angle);
+    if clone_hvflip then begin
+      CreateGLPolygoLine(aWinColor, -posX, -posY, posZ, lineLength, lineWidth, angle - 180);
+    end;
+    if clone_hflip then begin
+      CreateGLPolygoLine(aWinColor, posX, -posY, posZ, lineLength, lineWidth, -angle);
+    end;
+    if clone_vflip then begin
+      CreateGLPolygoLine(aWinColor, -posX, posY, posZ, lineLength, lineWidth, 180 - angle);
+    end;
+
+    posX := posX + x_disp;
+    posY := posY + y_disp;
+    angle := angle + angle_disp;
+  end;
 
  { GLPolygon.Material.Texture.Image.LoadFromFile('..\grad.jpg');
   if lineWidth > 1e-10 then begin
@@ -2945,6 +3042,7 @@ begin
   MinWorldY := -12;
 
   LoadSceneFromXML('scene.xml');
+  
   SetCameraTarget(0);
 
   //Floor
@@ -4250,7 +4348,7 @@ end;
 
 // Sensores de linha branca  1
 // Sonar 1-n
-// Beacons  0
+// Beacons/landmark  0
 // Receptores de beacons  1-nb
 //  digitais
 //  analógicos
