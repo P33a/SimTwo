@@ -6,7 +6,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls, ExtCtrls, GLWin32Viewer, GLcontext, Math,
   IdBaseComponent, IdComponent, IdUDPBase, IdUDPServer, IdSocketHandle, ODERobots, OdeImport,
-  rxPlacemnt, Grids, GLCadencer, CPort, ShellAPI, Sockets, GLShadowVolume, GLScene;
+  rxPlacemnt, Grids, GLCadencer, CPort, ShellAPI, Sockets, GLShadowVolume, GLScene,
+  CheckLst, Buttons;
 
 type
   TFParams = class(TForm)
@@ -198,6 +199,13 @@ type
     BSetTrailPars: TButton;
     RGGLObjects: TRadioGroup;
     SGGlobalSensors: TStringGrid;
+    BExportTrack: TButton;
+    CBTags: TCheckBox;
+    LBSelectedTags: TListBox;
+    LBAllTags: TListBox;
+    BitBtnAddTags: TBitBtn;
+    BitBtnRemoveTags: TBitBtn;
+    BitBtnAddAll: TBitBtn;
     procedure CBShadowsClick(Sender: TObject);
     procedure CBVsyncClick(Sender: TObject);
     procedure BSetFPSClick(Sender: TObject);
@@ -248,6 +256,10 @@ type
     procedure Button1Click(Sender: TObject);
     procedure BSetTrailParsClick(Sender: TObject);
     procedure RGGLObjectsClick(Sender: TObject);
+    procedure BExportTrackClick(Sender: TObject);
+    procedure BitBtnAddTagsClick(Sender: TObject);
+    procedure BitBtnRemoveTagsClick(Sender: TObject);
+    procedure BitBtnAddAllClick(Sender: TObject);
   private
     procedure FillEditArray(ProtoName: string;
       var EditArray: array of TEdit);
@@ -556,6 +568,9 @@ begin
     //EditDebug.Anchors := EditDebug.Anchors - [akbottom];
     //EditDebug.Anchors := EditDebug.Anchors + [akbottom];
   end;
+
+  LBAllTags.Clear;
+  WorldODE.getGLPolygonsTags(LBAllTags.Items);
 
   try
     BSetCamParsClick(Sender);
@@ -1077,6 +1092,47 @@ begin
       end;
 
     end;
+  end;
+end;
+
+procedure TFParams.BExportTrackClick(Sender: TObject);
+var SL: TStringList;
+begin
+  SL := TStringList.Create;
+  try
+    if CBTags.Checked then begin
+      WorldODE.exportGLPolygonsText(SL, LBSelectedTags.Items);
+    end else begin
+      WorldODE.exportGLPolygonsText(SL, nil);
+    end;
+    SL.SaveToFile('track.txt');
+  finally
+    SL.Free;
+  end;
+end;
+
+
+procedure TFParams.BitBtnAddTagsClick(Sender: TObject);
+begin
+  if LBAllTags.ItemIndex >= 0 then begin
+    if LBSelectedTags.Items.indexof(LBAllTags.Items[LBAllTags.Itemindex]) < 0 then
+      LBSelectedTags.Items.Add(LBAllTags.Items[LBAllTags.Itemindex]);
+  end;
+end;
+
+procedure TFParams.BitBtnRemoveTagsClick(Sender: TObject);
+begin
+  if LBSelectedTags.ItemIndex >= 0 then begin
+      LBSelectedTags.Items.Delete(LBSelectedTags.Itemindex);
+  end;
+end;
+
+procedure TFParams.BitBtnAddAllClick(Sender: TObject);
+var i: integer;
+begin
+  for i := 0 to LBAllTags.Count -1 do begin
+    if LBSelectedTags.Items.indexof(LBAllTags.Items[i]) < 0 then
+      LBSelectedTags.Items.Add(LBAllTags.Items[i]);
   end;
 end;
 
