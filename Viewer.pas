@@ -10,7 +10,7 @@ uses
   GLShadowVolume, GLSkydome, GLGraph, OmniXML, OmniXMLUtils, Contnrs, ODERobots,
   rxPlacemnt, ProjConfig, GLHUDObjects, Menus, GLVectorFileObjects,
   GLFireFX, GlGraphics, OpenGL1x, SimpleParser, GLBitmapFont,
-  GLMultiPolygon, GLMesh, jpeg;
+  GLMultiPolygon, GLMesh, jpeg, OmniXMLPersistent;
 
 type
   TRGBfloat = record
@@ -60,10 +60,6 @@ type
   private
     //procedure CreateSubGeomBox(var body: PdxBody; var geom: PdxGeom; xsize, ysize, zsize, x, y, z: double);
     //procedure CreateGlBox(var GLCube: TGLCube; var geom: PdxGeom);
-
-    procedure CreateSolidBox(var Solid: TSolid; bmass, posX, posY, posZ, L, W, H: double);
-    procedure CreateSolidCylinder(var Solid: TSolid; cmass, posX, posY, posZ: double; c_radius, c_length: double);
-    procedure CreateSolidSphere(var Solid: TSolid; bmass, posX, posY, posZ: double; c_radius: double);
 
     procedure CreateHingeJoint(var Link: TSolidLink; Solid1, Solid2: TSolid;
       anchor_x, anchor_y, anchor_z, axis_x, axis_y, axis_z: double);
@@ -119,6 +115,11 @@ type
 //    procedure AxisGLCreate(axis: Taxis; aRadius, aHeight: double);
 //    procedure AxisGLSetPosition(axis: Taxis);
   public
+    procedure CreateSolidBox(var Solid: TSolid; bmass, posX, posY, posZ, L, W, H: double);
+    procedure CreateSolidCylinder(var Solid: TSolid; cmass, posX, posY, posZ: double; c_radius, c_length: double);
+    procedure CreateSolidSphere(var Solid: TSolid; bmass, posX, posY, posZ: double; c_radius: double);
+    procedure DeleteSolid(Solid: TSolid);
+
     procedure exportGLPolygonsText(St: TStringList; tags: TStrings);
     procedure getGLPolygonsTags(TagsList: TStrings);
 
@@ -180,6 +181,8 @@ type
     MenuChangeScene: TMenuItem;
     GLCone1: TGLCone;
     GLMemoryViewer: TGLMemoryViewer;
+    N1: TMenuItem;
+    MenuAbort: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure GLSceneViewerMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -204,6 +207,7 @@ type
     procedure FormKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure MenuChangeSceneClick(Sender: TObject);
+    procedure MenuAbortClick(Sender: TObject);
   private
     { Private declarations }
     OldPick : TGLCustomSceneObject;
@@ -219,6 +223,7 @@ type
     procedure ShowOrRestoreForm(Fm: TForm);
     procedure PostProcessSensors(aSensor: TSensor);
     procedure PreProcessSensors(aSensor: TSensor);
+    procedure TestSaveTexture;
   public
     HUDStrings: TStringList;
     TrailsCount: integer;
@@ -1193,9 +1198,6 @@ begin
         if prop.NodeName = 'ID' then begin
           ID := GetNodeAttrStr(prop, 'value', ID);
         end;
-        if prop.NodeName = 'desc' then begin
-          descr := GetNodeAttrStr(prop, 'Eng', descr);
-        end;
         if prop.NodeName = 'texture' then begin
           TextureName := GetNodeAttrStr(prop, 'name', TextureName);
           TextureScale := GetNodeAttrRealParse(prop, 'scale', TextureScale, Parser);
@@ -1310,6 +1312,10 @@ begin
         //PositionSceneObject(newBone.GLObj, newBone.Geom);
       end;
 
+    end else begin // Unused Tag Generate warning
+      if (XMLErrors <> nil) and (bone.NodeName <> '#text') and (bone.NodeName <> '#comment') then begin
+        XMLErrors.Add('[Warning]: Tag <'+ bone.NodeName + '> not recognised!');
+      end;
     end;
 
     bone := bone.NextSibling;
@@ -1480,12 +1486,19 @@ begin
         if prop.NodeName = 'ID' then begin
           IDValue := GetNodeAttrStr(prop, 'value', IDValue);
         end;
+
         ReadFrictionFromXMLNode(Friction, '', prop, Parser);
+        Friction2 := Friction;
         ReadFrictionFromXMLNode(Friction2, '2', prop, Parser);
+
         ReadSpringFromXMLNode(Spring, '', prop, Parser);
+        Spring2 := Spring;
         ReadSpringFromXMLNode(Spring2, '2', prop, Parser);
+
         ReadMotorFromXMLNode(Motor, '', prop, Parser);
+        Motor2 := Motor;
         ReadMotorFromXMLNode(Motor2, '2', prop, Parser);
+
         prop := prop.NextSibling;
       end;
 
@@ -1611,7 +1624,7 @@ end;
 
 function LoadXML(XMLFile: string; ErrorList: TStringList): IXMLDocument;
 var XML: IXMLDocument;
-    err: string;
+    err, sep: string;
 begin
   result := nil;
   XML:=CreateXMLDoc;
@@ -1621,9 +1634,15 @@ begin
       //Add('XML file error:' + XMLFile);
       //Add(XML.ParseError.Reason);
     //end;
-    err := '[XML error] ' + format('%s(%d): ', [XMLFile, XML.ParseError.Line]) + #$0d+#$0A
+    if ErrorList <> nil then begin
+      sep := #$0d+#$0A;
+    end else begin
+      sep := ' ';
+    end;
+
+    err := '[XML error] ' + format('%s(%d): ', [XMLFile, XML.ParseError.Line]) + sep
     //err := format('%s(%d): ', [XMLFile, XML.ParseError.Line]) + #$0d+#$0A
-           + format('"%s": ',[trim(XML.ParseError.SrcText)]) + #$0d+#$0A
+           + format('"%s": ',[trim(XML.ParseError.SrcText)]) + sep
            + XML.ParseError.Reason ;
 
     if ErrorList <> nil then begin
@@ -1813,9 +1832,9 @@ begin
 
   obstacle := root.FirstChild;
   while obstacle <> nil do begin
-    //if obstacle.NodeName = 'defines' then begin
-    //  LoadDefinesFromXML(Parser, obstacle);
-    //end;
+    if obstacle.NodeName = 'defines' then begin
+      LoadDefinesFromXML(Parser, obstacle);
+    end;
     if obstacle.NodeName = 'cuboid' then begin
       prop := obstacle.FirstChild;
       // default values
@@ -2082,6 +2101,7 @@ var wheelnode, prop: IXMLNode;
     Friction, DefFriction: TFriction;
     Motor, DefMotor: TMotor;
     RGB, DefRGB: TRGBfloat;
+    ID: string;
 begin
   if root = nil then exit;
 
@@ -2161,10 +2181,13 @@ begin
       Friction := DefFriction;
       Motor := DefMotor;
       RGB := DefRGB;
+      ID := 'W';
 
       prop := wheelnode.FirstChild;
       while prop <> nil do begin
-
+        if prop.NodeName = 'ID' then begin
+          ID := GetNodeAttrStr(prop, 'value', ID);
+        end;
         if prop.NodeName = 'omni' then begin
           Pars.omni := true;
         end;
@@ -2220,6 +2243,11 @@ begin
         Robot.Wheels.Add(newWheel);
         CreateWheel(Robot, newWheel, Pars, Friction, Motor);
         newWheel.Tyre.SetTexture('MatBumps', 4); //TODO
+        if ID = 'W' then begin
+          newWheel.Axle.ID := ID + inttostr(Robot.Wheels.Count);
+        end else begin
+          newWheel.Axle.ID := ID;
+        end;
       end;
 
     end;
@@ -2659,7 +2687,7 @@ begin
   // Start a new contour
   //GLPolygon := TGLPolygon.CreateAsChild(FViewer.GLPlaneFloor);
   GLPolygon := TGLPolygon.CreateAsChild(OdeScene.FindChild('GLPlaneFloor',false));
-  GLPolygon.Position.Z := 0.0005;
+  GLPolygon.Position.Z := 0.0;
 
   while PolyNode <> nil do begin
     // default values
@@ -2992,6 +3020,10 @@ begin
           prop := prop.NextSibling;
 
         end;
+      end else begin // Unused Tag Generate warning
+        if (XMLErrors <> nil) and (objNode.NodeName <> '#text') and (objNode.NodeName <> '#comment') then begin
+          XMLErrors.Add('[Warning] ' + format('(%s): ', [XMLFile]) + 'Tag <'+ objNode.NodeName + '> not recognised!');
+        end;
       end;
 
       objNode := objNode.NextSibling;
@@ -3035,32 +3067,24 @@ begin
         else if lowercase(str)='wheelchair' then newRobot.Kind := rkWheelChair
         else if lowercase(str)='humanoid' then newRobot.Kind := rkHumanoid
         else if lowercase(str)='belt' then newRobot.Kind := rkConveyorBelt;
-      end;
-
-      if objNode.NodeName = 'defines' then begin
+      end else if objNode.NodeName = 'defines' then begin
         LoadDefinesFromXML(LocalParser, objnode);
-      end;
-
-      if objNode.NodeName = 'solids' then begin
+      end else if objNode.NodeName = 'solids' then begin
         LoadSolidsFromXML(newRobot.Solids, objNode, LocalParser);
         if newRobot.Solids.Count = 0 then exit;
         newRobot.MainBody := newRobot.Solids[0];
-      end;
-
-      if objNode.NodeName = 'wheels' then begin
+      end else if objNode.NodeName = 'wheels' then begin
         LoadWheelsFromXML(newRobot, objNode, LocalParser);
-      end;
-
-      if objNode.NodeName = 'shells' then begin
+      end else if objNode.NodeName = 'shells' then begin
         LoadShellsFromXML(newRobot, objNode, LocalParser);
-      end;
-
-      if objNode.NodeName = 'sensors' then begin
+      end else if objNode.NodeName = 'sensors' then begin
         LoadSensorsFromXML(newRobot, objNode, LocalParser);
-      end;
-
-      if objNode.NodeName = 'articulations' then begin
+      end else if objNode.NodeName = 'articulations' then begin
         LoadLinksFromXML(newRobot, objNode, LocalParser);
+      end else begin // Unused Tag Generate warning
+        if (XMLErrors <> nil) and (objNode.NodeName <> '#text') and (objNode.NodeName <> '#comment') then begin
+          XMLErrors.Add('[Warning] ' + format('(%s): ', [XMLFile]) + 'Tag <'+ objNode.NodeName + '> not recognised!');
+        end;
       end;
 
       objNode := objNode.NextSibling;
@@ -4099,9 +4123,17 @@ begin
 
   GLCadencer.enabled := true;
   TestTexture;
-  //GLHUDTextGeneric.Text := 'Test' + #13 + '2nd line?'; 
+  //GLHUDTextGeneric.Text := 'Test' + #13 + '2nd line?';
+  TestSaveTexture
 
 end;
+
+procedure TFViewer.TestSaveTexture;
+begin
+  TOmniXMLWriter.SaveToFile(GLMaterialLibrary.Materials.Items[3], 'filename.xml', pfNodes, ofIndent);
+end;
+
+
 
 procedure TFViewer.TimerTimer(Sender: TObject);
 var fps: double;
@@ -4261,6 +4293,20 @@ begin
   FSceneEdit.MenuChange.Click;
 end;
 
+procedure TFViewer.MenuAbortClick(Sender: TObject);
+begin
+  halt(1);
+end;
+
+procedure TWorld_ODE.DeleteSolid(Solid: TSolid);
+begin
+  (OdeScene as TGLShadowVolume).Occluders.RemoveCaster(Solid.GLObj);
+  ODEScene.Remove(Solid.GLObj, false);
+  Solid.GLObj.Free;
+  dGeomDestroy(Solid.Geom);
+  dBodyDestroy(Solid.Body);
+end;
+
 end.
 
 
@@ -4327,6 +4373,43 @@ begin
     LastCadencerTime:=ActTime;
   end;
 end;
+
+    int pnpoly(int npol, float *xp, float *yp, float x, float y)
+    [
+      int i, j, c = 0;
+      for (i = 0, j = npol-1; i < npol; j = i++) [
+        if ((((yp[i] <= y) && (y < yp[j])) ||
+             ((yp[j] <= y) && (y < yp[i]))) &&
+            (x < (xp[j] - xp[i]) * (y - yp[i]) / (yp[j] - yp[i]) + xp[i]))
+          c = !c;
+      ]
+      return c;
+    ]
+
+type point = record
+x,y : double;
+end;
+
+type polygon = array of point;
+
+var firstx : double = -1;
+firsty : double = -1;
+poly : polygon;
+
+function PointInPoly(p : point;poly : polygon) : Boolean;
+var i,j : integer;
+Begin
+  result := false;
+  j := High(poly);
+  For i := Low(poly) to High(poly) do begin
+    if (
+       ( ((poly[i].y <= p.y) and (p.y < poly[j].y)) or ((poly[j].y <= p.y) and (p.y < poly[i].y)) ) and
+       (p.x < ((poly[j].x - poly[i].x) * (p.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x))
+       ) then result := not result;
+    j := i
+  end;
+End;
+
 
 procedure TFMain.BuildLineScan;
 const ScanRes = 64;
@@ -4406,7 +4489,7 @@ end;
 
 
 // TODO
-// lembrar o estado fechado de janelas 
+// lembrar o estado fechado de janelas
 // Actuator: Electromagnet
 // Things scriptable
 // Sensores sem ser num robot  (???)
@@ -4436,6 +4519,7 @@ end;
 // Bussola       0
 // Giroscopios   0
 // Acelerometros 0
+// Measure rate
 
 // Solve color input confusion
 // Show scene tree  +
@@ -4446,3 +4530,5 @@ end;
 // multiple spreadsheets
 // Decorations
 // Add force to solid
+// canvas
+// spray

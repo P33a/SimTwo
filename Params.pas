@@ -248,8 +248,6 @@ type
     procedure CBUDPConnectClick(Sender: TObject);
     procedure UDPGenericUDPRead(Sender: TObject; AData: TStream;
       ABinding: TIdSocketHandle);
-    procedure UDPGenericStatus(ASender: TObject; const AStatus: TIdStatus;
-      const AStatusText: String);
     procedure BGlobalSetClick(Sender: TObject);
     procedure BSetCamParsClick(Sender: TObject);
     procedure BGetCamPosClick(Sender: TObject);
@@ -992,12 +990,6 @@ begin
   UDPGenData.CopyFrom(AData, 0);
 end;
 
-procedure TFParams.UDPGenericStatus(ASender: TObject;
-  const AStatus: TIdStatus; const AStatusText: String);
-begin
- // if hsDisconnected = AStatus then UDPGeneric.Active := false;
-//  UDPGeneric.DoWork();
-end;
 
 procedure TFParams.BGlobalSetClick(Sender: TObject);
 begin

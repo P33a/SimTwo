@@ -10224,6 +10224,14 @@ object FViewer: TFViewer
       ShortCut = 16455
       OnClick = MenuChangeSceneClick
     end
+    object N1: TMenuItem
+      Caption = '-'
+    end
+    object MenuAbort: TMenuItem
+      Caption = '&Abort'
+      ShortCut = 49220
+      OnClick = MenuAbortClick
+    end
   end
   object GLMaterialLibrary3ds: TGLMaterialLibrary
     Left = 40

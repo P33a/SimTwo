@@ -151,6 +151,7 @@ var
 
 procedure SetRCValue(r, c: integer; s: string);
 function GetRCValue(r, c: integer): double;
+function GetRCText(r, c: integer): string;
 function RCButtonPressed(r, c: integer): boolean;
 procedure ClearButtons;
 function RangeToMatrix(r, c, rows, cols: integer): Matrix;
@@ -467,45 +468,45 @@ end;
 procedure TFSheets.SGGlobalDrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
 var
-  grdColored: TStringGrid;
+  Grid: TStringGrid;
   sText: String;
   myBackColor: TColor;
   myTextColor: TColor;
   myAlignment: TAlignment;
   SheetCell: TSheetCell;
 begin
-  grdColored := TStringGrid(Sender);
+  Grid := TStringGrid(Sender);
   SheetCell := ActSheet.Cell(Arow, Acol);
   // set default values for the parameters,
   // get the values depending on the grid settings.
-  sText := grdColored.Cells[ACol, ARow];
+  sText := Grid.Cells[ACol, ARow];
 
   myAlignment := taLeftJustify;
-  if (ARow < grdColored.FixedRows) or (ACol < grdColored.FixedCols) then begin
-    myBackColor := grdColored.FixedColor;
+  if (ARow < Grid.FixedRows) or (ACol < Grid.FixedCols) then begin
+    myBackColor := Grid.FixedColor;
     myAlignment := taCenter;
-    myTextColor := grdColored.Font.Color;
+    myTextColor := Grid.Font.Color;
   end else begin
-    if (acol >= grdColored.Selection.Left) and (acol <= grdColored.Selection.Right) and
-       (arow >= grdColored.Selection.top) and (arow <= grdColored.Selection.bottom) then begin
+    if (acol >= Grid.Selection.Left) and (acol <= Grid.Selection.Right) and
+       (arow >= Grid.Selection.top) and (arow <= Grid.Selection.bottom) then begin
       myBackColor := clHighlight;
       myTextColor := clHighlightText;
     end else begin
-      myBackColor := grdColored.Color;
+      myBackColor := Grid.Color;
       myTextColor := clWindowText;
     end;
   end;
   // draw the text in the cell
   if (SheetCell.CellType = ctText) or (SheetCell.CellType = ctFormula) then begin
-    MyDrawCellText(grdColored.Canvas, Rect, sText, myBackColor, myTextColor, myAlignment);
+    MyDrawCellText(Grid.Canvas, Rect, sText, myBackColor, myTextColor, myAlignment);
   end else if SheetCell.CellType = ctButton then begin
     myTextColor := clBtnText;
     if SheetCell.CellButtonState = cstButtonDown then begin
-      DrawFrameControl(grdColored.Canvas.Handle, Rect, DFC_BUTTON, DFCS_BUTTONPUSH or DFCS_PUSHED);
-      DrawButtonText(grdColored.Canvas, Rect, sText, myBackColor, myTextColor, true);
+      DrawFrameControl(Grid.Canvas.Handle, Rect, DFC_BUTTON, DFCS_BUTTONPUSH or DFCS_PUSHED);
+      DrawButtonText(Grid.Canvas, Rect, sText, myBackColor, myTextColor, true);
     end else begin
-      DrawFrameControl(grdColored.Canvas.Handle, Rect, DFC_BUTTON, DFCS_BUTTONPUSH);
-      DrawButtonText(grdColored.Canvas, Rect, sText, myBackColor, myTextColor, false);
+      DrawFrameControl(Grid.Canvas.Handle, Rect, DFC_BUTTON, DFCS_BUTTONPUSH);
+      DrawButtonText(Grid.Canvas, Rect, sText, myBackColor, myTextColor, false);
     end;
   end;
   //end;
@@ -935,6 +936,12 @@ function GetRCValue(r, c: integer): double;
 begin
   result := FSheets.ActSheet.Cell(r, c).value;
 end;
+
+function GetRCText(r, c: integer): string;
+begin
+  result := FSheets.ActSheet.SGrid.Cells[c, r];
+end;
+
 
 function RCButtonPressed(r, c: integer): boolean;
 var SheetCell: TSheetCell;
