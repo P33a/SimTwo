@@ -95,11 +95,14 @@ type
     procedure SetZeroState;
     procedure SetColor(R, G, B: single; A: single = 1);
     procedure GetColor(out R, G, B, A: integer);
+    procedure SetColorRGB(RGB: TColor);
     procedure SetTexture(TextureName: string; TextureScale: double);
     function GetPosition: TdVector3;
     function GetRotation: TdMatrix3;
+    function GetLinSpeed: TdVector3;
     procedure SetSize(sizeX, sizeY, sizeZ: double);
     procedure GetSize(out sizeX, sizeY, sizeZ: double);
+    procedure SetForce(FX, FY, FZ: double);
   end;
 
   TSolidList = class(TList)
@@ -701,6 +704,13 @@ begin
   GLObj.Material.FrontProperties.Diffuse.SetColor(R, G, B, A);
 end;
 
+
+procedure TSolid.SetColorRGB(RGB: TColor);
+begin
+  if GLObj = nil then exit;
+  GLObj.Material.FrontProperties.Diffuse.AsWinColor := RGB;
+end;
+
 procedure TSolid.GetColor(out R, G, B, A: integer);
 begin
   if GLObj = nil then exit;
@@ -823,6 +833,16 @@ begin
     SizeY := sizeX;
     SizeZ := sizeX;
   end;
+end;
+
+procedure TSolid.SetForce(FX, FY, FZ: double);
+begin
+  dBodySetForce(Body, Fx, Fy, Fz);
+end;
+
+function TSolid.GetLinSpeed: TdVector3;
+begin
+  result :=dBodyGetLinearVel(Body)^;
 end;
 
 { TAxis }

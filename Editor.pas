@@ -416,12 +416,6 @@ begin
   InsertList := TStringList.Create;
   TypeList := TStringList.Create;
 
-  with PrintDialog do begin
-    Collate := True;
-    Copies := 1;
-    Options := [poPageNums];
-  end;
-
   LocalInspectorLine := -1;
 
   Plugin := TPSImport_ODERobotsPublished.Create(Self);
@@ -432,6 +426,18 @@ begin
 
   MatrixPlugin := TPSImport_dynmatrix.Create(Self);
   TPSPluginItem(PSScript.Plugins.add).Plugin := MatrixPlugin;
+
+  try
+    with PrintDialog do begin
+      Collate := True;
+      Copies := 1;
+      Options := [poPageNums];
+    end;
+  except on E: Exception do begin
+    showmessage(E.Message);
+  end;
+  end;
+
 end;
 
 procedure TFEditor.UpdateStatusLine;
@@ -861,6 +867,8 @@ begin
 
   Sender.AddFunction(@SetRCValue, 'procedure SetRCValue(r, c: integer; s: string);');
   Sender.AddFunction(@GetRCValue, 'function GetRCValue(r, c: integer): double;');
+  Sender.AddFunction(@GetRCText, 'function GetRCText(r, c: integer): string;');
+
   Sender.AddFunction(@RCButtonPressed, 'function RCButtonPressed(r, c: integer): boolean;');
   Sender.AddFunction(@RangeToMatrix, 'function RangeToMatrix(r, c, rows, cols: integer): Matrix;');
   Sender.AddFunction(@MatrixToRange, 'procedure MatrixToRange(r, c: integer; const M: Matrix);');

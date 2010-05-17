@@ -129,7 +129,7 @@ object FEditor: TFEditor
         Top = 329
         Width = 761
         Height = 100
-        ActivePage = TabOutput
+        ActivePage = TabErrors
         Align = alBottom
         TabOrder = 1
         TabPosition = tpBottom

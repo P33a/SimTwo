@@ -98,6 +98,11 @@ function GetSolidVx(R, i: integer): double;
 function GetSolidVy(R, i: integer): double;
 function GetSolidVz(R, i: integer): double;
 
+function GetSolidColor(R, i: integer): TRGBAColor;
+procedure SetSolidColor(R, I: integer; Red, Green, Blue: byte);
+
+procedure SetSolidForce(R, i: integer; Fx, Fy, Fz: double);
+
 function GetSensorVal(R, i: integer): double;
 
 function GetThingIndex(ID: string): integer;
@@ -111,8 +116,14 @@ procedure SetThingPos(T: integer; x, y, z: double);
 function GetThingSize(T: integer): TPoint3D;
 procedure SetThingSize(T: integer; x, y, z: double);
 
-function GetSolidColor(R, i: integer): TRGBAColor;
-procedure SetSolidColor(R, I: integer; Red, Green, Blue: byte);
+function AddThingSphere(ID: string; mass, posX, posY, posZ, radius: double; rgb24: integer): integer;
+procedure SetThingForce(T: integer; Fx, Fy, Fz: double);
+
+function GetThingSpeed(T: integer): TPoint3D;
+procedure SetThingSpeed(T: integer; vx, vy, vz: double);
+
+procedure ClearThings;
+
 
 function GetAxisOdo(R, i: integer): integer;
 
@@ -186,6 +197,8 @@ procedure SetTrailColor(T: integer; Red, Green, Blue: byte);
 procedure AddTrailNode(T: integer; x, y, z: double);
 procedure DelTrailNode(T: integer);
 procedure ClearTrail(T: integer);
+
+
 
 {
 
@@ -408,6 +421,14 @@ begin
   result.y := v0[1];
   result.z := v0[2];
 end;
+
+function TdVector3ToTPoint3D(v1: TdVector3): TPoint3D;
+begin
+  Result.x := v1[0];
+  Result.y := v1[1];
+  Result.z := v1[2];
+end;
+
 
 function GetThingPos(T: integer): TPoint3D;
 var v1: TdVector3;
@@ -697,6 +718,12 @@ end;
 procedure SetSolidColor(R, I: integer; Red, Green, Blue: byte);
 begin
   WorldODE.Robots[R].Solids[i].SetColor(Red/255, Green/255, Blue/255);
+end;
+
+
+procedure SetSolidForce(R, i: integer; Fx, Fy, Fz: double);
+begin
+  WorldODE.Robots[r].Solids[i].SetForce(Fx, Fy, Fz);
 end;
 
 function GetAxisOdo(R, i: integer): integer;
@@ -1113,7 +1140,61 @@ begin
 end;
 
 
+function AddThingSphere(ID: string; mass, posx, posY, posZ, radius: double; rgb24: integer): integer;
+var newThing: TSolid;
+begin
+  with WorldODE do begin
+    newThing := TSolid.Create;
+    result := Things.Add(newThing);
+    newThing.ID := ID;
 
+    newThing.description := ID;
+    newThing.BuoyantMass := 0;
+    newThing.Drag := 0;
+    newThing.StokesDrag := 1e-5;
+    newThing.RollDrag := 1e-3;
+
+    CreateSolidSphere(newThing, mass, posX, posY, posZ, radius);
+
+    newThing.SetZeroState();
+    newThing.SetColorRGB(rgb24);
+  end;
+end;
+
+procedure SetThingForce(T: integer; Fx, Fy, Fz: double);
+begin
+  WorldODE.Things[T].SetForce(Fx, Fy, Fz);
+end;
+
+
+function GetThingSpeed(T: integer): TPoint3D;
+var v1: TdVector3;
+begin
+  result.x := 0;
+  result.y := 0;
+  result.z := 0;
+
+  v1 := WorldODE.Things[T].GetLinSpeed;
+
+  Result.x := v1[0];
+  Result.y := v1[1];
+  Result.z := v1[2];
+end;
+
+
+procedure SetThingSpeed(T: integer; vx, vy, vz: double);
+begin
+  WorldODE.Things[T].SetLinSpeed(vx, vy, vz);
+end;
+
+procedure ClearThings;
+var i: integer;
+begin
+  for i := 0 to WorldODE.Things.Count - 1 do begin
+    WorldODE.DeleteSolid(WorldODE.Things[i]);
+  end;
+  WorldODE.Things.ClearAll;
+end;
 
 {
 function GetLinkWayPointPos(R, i, j: integer): double;
