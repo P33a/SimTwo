@@ -21,6 +21,8 @@ function FMod(x,d: double): double;
 function DiffAngle(a1,a2: double): double;
 function Dist(x,y: double): double;
 function ATan2(y,x: double): double;
+function ACos2(y,x: double): double;
+function ASin2(y,x: double): double;
 function Sign(a: double): double;
 function Sat(a,limit: double): double;
 
@@ -282,6 +284,28 @@ begin
     end;
   end;
 end;
+
+function ACos2(y, x: double): double;
+begin
+  if y >= 0 then begin
+    result := arccos(max(-1, min(1, x)));
+  end else begin
+    result := -arccos(max(-1, min(1, x)));
+  end;
+end;
+
+
+function ASin2(y, x: double): double;
+begin
+  if x >= 0 then begin
+    result := arcsin(max(-1, min(1, y)));
+  end else if y > 0 then begin // 2nd Quadrant
+    result := pi + arcsin(max(-1, min(1, y)));
+  end else begin               // 3rd Quadrant
+    result := -pi + arcsin(max(-1, min(1, y)));
+  end;
+end;
+
 
 function Sign(a: double): double;
 begin

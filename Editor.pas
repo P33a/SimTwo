@@ -418,14 +418,14 @@ begin
 
   LocalInspectorLine := -1;
 
+  MatrixPlugin := TPSImport_dynmatrix.Create(Self);
+  TPSPluginItem(PSScript.Plugins.add).Plugin := MatrixPlugin;
+
   Plugin := TPSImport_ODERobotsPublished.Create(Self);
   TPSPluginItem(PSScript.Plugins.add).Plugin := Plugin;
 
   PathPlugin := TPSImport_PathFinder.Create(Self);
   TPSPluginItem(PSScript.Plugins.add).Plugin := PathPlugin;
-
-  MatrixPlugin := TPSImport_dynmatrix.Create(Self);
-  TPSPluginItem(PSScript.Plugins.add).Plugin := MatrixPlugin;
 
   try
     with PrintDialog do begin
@@ -656,7 +656,7 @@ end;
 
 procedure TFEditor.MenuLocalHelpClick(Sender: TObject);
 begin
-  ShellExecute(Handle, 'open', 'Help.pdf', nil, nil,  SW_SHOWNORMAL);
+  ShellExecute(Handle, 'open', 'funclist.txt', nil, nil,  SW_SHOWNORMAL);
 end;
 
 procedure TFEditor.BuildRegFuncList(Sender: TPSScript);
@@ -841,6 +841,8 @@ begin
   Sender.AddFunction(@arccos, 'function arccos(x: Extended): Extended');
   Sender.AddFunction(@tan, 'function tan(x: Extended): Extended');
   Sender.AddFunction(@ATan2, 'function ATan2(y,x: double): double');
+  Sender.AddFunction(@ACos2, 'function ACos2(y,x: double): double');
+  Sender.AddFunction(@ASin2, 'function ASin2(y,x: double): double');
   Sender.AddFunction(@DiffAngle, 'function DiffAngle(a1,a2: double): double;');
   Sender.AddFunction(@Dist, 'function Dist(x,y: double): double');
   Sender.AddFunction(@Sign, 'function Sign(a: double): double');
