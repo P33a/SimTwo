@@ -2,7 +2,7 @@ unit ODERobotsPublished;
 
 interface
 
-uses ODERobots, PathFinder;
+uses ODERobots, PathFinder, dynmatrix;
 
 type
   TAxisPoint = record
@@ -77,6 +77,13 @@ function GetSolidCenterOfMass(R, i: integer): TPoint3D;
 
 function GetSolidPos(R, i: integer): TPoint3D;
 function GetSolidLinearVel(R, i: integer): TPoint3D;
+
+//Matrix versions
+function GetSolidPosMat(R, i: integer): Matrix;
+function GetSolidLinearVelMat(R, i: integer): Matrix;
+function GetSolidRotMat(R, i: integer): Matrix;
+function GetSolidAgularVelMat(R, i: integer): Matrix;
+
 
 // Flat Functions
 function GetRobotX(R: integer): double;
@@ -536,6 +543,70 @@ begin
     Result.z := v1[2];
   end;
 end;
+
+function GetSolidPosMat(R, i: integer): Matrix;
+var v: PdVector3;
+begin
+  result := Mzeros(3,1);
+
+  with WorldODE.Robots[R].Solids[i] do begin
+    if Body = nil then exit;
+    v := dBodyGetPosition(Body);
+    Msetv(Result, 0, 0, v^[0]);
+    Msetv(Result, 1, 0, v^[1]);
+    Msetv(Result, 2, 0, v^[2]);
+  end;
+end;
+
+
+function GetSolidLinearVelMat(R, i: integer): Matrix;
+var v: PdVector3;
+begin
+  result := Mzeros(3,1);
+
+  with WorldODE.Robots[R].Solids[i] do begin
+    if Body = nil then exit;
+    v := dBodyGetLinearVel(Body);
+    Msetv(Result, 0, 0, v^[0]);
+    Msetv(Result, 1, 0, v^[1]);
+    Msetv(Result, 2, 0, v^[2]);
+  end;
+end;
+
+
+function GetSolidAgularVelMat(R, i: integer): Matrix;
+var v: PdVector3;
+begin
+  result := Mzeros(3,1);
+
+  with WorldODE.Robots[R].Solids[i] do begin
+    if Body = nil then exit;
+    v := dBodyGetAngularVel(Body);
+    Msetv(Result, 0, 0, v^[0]);
+    Msetv(Result, 1, 0, v^[1]);
+    Msetv(Result, 2, 0, v^[2]);
+  end;
+end;
+
+
+function GetSolidRotMat(R, i: integer): Matrix;
+var pR: PdMatrix3;
+    row, col: integer;
+begin
+  result := Mzeros(3,3);
+
+  with WorldODE.Robots[R].Solids[i] do begin
+    if Body = nil then exit;
+    pR := dBodyGetRotation(Body);
+    for row := 0 to 2 do begin
+      for col := 0 to 2 do begin
+        Msetv(Result, row, col, pR^[4*row+col]);
+      end;
+    end;
+  end;
+end;
+
+
 
 function GetRobotX(R: integer): double;
 var v1: TdVector3;

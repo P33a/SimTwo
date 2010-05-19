@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, rxPlacemnt, Grids, ComCtrls, StdCtrls, ExtCtrls, Menus, Buttons, OmniXML,
-  OmniXMLUtils, SimpleParser, math, dynmatrix;
+  OmniXMLUtils, SimpleParser, math, dynmatrix, clipbrd;
 
 type
   TSheet = class;
@@ -24,7 +24,6 @@ type
     CellType: TCellType;
     CellButtonState: TCellButtonState;
 
-    //SourceCellsList, DependentCellsList: TSheetCellList;
     SourceCellsList: TStringList;
     level: integer;
 
@@ -101,7 +100,7 @@ type
     PasteSpecial1: TMenuItem;
     MenuPaste: TMenuItem;
     MenuCopy: TMenuItem;
-    Cut1: TMenuItem;
+    MenuCut: TMenuItem;
     N3: TMenuItem;
     Repeatcommand1: TMenuItem;
     Undo1: TMenuItem;
@@ -131,8 +130,12 @@ type
     procedure PanelFormulaClick(Sender: TObject);
     procedure EditFormulaKeyPress(Sender: TObject; var Key: Char);
     procedure MenuDeleteClick(Sender: TObject);
+    procedure MenuCopyClick(Sender: TObject);
+    procedure MenuPasteClick(Sender: TObject);
   private
     procedure FillHeaders(SGrid: TStringGrid);
+    procedure CellsRectToStringList(CellsRect: TGridRect; SL: TStringList);
+    procedure StringListToCellsRect(SL: TStringList; CellsRect: TGridRect);
   public
     ActSheet: TSheet;
     Last_x, Last_y: integer;
@@ -143,7 +146,7 @@ type
 
     procedure SaveSheet(XMLFile: string; Sheet: TSheet);
     procedure LoadSheet(Sheet: TSheet; XMLFile: string);
-    procedure EnterFormula;
+    procedure EnterFormula(r, c: integer; newText: string);
   end;
 
 var
@@ -516,7 +519,7 @@ end;
 
 procedure TFSheets.SpeedButtonOKClick(Sender: TObject);
 begin
-  EnterFormula; // 1st way on accepting an edited formula
+  EnterFormula(Last_r, Last_c, EditFormula.Text); // 1st way on accepting an edited formula
 end;
 
 
@@ -830,7 +833,7 @@ begin
   if CellType = ctFormula then begin
     result := '=' + expression;
   end else if CellType = ctButton then begin
-    result := expression;
+    result := '[' + expression + ']';
   end else begin
     result := text;
   end;
@@ -851,7 +854,7 @@ begin
   if key in [VK_RETURN, VK_DOWN, VK_UP] then begin // 2nd way of accepting an edited formula
     //ActSheet.EditCell(Last_r, Last_c).ParseText(EditFormula.Text);
     key := 0;
-    EnterFormula;
+    EnterFormula(Last_r, Last_c, EditFormula.Text);
     ActSheet.SGrid.SetFocus;
     if (key = VK_DOWN) then begin
       SelRect := ActSheet.SGrid.Selection;
@@ -927,7 +930,7 @@ end;
 procedure TFSheets.EditFormulaExit(Sender: TObject);
 begin
   if not escaping then // 3rd way of accepting an edited formula
-    EnterFormula;
+    EnterFormula(Last_r, Last_c, EditFormula.Text);
     //ActSheet.EditCell(Last_r, Last_c).ParseText(EditFormula.Text);
   Escaping := false;
 end;
@@ -999,10 +1002,10 @@ begin
   ActSheet.SGrid.Invalidate;
 end;
 
-procedure TFSheets.EnterFormula;
+procedure TFSheets.EnterFormula(r, c: integer; newText: string);
 var i64_start, i64_end, i64_freq: int64;
 begin
-  ActSheet.EditCell(Last_r, Last_c).ParseText(EditFormula.Text);
+  ActSheet.EditCell(r, c).ParseText(newText);
   ActSheet.BuildCalcSequence;
 
   QueryPerformanceCounter(i64_start);
@@ -1056,6 +1059,85 @@ begin
 end;
 
 
+procedure TFSheets.CellsRectToStringList(CellsRect: TGridRect; SL: TStringList);
+var r, c: integer;
+begin
+  Sl.Clear;
+  SL.Add(inttostr(CellsRect.top));
+  SL.Add(inttostr(CellsRect.Left));
+  SL.Add(inttostr(CellsRect.bottom));
+  SL.Add(inttostr(CellsRect.Right));
+  for r := CellsRect.top to CellsRect.bottom do begin
+    for c := CellsRect.Left to CellsRect.Right do begin
+      SL.Add(FSheets.ActSheet.EditCell(r, c).DisplayText_);
+    end;
+  end;
+end;
+
+procedure TFSheets.StringListToCellsRect(SL: TStringList; CellsRect: TGridRect);
+var r, c, i: integer;
+    Sheet: TSheet;
+    r_offset, c_offset: integer;
+begin
+  Sheet := FSheets.ActSheet;
+  r := CellsRect.top;
+  c := CellsRect.Left;
+  try
+    CellsRect.top := strtoint(SL[0]);
+    r_offset := r - CellsRect.top;
+    CellsRect.top := CellsRect.top + r_offset;
+
+    CellsRect.Left := strtoint(SL[1]);
+    c_offset := c - CellsRect.Left;
+    CellsRect.Left := CellsRect.Left + c_offset;
+
+    CellsRect.bottom := strtoint(SL[2]) + r_offset;
+    CellsRect.Right := strtoint(SL[3]) + c_offset;
+
+    i := 4;
+    for r := CellsRect.top to CellsRect.bottom do begin
+      for c := CellsRect.Left to CellsRect.Right do begin
+        Sheet.EditCell(r, c).ParseText(SL[i]);
+        inc(i);
+      end;
+    end;
+
+    Sheet.BuildCalcSequence;
+    while Sheet.ReCalc <> Sheet.CalcSequence.Count do begin
+      Sheet.BuildCalcSequence;
+    end;
+
+    except on E: Exception do begin
+      StatusBar.Panels[3].Text := E.message;
+      exit;
+    end;
+  end;
+end;
+
+procedure TFSheets.MenuCopyClick(Sender: TObject);
+var SL: TStringList;
+begin
+  SL := TStringList.Create;
+  try
+    CellsRectToStringList(ActSheet.SGrid.Selection, SL);
+    clipboard.AsText := SL.Text;
+  finally
+    SL.Free;
+  end;
+
+end;
+
+procedure TFSheets.MenuPasteClick(Sender: TObject);
+var SL: TStringList;
+begin
+  SL := TStringList.Create;
+  try
+    SL.Text := clipboard.AsText;
+    StringListToCellsRect(SL, ActSheet.SGrid.Selection);
+  finally
+    SL.Free;
+  end;
+end;
 
 end.
 

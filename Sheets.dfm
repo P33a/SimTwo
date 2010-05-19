@@ -219,7 +219,7 @@ object FSheets: TFSheets
         Caption = '&Go To...'
       end
     end
-    object Cut1: TMenuItem
+    object MenuCut: TMenuItem
       Caption = 'Cu&t'
       ShortCut = 16472
       Visible = False
@@ -227,12 +227,12 @@ object FSheets: TFSheets
     object MenuCopy: TMenuItem
       Caption = '&Copy'
       ShortCut = 16451
-      Visible = False
+      OnClick = MenuCopyClick
     end
     object MenuPaste: TMenuItem
       Caption = '&Paste'
       ShortCut = 16470
-      Visible = False
+      OnClick = MenuPasteClick
     end
     object N1: TMenuItem
       Caption = '-'

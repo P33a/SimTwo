@@ -554,8 +554,7 @@ object FViewer: TFViewer
       Layout = tlTop
     end
     object GLXYZGrid: TGLXYZGrid
-      ObjectsSorting = osNone
-      Position.Coordinates = {00000000000000406F12833A0000803F}
+      Position.Coordinates = {00000000000000006F12033B0000803F}
       AntiAliased = True
       LineColor.Color = {3333333F3333333F3333333F0000803F}
       LineWidth = 2.000000000000000000
