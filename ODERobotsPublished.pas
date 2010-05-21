@@ -766,7 +766,7 @@ end;
 
 function GetSensorVal(R, i: integer): double;
 begin
-  result := WorldODE.Robots[r].Sensors[i].measure;
+  result := WorldODE.Robots[r].Sensors[i].measures[0].measure;
 end;
 
 function GetThingColor(T, c: integer): TRGBAColor;
