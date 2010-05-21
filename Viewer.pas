@@ -287,7 +287,7 @@ begin
 
     if dGeomGetClass(o1) = dRayClass then begin
       if (o1.data <> nil) then begin
-        with TSensorRay(o1.data) do begin
+        with TSensorRay(o1.data).Measure do begin
           pos := contact[0].geom.pos;
           normal := contact[0].geom.normal;
           dist := contact[0].geom.depth;
@@ -301,7 +301,7 @@ begin
     end;
     if dGeomGetClass(o2) = dRayClass then begin
       if (o2.data <> nil) then begin
-        with TSensorRay(o2.data) do begin
+        with TSensorRay(o2.data).Measure do begin
           pos := contact[0].geom.pos;
           normal := contact[0].geom.normal;
           dist := contact[0].geom.depth;
@@ -3526,20 +3526,20 @@ begin
   //v := 0;
   with aSensor do begin
     if kind <> skIRSharp then exit;
-    if not has_measure then exit;
+    if not Measures[0].has_measure then exit;
     if not Noise.active then exit;
 
     //var_dist := 0;
-    iv := Noise.gain * measure + Noise.offset;
+    iv := Noise.gain * Measures[0].measure + Noise.offset;
     if iv <> 0 then
       v := 1 / iv
     else exit;
-    var_v := Noise.var_d * measure + Noise.var_k;
+    var_v := Noise.var_d * Measures[0].measure + Noise.var_k;
     //m := - Noise.gain / sqr(iv);
     m := - Noise.gain * sqr(v);
     if m <> 0 then begin
       var_dist := var_v / sqr(m);
-      measure := measure + RandG(0, sqrt(var_dist));
+      Measures[0].measure := Measures[0].measure + RandG(0, sqrt(var_dist));
     end;
 
   end;
@@ -3570,8 +3570,8 @@ begin
 
     // Fill remote IR sensors
     for i:=0 to min(Sensors.Count, MaxRemIrSensors)-1 do begin
-      if Sensors[i].has_measure then begin
-        Robot.IRSensors[i] := Sensors[i].measure;
+      if Sensors[i].Measures[0].has_measure then begin
+        Robot.IRSensors[i] := Sensors[i].Measures[0].measure;
       end else begin
         Robot.IRSensors[i] := 0;
       end;
@@ -3673,11 +3673,11 @@ end;
 procedure TFViewer.PreProcessSensors(aSensor: TSensor);
 var j: integer;
 begin
-  aSensor.measure := 1e6;
-  aSensor.has_measure := false;
+  aSensor.Measures[0].measure := 1e6;
+  aSensor.Measures[0].has_measure := false;
   for j := 0 to aSensor.Rays.Count - 1 do begin
-    aSensor.Rays[j].dist := -1;
-    aSensor.Rays[j].has_measure := false;
+    aSensor.Rays[j].Measure.dist := -1;
+    aSensor.Rays[j].Measure.has_measure := false;
   end;
 end;
 
@@ -3689,38 +3689,44 @@ begin
     case kind of
 
       skIRSharp: begin
-        //measure := Rays[0].measure;
-        dist := Rays[0].dist;
-        has_measure := Rays[0].has_measure;
-        if has_measure then
-          measure := min(measure, dist);
+        with Measures[0] do begin
+          //measure := Rays[0].measure;
+          dist := Rays[0].Measure.dist;
+          has_measure := Rays[0].Measure.has_measure;
+          if has_measure then
+            measure := min(measure, dist);
+        end;
       end;
 
       skCapacitive: begin
-        measure := Rays[0].measure;
-        dist := Rays[0].dist;
-        has_measure := Rays[0].has_measure;
-        if has_measure then begin
-          measure := 1
-        end else begin
-          measure := 0;
-          has_measure := true;
+        with Measures[0] do begin
+          measure := Rays[0].Measure.measure;
+          dist := Rays[0].Measure.dist;
+          has_measure := Rays[0].Measure.has_measure;
+          if has_measure then begin
+            measure := 1
+          end else begin
+            measure := 0;
+            has_measure := true;
+          end;
         end;
       end;
 
       skInductive: begin
-        measure := Rays[0].measure;
-        dist := Rays[0].dist;
-        has_measure := Rays[0].has_measure;
-        MeasuredSolid := Rays[0].HitSolid;
-        if has_measure then begin
-          if (MeasuredSolid <> nil) and
-             (smMetallic in MeasuredSolid.MatterProperties) then
-                measure := 1
-          else measure := 0;
-        end else begin
-          measure := 0;
-          has_measure := true;
+        with Measures[0] do begin
+          measure := Rays[0].Measure.measure;
+          dist := Rays[0].Measure.dist;
+          has_measure := Rays[0].Measure.has_measure;
+          HitSolid := Rays[0].Measure.HitSolid;
+          if has_measure then begin
+            if (HitSolid <> nil) and
+               (smMetallic in HitSolid.MatterProperties) then
+                  measure := 1
+            else measure := 0;
+          end else begin
+            measure := 0;
+            has_measure := true;
+          end;
         end;
       end;
 

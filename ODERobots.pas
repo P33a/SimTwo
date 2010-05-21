@@ -282,13 +282,20 @@ type
 
   TSensor = class;
 
-  TSensorRay = class
-    ParentSensor, TargetBeacon: TSensor;
-    Geom: PdxGeom;
-    HitSolid: TSolid;
+  TSensorMeasure = class
     dist, measure: double;
     pos, normal: TdVector3;
     has_measure: boolean;
+    HitSolid: TSolid;
+  public
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
+  TSensorRay = class
+    ParentSensor, TargetBeacon: TSensor;
+    Geom: PdxGeom;
+    Measure: TSensorMeasure;
   public
     constructor Create;
     destructor Destroy; override;
@@ -322,18 +329,25 @@ type
     //Geom : PdxGeom;
     //Geoms: TGeomList;
     ID: string;
-    Rays: TSensorRayList;
-    GLObj: TGLSceneObject;
-    dist, measure: double;
-    pos, normal: TdVector3;
     kind: TSensorKind;
     Noise: TSensorNoise;
+    Rays: TSensorRayList;
+    GLObj: TGLSceneObject;
+
+    SensorMeasures: array of TSensorMeasure;
+  protected
+    function GetMeasure(Index: Integer): TSensorMeasure;
+    procedure SetMeasure(Index: Integer; AMeasure: TSensorMeasure);
+{    dist, measure: double;
+    pos, normal: TdVector3;
     has_measure: boolean;
     MeasuredSolid: TSolid;
+}
   public
     constructor Create;
     destructor Destroy; override;
     procedure SetColor(R, G, B: single; A: single = -1);
+    property Measures[Index: Integer]: TSensorMeasure read GetMeasure write SetMeasure; default;
   end;
 
 const
@@ -1221,14 +1235,28 @@ end;
 constructor TSensor.Create;
 begin
   Rays := TSensorRayList.Create;
+
+  SetLength(SensorMeasures, 1);
+  SensorMeasures[0] := TSensorMeasure.Create;
 end;
 
 destructor TSensor.Destroy;
+var i: integer;
 begin
+  for i := 0 to length(SensorMeasures) - 1 do begin
+    SensorMeasures[i].Free;
+  end;
   //Geoms.DeleteAllGeoms();
   Rays.ClearAll;
   Rays.Free;
   inherited;
+end;
+
+function TSensor.GetMeasure(Index: Integer): TSensorMeasure;
+begin
+  if (Index < 0) or (Index >= length(SensorMeasures)) then
+    raise ERangeError.CreateFmt('%d is not within the valid range of 0..%d', [Index, length(SensorMeasures)-1]);
+  result := SensorMeasures[Index];
 end;
 
 procedure TSensor.SetColor(R, G, B: single; A: single = -1);
@@ -1238,6 +1266,13 @@ begin
   if A = -1 then A := GLObj.Material.FrontProperties.Diffuse.Alpha;
   GLObj.Material.FrontProperties.Diffuse.SetColor(R, G, B, A);
 //  end;
+end;
+
+procedure TSensor.SetMeasure(Index: Integer; AMeasure: TSensorMeasure);
+begin
+  if (Index < 0) or (Index >= length(SensorMeasures)) then
+    raise ERangeError.CreateFmt('%d is not within the valid range of 0..%d', [Index, length(SensorMeasures)-1]);
+  SensorMeasures[Index] := AMeasure;
 end;
 
 { TSensorList }
@@ -1454,11 +1489,12 @@ end;
 
 constructor TSensorRay.Create;
 begin
-
+  Measure := TSensorMeasure.Create;
 end;
 
 destructor TSensorRay.Destroy;
 begin
+  Measure.Free;
   if geom <> nil then dGeomDestroy(geom);
   inherited;
 end;
@@ -1517,6 +1553,19 @@ end;
 procedure TSensorRayList.SetItems(Index: Integer; ASensorRay: TSensorRay);
 begin
   inherited Items[Index] := ASensorRay;
+end;
+
+{ TSensorMeasure }
+
+constructor TSensorMeasure.Create;
+begin
+
+end;
+
+destructor TSensorMeasure.Destroy;
+begin
+
+  inherited;
 end;
 
 end.
