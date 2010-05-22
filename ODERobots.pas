@@ -23,7 +23,7 @@ const MaxDim = 8;
   skOmniWheel = 1;
   skMotorBelt = 2;}
 type
-  TSolidKind = (skDefault, skOmniWheel, skMotorBelt, skPropeller);
+  TSolidKind = (skDefault, skOmniWheel, skMotorBelt, skPropeller, skFloor, skWall);
 
 type
   TControlMode = (cmPIDPosition, cmPIDSpeed, cmState);
@@ -283,10 +283,10 @@ type
   TSensor = class;
 
   TSensorMeasure = class
-    dist, measure: double;
+    dist, value: double;
     pos, normal: TdVector3;
-    has_measure: boolean;
     HitSolid: TSolid;
+    has_measure: boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -323,7 +323,7 @@ type
     active: boolean;
   end;
 
-  TSensorKind = (skGeneric, skIR, skIRSharp, skSonar, skCapacitive, skInductive, skBeacon);
+  TSensorKind = (skGeneric, skIR, skIRSharp, skSonar, skCapacitive, skInductive, skBeacon, skFloorLine);
 
   TSensor = class
     //Geom : PdxGeom;
@@ -333,8 +333,10 @@ type
     Noise: TSensorNoise;
     Rays: TSensorRayList;
     GLObj: TGLSceneObject;
+    Period, TimeFromLastMeasure: double;
 
     SensorMeasures: array of TSensorMeasure;
+  private
   protected
     function GetMeasure(Index: Integer): TSensorMeasure;
     procedure SetMeasure(Index: Integer; AMeasure: TSensorMeasure);
@@ -348,10 +350,12 @@ type
     destructor Destroy; override;
     procedure SetColor(R, G, B: single; A: single = -1);
     property Measures[Index: Integer]: TSensorMeasure read GetMeasure write SetMeasure; default;
+    procedure PreProcess;
+    procedure PostProcess;
   end;
 
 const
-  SensorKindStrings: array[TSensorKind] of string = ('Generic', 'IR', 'IRSharp', 'Sonar', 'Capacitive', 'Inductive', 'Beacon');
+  SensorKindStrings: array[TSensorKind] of string = ('Generic', 'IR', 'IRSharp', 'Sonar', 'Capacitive', 'Inductive', 'Beacon', 'FloorLine');
 
 type
   TSensorList = class(TList)
@@ -1274,6 +1278,77 @@ begin
     raise ERangeError.CreateFmt('%d is not within the valid range of 0..%d', [Index, length(SensorMeasures)-1]);
   SensorMeasures[Index] := AMeasure;
 end;
+
+procedure TSensor.PreProcess;
+var j: integer;
+begin
+  Measures[0].value := 1e6;
+  Measures[0].has_measure := false;
+  for j := 0 to Rays.Count - 1 do begin
+    Rays[j].Measure.dist := -1;
+    Rays[j].Measure.has_measure := false;
+  end;
+end;
+
+
+
+procedure TSensor.PostProcess;
+begin
+  case kind of
+
+    skIRSharp: begin
+      with Measures[0] do begin
+        dist := Rays[0].Measure.dist;
+        has_measure := Rays[0].Measure.has_measure;
+        if has_measure then
+          value := min(value, dist);
+      end;
+    end;
+
+    skCapacitive: begin
+      with Measures[0] do begin
+        dist := Rays[0].Measure.dist;
+        has_measure := true;
+        if Rays[0].Measure.has_measure then begin
+          value := 1
+        end else begin
+          value := 0;
+        end;
+      end;
+    end;
+
+    skInductive: begin
+      with Measures[0] do begin
+        dist := Rays[0].Measure.dist;
+        has_measure := true;
+        HitSolid := Rays[0].Measure.HitSolid;
+        value := 0;
+        if (Rays[0].Measure.has_measure) and
+           (HitSolid <> nil) and
+           (smMetallic in HitSolid.MatterProperties) then begin
+          value := 1
+        end;
+      end;
+    end;
+
+    skFloorLine: begin
+      with Measures[0] do begin
+        dist := Rays[0].Measure.dist;
+        has_measure := true;
+        HitSolid := Rays[0].Measure.HitSolid;
+        value := 0;
+        if (Rays[0].Measure.has_measure) and
+           (HitSolid <> nil) and
+           (HitSolid.kind = skFloor) then begin
+          value := 1
+        end;
+      end;
+    end;
+
+  end;
+end;
+
+
 
 { TSensorList }
 
