@@ -7,10 +7,10 @@ uses
   Dialogs, GLScene, GLObjects, GLMisc, GLWin32Viewer, GLCadencer, ODEImport,
   GLShadowPlane, VectorGeometry, GLGeomObjects, ExtCtrls, ComCtrls,
   GLWindowsFont, keyboard, GLTexture, math, GLSpaceText, Remote,
-  GLShadowVolume, GLSkydome, GLGraph, OmniXML, OmniXMLUtils, Contnrs, ODERobots,
+  GLShadowVolume, GLSkydome, GLGraph, OmniXML, OmniXMLUtils,  ODERobots,
   rxPlacemnt, ProjConfig, GLHUDObjects, Menus, GLVectorFileObjects,
   GLFireFX, GlGraphics, OpenGL1x, SimpleParser, GLBitmapFont,
-  GLMultiPolygon, GLMesh, jpeg, OmniXMLPersistent;
+  GLMultiPolygon, GLMesh, jpeg;
 
 type
   TRGBfloat = record
@@ -32,6 +32,7 @@ type
     default_n_mu: double;
     AirDensity: double;
 
+    Walls: TSolidList;
     Environment: TSolid;
     Robots: TRobotList;
     Obstacles: TSolidList;
@@ -112,6 +113,8 @@ type
       lineLength, lineWidth, angle: double; s_tag: string): TGLPolygon;
     function CreateGLArc(aWinColor: longWord; Xc, Yc, Zc, StartAngle,
       StopAngle, step, innerRadius, outerRadius: double; s_tag: string): TGLPolygon;
+    //procedure CreateInvisiblePlane(Plane: TSolid; dirX, dirY, dirZ, offset: double);
+    function CreateInvisiblePlane(planeKind: TSolidKind; dirX, dirY, dirZ, offset: double): TSolid;
 //    procedure AxisGLCreate(axis: Taxis; aRadius, aHeight: double);
 //    procedure AxisGLSetPosition(axis: Taxis);
   public
@@ -221,8 +224,6 @@ type
     function GLSceneViewerPick(X, Y: Integer): TGLCustomSceneObject;
     procedure TestTexture;
     procedure ShowOrRestoreForm(Fm: TForm);
-    procedure PostProcessSensors(aSensor: TSensor);
-    procedure PreProcessSensors(aSensor: TSensor);
     procedure TestSaveTexture;
   public
     HUDStrings: TStringList;
@@ -795,6 +796,17 @@ begin
   PositionSceneObject(Obstacle.GLObj, Obstacle.Geom);
 //  PositionSceneObject(TGLBaseSceneObject(PdxGeom(ground_box).data), ground_box);
   (OdeScene as TGLShadowVolume).Occluders.AddCaster(Obstacle.GLObj);
+end;
+
+//procedure TWorld_ODE.CreateInvisiblePlane(Plane: TSolid; dirX, dirY, dirZ, offset: double);
+function TWorld_ODE.CreateInvisiblePlane(planeKind: TSolidKind; dirX, dirY, dirZ, offset: double): TSolid;
+//var plane: TSolid;
+begin
+  result := TSolid.Create;
+  result.kind := planeKind;
+  result.Geom := dCreatePlane(space, dirX, dirY, dirZ, offset);
+  result.GLObj := nil;
+  result.Geom.data := result;
 end;
 
 
@@ -3112,6 +3124,8 @@ begin
 
   OdeScene := FViewer.GLShadowVolume;
 
+  Walls := TSolidList.Create;
+
   Environment := TSolid.Create;
   Environment.Body := nil;
 
@@ -3144,16 +3158,23 @@ begin
   MinWorldY := -12;
 
   LoadSceneFromXML('scene.xml');
-  
+
   SetCameraTarget(0);
 
   //Floor
-  dCreatePlane(space, 0, 0, 1, 0);
+  //dCreatePlane(space, 0, 0, 1, 0);
+  Walls.Add(CreateInvisiblePlane(skFloor, 0, 0, 1, 0));
+
   //Box wall limit
-  dCreatePlane(space,  0, 1, 0, -MaxWorldY);
-  dCreatePlane(space,  1, 0, 0, -MaxWorldX);
-  dCreatePlane(space,  0,-1, 0, MinWorldY);
-  dCreatePlane(space, -1, 0, 0, MinWorldX);
+  //dCreatePlane(space,  0, 1, 0, -MaxWorldY);
+  //dCreatePlane(space,  1, 0, 0, -MaxWorldX);
+  //dCreatePlane(space,  0,-1, 0, MinWorldY);
+  //dCreatePlane(space, -1, 0, 0, MinWorldX);
+
+  Walls.Add(CreateInvisiblePlane(skWall,  0, 1, 0, -MaxWorldY));
+  Walls.Add(CreateInvisiblePlane(skWall,  1, 0, 0, -MaxWorldX));
+  Walls.Add(CreateInvisiblePlane(skWall,  0,-1, 0, MinWorldY));
+  Walls.Add(CreateInvisiblePlane(skWall, -1, 0, 0, MinWorldX));
 
 {  if Robots[0] <> nil then begin
     if Robots[0].MainBody.GLObj<>nil then begin
@@ -3186,6 +3207,9 @@ begin
   Obstacles.Free;
 
   Environment.Free;
+
+  Walls.ClearAll;
+  Walls.Free;
 
   dSpaceDestroy(space);
   //TODO Destroy the bodies
@@ -3530,16 +3554,16 @@ begin
     if not Noise.active then exit;
 
     //var_dist := 0;
-    iv := Noise.gain * Measures[0].measure + Noise.offset;
+    iv := Noise.gain * Measures[0].value + Noise.offset;
     if iv <> 0 then
       v := 1 / iv
     else exit;
-    var_v := Noise.var_d * Measures[0].measure + Noise.var_k;
+    var_v := Noise.var_d * Measures[0].value + Noise.var_k;
     //m := - Noise.gain / sqr(iv);
     m := - Noise.gain * sqr(v);
     if m <> 0 then begin
       var_dist := var_v / sqr(m);
-      Measures[0].measure := Measures[0].measure + RandG(0, sqrt(var_dist));
+      Measures[0].value := Measures[0].value + RandG(0, sqrt(var_dist));
     end;
 
   end;
@@ -3571,7 +3595,7 @@ begin
     // Fill remote IR sensors
     for i:=0 to min(Sensors.Count, MaxRemIrSensors)-1 do begin
       if Sensors[i].Measures[0].has_measure then begin
-        Robot.IRSensors[i] := Sensors[i].Measures[0].measure;
+        Robot.IRSensors[i] := Sensors[i].Measures[0].value;
       end else begin
         Robot.IRSensors[i] := 0;
       end;
@@ -3669,70 +3693,6 @@ begin
 //      PositionSceneObject(FViewer.GLSphere_ball, WorldODE.ball_geom);
 end;
 
-
-procedure TFViewer.PreProcessSensors(aSensor: TSensor);
-var j: integer;
-begin
-  aSensor.Measures[0].measure := 1e6;
-  aSensor.Measures[0].has_measure := false;
-  for j := 0 to aSensor.Rays.Count - 1 do begin
-    aSensor.Rays[j].Measure.dist := -1;
-    aSensor.Rays[j].Measure.has_measure := false;
-  end;
-end;
-
-
-procedure TFViewer.PostProcessSensors(aSensor: TSensor);
-begin
-  with aSensor do begin
-    //measure := min(measure, dist);
-    case kind of
-
-      skIRSharp: begin
-        with Measures[0] do begin
-          //measure := Rays[0].measure;
-          dist := Rays[0].Measure.dist;
-          has_measure := Rays[0].Measure.has_measure;
-          if has_measure then
-            measure := min(measure, dist);
-        end;
-      end;
-
-      skCapacitive: begin
-        with Measures[0] do begin
-          measure := Rays[0].Measure.measure;
-          dist := Rays[0].Measure.dist;
-          has_measure := Rays[0].Measure.has_measure;
-          if has_measure then begin
-            measure := 1
-          end else begin
-            measure := 0;
-            has_measure := true;
-          end;
-        end;
-      end;
-
-      skInductive: begin
-        with Measures[0] do begin
-          measure := Rays[0].Measure.measure;
-          dist := Rays[0].Measure.dist;
-          has_measure := Rays[0].Measure.has_measure;
-          HitSolid := Rays[0].Measure.HitSolid;
-          if has_measure then begin
-            if (HitSolid <> nil) and
-               (smMetallic in HitSolid.MatterProperties) then
-                  measure := 1
-            else measure := 0;
-          end else begin
-            measure := 0;
-            has_measure := true;
-          end;
-        end;
-      end;
-
-    end;
-  end;
-end;
 
 
 procedure TFViewer.GLCadencerProgress(Sender: TObject; const deltaTime, newTime: Double);
@@ -3949,14 +3909,14 @@ begin
         // Reset sensors measure
         with WorldODE.Robots[r] do begin
           for i:=0 to Sensors.Count - 1 do begin
-            PreProcessSensors(Sensors[i]);
+            Sensors[i].PreProcess;
           end;
         end;
       end; //end robot loop
 
       with WorldODE do begin
         for i:=0 to Sensors.Count - 1 do begin
-          PreProcessSensors(Sensors[i]);
+          Sensors[i].PreProcess;
         end;
       end;
 
@@ -3985,13 +3945,13 @@ begin
       // Process Robot Sensors
       for r := 0 to WorldODE.Robots.Count-1 do begin
         for i := 0 to WorldODE.Robots[r].Sensors.Count - 1 do begin
-          PostProcessSensors(WorldODE.Robots[r].Sensors[i]);
+          WorldODE.Robots[r].Sensors[i].PostProcess;
         end;
       end;
 
       // Process World Sensors
       for i := 0 to WorldODE.Sensors.Count - 1 do begin
-        PostProcessSensors(WorldODE.Sensors[i]);
+        WorldODE.Sensors[i].PostProcess;
       end;
 
     end;
@@ -4136,7 +4096,7 @@ end;
 
 procedure TFViewer.TestSaveTexture;
 begin
-  TOmniXMLWriter.SaveToFile(GLMaterialLibrary.Materials.Items[3], 'filename.xml', pfNodes, ofIndent);
+//  TOmniXMLWriter.SaveToFile(GLMaterialLibrary.Materials.Items[3], 'filename.xml', pfNodes, ofIndent);
 end;
 
 
@@ -4538,3 +4498,4 @@ end;
 // Add force to solid
 // canvas
 // spray
+// Sensor.rate

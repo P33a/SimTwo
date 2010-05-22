@@ -453,7 +453,7 @@ begin
   for i := low(EditsIR) to high(EditsIR) do begin
     if (WorldODE.Robots[idx].Sensors.Count > i) and
        WorldODE.Robots[idx].Sensors[i].Measures[0].has_measure then begin
-      EditsIR[i].Text := format('%.2f',[WorldODE.Robots[idx].Sensors[i].Measures[0].measure]);
+      EditsIR[i].Text := format('%.2f',[WorldODE.Robots[idx].Sensors[i].Measures[0].value]);
     end else begin
       EditsIR[i].Text := '';
     end;
@@ -1075,12 +1075,12 @@ begin
 
       if Sensors[i].kind = skIRSharp then begin
         if Sensors[i].Measures[0].has_measure then begin
-          SGGlobalSensors.Cells[1,i+1] := format('%.2f', [Sensors[i].Measures[0].measure]);
+          SGGlobalSensors.Cells[1,i+1] := format('%.2f', [Sensors[i].Measures[0].value]);
         end else begin
           SGGlobalSensors.Cells[1,i+1] := '';
         end;
       end else begin
-        SGGlobalSensors.Cells[1,i+1] := format('%g', [Sensors[i].Measures[0].measure]);
+        SGGlobalSensors.Cells[1,i+1] := format('%g', [Sensors[i].Measures[0].value]);
       end;
 
     end;
