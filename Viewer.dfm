@@ -57,6 +57,115 @@ object FViewer: TFViewer
       Specular.Color = {0000803F0000803F0000803F0000803F}
       SpotCutOff = 180.000000000000000000
     end
+    object GLXYZGrid: TGLXYZGrid
+      Position.Coordinates = {00000000000000006F12033B0000803F}
+      AntiAliased = True
+      LineColor.Color = {3333333F3333333F3333333F0000803F}
+      LineWidth = 2.000000000000000000
+      XSamplingScale.Min = -5.000000000000000000
+      XSamplingScale.Max = 5.000000000000000000
+      XSamplingScale.Step = 1.000000000000000000
+      YSamplingScale.Min = -5.000000000000000000
+      YSamplingScale.Max = 5.000000000000000000
+      YSamplingScale.Step = 1.000000000000000000
+      ZSamplingScale.Step = 0.100000001490116100
+    end
+    object GLDTrails: TGLDummyCube
+      CubeSize = 1.000000000000000000
+    end
+    object GLDummyCubeAxis: TGLDummyCube
+      Position.Coordinates = {00000000000000006F12833A0000803F}
+      CubeSize = 1.000000000000000000
+      object GLFlatText_X: TGLFlatText
+        Position.Coordinates = {6666663FCDCC4CBD000000000000803F}
+        Scale.Coordinates = {6F12833B6F12833BCDCCCC3D00000000}
+        BitmapFont = GLStoredBitmapFont
+        Text = 'x'
+        Alignment = taLeftJustify
+        Layout = tlTop
+        Options = []
+      end
+      object GLFlatText_Y: TGLFlatText
+        Position.Coordinates = {9A9919BE3333733F000000000000803F}
+        Scale.Coordinates = {6F12833B6F12833BCDCCCC3D00000000}
+        BitmapFont = GLStoredBitmapFont
+        Text = 'y'
+        Alignment = taLeftJustify
+        Layout = tlTop
+        Options = []
+      end
+      object GLFlatTextOrigin: TGLFlatText
+        Position.Coordinates = {00000000CDCC4CBD000000000000803F}
+        Scale.Coordinates = {6F12833B6F12833BCDCCCC3D00000000}
+        BitmapFont = GLStoredBitmapFont
+        Text = '(0, 0)'
+        Alignment = taCenter
+        Layout = tlTop
+        Options = []
+      end
+      object GLPolygonArrowX: TGLPolygon
+        Material.FrontProperties.Ambient.Color = {CDCCCC3ECDCCCC3ECDCCCC3E0000803F}
+        Material.FrontProperties.Diffuse.Color = {0000803F0000803F0000803F0000803F}
+        Position.Coordinates = {48E17A3F0000000017B7D1380000803F}
+        RollAngle = -90.000000000000000000
+        Scale.Coordinates = {CDCCCC3D0000803F0000803F00000000}
+        Up.Coordinates = {0000803F2EBD3BB30000000000000000}
+        Nodes = <
+          item
+            Y = 0.150000005960464500
+          end
+          item
+            X = -0.500000000000000000
+          end
+          item
+            X = -0.200000002980232200
+          end
+          item
+            X = -0.200000002980232200
+            Y = -1.000000000000000000
+          end
+          item
+            X = 0.200000002980232200
+            Y = -1.000000000000000000
+          end
+          item
+            X = 0.200000002980232200
+          end
+          item
+            X = 0.500000000000000000
+          end>
+      end
+      object GLPolygonArrowY: TGLPolygon
+        Material.FrontProperties.Ambient.Color = {CDCCCC3ECDCCCC3ECDCCCC3E0000803F}
+        Material.FrontProperties.Diffuse.Color = {0000803F0000803F0000803F0000803F}
+        Position.Coordinates = {0000000048E17A3F17B7D1380000803F}
+        Scale.Coordinates = {CDCCCC3D0000803F0000803F00000000}
+        Nodes = <
+          item
+            Y = 0.150000005960464500
+          end
+          item
+            X = -0.500000000000000000
+          end
+          item
+            X = -0.200000002980232200
+          end
+          item
+            X = -0.200000002980232200
+            Y = -1.000000000000000000
+          end
+          item
+            X = 0.200000002980232200
+            Y = -1.000000000000000000
+          end
+          item
+            X = 0.200000002980232200
+          end
+          item
+            X = 0.500000000000000000
+          end>
+      end
+    end
     object ODEScene: TGLDummyCube
       CubeSize = 1.000000000000000000
       object GLDummyTargetCam: TGLDummyCube
@@ -553,19 +662,6 @@ object FViewer: TFViewer
       Alignment = taLeftJustify
       Layout = tlTop
     end
-    object GLXYZGrid: TGLXYZGrid
-      Position.Coordinates = {00000000000000006F12033B0000803F}
-      AntiAliased = True
-      LineColor.Color = {3333333F3333333F3333333F0000803F}
-      LineWidth = 2.000000000000000000
-      XSamplingScale.Min = -5.000000000000000000
-      XSamplingScale.Max = 5.000000000000000000
-      XSamplingScale.Step = 1.000000000000000000
-      YSamplingScale.Min = -5.000000000000000000
-      YSamplingScale.Max = 5.000000000000000000
-      YSamplingScale.Step = 1.000000000000000000
-      ZSamplingScale.Step = 0.100000001490116100
-    end
     object GLCylinder2: TGLCylinder
       Material.MaterialLibrary = GLMaterialLibrary
       Material.LibMaterialName = 'LibMaterialFeup'
@@ -589,102 +685,6 @@ object FViewer: TFViewer
         end>
       Position.Coordinates = {00000000000000000000003F0000803F}
       Visible = False
-    end
-    object GLDTrails: TGLDummyCube
-      CubeSize = 1.000000000000000000
-    end
-    object GLDummyCubeAxis: TGLDummyCube
-      Position.Coordinates = {00000000000000006F12833A0000803F}
-      CubeSize = 1.000000000000000000
-      object GLFlatText_X: TGLFlatText
-        Position.Coordinates = {6666663FCDCC4CBD000000000000803F}
-        Scale.Coordinates = {6F12833B6F12833BCDCCCC3D00000000}
-        BitmapFont = GLStoredBitmapFont
-        Text = 'x'
-        Alignment = taLeftJustify
-        Layout = tlTop
-        Options = []
-      end
-      object GLFlatText_Y: TGLFlatText
-        Position.Coordinates = {9A9919BE3333733F000000000000803F}
-        Scale.Coordinates = {6F12833B6F12833BCDCCCC3D00000000}
-        BitmapFont = GLStoredBitmapFont
-        Text = 'y'
-        Alignment = taLeftJustify
-        Layout = tlTop
-        Options = []
-      end
-      object GLFlatTextOrigin: TGLFlatText
-        Position.Coordinates = {00000000CDCC4CBD000000000000803F}
-        Scale.Coordinates = {6F12833B6F12833BCDCCCC3D00000000}
-        BitmapFont = GLStoredBitmapFont
-        Text = '(0, 0)'
-        Alignment = taCenter
-        Layout = tlTop
-        Options = []
-      end
-      object GLPolygonArrowX: TGLPolygon
-        Material.FrontProperties.Ambient.Color = {CDCCCC3ECDCCCC3ECDCCCC3E0000803F}
-        Material.FrontProperties.Diffuse.Color = {0000803F0000803F0000803F0000803F}
-        Position.Coordinates = {48E17A3F0000000017B7D1380000803F}
-        RollAngle = -90.000000000000000000
-        Scale.Coordinates = {CDCCCC3D0000803F0000803F00000000}
-        Up.Coordinates = {0000803F2EBD3BB30000000000000000}
-        Nodes = <
-          item
-            Y = 0.150000005960464500
-          end
-          item
-            X = -0.500000000000000000
-          end
-          item
-            X = -0.200000002980232200
-          end
-          item
-            X = -0.200000002980232200
-            Y = -1.000000000000000000
-          end
-          item
-            X = 0.200000002980232200
-            Y = -1.000000000000000000
-          end
-          item
-            X = 0.200000002980232200
-          end
-          item
-            X = 0.500000000000000000
-          end>
-      end
-      object GLPolygonArrowY: TGLPolygon
-        Material.FrontProperties.Ambient.Color = {CDCCCC3ECDCCCC3ECDCCCC3E0000803F}
-        Material.FrontProperties.Diffuse.Color = {0000803F0000803F0000803F0000803F}
-        Position.Coordinates = {0000000048E17A3F17B7D1380000803F}
-        Scale.Coordinates = {CDCCCC3D0000803F0000803F00000000}
-        Nodes = <
-          item
-            Y = 0.150000005960464500
-          end
-          item
-            X = -0.500000000000000000
-          end
-          item
-            X = -0.200000002980232200
-          end
-          item
-            X = -0.200000002980232200
-            Y = -1.000000000000000000
-          end
-          item
-            X = 0.200000002980232200
-            Y = -1.000000000000000000
-          end
-          item
-            X = 0.200000002980232200
-          end
-          item
-            X = 0.500000000000000000
-          end>
-      end
     end
     object GLFreeForm1: TGLFreeForm
     end

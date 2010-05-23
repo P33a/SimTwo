@@ -1075,7 +1075,7 @@ begin
 
       if Sensors[i].kind = skIRSharp then begin
         if Sensors[i].Measures[0].has_measure then begin
-          SGGlobalSensors.Cells[1,i+1] := format('%.2f', [Sensors[i].Measures[0].value]);
+          SGGlobalSensors.Cells[1,i+1] := format('%.2f', [Sensors[i].value]);
         end else begin
           SGGlobalSensors.Cells[1,i+1] := '';
         end;
