@@ -334,9 +334,12 @@ type
     Rays: TSensorRayList;
     GLObj: TGLSceneObject;
     Period, TimeFromLastMeasure: double;
+    Tags: TStringlist;
 
     SensorMeasures: array of TSensorMeasure;
   private
+    function InsideGLPolygonsTaged(x, y: double;
+      GLFloor: TGLBaseSceneObject): boolean;
   protected
     function GetMeasure(Index: Integer): TSensorMeasure;
     procedure SetMeasure(Index: Integer; AMeasure: TSensorMeasure);
@@ -1238,6 +1241,8 @@ end;
 
 constructor TSensor.Create;
 begin
+  Tags := TStringlist.Create;
+
   Rays := TSensorRayList.Create;
 
   SetLength(SensorMeasures, 1);
@@ -1253,6 +1258,8 @@ begin
   //Geoms.DeleteAllGeoms();
   Rays.ClearAll;
   Rays.Free;
+
+  Tags.Free;
   inherited;
 end;
 
@@ -1282,7 +1289,7 @@ end;
 procedure TSensor.PreProcess;
 var j: integer;
 begin
-  Measures[0].value := 1e6;
+  Measures[0].value := 0;
   Measures[0].has_measure := false;
   for j := 0 to Rays.Count - 1 do begin
     Rays[j].Measure.dist := -1;
@@ -1301,7 +1308,8 @@ begin
         dist := Rays[0].Measure.dist;
         has_measure := Rays[0].Measure.has_measure;
         if has_measure then
-          value := min(value, dist);
+          //value := min(value, dist);
+          value := dist;
       end;
     end;
 
@@ -1340,11 +1348,41 @@ begin
         if (Rays[0].Measure.has_measure) and
            (HitSolid <> nil) and
            (HitSolid.kind = skFloor) then begin
+          if InsideGLPolygonsTaged(Rays[0].Measure.pos[0], Rays[0].Measure.pos[1], HitSolid.AltGLObj) then
           value := 1
         end;
       end;
     end;
 
+  end;
+end;
+
+
+function TSensor.InsideGLPolygonsTaged(x, y: double; GLFloor: TGLBaseSceneObject): boolean;
+var n, i, j: integer;
+    GLPolygon: TGLPolygon;
+begin
+  result := false;
+  //GLFloor := OdeScene.FindChild('GLPlaneFloor', false);
+  if GLFloor = nil then exit;
+  for n := 0 to GLFloor.Count - 1 do begin
+    if not (GLFloor.Children[n] is TGLPolygon) then continue;
+    GLPolygon := TGLPolygon(GLFloor.Children[n]);
+    if tags <> nil then
+      if tags.IndexOf(GLPolygon.Hint) < 0 then continue;
+
+    j := GLPolygon.Nodes.Count - 1;
+    for i := 0 to GLPolygon.Nodes.Count - 1 do begin
+      //result := false;
+      // test if point is inside polygon
+      with GLPolygon do begin
+        if ((((Nodes[i].Y <= Y) and (Y < Nodes[j].Y)) or ((Nodes[j].Y <= Y) and (Y < Nodes[i].Y)) )
+             and (X < (Nodes[j].X - Nodes[i].X) * (Y - Nodes[i].Y) / (Nodes[j].Y - Nodes[i].Y) + Nodes[i].X))
+        then result := not result;
+        j:=i;
+      end;
+    end;
+    if result then break;
   end;
 end;
 

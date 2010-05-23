@@ -133,6 +133,7 @@ type
     procedure CreatePickJoint(Solid: TSolid; anchor_x, anchor_y, anchor_z: double);
     procedure MovePickJoint(anchor_x, anchor_y, anchor_z: double);
     procedure DestroyPickJoint;
+    function InsideGLPolygonsTaged(x, y: double; tags: TStrings): boolean;
   end;
 
 
@@ -764,10 +765,6 @@ begin
     BottomRadius := SensorRadius;
     Height := SensorHeight;
     Alignment := caTop;
-    Material.FrontProperties.Diffuse.Alpha := 0.5;
-    //Material.FrontProperties.Emission.AsWinColor := clred;
-    //Material.FrontProperties.Emission.Alpha := 0.5;
-    Material.BlendingMode := bmTransparency;
     if GLBaseObject is TGLCylinder then begin
       Sensor.GLObj.Position.SetPoint(posX, -posZ, posY); // 90 degree rotation makes this ugly thing (TODO?)
     end else begin
@@ -775,7 +772,6 @@ begin
       PitchAngle := 90;
     end;
   end;
-
 end;
 
 procedure TWorld_ODE.CreateBoxObstacle(var Obstacle: TSolid; sizeX, sizeY, sizeZ, posX, posY, posZ: double);
@@ -1917,6 +1913,7 @@ var sensor, prop: IXMLNode;
     MotherSolid: TSolid;
     SolidIdx: integer;
     AbsoluteCoords: boolean;
+    stags: string;
 begin
   if root = nil then exit;
 
@@ -1926,6 +1923,7 @@ begin
        (sensor.NodeName = 'IRSharp') or
        (sensor.NodeName = 'capacitive') or
        (sensor.NodeName = 'inductive') or
+       (sensor.NodeName = 'floorline') or
        (sensor.NodeName = 'beacon') then begin
       // default values
       IDValue := '';
@@ -1938,6 +1936,7 @@ begin
       posX := 0; posY := 0; posZ := 0;
       angX := 0; angY := 0; angZ := 0;
       colorR := 128/255; colorG := 128/255; colorB := 128/255;
+      stags := '';
 
       prop := sensor.FirstChild;
       while prop <> nil do begin
@@ -1972,6 +1971,9 @@ begin
           offset := GetNodeAttrRealParse(prop, 'offset', offset, Parser);
           gain := GetNodeAttrRealParse(prop, 'gain', gain, Parser);
         end;
+        if prop.NodeName = 'tag' then begin
+          stags := stags + ';' + prop.Text;
+        end;
         if prop.NodeName = 'color_rgb' then begin
           colorR := GetNodeAttrInt(prop, 'r', 128)/255;
           colorG := GetNodeAttrInt(prop, 'g', 128)/255;
@@ -1986,8 +1988,12 @@ begin
       if sensor.NodeName = 'IRSharp' then newSensor.kind := skIRSharp
       else if sensor.NodeName = 'capacitive' then newSensor.kind := skCapacitive
       else if sensor.NodeName = 'inductive' then newSensor.kind := skInductive
-      else if sensor.NodeName = 'beacon' then newSensor.kind := skBeacon;
+      else if sensor.NodeName = 'beacon' then newSensor.kind := skBeacon
+      else if sensor.NodeName = 'floorline' then newSensor.kind := skFloorLine;
 
+      newSensor.Tags.Delimiter := ';';
+      newSensor.Tags.DelimitedText := stags;
+      
       newSensor.Noise := Noise;
 
       if Robot <> nil then begin // It is a Robot sensor
@@ -1999,7 +2005,7 @@ begin
         end else begin
           MotherSolid := Robot.Solids[SolidIdx];
         end;
-        if newSensor.kind in [skIRSharp, skCapacitive, skInductive] then begin
+        if newSensor.kind in [skIRSharp, skCapacitive, skInductive, skFloorLine] then begin
           CreateOneRaySensor(MotherSolid.Body, newSensor, SLen, SInitialWidth, SFinalWidth);
           RFromZYXRotRel(R, angX, angY + pi/2, AngZ);
           if AbsoluteCoords then begin
@@ -2012,15 +2018,10 @@ begin
         end;
         if newSensor.kind in [skBeacon] then begin
           CreateSensorBody(newSensor, MotherSolid.GLObj, 0.1, 0.02, posX, posY, posZ);
-          //if MotherSolid.GLObj is TGLCylinder then begin
-          //  newSensor.GLObj.Position.SetPoint(posX, -posZ, posY); // 90 degree rotation makes this ugly thing (TODO?)
-          //end else begin
-          //  newSensor.GLObj.Position.SetPoint(posX, posY, posZ); // As it should be
-          //end;
         end;
       end else begin // It is a global sensor
         Sensors.Add(newSensor);
-        if newSensor.kind in [skIRSharp, skCapacitive, skInductive] then begin
+        if newSensor.kind in [skIRSharp, skCapacitive, skInductive, skFloorLine] then begin
           CreateOneRaySensor(nil, newSensor, SLen, SInitialWidth, SFinalWidth);
           RFromZYXRotRel(R, angX, angY + pi/2, AngZ);
           dGeomSetRotation(newSensor.Rays[0].Geom, R);
@@ -2028,9 +2029,8 @@ begin
         end;
         if newSensor.kind in [skBeacon] then begin
           CreateSensorBody(newSensor, ODEScene, 0.1, 0.02, posX, posY, posZ);
-          //newSensor.GLObj.Position.SetPoint(posX, posY, posZ);
         end;
-    end;
+      end;
 
       newSensor.SetColor(colorR, colorG, colorB);
     end;
@@ -2544,7 +2544,63 @@ begin
 end;
 
 
+function TWorld_ODE.InsideGLPolygonsTaged(x, y: double; tags: TStrings): boolean;
+var n, i, j: integer;
+    GLPolygon: TGLPolygon;
+    GLFloor: TGLBaseSceneObject;
+begin
+  result := false;
+  GLFloor := OdeScene.FindChild('GLPlaneFloor', false);
+  if GLFloor = nil then exit;
+  for n := 0 to GLFloor.Count - 1 do begin
+    if not (GLFloor.Children[n] is TGLPolygon) then continue;
+    GLPolygon := TGLPolygon(GLFloor.Children[n]);
+    if tags <> nil then
+      if tags.IndexOf(GLPolygon.Hint) < 0 then continue;
+
+    j := GLPolygon.Nodes.Count - 1;
+    for i := 0 to GLPolygon.Nodes.Count - 1 do begin
+      //result := false;
+      // test if point is inside polygon
+      with GLPolygon do begin
+        if ((((Nodes[i].Y <= Y) and (Y < Nodes[j].Y)) or ((Nodes[j].Y <= Y) and (Y < Nodes[i].Y)) )
+             and (X < (Nodes[j].X - Nodes[i].X) * (Y - Nodes[i].Y) / (Nodes[j].Y - Nodes[i].Y) + Nodes[i].X))
+        then result := not result;
+        j:=i;
+      end;
+    end;
+    if result then break;
+  end;
+end;
+
+
 {
+function PointInPoly(p : point;poly : polygon) : Boolean;
+var i,j : integer;
+Begin
+  result := false;
+  j := High(poly);
+  For i := Low(poly) to High(poly) do begin
+    if (
+       ( ((poly[i].y <= p.y) and (p.y < poly[j].y)) or ((poly[j].y <= p.y) and (p.y < poly[i].y)) ) and
+       (p.x < ((poly[j].x - poly[i].x) * (p.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x))
+       ) then result := not result;
+    j := i
+  end;
+End;
+      for ico:=0 to GLMultiPolygonTrack.Contours.Count -1 do begin
+        j := GLMultiPolygonTrack.Contours.Items[ico].Nodes.Count - 1;
+        with GLMultiPolygonTrack.Contours.Items[ico] do begin
+          for ins:=0 to Nodes.Count -1 do begin
+            if ((((Nodes.Items[ins].Y <= Y) and (Y<Nodes.Items[j].Y)) or ((Nodes.Items[j].Y <= Y) and (Y<Nodes.Items[ins].Y)) )
+                 and (X<(Nodes.Items[j].X-Nodes.Items[ins].X)*(Y-Nodes.Items[ins].Y)/(Nodes.Items[j].Y-Nodes.Items[ins].Y)+Nodes.Items[ins].X)) then
+                inside:=not inside;
+             j:=ins;
+          end;
+          if inside then break;
+        end;
+      end;
+
   <arc>
     <color rgb24='8F8F8F'/>
     <center x='0' y='0' z='0'/>
@@ -3111,6 +3167,7 @@ end;
 
 
 constructor TWorld_ODE.create;
+var plane: TSolid;
 begin
   AirDensity := 1.293; //kg/m3
   default_n_mu := 0.95;
@@ -3163,7 +3220,9 @@ begin
 
   //Floor
   //dCreatePlane(space, 0, 0, 1, 0);
-  Walls.Add(CreateInvisiblePlane(skFloor, 0, 0, 1, 0));
+  plane := CreateInvisiblePlane(skFloor, 0, 0, 1, 0);
+  plane.AltGLObj := FViewer.GLPlaneFloor;
+  Walls.Add(plane);
 
   //Box wall limit
   //dCreatePlane(space,  0, 1, 0, -MaxWorldY);
@@ -3596,17 +3655,12 @@ begin
     for i:=0 to min(Sensors.Count, MaxRemIrSensors)-1 do begin
       if Sensors[i].Measures[0].has_measure then begin
         Robot.IRSensors[i] := Sensors[i].Measures[0].value;
+        if Robot.IRSensors[i] = 0 then Robot.IRSensors[i] := 1e6;
       end else begin
         Robot.IRSensors[i] := 0;
       end;
     end;
 
-    {Ball.x:=BallsState[i].x;
-    Ball.y:=BallsState[i].y;
-    Ball.vx:=BallsState[i].vx;
-    Ball.vy:=BallsState[i].vy;
-    Ball.bcolor:=BallsState[i].bcolor;
-    Ball.goal:=BallsState[i].goal;}
   end;
 end;
 
