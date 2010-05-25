@@ -83,6 +83,7 @@ object FViewer: TFViewer
         Text = 'x'
         Alignment = taLeftJustify
         Layout = tlTop
+        ModulateColor.Color = {9A93133FE4DB5B3FEBE0E03E0000803F}
         Options = []
       end
       object GLFlatText_Y: TGLFlatText
@@ -92,6 +93,7 @@ object FViewer: TFViewer
         Text = 'y'
         Alignment = taLeftJustify
         Layout = tlTop
+        ModulateColor.Color = {9A93133FE4DB5B3FEBE0E03E0000803F}
         Options = []
       end
       object GLFlatTextOrigin: TGLFlatText
@@ -101,11 +103,12 @@ object FViewer: TFViewer
         Text = '(0, 0)'
         Alignment = taCenter
         Layout = tlTop
+        ModulateColor.Color = {9A93133FE4DB5B3FEBE0E03E0000803F}
         Options = []
       end
       object GLPolygonArrowX: TGLPolygon
-        Material.FrontProperties.Ambient.Color = {CDCCCC3ECDCCCC3ECDCCCC3E0000803F}
-        Material.FrontProperties.Diffuse.Color = {0000803F0000803F0000803F0000803F}
+        Material.FrontProperties.Ambient.Color = {CDCCCC3DCDCCCC3DCDCCCC3D0000803F}
+        Material.FrontProperties.Diffuse.Color = {CDCC4C3E9A99193FCDCC4C3E0000803F}
         Position.Coordinates = {48E17A3F0000000017B7D1380000803F}
         RollAngle = -90.000000000000000000
         Scale.Coordinates = {CDCCCC3D0000803F0000803F00000000}
@@ -136,8 +139,8 @@ object FViewer: TFViewer
           end>
       end
       object GLPolygonArrowY: TGLPolygon
-        Material.FrontProperties.Ambient.Color = {CDCCCC3ECDCCCC3ECDCCCC3E0000803F}
-        Material.FrontProperties.Diffuse.Color = {0000803F0000803F0000803F0000803F}
+        Material.FrontProperties.Ambient.Color = {CDCCCC3DCDCCCC3DCDCCCC3D0000803F}
+        Material.FrontProperties.Diffuse.Color = {CDCC4C3E9A99193FCDCC4C3E0000803F}
         Position.Coordinates = {0000000048E17A3F17B7D1380000803F}
         Scale.Coordinates = {CDCCCC3D0000803F0000803F00000000}
         Nodes = <
