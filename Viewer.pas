@@ -1913,10 +1913,13 @@ var sensor, prop: IXMLNode;
     MotherSolid: TSolid;
     SolidIdx: integer;
     AbsoluteCoords: boolean;
-    stags: string;
+    stags, s: string;
+    st : TStringList;
 begin
   if root = nil then exit;
 
+  st := TStringList.Create;
+  try
   sensor := root.FirstChild;
   while sensor <> nil do begin
     if (sensor.NodeName = 'IR') or
@@ -1972,7 +1975,10 @@ begin
           gain := GetNodeAttrRealParse(prop, 'gain', gain, Parser);
         end;
         if prop.NodeName = 'tag' then begin
-          stags := stags + ';' + prop.Text;
+          //stags := stags + ';' + prop.Text;
+          s := GetNodeAttrStr(prop, 'value', '');
+          //if s <> '' then stags := stags + ';' + s;
+          if s <> '' then st.Add(s);
         end;
         if prop.NodeName = 'color_rgb' then begin
           colorR := GetNodeAttrInt(prop, 'r', 128)/255;
@@ -1991,9 +1997,10 @@ begin
       else if sensor.NodeName = 'beacon' then newSensor.kind := skBeacon
       else if sensor.NodeName = 'floorline' then newSensor.kind := skFloorLine;
 
-      newSensor.Tags.Delimiter := ';';
-      newSensor.Tags.DelimitedText := stags;
-      
+      //newSensor.Tags.Delimiter := ';';
+      //newSensor.Tags.DelimitedText := stags;
+      newSensor.Tags.AddStrings(st);
+
       newSensor.Noise := Noise;
 
       if Robot <> nil then begin // It is a Robot sensor
@@ -2036,6 +2043,9 @@ begin
     end;
 
     sensor := sensor.NextSibling;
+  end;
+  finally
+  st.Free;
   end;
 
 end;
@@ -3447,8 +3457,6 @@ begin
           ticks := ticks + WorldODE.Ode_dt;
           if ticks >= ControlPeriod then begin
             ticks := ticks - ControlPeriod;
-          //inc(ticks);
-          //if ticks >= ControlPeriod then begin
             case ControlMode of
               cmPIDPosition: begin
                 if axis.isCircular then begin   // If it is a circular joint
@@ -3474,7 +3482,6 @@ begin
                 ref.volts := CalcPD(Motor.Controller, ref.theta, ref.w, theta, filt_speed);
               end;
             end;
-            //ticks := 0;
           end;
         end;
       end;

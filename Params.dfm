@@ -25,7 +25,7 @@ object FParams: TFParams
     Top = 0
     Width = 273
     Height = 621
-    ActivePage = TabDebug
+    ActivePage = TabControl
     Anchors = [akLeft, akTop, akBottom]
     TabOrder = 0
     object TabControl: TTabSheet
@@ -154,7 +154,7 @@ object FParams: TFParams
         Top = 168
         Width = 261
         Height = 425
-        ActivePage = TabGlobal
+        ActivePage = TabRobot
         Anchors = [akLeft, akTop, akBottom]
         TabOrder = 4
         object TabGlobal: TTabSheet
@@ -318,58 +318,58 @@ object FParams: TFParams
           object Label2: TLabel
             Left = 184
             Top = 168
-            Width = 21
+            Width = 16
             Height = 13
-            Caption = 'IR0:'
+            Caption = 'S0:'
           end
           object Label3: TLabel
             Left = 184
             Top = 188
-            Width = 21
+            Width = 16
             Height = 13
-            Caption = 'IR1:'
+            Caption = 'S1:'
           end
           object Label5: TLabel
             Left = 184
             Top = 208
-            Width = 21
+            Width = 16
             Height = 13
-            Caption = 'IR2:'
+            Caption = 'S2:'
           end
           object Label7: TLabel
             Left = 184
             Top = 228
-            Width = 21
+            Width = 16
             Height = 13
-            Caption = 'IR3:'
+            Caption = 'S3:'
           end
           object Label30: TLabel
             Left = 184
             Top = 248
-            Width = 21
+            Width = 16
             Height = 13
-            Caption = 'IR4:'
+            Caption = 'S4:'
           end
           object Label31: TLabel
             Left = 184
             Top = 268
-            Width = 21
+            Width = 16
             Height = 13
-            Caption = 'IR5:'
+            Caption = 'S5:'
           end
           object Label32: TLabel
             Left = 184
             Top = 288
-            Width = 21
+            Width = 16
             Height = 13
-            Caption = 'IR6:'
+            Caption = 'S6:'
           end
           object Label33: TLabel
             Left = 184
             Top = 308
-            Width = 21
+            Width = 16
             Height = 13
-            Caption = 'IR7:'
+            Caption = 'S7:'
           end
           object Label34: TLabel
             Left = 188
@@ -741,7 +741,7 @@ object FParams: TFParams
             Width = 149
             Height = 21
             Style = csDropDownList
-            ItemHeight = 0
+            ItemHeight = 13
             TabOrder = 8
           end
           object BJointWayPointsSave: TButton

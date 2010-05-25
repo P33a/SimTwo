@@ -336,23 +336,26 @@ type
     Period, TimeFromLastMeasure: double;
     Tags: TStringlist;
 
-    SensorMeasures: array of TSensorMeasure;
   private
     function InsideGLPolygonsTaged(x, y: double;
       GLFloor: TGLBaseSceneObject): boolean;
   protected
-    function GetMeasure(Index: Integer): TSensorMeasure;
-    procedure SetMeasure(Index: Integer; AMeasure: TSensorMeasure);
+    function GetMeasureCount: integer;
+    //function GetMeasure(Index: Integer): TSensorMeasure;
+    //procedure SetMeasure(Index: Integer; AMeasure: TSensorMeasure);
 {    dist, measure: double;
     pos, normal: TdVector3;
     has_measure: boolean;
     MeasuredSolid: TSolid;
 }
   public
+    Measures: array of TSensorMeasure;
+
     constructor Create;
     destructor Destroy; override;
     procedure SetColor(R, G, B: single; A: single = -1);
-    property Measures[Index: Integer]: TSensorMeasure read GetMeasure write SetMeasure; default;
+    //property Measures[Index: Integer]: TSensorMeasure read GetMeasure write SetMeasure; default;
+    property Count: integer read GetMeasureCount;
     procedure PreProcess;
     procedure PostProcess;
   end;
@@ -1245,17 +1248,17 @@ begin
 
   Rays := TSensorRayList.Create;
 
-  SetLength(SensorMeasures, 1);
-  SensorMeasures[0] := TSensorMeasure.Create;
+  SetLength(Measures, 1);
+  Measures[0] := TSensorMeasure.Create;
 end;
 
 destructor TSensor.Destroy;
 var i: integer;
 begin
-  for i := 0 to length(SensorMeasures) - 1 do begin
-    SensorMeasures[i].Free;
+  for i := 0 to length(Measures) - 1 do begin
+    Measures[i].Free;
   end;
-  //Geoms.DeleteAllGeoms();
+
   Rays.ClearAll;
   Rays.Free;
 
@@ -1263,12 +1266,19 @@ begin
   inherited;
 end;
 
+{procedure TSensor.SetMeasure(Index: Integer; AMeasure: TSensorMeasure);
+begin
+  if (Index < 0) or (Index >= length(SensorMeasures)) then
+    raise ERangeError.CreateFmt('%d is not within the valid range of 0..%d', [Index, length(SensorMeasures)-1]);
+  SensorMeasures[Index] := AMeasure;
+end;
+
 function TSensor.GetMeasure(Index: Integer): TSensorMeasure;
 begin
   if (Index < 0) or (Index >= length(SensorMeasures)) then
     raise ERangeError.CreateFmt('%d is not within the valid range of 0..%d', [Index, length(SensorMeasures)-1]);
   result := SensorMeasures[Index];
-end;
+end;}
 
 procedure TSensor.SetColor(R, G, B: single; A: single = -1);
 begin
@@ -1279,12 +1289,6 @@ begin
 //  end;
 end;
 
-procedure TSensor.SetMeasure(Index: Integer; AMeasure: TSensorMeasure);
-begin
-  if (Index < 0) or (Index >= length(SensorMeasures)) then
-    raise ERangeError.CreateFmt('%d is not within the valid range of 0..%d', [Index, length(SensorMeasures)-1]);
-  SensorMeasures[Index] := AMeasure;
-end;
 
 procedure TSensor.PreProcess;
 var j: integer;
@@ -1387,6 +1391,11 @@ begin
 end;
 
 
+
+function TSensor.GetMeasureCount: integer;
+begin
+  result := length(Measures);
+end;
 
 { TSensorList }
 
