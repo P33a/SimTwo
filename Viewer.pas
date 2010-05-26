@@ -220,7 +220,6 @@ type
     KeyVals: TKeyVals;
     procedure UpdateCamPos(CMode: integer);
     procedure FillRemote(r: integer);
-    procedure IRSharpNoiseModel(aSensor: TSensor);
     procedure UpdateGLScene;
     function GLSceneViewerPick(X, Y: Integer): TGLCustomSceneObject;
     procedure TestTexture;
@@ -1097,7 +1096,7 @@ end;}
 //procedure TWorld_ODE.LoadHumanoidBonesFromXML(Robot: TRobot; XMLFile: string);
 //procedure TWorld_ODE.LoadSolidsFromXML(Robot: TRobot; const root: IXMLNode);
 procedure TWorld_ODE.LoadSolidsFromXML(SolidList: TSolidList; const root: IXMLNode; Parser: TSimpleParser);
-var bone, prop: IXMLNode;
+var XMLSolid, prop: IXMLNode;
     radius, sizeX, sizeY, sizeZ, posX, posY, posZ, angX, angY, angZ, mass: double;
     I11, I22, I33, I12, I13, I23: double;
     BuoyantMass, Drag, StokesDrag, RollDrag: double;
@@ -1117,10 +1116,10 @@ var bone, prop: IXMLNode;
 begin
   if root = nil then exit;
 
-  bone := root.FirstChild;
-  while bone <> nil do begin
-    if pos(bone.NodeName, 'cuboid <> cylinder <> sphere <> belt <> propeller') <> 0 then begin // 'bone'
-      prop := bone.FirstChild;
+  XMLSolid := root.FirstChild;
+  while XMLSolid <> nil do begin
+    if pos(XMLSolid.NodeName, 'cuboid <> cylinder <> sphere <> belt <> propeller') <> 0 then begin // 'bone'
+      prop := XMLSolid.FirstChild;
       // default values
       mass := 1;  ID := '-1';
       I11 := -1; I22 := -1; I33 := -1; I12 := 0; I13 := 0; I23 := 0;
@@ -1137,7 +1136,7 @@ begin
       angX := 0; angY := 0; angZ := 0;
       colorR := 128/255; colorG := 128/255; colorB := 128/255;
       TextureName := ''; TextureScale := 1;
-      descr := bone.NodeName + inttostr(SolidList.Count);
+      descr := XMLSolid.NodeName + inttostr(SolidList.Count);
       Surf.mu := -1; Surf.mu2 := -1;
       Surf.soft_cfm := 1e-5;
       //Surf.soft_erp := 0.2;
@@ -1177,6 +1176,7 @@ begin
           sizeX := GetNodeAttrRealParse(prop, 'x', sizeX, Parser);
           sizeY := GetNodeAttrRealParse(prop, 'y', sizeY, Parser);
           sizeZ := GetNodeAttrRealParse(prop, 'z', sizeZ, Parser);
+          radius := GetNodeAttrRealParse(prop, 'radius', radius, Parser);
         end;
         if prop.NodeName = 'pos' then begin
           posX := GetNodeAttrRealParse(prop, 'x', posX, Parser);
@@ -1224,15 +1224,19 @@ begin
         newBone.StokesDrag := StokesDrag;
         newBone.RollDrag := RollDrag;
 
-        if (bone.NodeName = 'cuboid') or (bone.NodeName = 'belt') or (bone.NodeName = 'propeller')then begin
+        if (XMLSolid.NodeName = 'cuboid') or (XMLSolid.NodeName = 'belt') or (XMLSolid.NodeName = 'propeller')then begin
           CreateSolidBox(newBone, mass, posX, posY, posZ, sizeX, sizeY, sizeZ);
           //if TextureName <> '' then begin
           //  newBone.SetTexture(TextureName, TextureScale); //'LibMaterialFeup'
           //end;
-        end else if bone.NodeName = 'sphere' then begin
+        end else if XMLSolid.NodeName = 'sphere' then begin
           CreateSolidSphere(newBone, mass, posX, posY, posZ, radius);
-        end else if bone.NodeName = 'cylinder' then begin
-          CreateSolidCylinder(newBone, mass, posX, posY, posZ, sizeX, sizeZ);
+        end else if XMLSolid.NodeName = 'cylinder' then begin
+          if abs(radius-1) > 1e-6 then begin
+            CreateSolidCylinder(newBone, mass, posX, posY, posZ, radius, sizeZ);
+          end else begin
+            CreateSolidCylinder(newBone, mass, posX, posY, posZ, sizeX, sizeZ);
+          end;
           //if TextureName <> '' then begin
           //  newBone.SetTexture(TextureName, TextureScale); //'LibMaterialFeup'
           //end;
@@ -1254,8 +1258,8 @@ begin
         if BuoyantMass <> 0 then begin
           dBodySetGravityMode(newBone.Body, 0);
         end;
-        if bone.NodeName = 'belt' then newBone.kind := skMotorBelt;
-        if bone.NodeName = 'propeller' then newBone.kind := skPropeller;
+        if XMLSolid.NodeName = 'belt' then newBone.kind := skMotorBelt;
+        if XMLSolid.NodeName = 'propeller' then newBone.kind := skPropeller;
 
         newBone.MatterProperties := MatterProps;
 
@@ -1321,12 +1325,12 @@ begin
       end;
 
     end else begin // Unused Tag Generate warning
-      if (XMLErrors <> nil) and (bone.NodeName <> '#text') and (bone.NodeName <> '#comment') then begin
-        XMLErrors.Add('[Warning]: Tag <'+ bone.NodeName + '> not recognised!');
+      if (XMLErrors <> nil) and (XMLSolid.NodeName <> '#text') and (XMLSolid.NodeName <> '#comment') then begin
+        XMLErrors.Add('[Warning]: Tag <'+ XMLSolid.NodeName + '> not recognised!');
       end;
     end;
 
-    bone := bone.NextSibling;
+    XMLSolid := XMLSolid.NextSibling;
   end;
 end;
 
@@ -1827,11 +1831,6 @@ var XML: IXMLDocument;
     R: TdMatrix3;
     NewObstacle: TSolid;
 begin
-{  XML:=CreateXMLDoc;
-  XML.Load(XMLFile);
-  if XML.ParseError.Reason<>'' then begin
-    exit;
-  end;}
   XML := LoadXML(XMLFile, XMLErrors);
   if XML = nil then exit;
 
@@ -1856,6 +1855,7 @@ begin
           sizeX := GetNodeAttrRealParse(prop, 'x', sizeX, Parser);
           sizeY := GetNodeAttrRealParse(prop, 'y', sizeY, Parser);
           sizeZ := GetNodeAttrRealParse(prop, 'z', sizeZ, Parser);
+          sizeX := GetNodeAttrRealParse(prop, 'radius', sizeX, Parser);
         end;
         if prop.NodeName = 'pos' then begin
           posX := GetNodeAttrRealParse(prop, 'x', posX, Parser);
@@ -1915,6 +1915,7 @@ var sensor, prop: IXMLNode;
     AbsoluteCoords: boolean;
     stags, s: string;
     st : TStringList;
+    sensor_period: double;
 begin
   if root = nil then exit;
 
@@ -1935,11 +1936,13 @@ begin
       AbsoluteCoords := false;
       with Noise do begin
         var_k := 0; var_d := 0; offset := 0; gain := 1; active := false;
+        std_a := 0; std_p := 0;
       end;
       posX := 0; posY := 0; posZ := 0;
       angX := 0; angY := 0; angZ := 0;
       colorR := 128/255; colorG := 128/255; colorB := 128/255;
       stags := '';
+      sensor_period := 0.01;
 
       prop := sensor.FirstChild;
       while prop <> nil do begin
@@ -1973,12 +1976,17 @@ begin
           var_d := GetNodeAttrRealParse(prop, 'var_d', var_d, Parser);
           offset := GetNodeAttrRealParse(prop, 'offset', offset, Parser);
           gain := GetNodeAttrRealParse(prop, 'gain', gain, Parser);
+          std_a := GetNodeAttrRealParse(prop, 'stdev', std_a, Parser);
+          std_p := GetNodeAttrRealParse(prop, 'stdev_p', std_p, Parser);
         end;
         if prop.NodeName = 'tag' then begin
           //stags := stags + ';' + prop.Text;
           s := GetNodeAttrStr(prop, 'value', '');
           //if s <> '' then stags := stags + ';' + s;
           if s <> '' then st.Add(s);
+        end;
+        if prop.NodeName = 'period' then begin
+          sensor_period := GetNodeAttrRealParse(prop, 'value', sensor_period, Parser);
         end;
         if prop.NodeName = 'color_rgb' then begin
           colorR := GetNodeAttrInt(prop, 'r', 128)/255;
@@ -2002,6 +2010,7 @@ begin
       newSensor.Tags.AddStrings(st);
 
       newSensor.Noise := Noise;
+      newSensor.Period := sensor_period;
 
       if Robot <> nil then begin // It is a Robot sensor
         Robot.Sensors.Add(newSensor);
@@ -2022,8 +2031,7 @@ begin
             dGeomSetOffsetRotation(newSensor.Rays[0].Geom, R);
             dGeomSetOffsetPosition(newSensor.Rays[0].Geom, posX, posY, posZ);
           end;
-        end;
-        if newSensor.kind in [skBeacon] then begin
+        end else if newSensor.kind in [skBeacon] then begin
           CreateSensorBody(newSensor, MotherSolid.GLObj, 0.1, 0.02, posX, posY, posZ);
         end;
       end else begin // It is a global sensor
@@ -2033,8 +2041,7 @@ begin
           RFromZYXRotRel(R, angX, angY + pi/2, AngZ);
           dGeomSetRotation(newSensor.Rays[0].Geom, R);
           dGeomSetPosition(newSensor.Rays[0].Geom, posX, posY, posZ);
-        end;
-        if newSensor.kind in [skBeacon] then begin
+        end else if newSensor.kind in [skBeacon] then begin
           CreateSensorBody(newSensor, ODEScene, 0.1, 0.02, posX, posY, posZ);
         end;
       end;
@@ -2044,6 +2051,9 @@ begin
 
     sensor := sensor.NextSibling;
   end;
+
+
+
   finally
   st.Free;
   end;
@@ -2329,6 +2339,7 @@ begin
           sizeX := GetNodeAttrRealParse(prop, 'x', sizeX, Parser);
           sizeY := GetNodeAttrRealParse(prop, 'y', sizeY, Parser);
           sizeZ := GetNodeAttrRealParse(prop, 'z', sizeZ, Parser);
+          radius := GetNodeAttrRealParse(prop, 'radius', radius, Parser);
         end;
         if prop.NodeName = 'pos' then begin
           posX := GetNodeAttrRealParse(prop, 'x', posX, Parser);
@@ -3610,32 +3621,6 @@ begin
   end;
 end;
 
-procedure TFViewer.IRSharpNoiseModel(aSensor: TSensor);
-var v, iv, var_v, m, var_dist: double;
-begin
-  //v := 0;
-  with aSensor do begin
-    if kind <> skIRSharp then exit;
-    if not Measures[0].has_measure then exit;
-    if not Noise.active then exit;
-
-    //var_dist := 0;
-    iv := Noise.gain * Measures[0].value + Noise.offset;
-    if iv <> 0 then
-      v := 1 / iv
-    else exit;
-    var_v := Noise.var_d * Measures[0].value + Noise.var_k;
-    //m := - Noise.gain / sqr(iv);
-    m := - Noise.gain * sqr(v);
-    if m <> 0 then begin
-      var_dist := var_v / sqr(m);
-      Measures[0].value := Measures[0].value + RandG(0, sqrt(var_dist));
-    end;
-
-  end;
-end;
-
-
 procedure TFViewer.FillRemote(r: integer);
 var i: integer;
   v1, v2: TdVector3;
@@ -3797,10 +3782,11 @@ begin
             end;
 
             for i := 0 to Sensors.Count - 1 do begin
-              if Sensors[i].kind = skIRSharp then begin
+              Sensors[i].NoiseModel;
+              //if Sensors[i].kind = skIRSharp then begin
                 // Process IR sensors noise
-                IRSharpNoiseModel(Sensors[i]);
-              end;
+                //IRSharpNoiseModel(Sensors[i]);
+              //end;
             end;
 
             // Fill RemState
@@ -3824,10 +3810,11 @@ begin
         // Model Global Sensor Noise
         with WorldODE do begin
           for i := 0 to Sensors.Count - 1 do begin
-            if Sensors[i].kind = skIRSharp then begin
+            Sensors[i].NoiseModel;
+            //if Sensors[i].kind = skIRSharp then begin
               // Process IR sensors noise
-              IRSharpNoiseModel(Sensors[i]);
-            end;
+              //IRSharpNoiseModel(Sensors[i]);
+            //end;
           end;
         end;
         FParams.ShowGlobalState;
@@ -3998,6 +3985,7 @@ begin
         WorldODE.UpdatePickJoint;
       end;
 
+      // ODE in action Now!
       QueryPerformanceCounter(t_i1);
       WorldODE.WorldUpdate;
       QueryPerformanceCounter(t_i2);
@@ -4005,14 +3993,30 @@ begin
 
       // Process Robot Sensors
       for r := 0 to WorldODE.Robots.Count-1 do begin
-        for i := 0 to WorldODE.Robots[r].Sensors.Count - 1 do begin
-          WorldODE.Robots[r].Sensors[i].PostProcess;
+        with WorldODE.Robots[r] do begin
+          for i := 0 to Sensors.Count - 1 do begin
+            with Sensors[i] do begin
+              PostProcess;
+              TimeFromLastMeasure := TimeFromLastMeasure + WorldODE.Ode_dt;
+              if TimeFromLastMeasure > Sensors[i].Period then begin
+                TimeFromLastMeasure := TimeFromLastMeasure - Sensors[i].Period;
+                UpdateMeasures;
+              end;
+            end;
+          end;
         end;
       end;
 
       // Process World Sensors
       for i := 0 to WorldODE.Sensors.Count - 1 do begin
-        WorldODE.Sensors[i].PostProcess;
+        with WorldODE.Sensors[i] do begin
+          PostProcess;
+          TimeFromLastMeasure := TimeFromLastMeasure + WorldODE.Ode_dt;
+          if TimeFromLastMeasure > Period then begin
+            TimeFromLastMeasure := TimeFromLastMeasure - Period;
+            UpdateMeasures;
+          end;
+        end;
       end;
 
     end;
@@ -4546,7 +4550,7 @@ end;
 // Bussola       0
 // Giroscopios   0
 // Acelerometros 0
-// Measure rate
+// Measure rate sync
 
 // Solve color input confusion
 // Show scene tree  +
@@ -4556,7 +4560,7 @@ end;
 // charts for the spreadsheet
 // multiple spreadsheets
 // Decorations
-// Add force to solid
+// Add force to solid - done for thing
 // canvas
 // spray
 // Sensor.rate

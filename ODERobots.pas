@@ -320,14 +320,13 @@ type
 
   TSensorNoise = record
     var_k, var_d, offset, gain: double;
+    std_a, std_p: double;
     active: boolean;
   end;
 
   TSensorKind = (skGeneric, skIR, skIRSharp, skSonar, skCapacitive, skInductive, skBeacon, skFloorLine);
 
   TSensor = class
-    //Geom : PdxGeom;
-    //Geoms: TGeomList;
     ID: string;
     kind: TSensorKind;
     Noise: TSensorNoise;
@@ -337,17 +336,12 @@ type
     Tags: TStringlist;
 
   private
-    function InsideGLPolygonsTaged(x, y: double;
-      GLFloor: TGLBaseSceneObject): boolean;
+    function InsideGLPolygonsTaged(x, y: double; GLFloor: TGLBaseSceneObject): boolean;
   protected
     function GetMeasureCount: integer;
     //function GetMeasure(Index: Integer): TSensorMeasure;
     //procedure SetMeasure(Index: Integer; AMeasure: TSensorMeasure);
-{    dist, measure: double;
-    pos, normal: TdVector3;
-    has_measure: boolean;
-    MeasuredSolid: TSolid;
-}
+
   public
     Measures: array of TSensorMeasure;
 
@@ -358,6 +352,8 @@ type
     property Count: integer read GetMeasureCount;
     procedure PreProcess;
     procedure PostProcess;
+    procedure UpdateMeasures;
+    procedure NoiseModel;
   end;
 
 const
@@ -1293,8 +1289,8 @@ end;
 procedure TSensor.PreProcess;
 var j: integer;
 begin
-  Measures[0].value := 0;
-  Measures[0].has_measure := false;
+  //Measures[0].value := 0;
+  //Measures[0].has_measure := false;
   for j := 0 to Rays.Count - 1 do begin
     Rays[j].Measure.dist := -1;
     Rays[j].Measure.has_measure := false;
@@ -1304,6 +1300,101 @@ end;
 
 
 procedure TSensor.PostProcess;
+begin
+ { case kind of
+
+    skIRSharp: begin
+      with Measures[0] do begin
+        dist := Rays[0].Measure.dist;
+        has_measure := Rays[0].Measure.has_measure;
+        if has_measure then
+          //value := min(value, dist);
+          value := dist;
+      end;
+    end;
+
+    skCapacitive: begin
+      with Measures[0] do begin
+        dist := Rays[0].Measure.dist;
+        has_measure := true;
+        if Rays[0].Measure.has_measure then begin
+          value := 1
+        end else begin
+          value := 0;
+        end;
+      end;
+    end;
+
+    skInductive: begin
+      with Measures[0] do begin
+        dist := Rays[0].Measure.dist;
+        has_measure := true;
+        HitSolid := Rays[0].Measure.HitSolid;
+        value := 0;
+        if (Rays[0].Measure.has_measure) and
+           (HitSolid <> nil) and
+           (smMetallic in HitSolid.MatterProperties) then begin
+          value := 1
+        end;
+      end;
+    end;
+
+    skFloorLine: begin
+      with Measures[0] do begin
+        dist := Rays[0].Measure.dist;
+        has_measure := true;
+        HitSolid := Rays[0].Measure.HitSolid;
+        value := 0;
+        if (Rays[0].Measure.has_measure) and
+           (HitSolid <> nil) and
+           (HitSolid.kind = skFloor) then begin
+          if InsideGLPolygonsTaged(Rays[0].Measure.pos[0], Rays[0].Measure.pos[1], HitSolid.AltGLObj) then
+          value := 1
+        end;
+      end;
+    end;
+
+  end;}
+end;
+
+
+function TSensor.InsideGLPolygonsTaged(x, y: double; GLFloor: TGLBaseSceneObject): boolean;
+var n, i, j: integer;
+    GLPolygon: TGLPolygon;
+begin
+  result := false;
+  //GLFloor := OdeScene.FindChild('GLPlaneFloor', false);
+  if GLFloor = nil then exit;
+  for n := 0 to GLFloor.Count - 1 do begin
+    if not (GLFloor.Children[n] is TGLPolygon) then continue;
+    GLPolygon := TGLPolygon(GLFloor.Children[n]);
+    if tags <> nil then
+      if tags.IndexOf(GLPolygon.Hint) < 0 then continue;
+
+    j := GLPolygon.Nodes.Count - 1;
+    for i := 0 to GLPolygon.Nodes.Count - 1 do begin
+      //result := false;
+      // test if point is inside polygon
+      with GLPolygon do begin
+        if ((((Nodes[i].Y <= Y) and (Y < Nodes[j].Y)) or ((Nodes[j].Y <= Y) and (Y < Nodes[i].Y)) )
+             and (X < (Nodes[j].X - Nodes[i].X) * (Y - Nodes[i].Y) / (Nodes[j].Y - Nodes[i].Y) + Nodes[i].X))
+        then result := not result;
+        j:=i;
+      end;
+    end;
+    if result then break;
+  end;
+end;
+
+
+
+function TSensor.GetMeasureCount: integer;
+begin
+  result := length(Measures);
+end;
+
+
+procedure TSensor.UpdateMeasures;
 begin
   case kind of
 
@@ -1361,41 +1452,36 @@ begin
   end;
 end;
 
-
-function TSensor.InsideGLPolygonsTaged(x, y: double; GLFloor: TGLBaseSceneObject): boolean;
-var n, i, j: integer;
-    GLPolygon: TGLPolygon;
+procedure TSensor.NoiseModel;
+var v, iv, var_v, m, var_dist: double;
 begin
-  result := false;
-  //GLFloor := OdeScene.FindChild('GLPlaneFloor', false);
-  if GLFloor = nil then exit;
-  for n := 0 to GLFloor.Count - 1 do begin
-    if not (GLFloor.Children[n] is TGLPolygon) then continue;
-    GLPolygon := TGLPolygon(GLFloor.Children[n]);
-    if tags <> nil then
-      if tags.IndexOf(GLPolygon.Hint) < 0 then continue;
+  if not Noise.active then exit;
 
-    j := GLPolygon.Nodes.Count - 1;
-    for i := 0 to GLPolygon.Nodes.Count - 1 do begin
-      //result := false;
-      // test if point is inside polygon
-      with GLPolygon do begin
-        if ((((Nodes[i].Y <= Y) and (Y < Nodes[j].Y)) or ((Nodes[j].Y <= Y) and (Y < Nodes[i].Y)) )
-             and (X < (Nodes[j].X - Nodes[i].X) * (Y - Nodes[i].Y) / (Nodes[j].Y - Nodes[i].Y) + Nodes[i].X))
-        then result := not result;
-        j:=i;
-      end;
+  if kind = skIRSharp then begin
+    if not Measures[0].has_measure then exit;
+
+    iv := Noise.gain * Measures[0].value + Noise.offset;
+    if iv <> 0 then
+      v := 1 / iv
+    else exit;
+    var_v := Noise.var_d * Measures[0].value + Noise.var_k;
+    m := - Noise.gain * sqr(v);
+    if m <> 0 then begin
+      var_dist := var_v / sqr(m);
+      Measures[0].value := Measures[0].value + RandG(0, sqrt(var_dist));
     end;
-    if result then break;
+  end else begin
+    v := Noise.offset;
+    if Noise.std_a <> 0 then begin
+      v := v + RandG(0, Noise.std_a);
+    end;
+    if Noise.std_p <> 0 then begin
+      v := v + RandG(0, Measures[0].value * Noise.std_p);
+    end;
+    Measures[0].value := Noise.gain * Measures[0].value + v;
   end;
 end;
 
-
-
-function TSensor.GetMeasureCount: integer;
-begin
-  result := length(Measures);
-end;
 
 { TSensorList }
 
