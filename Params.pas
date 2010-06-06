@@ -39,7 +39,6 @@ type
     Label10: TLabel;
     Label11: TLabel;
     Label12: TLabel;
-    MemoCameraConfig: TMemo;
     EditDebug3: TEdit;
     MemoDebug: TMemo;
     FormStorage: TFormStorage;
@@ -206,6 +205,7 @@ type
     BitBtnAddTags: TBitBtn;
     BitBtnRemoveTags: TBitBtn;
     BitBtnAddAll: TBitBtn;
+    RGSensorGL: TRadioGroup;
     procedure CBShadowsClick(Sender: TObject);
     procedure CBVsyncClick(Sender: TObject);
     procedure BSetFPSClick(Sender: TObject);
@@ -258,6 +258,7 @@ type
     procedure BitBtnAddTagsClick(Sender: TObject);
     procedure BitBtnRemoveTagsClick(Sender: TObject);
     procedure BitBtnAddAllClick(Sender: TObject);
+    procedure RGSensorGLClick(Sender: TObject);
   private
     procedure FillEditArray(ProtoName: string;
       var EditArray: array of TEdit);
@@ -1125,6 +1126,32 @@ begin
   for i := 0 to LBAllTags.Count -1 do begin
     if LBSelectedTags.Items.indexof(LBAllTags.Items[i]) < 0 then
       LBSelectedTags.Items.Add(LBAllTags.Items[i]);
+  end;
+end;
+
+procedure TFParams.RGSensorGLClick(Sender: TObject);
+var r, i: integer;
+begin
+  for r := 0 to WorldODE.Robots.Count - 1 do begin
+    for i := 0 to WorldODE.Robots[r].Sensors.Count - 1 do begin
+      with WorldODE.Robots[r].Sensors[i] do begin
+        case RGSensorGL.ItemIndex of
+          0: GLObj.Visible := true;
+          1: GLObj.Visible := (Rays.Count <= 1);
+          2: GLObj.Visible := false;
+        end;
+      end;
+    end;
+  end;
+
+  for i := 0 to WorldODE.Sensors.Count - 1 do begin
+    with WorldODE.Sensors[i] do begin
+      case RGSensorGL.ItemIndex of
+        0: GLObj.Visible := true;
+        1: GLObj.Visible := (Rays.Count <= 1);
+        2: GLObj.Visible := false;
+      end;
+    end;
   end;
 end;
 
