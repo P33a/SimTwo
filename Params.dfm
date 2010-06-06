@@ -25,7 +25,7 @@ object FParams: TFParams
     Top = 0
     Width = 273
     Height = 621
-    ActivePage = TabDebug
+    ActivePage = TabGraphics
     Anchors = [akLeft, akTop, akBottom]
     TabOrder = 0
     object TabControl: TTabSheet
@@ -879,36 +879,36 @@ object FParams: TFParams
         Caption = 'Target FPS:'
       end
       object Label9: TLabel
-        Left = 116
-        Top = 202
+        Left = 112
+        Top = 218
         Width = 10
         Height = 13
         Caption = 'X:'
       end
       object Label10: TLabel
-        Left = 116
-        Top = 226
+        Left = 112
+        Top = 242
         Width = 10
         Height = 13
         Caption = 'Y:'
       end
       object Label11: TLabel
-        Left = 116
-        Top = 250
+        Left = 112
+        Top = 266
         Width = 10
         Height = 13
         Caption = 'Z:'
       end
       object Label12: TLabel
-        Left = 132
-        Top = 182
+        Left = 128
+        Top = 198
         Width = 37
         Height = 13
         Caption = 'Position'
       end
       object Label50: TLabel
-        Left = 180
-        Top = 182
+        Left = 176
+        Top = 198
         Width = 35
         Height = 13
         Caption = 'Look at'
@@ -936,7 +936,7 @@ object FParams: TFParams
       end
       object Label54: TLabel
         Left = 184
-        Top = 34
+        Top = 134
         Width = 29
         Height = 13
         Alignment = taRightJustify
@@ -944,7 +944,7 @@ object FParams: TFParams
       end
       object Label55: TLabel
         Left = 168
-        Top = 56
+        Top = 156
         Width = 46
         Height = 13
         Alignment = taRightJustify
@@ -1065,38 +1065,25 @@ object FParams: TFParams
         TabOrder = 10
       end
       object EditCamX: TEdit
-        Left = 132
-        Top = 198
+        Left = 128
+        Top = 214
         Width = 45
         Height = 21
         TabOrder = 11
       end
       object EditCamY: TEdit
-        Left = 132
-        Top = 222
+        Left = 128
+        Top = 238
         Width = 45
         Height = 21
         TabOrder = 12
       end
       object EditCamZ: TEdit
-        Left = 132
-        Top = 246
+        Left = 128
+        Top = 262
         Width = 45
         Height = 21
         TabOrder = 13
-      end
-      object MemoCameraConfig: TMemo
-        Left = 116
-        Top = 116
-        Width = 145
-        Height = 61
-        Lines.Strings = (
-          'Camera.Position = [1 1 3]'
-          'Camera.OffSet = [0 0 0]'
-          'Target.Position = [1 1 3]'
-          'Target.OffSet = [0 0 0]')
-        TabOrder = 14
-        Visible = False
       end
       object SGConf: TStringGrid
         Left = 0
@@ -1110,7 +1097,7 @@ object FParams: TFParams
         FixedCols = 0
         RowCount = 128
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSelect]
-        TabOrder = 15
+        TabOrder = 14
         OnDblClick = SGConfDblClick
         ColWidths = (
           87
@@ -1123,7 +1110,7 @@ object FParams: TFParams
         Top = 360
         Width = 70
         Height = 21
-        TabOrder = 16
+        TabOrder = 15
         OnKeyPress = EditGridKeyPress
       end
       object EditGridY: TEdit
@@ -1131,7 +1118,7 @@ object FParams: TFParams
         Top = 360
         Width = 70
         Height = 21
-        TabOrder = 17
+        TabOrder = 16
         OnKeyPress = EditGridKeyPress
       end
       object EditGridZ: TEdit
@@ -1139,7 +1126,7 @@ object FParams: TFParams
         Top = 360
         Width = 70
         Height = 21
-        TabOrder = 18
+        TabOrder = 17
         OnKeyPress = EditGridKeyPress
       end
       object BSGConfSet: TButton
@@ -1148,36 +1135,36 @@ object FParams: TFParams
         Width = 40
         Height = 21
         Caption = 'Set'
-        TabOrder = 19
+        TabOrder = 18
         OnClick = BSGConfSetClick
       end
       object EditCamLookX: TEdit
-        Left = 180
-        Top = 198
+        Left = 176
+        Top = 214
+        Width = 45
+        Height = 21
+        TabOrder = 19
+      end
+      object EditCamLookY: TEdit
+        Left = 176
+        Top = 238
         Width = 45
         Height = 21
         TabOrder = 20
       end
-      object EditCamLookY: TEdit
-        Left = 180
-        Top = 222
+      object EditCamLookZ: TEdit
+        Left = 176
+        Top = 262
         Width = 45
         Height = 21
         TabOrder = 21
-      end
-      object EditCamLookZ: TEdit
-        Left = 180
-        Top = 246
-        Width = 45
-        Height = 21
-        TabOrder = 22
       end
       object EditSetCamX: TEdit
         Left = 52
         Top = 306
         Width = 45
         Height = 21
-        TabOrder = 23
+        TabOrder = 22
         Text = '1'
       end
       object EditSetCamY: TEdit
@@ -1185,7 +1172,7 @@ object FParams: TFParams
         Top = 306
         Width = 45
         Height = 21
-        TabOrder = 24
+        TabOrder = 23
         Text = '1'
       end
       object EditSetCamZ: TEdit
@@ -1193,7 +1180,7 @@ object FParams: TFParams
         Top = 306
         Width = 45
         Height = 21
-        TabOrder = 25
+        TabOrder = 24
         Text = '1'
       end
       object BSetCamPars: TButton
@@ -1202,7 +1189,7 @@ object FParams: TFParams
         Width = 32
         Height = 43
         Caption = 'Set'
-        TabOrder = 26
+        TabOrder = 25
         OnClick = BSetCamParsClick
       end
       object EditSetCamLookX: TEdit
@@ -1210,7 +1197,7 @@ object FParams: TFParams
         Top = 328
         Width = 45
         Height = 21
-        TabOrder = 27
+        TabOrder = 26
         Text = '0'
       end
       object EditSetCamLookY: TEdit
@@ -1218,7 +1205,7 @@ object FParams: TFParams
         Top = 328
         Width = 45
         Height = 21
-        TabOrder = 28
+        TabOrder = 27
         Text = '0'
       end
       object EditSetCamLookZ: TEdit
@@ -1226,7 +1213,7 @@ object FParams: TFParams
         Top = 328
         Width = 45
         Height = 21
-        TabOrder = 29
+        TabOrder = 28
         Text = '0'
       end
       object BGetCamPos: TButton
@@ -1235,7 +1222,7 @@ object FParams: TFParams
         Width = 33
         Height = 21
         Caption = 'Get'
-        TabOrder = 30
+        TabOrder = 29
         OnClick = BGetCamPosClick
       end
       object Button1: TButton
@@ -1244,38 +1231,38 @@ object FParams: TFParams
         Width = 33
         Height = 21
         Caption = 'Get'
-        TabOrder = 31
+        TabOrder = 30
         OnClick = Button1Click
       end
       object EditTrailsCount: TEdit
         Left = 216
-        Top = 30
+        Top = 130
         Width = 45
         Height = 21
-        TabOrder = 32
+        TabOrder = 31
         Text = '8'
       end
       object EditTrailSize: TEdit
         Left = 216
-        Top = 52
+        Top = 152
         Width = 45
         Height = 21
-        TabOrder = 33
+        TabOrder = 32
         Text = '200'
       end
       object BSetTrailPars: TButton
         Left = 216
-        Top = 4
+        Top = 104
         Width = 45
         Height = 21
         Caption = 'Set'
-        TabOrder = 34
+        TabOrder = 33
         OnClick = BSetTrailParsClick
       end
       object RGGLObjects: TRadioGroup
-        Left = 168
-        Top = 80
-        Width = 93
+        Left = 192
+        Top = 34
+        Width = 73
         Height = 65
         Caption = 'GLObjects'
         ItemIndex = 1
@@ -1283,8 +1270,22 @@ object FParams: TFParams
           'Original'
           'Mesh'
           'Both')
-        TabOrder = 35
+        TabOrder = 34
         OnClick = RGGLObjectsClick
+      end
+      object RGSensorGL: TRadioGroup
+        Left = 108
+        Top = 34
+        Width = 81
+        Height = 65
+        Caption = 'Show Sensors'
+        ItemIndex = 0
+        Items.Strings = (
+          'All'
+          'One Ray'
+          'None')
+        TabOrder = 35
+        OnClick = RGSensorGLClick
       end
     end
     object TabDebug: TTabSheet
@@ -1710,7 +1711,8 @@ object FParams: TFParams
       'RGGLObjects.ItemIndex'
       'PGRobots.TabIndex'
       'CBTags.Checked'
-      'LBSelectedTags.Items')
+      'LBSelectedTags.Items'
+      'RGSensorGL.ItemIndex')
     StoredValues = <>
     Left = 236
     Top = 60
@@ -1735,7 +1737,7 @@ object FParams: TFParams
     Bindings = <>
     DefaultPort = 9808
     OnUDPRead = UDPGenericUDPRead
-    Left = 236
-    Top = 120
+    Left = 180
+    Top = 28
   end
 end

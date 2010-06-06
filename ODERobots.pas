@@ -326,7 +326,7 @@ type
     active: boolean;
   end;
 
-  TSensorKind = (skGeneric, skIR, skIRSharp, skSonar, skCapacitive, skInductive, skBeacon, skFloorLine, skLAserRanger2D);
+  TSensorKind = (skGeneric, skIR, skIRSharp, skSonar, skCapacitive, skInductive, skBeacon, skFloorLine, skRanger2D);
 
   TSensor = class
     ID: string;
@@ -360,7 +360,7 @@ type
 
 const
   SensorKindStrings: array[TSensorKind] of string =
-  ('Generic', 'IR', 'IRSharp', 'Sonar', 'Capacitive', 'Inductive', 'Beacon', 'FloorLine', 'LAserRanger2D');
+  ('Generic', 'IR', 'IRSharp', 'Sonar', 'Capacitive', 'Inductive', 'Beacon', 'FloorLine', 'Ranger2D');
 
 type
   TSensorList = class(TList)

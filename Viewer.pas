@@ -73,7 +73,7 @@ type
 
     procedure UpdateOdometry(Axis: TAxis);
     procedure CreateWheel(Robot: TRobot; Wheel: TWheel; const Pars: TWheelPars; const wFriction: TFriction; const wMotor: TMotor);
-    function CreateOneRaySensor(motherbody: PdxBody; Sensor: TSensor; SensorLength, InitialWidth, FinalWidth: double): TSensorRay;
+    function CreateOneRaySensor(motherbody: PdxBody; Sensor: TSensor; SensorLength: double): TSensorRay;
 
     procedure LoadObstaclesFromXML(XMLFile: string; Parser: TSimpleParser);
     procedure LoadSensorsFromXML(Robot: TRobot; const root: IXMLNode; Parser: TSimpleParser);
@@ -115,6 +115,7 @@ type
       StopAngle, step, innerRadius, outerRadius: double; s_tag: string): TGLPolygon;
     //procedure CreateInvisiblePlane(Plane: TSolid; dirX, dirY, dirZ, offset: double);
     function CreateInvisiblePlane(planeKind: TSolidKind; dirX, dirY, dirZ, offset: double): TSolid;
+    procedure CreateSensorBeamGLObj(Sensor: TSensor; SensorLength, InitialWidth, FinalWidth: double);
 //    procedure AxisGLCreate(axis: Taxis; aRadius, aHeight: double);
 //    procedure AxisGLSetPosition(axis: Taxis);
   public
@@ -336,7 +337,6 @@ begin
       n_mu2 := sqrt(n_mu2 * TSolid(o2.data).ParSurface.mu2);
       n_soft_cfm := max(n_soft_cfm, TSolid(o2.data).ParSurface.soft_cfm);
     end;
-
 
     {if((dGeomGetClass(o1) = dSphereClass) and (dGeomGetClass(o2) <> dPlaneClass)) or
       ((dGeomGetClass(o2) = dSphereClass) and (dGeomGetClass(o1) <> dPlaneClass)) then begin
@@ -720,7 +720,7 @@ begin
 end;
 
 
-function TWorld_ODE.CreateOneRaySensor(motherbody: PdxBody; Sensor: TSensor; SensorLength, InitialWidth, FinalWidth: double): TSensorRay;
+function TWorld_ODE.CreateOneRaySensor(motherbody: PdxBody; Sensor: TSensor; SensorLength: double): TSensorRay;
 var newRay: TSensorRay;
 begin
   newRay := TSensorRay.Create;
@@ -730,7 +730,10 @@ begin
   newRay.Geom.data := newRay;
   Sensor.Rays.Add(newRay);
   result := newRay;
+end;
 
+procedure TWorld_ODE.CreateSensorBeamGLObj(Sensor: TSensor; SensorLength, InitialWidth, FinalWidth: double);
+begin
   Sensor.GLObj := TGLSceneObject(ODEScene.AddNewChild(TGLCylinder));
 
   with (Sensor.GLObj as TGLCylinder) do begin
@@ -1938,6 +1941,8 @@ var sensor, prop: IXMLNode;
     st : TStringList;
     sensor_period: double;
     newRay: TSensorRay;
+    BeamAngle, md: double;
+    i, NumRays: integer;
 begin
   if root = nil then exit;
 
@@ -1950,6 +1955,7 @@ begin
        (sensor.NodeName = 'capacitive') or
        (sensor.NodeName = 'inductive') or
        (sensor.NodeName = 'floorline') or
+       (sensor.NodeName = 'ranger2d') or
        (sensor.NodeName = 'beacon') then begin
       // default values
       IDValue := '';
@@ -1965,6 +1971,8 @@ begin
       colorR := 128/255; colorG := 128/255; colorB := 128/255;
       stags := '';
       sensor_period := 0.01;
+      BeamAngle := rad(30);
+      NumRays := 1;
 
       prop := sensor.FirstChild;
       while prop <> nil do begin
@@ -1981,6 +1989,8 @@ begin
           SLen := GetNodeAttrRealParse(prop, 'length', SLen, Parser);
           SInitialWidth := GetNodeAttrRealParse(prop, 'initial_width', SInitialWidth, Parser);
           SFinalWidth := GetNodeAttrRealParse(prop, 'final_width', SFinalWidth, Parser);
+          BeamAngle := rad(GetNodeAttrRealParse(prop, 'angle', deg(BeamAngle), Parser));
+          NumRays := round(GetNodeAttrRealParse(prop, 'rays', NumRays, Parser));
         end;
         if prop.NodeName = 'pos' then begin
           posX := GetNodeAttrRealParse(prop, 'x', posX, Parser);
@@ -2025,7 +2035,8 @@ begin
       else if sensor.NodeName = 'capacitive' then newSensor.kind := skCapacitive
       else if sensor.NodeName = 'inductive' then newSensor.kind := skInductive
       else if sensor.NodeName = 'beacon' then newSensor.kind := skBeacon
-      else if sensor.NodeName = 'floorline' then newSensor.kind := skFloorLine;
+      else if sensor.NodeName = 'floorline' then newSensor.kind := skFloorLine
+      else if sensor.NodeName = 'ranger2d' then newSensor.kind := skRanger2D;
 
       //newSensor.Tags.Delimiter := ';';
       //newSensor.Tags.DelimitedText := stags;
@@ -2054,10 +2065,19 @@ begin
       end;
 
       if newSensor.kind in [skIRSharp, skCapacitive, skInductive, skFloorLine] then begin
-        newRay := CreateOneRaySensor(MotherBody, newSensor, SLen, SInitialWidth, SFinalWidth);
+        newRay := CreateOneRaySensor(MotherBody, newSensor, SLen);
         newRay.Place(posX, posY, posZ, angX, angY, AngZ, AbsoluteCoords);
+        CreateSensorBeamGLObj(newSensor, SLen, SInitialWidth, SFinalWidth);
       end else if newSensor.kind in [skBeacon] then begin
         CreateSensorBody(newSensor, MotherGLObj, 0.1, 0.02, posX, posY, posZ);
+      end else if newSensor.kind in [skRanger2D] then begin
+        CreateSensorBeamGLObj(newSensor, SLen, SInitialWidth, SFinalWidth);
+        for i := 1 to NumRays do begin
+          newRay := CreateOneRaySensor(MotherBody, newSensor, SLen);
+          md := (NumRays+1)/2;
+          newRay.Place(posX, posY, posZ, angX, angY, AngZ + BeamAngle *(i - md)/md, AbsoluteCoords);
+          //dGeomDisable(NewRay.Geom);
+        end;
       end;
 
       newSensor.SetColor(colorR, colorG, colorB);
@@ -3671,7 +3691,7 @@ begin
 end;
 
 procedure TFViewer.UpdateGLScene;
-var r, i: integer;
+var r, i, n: integer;
    img: TGLBitmap32;
 begin
     if GLHUDTextObjName.TagFloat > 0 then begin
@@ -3693,8 +3713,13 @@ begin
         //Sensors
         for i := 0 to Sensors.Count-1 do begin
           if Sensors[i].GLObj = nil then continue;
+          //if Sensors[i].Rays.Count = 1 then begin
+          //  PositionSceneObject(Sensors[i].GLObj, Sensors[i].Rays[0].Geom);
+          //  if Sensors[i].GLObj is TGLCylinder then Sensors[i].GLObj.pitch(90);
+          //end;
           if Sensors[i].Rays.Count > 0 then begin
-            PositionSceneObject(Sensors[i].GLObj, Sensors[i].Rays[0].Geom);
+            n := random(Sensors[i].Rays.Count);
+            PositionSceneObject(Sensors[i].GLObj, Sensors[i].Rays[n].Geom);
             if Sensors[i].GLObj is TGLCylinder then Sensors[i].GLObj.pitch(90);
           end;
         end;
