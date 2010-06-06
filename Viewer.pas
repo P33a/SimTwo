@@ -10,7 +10,7 @@ uses
   GLShadowVolume, GLSkydome, GLGraph, OmniXML, OmniXMLUtils,  ODERobots,
   rxPlacemnt, ProjConfig, GLHUDObjects, Menus, GLVectorFileObjects,
   GLFireFX, GlGraphics, OpenGL1x, SimpleParser, GLBitmapFont,
-  GLMultiPolygon, GLMesh, jpeg;
+  GLMesh, jpeg;
 
 type
   TRGBfloat = record
@@ -73,7 +73,7 @@ type
 
     procedure UpdateOdometry(Axis: TAxis);
     procedure CreateWheel(Robot: TRobot; Wheel: TWheel; const Pars: TWheelPars; const wFriction: TFriction; const wMotor: TMotor);
-    procedure CreateOneRaySensor(motherbody: PdxBody; Sensor: TSensor; SensorLength, InitialWidth, FinalWidth: double);
+    function CreateOneRaySensor(motherbody: PdxBody; Sensor: TSensor; SensorLength, InitialWidth, FinalWidth: double): TSensorRay;
 
     procedure LoadObstaclesFromXML(XMLFile: string; Parser: TSimpleParser);
     procedure LoadSensorsFromXML(Robot: TRobot; const root: IXMLNode; Parser: TSimpleParser);
@@ -187,6 +187,8 @@ type
     GLMemoryViewer: TGLMemoryViewer;
     N1: TMenuItem;
     MenuAbort: TMenuItem;
+    GLPlaneTex: TGLPlane;
+    GLPlane1: TGLPlane;
     procedure FormCreate(Sender: TObject);
     procedure GLSceneViewerMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -236,7 +238,6 @@ type
   end;
 
 
-procedure RFromZYXRotRel(var R: TdMatrix3; angX, angY, angZ: TDreal);
 function LoadXML(XMLFile: string; ErrorList: TStringList): IXMLDocument;
 
 var
@@ -396,17 +397,6 @@ begin
   end;
 end;
 
-
-procedure RFromZYXRotRel(var R: TdMatrix3; angX, angY, angZ: TDreal);
-var Rx, Ry, Rz, Ryx: TdMatrix3;
-begin
-  dRFromAxisAndAngle(Rz, 0, 0, 1, angZ);
-  dRFromAxisAndAngle(Ry, 0, 1, 0, angY);
-  dRFromAxisAndAngle(Rx, 1, 0, 0, angX);
-
-  dMULTIPLY0_333(Ryx, Ry, Rx);
-  dMULTIPLY0_333(R, Rz, Ryx);
-end;
 
 
 function CalcPID(var PID: TMotController; ref, ek: double): double;
@@ -730,7 +720,7 @@ begin
 end;
 
 
-procedure TWorld_ODE.CreateOneRaySensor(motherbody: PdxBody; Sensor: TSensor; SensorLength, InitialWidth, FinalWidth: double);
+function TWorld_ODE.CreateOneRaySensor(motherbody: PdxBody; Sensor: TSensor; SensorLength, InitialWidth, FinalWidth: double): TSensorRay;
 var newRay: TSensorRay;
 begin
   newRay := TSensorRay.Create;
@@ -739,6 +729,7 @@ begin
   dGeomSetBody(newRay.Geom, motherbody);
   newRay.Geom.data := newRay;
   Sensor.Rays.Add(newRay);
+  result := newRay;
 
   Sensor.GLObj := TGLSceneObject(ODEScene.AddNewChild(TGLCylinder));
 
@@ -1103,7 +1094,7 @@ var XMLSolid, prop: IXMLNode;
     colorR, colorG, colorB: double;
     ID: string;
     R: TdMatrix3;
-    newBone: TSolid;
+    newSolid: TSolid;
     descr: string;
     TextureName: string;
     TextureScale: double;
@@ -1113,12 +1104,14 @@ var XMLSolid, prop: IXMLNode;
     Surf: TdSurfaceParameters;
     dMass: TdMass;
     MatterProps: TMatterProperties;
+    hasCanvas: boolean;
+    CanvasWidth, CanvasHeigth: integer;
 begin
   if root = nil then exit;
 
   XMLSolid := root.FirstChild;
   while XMLSolid <> nil do begin
-    if pos(XMLSolid.NodeName, 'cuboid <> cylinder <> sphere <> belt <> propeller') <> 0 then begin // 'bone'
+    if pos(XMLSolid.NodeName, 'cuboid <> cylinder <> sphere <> belt <> propeller') <> 0 then begin // Tsolid
       prop := XMLSolid.FirstChild;
       // default values
       mass := 1;  ID := '-1';
@@ -1141,7 +1134,15 @@ begin
       Surf.soft_cfm := 1e-5;
       //Surf.soft_erp := 0.2;
       Surf.bounce := 0; Surf.bounce_vel := 0;
+      hasCanvas := false;
+      CanvasWidth := 128; CanvasHeigth := 128;
+
       while prop <> nil do begin
+        if prop.NodeName = 'canvas' then begin
+          hasCanvas := true;
+          CanvasWidth := round(GetNodeAttrRealParse(prop, 'width', CanvasWidth, Parser));
+          CanvasHeigth := round(GetNodeAttrRealParse(prop, 'heigth', CanvasHeigth, Parser));
+        end;
         if prop.NodeName = 'metallic' then begin
           MatterProps := MatterProps + [smMetallic];
         end;
@@ -1215,60 +1216,77 @@ begin
 
       if ID <> '-1' then begin
         // Create and position the solid
-        newBone := TSolid.Create;
-        SolidList.Add(newBone);
-        newBone.ID := ID;
-        newBone.description := ID;
-        newBone.BuoyantMass := BuoyantMass;
-        newBone.Drag := Drag;
-        newBone.StokesDrag := StokesDrag;
-        newBone.RollDrag := RollDrag;
+        newSolid := TSolid.Create;
+        SolidList.Add(newSolid);
+        newSolid.ID := ID;
+        newSolid.description := ID;
+        newSolid.BuoyantMass := BuoyantMass;
+        newSolid.Drag := Drag;
+        newSolid.StokesDrag := StokesDrag;
+        newSolid.RollDrag := RollDrag;
 
         if (XMLSolid.NodeName = 'cuboid') or (XMLSolid.NodeName = 'belt') or (XMLSolid.NodeName = 'propeller')then begin
-          CreateSolidBox(newBone, mass, posX, posY, posZ, sizeX, sizeY, sizeZ);
+          CreateSolidBox(newSolid, mass, posX, posY, posZ, sizeX, sizeY, sizeZ);
           //if TextureName <> '' then begin
-          //  newBone.SetTexture(TextureName, TextureScale); //'LibMaterialFeup'
+          //  newSolid.SetTexture(TextureName, TextureScale); //'LibMaterialFeup'
           //end;
+          if (XMLSolid.NodeName = 'cuboid') and HasCanvas then begin
+            (newSolid.GLObj as TGLCube).Parts := (newSolid.GLObj as TGLCube).Parts - [cpfront];  // remove the side where the canvas will be placed
+            newSolid.CanvasGLObj := TGLSceneObject(newSolid.GLObj.AddNewChild(TGLPlane));
+            with (newSolid.CanvasGLObj as TGLPlane) do begin
+             position.Z := sizeZ/2;
+             width := sizeX;
+             Height := sizeY;
+             Material.Texture.Disabled := false;
+             Material.Texture.TextureMode := tmModulate;
+            end;
+            newSolid.PaintBitmap := TBitmap.Create;
+            newSolid.PaintBitmap.Width := CanvasWidth;
+            newSolid.PaintBitmap.Height := CanvasHeigth;
+            newSolid.PaintBitmap.PixelFormat := pf24bit;
+            //newSolid.PaintBitmap.Canvas.TextOut(0,0,'Hello World!');
+            //newSolid.PaintBitmap.Canvas.Ellipse(0,0,127,127);
+          end;
         end else if XMLSolid.NodeName = 'sphere' then begin
-          CreateSolidSphere(newBone, mass, posX, posY, posZ, radius);
+          CreateSolidSphere(newSolid, mass, posX, posY, posZ, radius);
         end else if XMLSolid.NodeName = 'cylinder' then begin
           if abs(radius-1) > 1e-6 then begin
-            CreateSolidCylinder(newBone, mass, posX, posY, posZ, radius, sizeZ);
+            CreateSolidCylinder(newSolid, mass, posX, posY, posZ, radius, sizeZ);
           end else begin
-            CreateSolidCylinder(newBone, mass, posX, posY, posZ, sizeX, sizeZ);
+            CreateSolidCylinder(newSolid, mass, posX, posY, posZ, sizeX, sizeZ);
           end;
           //if TextureName <> '' then begin
-          //  newBone.SetTexture(TextureName, TextureScale); //'LibMaterialFeup'
+          //  newSolid.SetTexture(TextureName, TextureScale); //'LibMaterialFeup'
           //end;
         end;
         if (I11 > 0) and (I22 > 0) and (I33 > 0)  then begin
-          dMass := newBone.Body.mass;
+          dMass := newSolid.Body.mass;
           dMassSetParameters(dmass, dmass.mass,
                              dmass.c[0],
                              dmass.c[1],
                              dmass.c[2],
                              I11, I22, I33, I12, I13, I23);
-          dBodySetMass(newBone.Body, @dMass);
+          dBodySetMass(newSolid.Body, @dMass);
         end;
 
         if TextureName <> '' then begin
-          newBone.SetTexture(TextureName, TextureScale); //'LibMaterialFeup'
+          newSolid.SetTexture(TextureName, TextureScale); //'LibMaterialFeup'
         end;
 
         if BuoyantMass <> 0 then begin
-          dBodySetGravityMode(newBone.Body, 0);
+          dBodySetGravityMode(newSolid.Body, 0);
         end;
-        if XMLSolid.NodeName = 'belt' then newBone.kind := skMotorBelt;
-        if XMLSolid.NodeName = 'propeller' then newBone.kind := skPropeller;
+        if XMLSolid.NodeName = 'belt' then newSolid.kind := skMotorBelt;
+        if XMLSolid.NodeName = 'propeller' then newSolid.kind := skPropeller;
 
-        newBone.MatterProperties := MatterProps;
+        newSolid.MatterProperties := MatterProps;
 
         // create mesh file
         if MeshFile <> '' then begin
-          //newBone.GLObj.Visible := false;
-          newBone.AltGLObj := TGLSceneObject(ODEScene.AddNewChild(TGLFreeForm));
-          with (newBone.AltGLObj as TGLFreeForm) do begin
-            TagObject := newBone;
+          //newSolid.GLObj.Visible := false;
+          newSolid.AltGLObj := TGLSceneObject(ODEScene.AddNewChild(TGLFreeForm));
+          with (newSolid.AltGLObj as TGLFreeForm) do begin
+            TagObject := newSolid;
             MaterialLibrary := FViewer.GLMaterialLibrary3ds;
             try
               LoadFromFile(MeshFile);
@@ -1279,19 +1297,19 @@ begin
             Scale.y := MeshScale;
             Scale.z := MeshScale;
           end;
-          PositionSceneObject(newBone.AltGLObj, newBone.Geom);
+          PositionSceneObject(newSolid.AltGLObj, newSolid.Geom);
 
           if MeshCastsShadows and (MeshShadowFile = '') then
-            (OdeScene as TGLShadowVolume).Occluders.AddCaster(newBone.AltGLObj);
+            (OdeScene as TGLShadowVolume).Occluders.AddCaster(newSolid.AltGLObj);
         end;
 
         // create shadow mesh file
         if MeshShadowFile <> '' then begin
-          newBone.ShadowGlObj := TGLSceneObject(ODEScene.Parent.AddNewChild(TGLFreeForm));
-          //newBone.ShadowGlObj := TGLSceneObject(ODEScene.AddNewChild(TGLFreeForm));
-          with (newBone.ShadowGlObj as TGLFreeForm) do begin
+          newSolid.ShadowGlObj := TGLSceneObject(ODEScene.Parent.AddNewChild(TGLFreeForm));
+          //newSolid.ShadowGlObj := TGLSceneObject(ODEScene.AddNewChild(TGLFreeForm));
+          with (newSolid.ShadowGlObj as TGLFreeForm) do begin
             Visible := false;
-            TagObject := newBone;
+            TagObject := newSolid;
             MaterialLibrary := FViewer.GLMaterialLibrary3ds;
             try
               LoadFromFile(MeshShadowFile);
@@ -1302,26 +1320,26 @@ begin
             Scale.y := MeshScale;
             Scale.z := MeshScale;
           end;
-          PositionSceneObject(newBone.ShadowGlObj, newBone.Geom);
-          with (OdeScene as TGLShadowVolume).Occluders.AddCaster(newBone.ShadowGlObj) do begin
+          PositionSceneObject(newSolid.ShadowGlObj, newSolid.Geom);
+          with (OdeScene as TGLShadowVolume).Occluders.AddCaster(newSolid.ShadowGlObj) do begin
             CastingMode := scmParentVisible;// scmAlways; //scmVisible;
           end;
         end;
 
         if Surf.mu >= 0 then begin
-          newBone.ParSurface.mode := $FF;
-          newBone.ParSurface.mu := Surf.mu;
-          if Surf.mu2 >= 0 then newBone.ParSurface.mu2 := Surf.mu2;
-          newBone.ParSurface.soft_cfm := Surf.soft_cfm;
-          newBone.ParSurface.bounce := Surf.bounce;
-          newBone.ParSurface.bounce_vel := Surf.bounce_vel;
+          newSolid.ParSurface.mode := $FF;
+          newSolid.ParSurface.mu := Surf.mu;
+          if Surf.mu2 >= 0 then newSolid.ParSurface.mu2 := Surf.mu2;
+          newSolid.ParSurface.soft_cfm := Surf.soft_cfm;
+          newSolid.ParSurface.bounce := Surf.bounce;
+          newSolid.ParSurface.bounce_vel := Surf.bounce_vel;
         end;
         RFromZYXRotRel(R, angX, angY, AngZ);
-        dBodySetRotation(newBone.Body, R);
+        dBodySetRotation(newSolid.Body, R);
 
-        newBone.SetZeroState();
-        newBone.SetColor(colorR, colorG, colorB);
-        //PositionSceneObject(newBone.GLObj, newBone.Geom);
+        newSolid.SetZeroState();
+        newSolid.SetColor(colorR, colorG, colorB);
+        //PositionSceneObject(newSolid.GLObj, newSolid.Geom);
       end;
 
     end else begin // Unused Tag Generate warning
@@ -1500,15 +1518,15 @@ begin
         end;
 
         ReadFrictionFromXMLNode(Friction, '', prop, Parser);
-        Friction2 := Friction;
+        //Friction2 := Friction;
         ReadFrictionFromXMLNode(Friction2, '2', prop, Parser);
 
         ReadSpringFromXMLNode(Spring, '', prop, Parser);
-        Spring2 := Spring;
+        //Spring2 := Spring;
         ReadSpringFromXMLNode(Spring2, '2', prop, Parser);
 
         ReadMotorFromXMLNode(Motor, '', prop, Parser);
-        Motor2 := Motor;
+        //Motor2 := Motor;
         ReadMotorFromXMLNode(Motor2, '2', prop, Parser);
 
         prop := prop.NextSibling;
@@ -1911,11 +1929,15 @@ var sensor, prop: IXMLNode;
 
     MotherSolidId: string;
     MotherSolid: TSolid;
+    MotherBody: PdxBody;
+    MotherGLObj : TGLBaseSceneObject;
+
     SolidIdx: integer;
     AbsoluteCoords: boolean;
     stags, s: string;
     st : TStringList;
     sensor_period: double;
+    newRay: TSensorRay;
 begin
   if root = nil then exit;
 
@@ -2021,29 +2043,21 @@ begin
         end else begin
           MotherSolid := Robot.Solids[SolidIdx];
         end;
-        if newSensor.kind in [skIRSharp, skCapacitive, skInductive, skFloorLine] then begin
-          CreateOneRaySensor(MotherSolid.Body, newSensor, SLen, SInitialWidth, SFinalWidth);
-          RFromZYXRotRel(R, angX, angY + pi/2, AngZ);
-          if AbsoluteCoords then begin
-            dGeomSetOffsetWorldRotation(newSensor.Rays[0].Geom, R);
-            dGeomSetOffsetWorldPosition(newSensor.Rays[0].Geom, posX, posY, posZ);
-          end else begin
-            dGeomSetOffsetRotation(newSensor.Rays[0].Geom, R);
-            dGeomSetOffsetPosition(newSensor.Rays[0].Geom, posX, posY, posZ);
-          end;
-        end else if newSensor.kind in [skBeacon] then begin
-          CreateSensorBody(newSensor, MotherSolid.GLObj, 0.1, 0.02, posX, posY, posZ);
-        end;
+        MotherBody := MotherSolid.Body;
+        MotherGLObj := MotherSolid.GLObj;
+
       end else begin // It is a global sensor
         Sensors.Add(newSensor);
-        if newSensor.kind in [skIRSharp, skCapacitive, skInductive, skFloorLine] then begin
-          CreateOneRaySensor(nil, newSensor, SLen, SInitialWidth, SFinalWidth);
-          RFromZYXRotRel(R, angX, angY + pi/2, AngZ);
-          dGeomSetRotation(newSensor.Rays[0].Geom, R);
-          dGeomSetPosition(newSensor.Rays[0].Geom, posX, posY, posZ);
-        end else if newSensor.kind in [skBeacon] then begin
-          CreateSensorBody(newSensor, ODEScene, 0.1, 0.02, posX, posY, posZ);
-        end;
+
+        MotherBody := nil;
+        MotherGLObj := ODEScene;
+      end;
+
+      if newSensor.kind in [skIRSharp, skCapacitive, skInductive, skFloorLine] then begin
+        newRay := CreateOneRaySensor(MotherBody, newSensor, SLen, SInitialWidth, SFinalWidth);
+        newRay.Place(posX, posY, posZ, angX, angY, AngZ, AbsoluteCoords);
+      end else if newSensor.kind in [skBeacon] then begin
+        CreateSensorBody(newSensor, MotherGLObj, 0.1, 0.02, posX, posY, posZ);
       end;
 
       newSensor.SetColor(colorR, colorG, colorB);
@@ -2112,7 +2126,7 @@ begin
         Kd := GetNodeAttrRealParse(prop, 'kd', Kd, Parser);
         Kf := GetNodeAttrRealParse(prop, 'kf', Kf, Parser);
         //Y_sat := GetNodeAttrRealParse(prop, 'ysat', Y_sat, Parser);
-        controlPeriod := GetNodeAttrRealParse(prop, 'period', controlPeriod, Parser)/1000;
+        controlPeriod := GetNodeAttrRealParse(prop, 'period', 1000 * controlPeriod, Parser)/1000;
         str := GetNodeAttrStr(prop, 'mode', 'pidspeed');
         if str = 'pidspeed' then ControlMode := cmPIDSpeed
         else if str = 'pidposition' then ControlMode := cmPIDPosition
@@ -3658,6 +3672,7 @@ end;
 
 procedure TFViewer.UpdateGLScene;
 var r, i: integer;
+   img: TGLBitmap32;
 begin
     if GLHUDTextObjName.TagFloat > 0 then begin
       GLHUDTextObjName.TagFloat := GLHUDTextObjName.TagFloat - GLCadencer.FixedDeltaTime;
@@ -3706,6 +3721,14 @@ begin
           if Solids[i].ShadowGlObj <> nil then begin
             PositionSceneObject(Solids[i].ShadowGlObj, Solids[i].Geom);
           end;
+          if Solids[i].CanvasGLObj <> nil then begin
+            //Solids[i].PaintBitmap.Canvas.TextOut(0,0,floattostr(WorldODE.physTime));
+            //Solids[i].CanvasGLObj.Material.Texture.Image.Invalidate;
+            Solids[i].CanvasGLObj.Material.Texture.Image.BeginUpdate;
+            img := Solids[i].CanvasGLObj.Material.Texture.Image.GetBitmap32(GL_TEXTURE_2D);
+            img.AssignFromBitmap24WithoutRGBSwap(Solids[i].PaintBitmap);
+            Solids[i].CanvasGLObj.Material.Texture.Image.endUpdate;
+          end;
         end;
 
         // Axis
@@ -3735,6 +3758,7 @@ begin
         end;
       end;
     end;
+    //TestTexture;
 //    if WorldODE.ball_geom <> nil then
 //      PositionSceneObject(FViewer.GLSphere_ball, WorldODE.ball_geom);
 end;
@@ -3947,8 +3971,9 @@ begin
           with WorldODE.Robots[r].Solids[i] do begin
             if kind = skPropeller then begin
                v1 := dBodyGetAngularVel(Body)^;
-               dBodyVectorFromWorld(Body, v1[0], v1[1], v1[2], v2);
-               dBodyAddRelForce(Body, 0.01*v2[0], 0, 0);
+               //dBodyVectorFromWorld(Body, v1[0], v1[1], v1[2], v2);
+               //dBodyAddRelForce(Body, 0.01*v2[0], 0, 0);
+               dBodyAddForce(Body, 0.01*v1[0], 0.01*v1[1], 0.01*v1[2]);    // TODO 0.01 ???
             end;
           end;
         end;
@@ -4184,16 +4209,31 @@ end;
 procedure TFViewer.TestTexture;
 var img: TGLBitmap32;
     thebmp: TBitmap;
+    t_start, t_end, t_delta: int64;
 begin
+
   thebmp := TBitmap.Create;
-  thebmp.Width := 256;
-  thebmp.Height := 256;
+  thebmp.Width := 128;
+  thebmp.Height := 128;
   thebmp.PixelFormat := pf24bit;
-  thebmp.Canvas.TextOut(10,10,'Hello World!');
-  //img := GLCube1.Material.Texture.Image.GetBitmap32(GL_TEXTURE_2D);  tgltexture
-  img := GLCube1.Material.TextureEx.Items[0].Texture.Image.GetBitmap32(GL_TEXTURE_2D);
+  QueryPerformanceFrequency(t_delta);
+  QueryPerformanceCounter(t_start);
+  thebmp.Canvas.TextOut(0,0,'Hello World!');
+  thebmp.Canvas.Ellipse(0,0,127,127);
+  thebmp.Canvas.TextOut(0,0,floattostr(WorldODE.physTime));
+
+  //img := GLCube1.Material.Texture.Image.GetBitmap32(GL_TEXTURE_2D);
+  //img := GLCube1.Material.TextureEx.Items[0].Texture.Image.GetBitmap32(GL_TEXTURE_2D);
+  //img := GLPlaneTex.Material.Texture.Image.GetBitmap32(GL_TEXTURE_2D);
+  GLPlane1.Material.Texture.Image.Invalidate;
+  //GLPlane1.Material.Texture.Image.ReleaseBitmap32;
+  img := GLPlane1.Material.Texture.Image.GetBitmap32(GL_TEXTURE_2D);
+
   img.AssignFromBitmap24WithoutRGBSwap(thebmp);
+  QueryPerformanceCounter(t_end);
   thebmp.Free;
+  FParams.EditDebug2.text := format('Texture: %.2f ',[1e6*(t_end - t_start)/t_delta]);
+
 end;
 
 procedure TWorld_ODE.SetCameraTarget(r: integer);
@@ -4326,7 +4366,9 @@ end;
 
 procedure TFViewer.MenuAbortClick(Sender: TObject);
 begin
-  halt(1);
+  if MessageDlg('Aborting means that any unsaved data will be lost!'+crlf+
+                'Abort anyway?',
+                 mtConfirmation , [mbOk,mbCancel], 0) = mrOk then halt(1);
 end;
 
 procedure TWorld_ODE.DeleteSolid(Solid: TSolid);
@@ -4341,189 +4383,10 @@ end;
 end.
 
 
-{
-
-
-procedure TFMain.GLCadencerProgress(Sender: TObject; const deltaTime, newTime: Double);
-var acttime: Dword;
-    dteta,droR,droL,dsR,dsL: double;
-    droF,droB,dsF,dsB: double;
-    buf:array[0..2047] of char;
-    wpole_n: double;
-    dsbx,dsby: double;
-
-    vec: TAffineVector;
-    tmpx,tmpy:double;
-
-    i: integer;
-    RealOdo, OdoNoise, droR_ODO, droL_ODO: double;
-begin
-  with RobotState, RobotPars, FieldPars do begin
-    EditOdo1.Text := inttostr(Odos[1]);
-    EditOdo2.Text := inttostr(Odos[2]);
-    u[1] := 0;
-    u[2] := 0;
-
-    // Line Scanner
-    if CBLineScanner.Checked then begin
-      with RemState.Robot do begin
-        ScannerAngle := strtofloatdef(EditScannerAngle.Text, 15);
-        ScannerAngle := max(min(ScannerAngle, 70), 10);
-        GLSphereRobotLineSensor.PitchAngle := ScannerAngle;
-      end;
-      BuildLineScan;
-    end;
-  end;
-
-
-  // Log
-  if CBLogActive.Checked then with RobotStateLog do begin
-    Points[index]:=RobotState;
-    inc(PointsCount);
-    inc(index);
-    if index>=MaxLogPoints then index:=0;
-  end;
-
-  // Trail
-  TrailSize:=strtointdef(EditTrailSize.Text,TrailSize);
-  if (GLLinesXY.Nodes.Count>0) then begin
-    if (dist(RobotState.x-GLLinesXY.Nodes[GLLinesXY.Nodes.Count-1].X,
-          RobotState.y-GLLinesXY.Nodes[GLLinesXY.Nodes.Count-1].y)>0.05) then
-    GLLinesXY.Nodes.AddNode(RobotState.x,RobotState.y,0.001);
-  end else
-    GLLinesXY.Nodes.AddNode(RobotState.x,RobotState.y,0.001);
-  while GLLinesXY.Nodes.Count>TrailSize do GLLinesXY.Nodes.Delete(0);
-
-  acttime:=GetTickcount;
-//  Caption := format('SimOne - %d',[acttime-LastCadencerTime]);
-//  LastCadencerTime:=ActTime;
-
-  if acttime>LastCadencerTime+1000 then begin
-    Caption := format(SimOneVersion + ' (c) Paulo Costa - %.1f (%d)',[GLSceneViewer.FramesPerSecond*1000/(acttime-LastCadencerTime),acttime-LastCadencerTime]);
-    GLSceneViewer.ResetPerformanceMonitor;
-    LastCadencerTime:=ActTime;
-  end;
-end;
-
-    int pnpoly(int npol, float *xp, float *yp, float x, float y)
-    [
-      int i, j, c = 0;
-      for (i = 0, j = npol-1; i < npol; j = i++) [
-        if ((((yp[i] <= y) && (y < yp[j])) ||
-             ((yp[j] <= y) && (y < yp[i]))) &&
-            (x < (xp[j] - xp[i]) * (y - yp[i]) / (yp[j] - yp[i]) + xp[i]))
-          c = !c;
-      ]
-      return c;
-    ]
-
-type point = record
-x,y : double;
-end;
-
-type polygon = array of point;
-
-var firstx : double = -1;
-firsty : double = -1;
-poly : polygon;
-
-function PointInPoly(p : point;poly : polygon) : Boolean;
-var i,j : integer;
-Begin
-  result := false;
-  j := High(poly);
-  For i := Low(poly) to High(poly) do begin
-    if (
-       ( ((poly[i].y <= p.y) and (p.y < poly[j].y)) or ((poly[j].y <= p.y) and (p.y < poly[i].y)) ) and
-       (p.x < ((poly[j].x - poly[i].x) * (p.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x))
-       ) then result := not result;
-    j := i
-  end;
-End;
-
-
-procedure TFMain.BuildLineScan;
-const ScanRes = 64;
-var Vo, Vp, V, V1, V2 : TAffineVector;
-    iPoint: TVector;
-//    iObj : TGLBaseSceneObject;
-    i, j, ico, ins: integer;
-    b, inside: boolean;
-    X,Y: single;
-    sens: array[1..ScanRes] of integer;
-begin
-  //ZeroMemory(@(RemState.Robot.Scanner), sizeof(RemState.Robot.Scanner));
-  ZeroMemory(@(sens), sizeof(sens));
-  Vo := GLPolygonScanner.LocalToAbsolute(GLPolygonScanner.Nodes.Items[0].AsAffineVector);
-  V1 := GLPolygonScanner.LocalToAbsolute(GLPolygonScanner.Nodes.Items[2].AsAffineVector);
-  V1 := VectorSubtract(V1, Vo);
-  V2 := GLPolygonScanner.LocalToAbsolute(GLPolygonScanner.Nodes.Items[1].AsAffineVector);
-  V2 := VectorSubtract(V2, Vo);
-  V := VectorSubtract(V2, V1);
-  for i:=0 to ScanRes-1 do begin
-    Vp := VectorCombine(V1, V, 1, i/ScanRes);
-    NormalizeVector(Vp);
-    b :=GLPlaneFloor.RayCastIntersect(VectorMake(Vo), VectorMake(Vp), @iPoint, nil);
-    if b then begin
-      X:=iPoint[0];
-      Y:=iPoint[1];
-      inside:= false;
-      // test if point is inside contours
-      for ico:=0 to GLMultiPolygonTrack.Contours.Count -1 do begin
-        j := GLMultiPolygonTrack.Contours.Items[ico].Nodes.Count - 1;
-        with GLMultiPolygonTrack.Contours.Items[ico] do begin
-          for ins:=0 to Nodes.Count -1 do begin
-            if ((((Nodes.Items[ins].Y <= Y) and (Y<Nodes.Items[j].Y)) or ((Nodes.Items[j].Y <= Y) and (Y<Nodes.Items[ins].Y)) )
-                 and (X<(Nodes.Items[j].X-Nodes.Items[ins].X)*(Y-Nodes.Items[ins].Y)/(Nodes.Items[j].Y-Nodes.Items[ins].Y)+Nodes.Items[ins].X)) then
-                inside:=not inside;
-             j:=ins;
-          end;
-          if inside then break;
-        end;
-      end;
-      EditDebug.Text :=  format(' %.2f, %.2f, %.2f',[iPoint[0], iPoint[1], iPoint[2]]);
-      //EditDebug.Text :=  iObj.Name + format(' %.2f, %.2f, %.2f',[Vo[0], Vo[1], Vo[2]]);
-      if inside then begin
-        //RemState.Robot.Scanner[i]:=255;
-        sens[i]:=255;
-      end else begin
-        //RemState.Robot.Scanner[i]:=0;
-        sens[i]:=0;
-      end;
-    end else begin
-      //RemState.Robot.Scanner[i]:=0;
-      sens[i]:=0;
-    end;
-  end;
-
-
-  // Add noise
-  for i:=0 to ScanRes-1 do begin
-    Sens[i] :=  round(Sens[i] + 10 *randg(0,2));
-  end;
-
-  // Filter
-  for i:=1 to ScanRes-2 do begin
-    RemState.Robot.Scanner[i] := round(max(0,min(255,(sens[i-1] + 2*sens[i] + sens[i+1]) div 4)));
-  end;
-
-  // Show In Chart
-  Series1.BeginUpdate;
-  Series1.Clear;
-  for i:=0 to ScanRes-1 do begin
-    Series1.AddXY(i,RemState.Robot.Scanner[i]);
-  end;
-  Series1.EndUpdate;
-
-end;
-}
-
 
 // TODO
 // lembrar o estado fechado de janelas
 // Actuator: Electromagnet
-// Things scriptable
-// Sensores sem ser num robot  (???)
 // Zona morta no PID
 // -Passadeiras- (falta controlar a aceleração delas)
 // -Thrusters- + turbulence
@@ -4539,9 +4402,9 @@ end;
 // Optional/configurable walls ??
 // axis turn count for better limits
 
-// Sensores de linha branca  1
+// * Sensores de linha branca  1
 // Sonar 1-n
-// Beacons/landmark  0
+// * Beacons/landmark  0
 // Receptores de beacons  1-nb
 //  digitais
 //  analógicos
@@ -4560,7 +4423,33 @@ end;
 // charts for the spreadsheet
 // multiple spreadsheets
 // Decorations
-// Add force to solid - done for thing
-// canvas
 // spray
-// Sensor.rate
+
+// Solenoid
+// F = 1/2 i^2 -b/(a+bx)^2
+
+//http://www.ngdc.noaa.gov/geomag/magfield.shtml
+//    *  Declination (D) positive east, in degrees and minutes
+//      Annual change (dD) positive east, in minutes per year
+//    * Inclination (I) positive down, in degrees and minutes
+//      Annual change (dI) positive down, in minutes per year
+//    * Horizontal Intensity (H), in nanoTesla
+//      Annual change (dH) in nanoTesla per year
+//    * North Component of H (X), positive north, in nanoTesla
+//      Annual change (dX) in nanoTesla per year
+//    * East Component of H (Y), positive east, in nanoTesla
+//      Annual change (dY) in nanoTesla per year
+//    * Vertical Intensity (Z), positive down, in nanoTesla
+//      Annual change (dZ) in nanoTesla per year
+//    * Total Field (F), in nanoTesla
+//      Annual change (dF) in nanoTesla per year
+
+//http://www.ngdc.noaa.gov/geomagmodels/struts/calcPointIGRF
+//Results for date: 2010.419189453125
+//Declination = -3.392° changing by 0.133 °/year
+//Inclination = 56.015° changing by -0.027 °/year
+//X component = 24,988.42 changing by 27.9 nT/year
+//Y component = -1,481.19 changing by 56.49 nT/year
+//Z component = 37,132.58 changing by -1.64 nT/year
+//Horizontal Intensity = 25,032.28 changing by 24.58 nT/year
+//Total Intensity = 44,782.18 changing by 12.38 nT/year

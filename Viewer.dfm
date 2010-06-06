@@ -678,16 +678,23 @@ object FViewer: TFViewer
       Alignment = caTop
     end
     object GLCube1: TGLCube
+      Material.Texture.TextureMode = tmModulate
+      Material.Texture.TextureWrap = twNone
+      Material.Texture.FilteringQuality = tfAnisotropic
+      Material.Texture.MappingTCoordinates.Coordinates = {00000000000000000000803F00000000}
+      Material.Texture.Disabled = False
+      Material.FaceCulling = fcNoCull
       Material.TextureEx = <
         item
           Texture.MappingMode = tmmObjectLinear
           Texture.MappingTCoordinates.Coordinates = {00000000000000000000803F00000000}
-          Texture.Disabled = False
           TextureIndex = 0
           TextureOffset.Coordinates = {0000003F0000003F0000000000000000}
         end>
       Position.Coordinates = {00000000000000000000003F0000803F}
       Visible = False
+      Parts = [cpBottom]
+      CubeSize = {0000803F6F12833A0000803F}
     end
     object GLFreeForm1: TGLFreeForm
     end
@@ -698,6 +705,28 @@ object FViewer: TFViewer
       Visible = False
       BottomRadius = 0.500000000000000000
       Height = 1.000000000000000000
+    end
+    object GLPlaneTex: TGLPlane
+      Material.FrontProperties.Ambient.Color = {0000003F0000003F0000003F0000803F}
+      Material.FrontProperties.Diffuse.Color = {0000803F0000803F0000803F0000803F}
+      Material.Texture.TextureMode = tmModulate
+      Material.Texture.Disabled = False
+      Direction.Coordinates = {00000000000080BF0000000000000000}
+      Position.Coordinates = {00000000000000000000003F0000803F}
+      Up.Coordinates = {00000000000000000000803F00000000}
+      Visible = False
+      Height = 1.000000000000000000
+      Width = 1.000000000000000000
+      NoZWrite = False
+    end
+    object GLPlane1: TGLPlane
+      Material.Texture.Disabled = False
+      Position.Coordinates = {0000000000000000CDCC4C3E0000803F}
+      Up.Coordinates = {000000000000803F0000008000000000}
+      Visible = False
+      Height = 1.000000000000000000
+      Width = 1.000000000000000000
+      NoZWrite = False
     end
     object GLCamera: TGLCamera
       DepthOfView = 1000000000.000000000000000000

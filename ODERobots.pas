@@ -72,7 +72,8 @@ type
   TSolid = class
     Body: PdxBody;
     Geom : PdxGeom;
-    GLObj, AltGLObj, ShadowGlObj: TGLSceneObject;
+    GLObj, AltGLObj, ShadowGlObj, CanvasGLObj: TGLSceneObject;
+    PaintBitmap: TBitmap;
     kind: TSolidKind;
     MatterProperties: TMatterProperties;
     BeltSpeed: double;
@@ -299,6 +300,7 @@ type
   public
     constructor Create;
     destructor Destroy; override;
+    procedure Place(posX, posY, posZ, angX, angY, AngZ: double; AbsoluteCoords: boolean = false);
   end;
 
   TSensorRayList = class(TList)
@@ -324,7 +326,7 @@ type
     active: boolean;
   end;
 
-  TSensorKind = (skGeneric, skIR, skIRSharp, skSonar, skCapacitive, skInductive, skBeacon, skFloorLine);
+  TSensorKind = (skGeneric, skIR, skIRSharp, skSonar, skCapacitive, skInductive, skBeacon, skFloorLine, skLAserRanger2D);
 
   TSensor = class
     ID: string;
@@ -357,7 +359,8 @@ type
   end;
 
 const
-  SensorKindStrings: array[TSensorKind] of string = ('Generic', 'IR', 'IRSharp', 'Sonar', 'Capacitive', 'Inductive', 'Beacon', 'FloorLine');
+  SensorKindStrings: array[TSensorKind] of string =
+  ('Generic', 'IR', 'IRSharp', 'Sonar', 'Capacitive', 'Inductive', 'Beacon', 'FloorLine', 'LAserRanger2D');
 
 type
   TSensorList = class(TList)
@@ -421,9 +424,24 @@ type
     procedure ClearAll;
   end;
 
+procedure RFromZYXRotRel(var R: TdMatrix3; angX, angY, angZ: TDreal);
+
 implementation
 
 uses Utils;
+
+
+procedure RFromZYXRotRel(var R: TdMatrix3; angX, angY, angZ: TDreal);
+var Rx, Ry, Rz, Ryx: TdMatrix3;
+begin
+  dRFromAxisAndAngle(Rz, 0, 0, 1, angZ);
+  dRFromAxisAndAngle(Ry, 0, 1, 0, angY);
+  dRFromAxisAndAngle(Rx, 1, 0, 0, angX);
+
+  dMULTIPLY0_333(Ryx, Ry, Rx);
+  dMULTIPLY0_333(R, Rz, Ryx);
+end;
+
 
 { TRobot }
 
@@ -639,7 +657,7 @@ end;
 
 destructor TSolid.Destroy;
 begin
-
+  if assigned(PaintBitmap) then PaintBitmap.Free;
   inherited;
 end;
 
@@ -1279,18 +1297,15 @@ end;}
 procedure TSensor.SetColor(R, G, B: single; A: single = -1);
 begin
   if GLObj = nil then exit;
-//  with GLObj as TGLCylinder do begin
+
   if A = -1 then A := GLObj.Material.FrontProperties.Diffuse.Alpha;
   GLObj.Material.FrontProperties.Diffuse.SetColor(R, G, B, A);
-//  end;
 end;
 
 
 procedure TSensor.PreProcess;
 var j: integer;
 begin
-  //Measures[0].value := 0;
-  //Measures[0].has_measure := false;
   for j := 0 to Rays.Count - 1 do begin
     Rays[j].Measure.dist := -1;
     Rays[j].Measure.has_measure := false;
@@ -1325,35 +1340,6 @@ begin
       end;
     end;
 
-    skInductive: begin
-      with Measures[0] do begin
-        dist := Rays[0].Measure.dist;
-        has_measure := true;
-        HitSolid := Rays[0].Measure.HitSolid;
-        value := 0;
-        if (Rays[0].Measure.has_measure) and
-           (HitSolid <> nil) and
-           (smMetallic in HitSolid.MatterProperties) then begin
-          value := 1
-        end;
-      end;
-    end;
-
-    skFloorLine: begin
-      with Measures[0] do begin
-        dist := Rays[0].Measure.dist;
-        has_measure := true;
-        HitSolid := Rays[0].Measure.HitSolid;
-        value := 0;
-        if (Rays[0].Measure.has_measure) and
-           (HitSolid <> nil) and
-           (HitSolid.kind = skFloor) then begin
-          if InsideGLPolygonsTaged(Rays[0].Measure.pos[0], Rays[0].Measure.pos[1], HitSolid.AltGLObj) then
-          value := 1
-        end;
-      end;
-    end;
-
   end;}
 end;
 
@@ -1363,7 +1349,6 @@ var n, i, j: integer;
     GLPolygon: TGLPolygon;
 begin
   result := false;
-  //GLFloor := OdeScene.FindChild('GLPlaneFloor', false);
   if GLFloor = nil then exit;
   for n := 0 to GLFloor.Count - 1 do begin
     if not (GLFloor.Children[n] is TGLPolygon) then continue;
@@ -1481,6 +1466,7 @@ begin
     Measures[0].value := Noise.gain * Measures[0].value + v;
   end;
 end;
+
 
 
 { TSensorList }
@@ -1705,6 +1691,27 @@ begin
   Measure.Free;
   if geom <> nil then dGeomDestroy(geom);
   inherited;
+end;
+
+procedure TSensorRay.Place(posX, posY, posZ, angX, angY, AngZ: double;  AbsoluteCoords: boolean);
+var R: TdMatrix3;
+    body: PdxBody;
+begin
+  RFromZYXRotRel(R, angX, angY + pi/2, AngZ);
+  body := dGeomGetBody(Geom);
+  if assigned(body) then begin // if the sensor ray is attached to a body (a robot sensor)
+    if AbsoluteCoords then begin
+      dGeomSetOffsetWorldRotation(Geom, R);
+      dGeomSetOffsetWorldPosition(Geom, posX, posY, posZ);
+    end else begin
+      dGeomSetOffsetRotation(Geom, R);
+      dGeomSetOffsetPosition(Geom, posX, posY, posZ);
+    end;
+  end else begin // if the sensor ray is NOT attached to a body (a world sensor)
+    RFromZYXRotRel(R, angX, angY + pi/2, AngZ);
+    dGeomSetRotation(Geom, R);
+    dGeomSetPosition(Geom, posX, posY, posZ);
+  end;
 end;
 
 { TSensorRayList }

@@ -616,7 +616,7 @@ begin
           MemoDebug.Lines.Add(format('    kp: %g, ki: %g, kd: %g, kf: %g',[Kp, Ki, Kd, Kf]));
         end;
         with Motor do begin
-          MemoDebug.Lines.Add(format('    Ri: %g, Li: %g, K: %g',[Ri, Li, Ki]));
+          MemoDebug.Lines.Add(format('    Ri: %g, Li: %g, K: %g Active: %d',[Ri, Li, Ki, ord(active)]));
           MemoDebug.Lines.Add(format('    Gear: %g, Vmax: %g, Imax: %g',[GearRatio, Vmax, Imax]));
         end;
       end;

@@ -2,7 +2,7 @@ unit ODERobotsPublished;
 
 interface
 
-uses ODERobots, PathFinder, dynmatrix;
+uses Graphics, Types, ODERobots, PathFinder, dynmatrix;
 
 type
   TAxisPoint = record
@@ -107,6 +107,10 @@ function GetSolidVz(R, i: integer): double;
 
 function GetSolidColor(R, i: integer): TRGBAColor;
 procedure SetSolidColor(R, I: integer; Red, Green, Blue: byte);
+function GetSolidCanvas(R, i: integer): TCanvas;
+procedure SolidCanvasClear(R, i: integer);
+//function GetSolidBitmap(R, i: integer): TBitmap;
+//procedure SolidCanvasDrawText(R, i: integer; x, y: integer; txt: string);
 
 procedure SetSolidForce(R, i: integer; Fx, Fy, Fz: double);
 
@@ -204,6 +208,7 @@ procedure SetTrailColor(T: integer; Red, Green, Blue: byte);
 procedure AddTrailNode(T: integer; x, y, z: double);
 procedure DelTrailNode(T: integer);
 procedure ClearTrail(T: integer);
+
 
 
 
@@ -791,6 +796,28 @@ begin
   WorldODE.Robots[R].Solids[i].SetColor(Red/255, Green/255, Blue/255);
 end;
 
+function GetSolidCanvas(R, i: integer): TCanvas;
+begin
+  result := WorldODE.Robots[R].Solids[i].PaintBitmap.Canvas;
+end;
+
+{function GetSolidBitmap(R, i: integer): TBitmap;
+begin
+  result := WorldODE.Robots[R].Solids[i].PaintBitmap;
+end;
+
+
+procedure SolidCanvasDrawText(R, i: integer; x, y: integer; txt: string);
+begin
+  WorldODE.Robots[R].Solids[i].PaintBitmap.Canvas.TextOut(x, y, txt);
+end;}
+
+procedure SolidCanvasClear(R, i: integer);
+begin
+  with WorldODE.Robots[R].Solids[i].PaintBitmap do begin
+    Canvas.FillRect(Rect(0,0, Width, Height) );
+  end;
+end;
 
 procedure SetSolidForce(R, i: integer; Fx, Fy, Fz: double);
 begin
