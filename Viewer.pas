@@ -291,12 +291,19 @@ begin
     if dGeomGetClass(o1) = dRayClass then begin
       if (o1.data <> nil) then begin
         with TSensorRay(o1.data).Measure do begin
-          pos := contact[0].geom.pos;
+          {pos := contact[0].geom.pos;
           normal := contact[0].geom.normal;
           dist := contact[0].geom.depth;
           //measure := min(measure, contact[0].geom.depth);
           has_measure:= true;
-          HitSolid := o2.data;
+          HitSolid := o2.data;}
+          if (dist < 0) or (contact[0].geom.depth < dist) then begin
+            pos := contact[0].geom.pos;
+            normal := contact[0].geom.normal;
+            dist := contact[0].geom.depth;
+            has_measure:= true;
+            HitSolid := o2.data;
+          end;
         end;
       end;
       //FParams.EditDEbug2.Text := format('%.2f, %.2f %.2f',[contact[0].geom.pos[0], contact[0].geom.pos[1], contact[0].geom.pos[2]]);;
@@ -305,12 +312,19 @@ begin
     if dGeomGetClass(o2) = dRayClass then begin
       if (o2.data <> nil) then begin
         with TSensorRay(o2.data).Measure do begin
-          pos := contact[0].geom.pos;
+          {pos := contact[0].geom.pos;
           normal := contact[0].geom.normal;
           dist := contact[0].geom.depth;
           //measure := min(measure, contact[0].geom.depth);
           has_measure:= true;
-          HitSolid := o1.data;
+          HitSolid := o1.data;}
+          if (dist < 0) or (contact[0].geom.depth < dist) then begin
+            pos := contact[0].geom.pos;
+            normal := contact[0].geom.normal;
+            dist := contact[0].geom.depth;
+            has_measure:= true;
+            HitSolid := o1.data;
+          end;
         end;
       end;
       exit;
@@ -1247,8 +1261,16 @@ begin
             newSolid.PaintBitmap.Width := CanvasWidth;
             newSolid.PaintBitmap.Height := CanvasHeigth;
             newSolid.PaintBitmap.PixelFormat := pf24bit;
+            newSolid.PaintBitmap.Canvas.Brush.Color := clblack;
+            newSolid.PaintBitmap.Canvas.pen.Color := clblack;
             //newSolid.PaintBitmap.Canvas.TextOut(0,0,'Hello World!');
             //newSolid.PaintBitmap.Canvas.Ellipse(0,0,127,127);
+
+            with newSolid do begin
+              PaintBitmapCorner[0] := sizeX/2;
+              PaintBitmapCorner[1] := sizeY/2;
+              PaintBitmapCorner[2] := sizeZ/2;
+            end;
           end;
         end else if XMLSolid.NodeName = 'sphere' then begin
           CreateSolidSphere(newSolid, mass, posX, posY, posZ, radius);
@@ -1956,6 +1978,7 @@ begin
        (sensor.NodeName = 'inductive') or
        (sensor.NodeName = 'floorline') or
        (sensor.NodeName = 'ranger2d') or
+       (sensor.NodeName = 'pentip') or
        (sensor.NodeName = 'beacon') then begin
       // default values
       IDValue := '';
@@ -2036,6 +2059,7 @@ begin
       else if sensor.NodeName = 'inductive' then newSensor.kind := skInductive
       else if sensor.NodeName = 'beacon' then newSensor.kind := skBeacon
       else if sensor.NodeName = 'floorline' then newSensor.kind := skFloorLine
+      else if sensor.NodeName = 'pentip' then newSensor.kind := skPenTip
       else if sensor.NodeName = 'ranger2d' then newSensor.kind := skRanger2D;
 
       //newSensor.Tags.Delimiter := ';';
@@ -2064,7 +2088,7 @@ begin
         MotherGLObj := ODEScene;
       end;
 
-      if newSensor.kind in [skIRSharp, skCapacitive, skInductive, skFloorLine] then begin
+      if newSensor.kind in [skIRSharp, skCapacitive, skInductive, skFloorLine, skPenTip] then begin
         newRay := CreateOneRaySensor(MotherBody, newSensor, SLen);
         newRay.Place(posX, posY, posZ, angX, angY, AngZ, AbsoluteCoords);
         CreateSensorBeamGLObj(newSensor, SLen, SInitialWidth, SFinalWidth);
@@ -3692,7 +3716,6 @@ end;
 
 procedure TFViewer.UpdateGLScene;
 var r, i, n: integer;
-   img: TGLBitmap32;
 begin
     if GLHUDTextObjName.TagFloat > 0 then begin
       GLHUDTextObjName.TagFloat := GLHUDTextObjName.TagFloat - GLCadencer.FixedDeltaTime;
@@ -3709,6 +3732,7 @@ begin
           if Shells[i].GLObj = nil then continue;
           PositionSceneObject(Shells[i].GLObj, Shells[i].Geom);
           if Shells[i].GLObj is TGLCylinder then Shells[i].GLObj.pitch(90);
+          //Shells[i].UpdateGLCanvas;
         end;
         //Sensors
         for i := 0 to Sensors.Count-1 do begin
@@ -3746,14 +3770,16 @@ begin
           if Solids[i].ShadowGlObj <> nil then begin
             PositionSceneObject(Solids[i].ShadowGlObj, Solids[i].Geom);
           end;
-          if Solids[i].CanvasGLObj <> nil then begin
+          Solids[i].UpdateGLCanvas;
+
+          {if Solids[i].CanvasGLObj <> nil then begin
             //Solids[i].PaintBitmap.Canvas.TextOut(0,0,floattostr(WorldODE.physTime));
             //Solids[i].CanvasGLObj.Material.Texture.Image.Invalidate;
             Solids[i].CanvasGLObj.Material.Texture.Image.BeginUpdate;
             img := Solids[i].CanvasGLObj.Material.Texture.Image.GetBitmap32(GL_TEXTURE_2D);
             img.AssignFromBitmap24WithoutRGBSwap(Solids[i].PaintBitmap);
             Solids[i].CanvasGLObj.Material.Texture.Image.endUpdate;
-          end;
+          end;}
         end;
 
         // Axis
@@ -3771,8 +3797,11 @@ begin
     with WorldODE do begin
       for i := 0 to Things.Count-1 do begin
         if Things[i].GLObj = nil then continue;
+
         PositionSceneObject(Things[i].GLObj, Things[i].Geom);
         if Things[i].GLObj is TGLCylinder then Things[i].GLObj.pitch(90);
+
+        Things[i].UpdateGLCanvas;
       end;
       //Sensors
       for i := 0 to Sensors.Count-1 do begin
