@@ -535,8 +535,8 @@ begin
 
   fo.Wnd := handle;
   fo.wFunc := FO_COPY;
-  fo.pFrom := pchar(od + '\..\base\*.*');
-  fo.pTo := pchar(od + '\..\' + s);
+  fo.pFrom := pchar(od + '\..\base\*.*' + #0); //Double Null Terminated
+  fo.pTo := pchar(od + '\..\' + s + #0);
   fo.fFlags := FOF_NOCONFIRMATION or FOF_SILENT;
   fo.hNameMappings := nil;
   fo.lpszProgressTitle := nil;

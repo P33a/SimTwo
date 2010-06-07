@@ -115,6 +115,7 @@ procedure SolidCanvasClear(R, i: integer);
 procedure SetSolidForce(R, i: integer; Fx, Fy, Fz: double);
 
 function GetSensorVal(R, i: integer): double;
+procedure SetSensorColor(R, i: integer; Red, Green, Blue: byte);
 
 function GetThingIndex(ID: string): integer;
 
@@ -773,6 +774,12 @@ function GetSensorVal(R, i: integer): double;
 begin
   result := WorldODE.Robots[r].Sensors[i].measures[0].value;
 end;
+
+procedure SetSensorColor(R, i: integer; Red, Green, Blue: byte);
+begin
+  WorldODE.Robots[R].Sensors[i].SetColor(Red/255, Green/255, Blue/255);
+end;
+
 
 function GetThingColor(T, c: integer): TRGBAColor;
 begin

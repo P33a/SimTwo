@@ -4,8 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, GLScene, GLObjects, GLMisc, GLWin32Viewer, ODEImport,
-  VectorGeometry, GLGeomObjects, ExtCtrls, ComCtrls, GLTexture,
+  Dialogs, GLScene, GLObjects, GLMisc, GLWin32Viewer, ODEImport, OpenGL1x,
+  VectorGeometry, GLGeomObjects, ExtCtrls, ComCtrls, GLTexture, GLGraphics, 
   keyboard, math, remote, Contnrs;
 
 const
@@ -74,6 +74,7 @@ type
     Geom : PdxGeom;
     GLObj, AltGLObj, ShadowGlObj, CanvasGLObj: TGLSceneObject;
     PaintBitmap: TBitmap;
+    PaintBitmapCorner: TdVector3;
     kind: TSolidKind;
     MatterProperties: TMatterProperties;
     BeltSpeed: double;
@@ -104,6 +105,7 @@ type
     procedure SetSize(sizeX, sizeY, sizeZ: double);
     procedure GetSize(out sizeX, sizeY, sizeZ: double);
     procedure SetForce(FX, FY, FZ: double);
+    procedure UpdateGLCanvas;
   end;
 
   TSolidList = class(TList)
@@ -326,7 +328,7 @@ type
     active: boolean;
   end;
 
-  TSensorKind = (skGeneric, skIR, skIRSharp, skSonar, skCapacitive, skInductive, skBeacon, skFloorLine, skRanger2D);
+  TSensorKind = (skGeneric, skIR, skIRSharp, skSonar, skCapacitive, skInductive, skBeacon, skFloorLine, skRanger2D, skPenTip);
 
   TSensor = class
     ID: string;
@@ -356,11 +358,13 @@ type
     procedure PostProcess;
     procedure UpdateMeasures;
     procedure NoiseModel;
+    procedure SetColorRGB(RGB: TColor);
+    function SwapRGB(RGB: TColor): TColor;
   end;
 
 const
   SensorKindStrings: array[TSensorKind] of string =
-  ('Generic', 'IR', 'IRSharp', 'Sonar', 'Capacitive', 'Inductive', 'Beacon', 'FloorLine', 'Ranger2D');
+  ('Generic', 'IR', 'IRSharp', 'Sonar', 'Capacitive', 'Inductive', 'Beacon', 'FloorLine', 'Ranger2D', 'PenTip');
 
 type
   TSensorList = class(TList)
@@ -428,7 +432,7 @@ procedure RFromZYXRotRel(var R: TdMatrix3; angX, angY, angZ: TDreal);
 
 implementation
 
-uses Utils;
+uses Utils, params;
 
 
 procedure RFromZYXRotRel(var R: TdMatrix3; angX, angY, angZ: TDreal);
@@ -883,6 +887,17 @@ begin
   result :=dBodyGetLinearVel(Body)^;
 end;
 
+procedure TSolid.UpdateGLCanvas;
+var img: TGLBitmap32;
+begin
+  if assigned(CanvasGLObj) and assigned(PaintBitmap) then begin
+    CanvasGLObj.Material.Texture.Image.BeginUpdate;
+    img := CanvasGLObj.Material.Texture.Image.GetBitmap32(GL_TEXTURE_2D);
+    img.AssignFromBitmap24WithoutRGBSwap(PaintBitmap);
+    CanvasGLObj.Material.Texture.Image.endUpdate;
+  end;
+end;
+
 { TAxis }
 
 
@@ -1309,6 +1324,7 @@ begin
   for j := 0 to Rays.Count - 1 do begin
     Rays[j].Measure.dist := -1;
     Rays[j].Measure.has_measure := false;
+    Rays[j].Measure.HitSolid := nil;
   end;
 end;
 
@@ -1380,6 +1396,8 @@ end;
 
 
 procedure TSensor.UpdateMeasures;
+var relpos, worldPos: TdVector3;
+    x, y, d: double;
 begin
   case kind of
 
@@ -1434,6 +1452,36 @@ begin
       end;
     end;
 
+    skPenTip: begin
+      with Measures[0] do begin
+        dist := Rays[0].Measure.dist;
+        has_measure := true;
+        HitSolid := Rays[0].Measure.HitSolid;
+        value := 0;
+        if (HitSolid <> nil) then Fparams.EditDebug3.Text := HitSolid.ID else Fparams.EditDebug3.Text := '';
+
+        if (Rays[0].Measure.has_measure) and
+           (HitSolid <> nil) and
+           (assigned(HitSolid.CanvasGLObj)) then begin
+          worldPos := Rays[0].Measure.pos;
+          dBodyGetPosRelPoint(HitSolid.Body, worldPos[0], worldPos[1], worldPos[2], relpos);
+          if abs(relpos[2] - HitSolid.PaintBitmapCorner[2]) < 1e-4 then begin
+            x := (HitSolid.PaintBitmapCorner[0] + relpos[0])/(2*HitSolid.PaintBitmapCorner[0]) * HitSolid.PaintBitmap.Width;
+            y := (HitSolid.PaintBitmapCorner[1] - relpos[1])/(2*HitSolid.PaintBitmapCorner[1]) * HitSolid.PaintBitmap.Height;
+            d := 1;
+            if assigned(GLObj) then begin
+              HitSolid.PaintBitmap.Canvas.Brush.Color := swapRGB(GLObj.Material.FrontProperties.Diffuse.AsWinColor);
+              HitSolid.PaintBitmap.Canvas.pen.Color := swapRGB(GLObj.Material.FrontProperties.Diffuse.AsWinColor);
+              if GLObj is TGLCylinder then
+                d :=  0.5 * TGLCylinder(GLObj).BottomRadius / HitSolid.PaintBitmapCorner[0] * HitSolid.PaintBitmap.Width;
+            end;
+            HitSolid.PaintBitmap.Canvas.Ellipse(rect(round(x-d), round(y-d), round(x+d), round(y+d)));
+          end;
+          value := 1;
+        end;
+      end;
+    end;
+
   end;
 end;
 
@@ -1468,6 +1516,17 @@ begin
 end;
 
 
+
+procedure TSensor.SetColorRGB(RGB: TColor);
+begin
+  if GLObj = nil then exit;
+  GLObj.Material.FrontProperties.Diffuse.AsWinColor := RGB;
+end;
+
+function TSensor.SwapRGB(RGB: TColor): TColor;
+begin
+  result := ((RGB and $FF0000) shr 16)  or (RGB and $00FF00) or ((RGB and $0000FF) shl 16);
+end;
 
 { TSensorList }
 

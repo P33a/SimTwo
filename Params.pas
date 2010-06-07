@@ -469,15 +469,15 @@ begin
       if (dJointGetType(Axes[i].ParentLink.joint) = ord(dJointTypeHinge)) or
          (dJointGetType(Axes[i].ParentLink.joint) = ord(dJointTypeUniversal)) then begin
         theta := radtodeg(Axes[i].GetPos);
-        SGJoints.Cells[2,i+1] := format('%.1f',[radtodeg(Axes[i].ref.theta)]);
+        SGJoints.Cells[2,i+1] := format('%.2f',[radtodeg(Axes[i].ref.theta)]);
       end else if dJointGetType(Axes[i].ParentLink.joint) = ord(dJointTypeSlider) then begin
         theta := Axes[i].GetPos;
-        SGJoints.Cells[2,i+1] := format('%.1f',[Axes[i].ref.theta]);
+        SGJoints.Cells[2,i+1] := format('%.2f',[Axes[i].ref.theta]);
       end;
-      SGJoints.Cells[1,i+1] := format('%.1f',[theta]);
+      SGJoints.Cells[1,i+1] := format('%.2f',[theta]);
 
       if wp_idx >= 0 then
-        SGJoints.Cells[3,i+1] := format('%.1f',[radtodeg(Axes[i].WayPoints[wp_idx].pos)]);
+        SGJoints.Cells[3,i+1] := format('%.2f',[radtodeg(Axes[i].WayPoints[wp_idx].pos)]);
 
       if i+1 = SGJoints.Selection.Top then begin
         EditJointTeta.Text := SGJoints.Cells[1,i+1];
