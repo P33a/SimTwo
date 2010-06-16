@@ -772,7 +772,9 @@ end;
 
 function GetSensorVal(R, i: integer): double;
 begin
-  result := WorldODE.Robots[r].Sensors[i].measures[0].value;
+  result := -1;
+  if WorldODE.Robots[r].Sensors[i].measures[0].has_measure then
+    result := WorldODE.Robots[r].Sensors[i].measures[0].value;
 end;
 
 procedure SetSensorColor(R, i: integer; Red, Green, Blue: byte);

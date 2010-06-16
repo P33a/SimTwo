@@ -1458,18 +1458,18 @@ begin
         has_measure := true;
         HitSolid := Rays[0].Measure.HitSolid;
         value := 0;
-        if (HitSolid <> nil) then Fparams.EditDebug3.Text := HitSolid.ID else Fparams.EditDebug3.Text := '';
+        //if (HitSolid <> nil) then Fparams.EditDebug3.Text := HitSolid.ID else Fparams.EditDebug3.Text := '';
 
         if (Rays[0].Measure.has_measure) and
            (HitSolid <> nil) and
            (assigned(HitSolid.CanvasGLObj)) then begin
           worldPos := Rays[0].Measure.pos;
           dBodyGetPosRelPoint(HitSolid.Body, worldPos[0], worldPos[1], worldPos[2], relpos);
-          if abs(relpos[2] - HitSolid.PaintBitmapCorner[2]) < 1e-4 then begin
+          if abs(relpos[2] - HitSolid.PaintBitmapCorner[2]) < 1e-4 then begin //Test if is the right face
             x := (HitSolid.PaintBitmapCorner[0] + relpos[0])/(2*HitSolid.PaintBitmapCorner[0]) * HitSolid.PaintBitmap.Width;
             y := (HitSolid.PaintBitmapCorner[1] - relpos[1])/(2*HitSolid.PaintBitmapCorner[1]) * HitSolid.PaintBitmap.Height;
             d := 1;
-            if assigned(GLObj) then begin
+            if assigned(GLObj) then begin // Get the color and size from the GLObject
               HitSolid.PaintBitmap.Canvas.Brush.Color := swapRGB(GLObj.Material.FrontProperties.Diffuse.AsWinColor);
               HitSolid.PaintBitmap.Canvas.pen.Color := swapRGB(GLObj.Material.FrontProperties.Diffuse.AsWinColor);
               if GLObj is TGLCylinder then
@@ -1477,7 +1477,7 @@ begin
             end;
             HitSolid.PaintBitmap.Canvas.Ellipse(rect(round(x-d), round(y-d), round(x+d), round(y+d)));
           end;
-          value := 1;
+          value := 1; // Can be used as an on/off presure sensor
         end;
       end;
     end;
