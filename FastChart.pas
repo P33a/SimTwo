@@ -43,6 +43,8 @@ type
     procedure BSaveLogClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure BClearClick(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   private
     procedure FillTreeView(tree: TTreeView);
     procedure FillRobotTreeView(r: integer; root: TTreeNode; tree: TTreeView);
@@ -438,6 +440,14 @@ end;
 procedure TFChart.BClearClick(Sender: TObject);
 begin
   RemoveAllSeries(TreeView);
+end;
+
+procedure TFChart.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if (ssctrl in Shift) then begin
+    if (ssShift in Shift) and (key = ord('T')) then CBFreeze.Checked := not CBFreeze.Checked;
+  end;
 end;
 
 end.
