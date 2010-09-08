@@ -25,7 +25,7 @@ object FParams: TFParams
     Top = 0
     Width = 273
     Height = 621
-    ActivePage = TabControl
+    ActivePage = TabGraphics
     Anchors = [akLeft, akTop, akBottom]
     TabOrder = 0
     object TabControl: TTabSheet
@@ -154,7 +154,7 @@ object FParams: TFParams
         Top = 168
         Width = 261
         Height = 425
-        ActivePage = TabAxis
+        ActivePage = TabGlobal
         Anchors = [akLeft, akTop, akBottom]
         TabOrder = 4
         object TabGlobal: TTabSheet
@@ -1106,33 +1106,33 @@ object FParams: TFParams
           50)
       end
       object EditGridX: TEdit
-        Left = 48
+        Left = 76
         Top = 360
-        Width = 70
+        Width = 60
         Height = 21
         TabOrder = 15
         OnKeyPress = EditGridKeyPress
       end
       object EditGridY: TEdit
-        Left = 119
+        Left = 139
         Top = 360
-        Width = 70
+        Width = 60
         Height = 21
         TabOrder = 16
         OnKeyPress = EditGridKeyPress
       end
       object EditGridZ: TEdit
-        Left = 190
+        Left = 202
         Top = 360
-        Width = 70
+        Width = 60
         Height = 21
         TabOrder = 17
         OnKeyPress = EditGridKeyPress
       end
       object BSGConfSet: TButton
-        Left = 0
+        Left = 38
         Top = 360
-        Width = 40
+        Width = 33
         Height = 21
         Caption = 'Set'
         TabOrder = 18
@@ -1186,7 +1186,7 @@ object FParams: TFParams
       object BSetCamPars: TButton
         Left = 232
         Top = 306
-        Width = 32
+        Width = 33
         Height = 43
         Caption = 'Set'
         TabOrder = 25
@@ -1286,6 +1286,15 @@ object FParams: TFParams
           'None')
         TabOrder = 35
         OnClick = RGSensorGLClick
+      end
+      object BSGConfGet: TButton
+        Left = 1
+        Top = 360
+        Width = 33
+        Height = 21
+        Caption = 'Get'
+        TabOrder = 36
+        OnClick = BSGConfGetClick
       end
     end
     object TabDebug: TTabSheet
@@ -1666,7 +1675,7 @@ object FParams: TFParams
     Bindings = <>
     DefaultPort = 9800
     OnUDPRead = UDPServerUDPRead
-    Left = 240
+    Left = 244
   end
   object FormStorage: TFormStorage
     IniSection = 'Config'
@@ -1730,7 +1739,7 @@ object FParams: TFParams
     FlowControl.ControlRTS = rtsDisable
     FlowControl.XonXoffOut = False
     FlowControl.XonXoffIn = False
-    Left = 208
+    Left = 220
   end
   object UDPGeneric: TIdUDPServer
     BroadcastEnabled = True
