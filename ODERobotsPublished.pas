@@ -36,6 +36,16 @@ type
     ZeroPos: double;
   end;
 
+  TMotorPars = record
+    Ri: double;
+    Li: double;
+    Ki: double;
+    Vmax: double;
+    Imax: double;
+    GearRatio: double;
+    simple: boolean;
+  end;
+
   TMotorControllerPars = record
     Ki: double;
     Kd: double;
@@ -72,6 +82,7 @@ function GetRobotCenterOfMass(R: integer): TPoint3D;
 
 function GetSolidIndex(R: integer; ID: string): integer;
 
+procedure SetSolidMass(R, i: integer; nmass: double);
 function GetSolidMass(R, i: integer): double;
 function GetSolidCenterOfMass(R, i: integer): TPoint3D;
 
@@ -154,6 +165,9 @@ function GetAxisSpeedRef(R, i: integer): double;
 
 function GetAxisEnergy(R, i: integer): double;
 procedure ResetAxisEnergy(R, i: integer);
+
+procedure SetMotorPars(R, i: integer; aMotorPars: TMotorPars);
+function GetMotorPars(R, i: integer): TMotorPars;
 
 procedure SetMotorControllerPars(R, i: integer; nKi, nKd, nKp, nKf: double);
 function GetMotorControllerPars(R, i: integer): TMotorControllerPars;
@@ -488,15 +502,27 @@ begin
 end;
 
 
+procedure SetSolidMass(R, i: integer; nmass: double);
+var Bmass: TdMass;
+begin
+  with WorldODE.Robots[R].Solids[i] do begin
+    if Body = nil then exit;
+    dBodygetMass(Body, Bmass);
+    Bmass.mass := nmass;
+    dBodySetMass(Body, @Bmass);
+  end;
+end;
+
+
 function GetSolidMass(R, i: integer): double;
-var mass: TdMass;
+var Bmass: TdMass;
 begin
   result := 0;
 
   with WorldODE.Robots[R].Solids[i] do begin
     if Body = nil then exit;
-    dBodyGetMass(Body, mass);
-    Result := mass.mass;
+    dBodyGetMass(Body, Bmass);
+    Result := Bmass.mass;
   end;
 end;
 
@@ -978,6 +1004,33 @@ end;
 procedure SetBeltSpeed(R, i: integer; nSpeed: double);
 begin
   WorldODE.Robots[r].Solids[i].BeltSpeed := nSpeed;
+end;
+
+
+procedure SetMotorPars(R, i: integer; aMotorPars: TMotorPars);
+begin
+  with WorldODE.Robots[r].Axes[i].Motor do begin
+    Ri := aMotorPars.Ri;
+    Li := aMotorPars.Li;
+    Ki := aMotorPars.Ki;
+    Vmax := aMotorPars.Vmax;
+    Imax := aMotorPars.Imax;
+    GearRatio := aMotorPars.GearRatio;
+    simple := aMotorPars.simple;
+  end;
+end;
+
+function GetMotorPars(R, i: integer): TMotorPars;
+begin
+  with WorldODE.Robots[r].Axes[i].Motor do begin
+    result.Ri := Ri;
+    result.Li := Li;
+    result.Ki := Ki;
+    result.Vmax := Vmax;
+    result.Imax := Imax;
+    result.GearRatio := GearRatio;
+    result.simple := simple;
+  end;
 end;
 
 
