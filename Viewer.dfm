@@ -10227,22 +10227,27 @@ object FViewer: TFViewer
     Top = 152
     object MenuConfig: TMenuItem
       Caption = '&Config'
+      ShortCut = 16455
       OnClick = MenuConfigClick
     end
     object MenuChart: TMenuItem
       Caption = 'Char&t'
+      ShortCut = 16468
       OnClick = MenuChartClick
     end
     object MenuEditor: TMenuItem
       Caption = '&Editor'
+      ShortCut = 16453
       OnClick = MenuEditorClick
     end
     object MenuScene: TMenuItem
       Caption = '&Scene'
+      ShortCut = 16467
       OnClick = MenuSceneClick
     end
     object MenuSheets: TMenuItem
       Caption = 'S&heet'
+      ShortCut = 16456
       OnClick = MenuSheetsClick
     end
     object MenuSnapshot: TMenuItem
@@ -10252,7 +10257,7 @@ object FViewer: TFViewer
     end
     object MenuChangeScene: TMenuItem
       Caption = 'Chan&ge Scene'
-      ShortCut = 16455
+      ShortCut = 16462
       OnClick = MenuChangeSceneClick
     end
     object N1: TMenuItem

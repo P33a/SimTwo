@@ -1123,6 +1123,9 @@ var XMLSolid, prop: IXMLNode;
     MatterProps: TMatterProperties;
     hasCanvas: boolean;
     CanvasWidth, CanvasHeigth: integer;
+    MotherSolidId: string;
+    SolidIdx: integer;
+    NewPos, ActPos: TdVector3;
 begin
   if root = nil then exit;
 
@@ -1153,8 +1156,12 @@ begin
       Surf.bounce := 0; Surf.bounce_vel := 0;
       hasCanvas := false;
       CanvasWidth := 128; CanvasHeigth := 128;
+      MotherSolidId := '';
 
       while prop <> nil do begin
+        if prop.NodeName = 'solid' then begin
+          MotherSolidId := GetNodeAttrStr(prop, 'id', MotherSolidId);
+        end;
         if prop.NodeName = 'canvas' then begin
           hasCanvas := true;
           CanvasWidth := round(GetNodeAttrRealParse(prop, 'width', CanvasWidth, Parser));
@@ -1359,8 +1366,21 @@ begin
           newSolid.ParSurface.bounce := Surf.bounce;
           newSolid.ParSurface.bounce_vel := Surf.bounce_vel;
         end;
+
         RFromZYXRotRel(R, angX, angY, AngZ);
         dBodySetRotation(newSolid.Body, R);
+
+        SolidIdx := SolidList.IndexFromID(MotherSolidId);
+        if SolidIdx <> -1 then begin // If the position is relative we have to add the parent body position/rotation
+          //Rotation
+          dMULTIPLY0_333(R, dBodyGetRotation(SolidList[SolidIdx].Body)^, dBodyGetRotation(newSolid.Body)^);
+          dBodySetRotation(newSolid.Body, R);
+
+          //Position
+          ActPos := dBodyGetPosition(newSolid.Body)^;
+          dBodyGetRelPointPos(SolidList[SolidIdx].Body, ActPos[0], ActPos[1], ActPos[2], NewPos); //To rotate with the parent body
+          dBodySetPosition(newSolid.Body, NewPos[0], NewPos[1], NewPos[2]);
+        end;
 
         newSolid.SetZeroState();
         newSolid.SetColor(colorR, colorG, colorB);
@@ -1417,6 +1437,9 @@ var JointNode, prop: IXMLNode;
     Motor2: TMotor;
     descr: string;
     AxisCanWrap, AxisCanWrap2: boolean;
+    MotherSolidId: string;
+    SolidIdx: integer;
+    NewPos, ActPos: TdVector3;
 begin
   if root = nil then exit;
 
@@ -1490,8 +1513,12 @@ begin
       Friction2 := DefFriction;
       Spring := DefSpring;
       Spring2 := DefSpring;
+      MotherSolidId := '';
 
       while prop <> nil do begin
+        if prop.NodeName = 'solid' then begin
+          MotherSolidId := GetNodeAttrStr(prop, 'id', MotherSolidId);
+        end;
         if prop.NodeName = 'pos' then begin
           posX := GetNodeAttrRealParse(prop, 'x', posX, Parser);
           posY := GetNodeAttrRealParse(prop, 'y', posY, Parser);
@@ -1520,6 +1547,9 @@ begin
         if prop.NodeName = 'connect' then begin
           LinkBody1 := GetNodeAttrStr(prop, 'B1', LinkBody1);
           LinkBody2 := GetNodeAttrStr(prop, 'B2', LinkBody2);
+
+          LinkBody1 := GetNodeAttrStr(prop, 'S1', LinkBody1); //Alternate sintax
+          LinkBody2 := GetNodeAttrStr(prop, 'S2', LinkBody2);
         end;
         //<draw radius='0.01' height='0.1' rgb24='8F0000'/>
         if prop.NodeName = 'draw' then begin
@@ -1574,11 +1604,12 @@ begin
             if Robot.Solids[i].ID = LinkBody2 then SolidIndex2 := i;
           end;
 
-          // ID = '0' or 'world' mean the world;
+          // ID = '0' or 'world' means: the world;
           if LinkBody1 = 'world' then LinkBody1 := '0';
           if LinkBody2 = 'world' then LinkBody2 := '0';
           if (((SolidIndex1 <> -1) or (LinkBody1 = '0')) and (SolidIndex2 <> -1)) or
              (((SolidIndex2 <> -1) or (LinkBody2 = '0')) and (SolidIndex1 <> -1)) then begin
+
             if LinkBody1 = '0' then begin // It only works when the SECOND body is the Environment
               Solid1 := Robot.Solids[SolidIndex2];
               Solid2 := Environment;
@@ -1591,6 +1622,22 @@ begin
             end;
             newLink := TSolidLink.Create;
             Robot.Links.Add(newLink);
+
+            SolidIdx := Robot.Solids.IndexFromID(MotherSolidId);
+            if SolidIdx <> -1 then begin // If the position is relative we have to add the parent body position/rotation
+              //First the position
+              dBodyGetRelPointPos(Robot.Solids[SolidIdx].Body, posX, posY, posZ, NewPos); //To rotate with the parent body
+              posX :=  NewPos[0];
+              posY :=  NewPos[1];
+              posZ :=  NewPos[2];
+
+              //Then the rotation
+              dBodyGetRelPointPos(Robot.Solids[SolidIdx].Body, axisX, axisY, axisZ, NewPos); //To rotate with the parent body
+              dBodyGetRelPointPos(Robot.Solids[SolidIdx].Body, 0, 0, 0, ActPos); //Rotated origin
+              axisX :=  NewPos[0] - ActPos[0];
+              axisY :=  NewPos[1] - ActPos[1];
+              axisZ :=  NewPos[2] - ActPos[2];
+            end;
 
             if LinkType ='Hinge' then begin
               CreateHingeJoint(newLink, Solid1, Solid2, posX, posY, posZ, axisX,axisY,axisZ);
@@ -1616,7 +1663,14 @@ begin
             end;
 
             if LinkType ='Universal' then begin
-              CreateUniversalJoint(newLink, Solid1, Solid2, posX, posY, posZ, axisX,axisY,axisZ, axis2X,axis2Y,axis2Z);
+              if SolidIdx <> -1 then begin // If the position is relative we have to rotate the second axis also
+                dBodyGetRelPointPos(Robot.Solids[SolidIdx].Body, axis2X, axis2Y, axis2Z, NewPos); //To rotate with the parent body
+                dBodyGetRelPointPos(Robot.Solids[SolidIdx].Body, 0, 0, 0, ActPos); //Rotated origin
+                axis2X :=  NewPos[0] - ActPos[0];
+                axis2Y :=  NewPos[1] - ActPos[1];
+                axis2Z :=  NewPos[2] - ActPos[2];
+              end;
+              CreateUniversalJoint(newLink, Solid1, Solid2, posX, posY, posZ, axisX, axisY, axisZ, axis2X, axis2Y, axis2Z);
               SetUniversalLimits(newLink, LimitMin, LimitMax, Limit2Min, Limit2Max);
 
               if Friction.Fc > 0 then begin
@@ -4408,12 +4462,19 @@ procedure TFViewer.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
   if (ssctrl in Shift) then begin
+    if (key = ord('G')) then MenuConfig.Click;
+    if (key = ord('T')) then MenuChart.Click;
+    if (ssShift in Shift) and (key = ord('T')) then FChart.CBFreeze.Checked := not FChart.CBFreeze.Checked;
+    if (key = ord('E')) then MenuEditor.Click;
+    if (key = ord('S')) then MenuScene.Click;
+    if (key = ord('H')) then MenuSheets.Click;
     if (key = ord('I')) then MenuSnapshot.Click;
-    if (key = ord('G')) then MenuChangeScene.Click;
+    if (key = ord('N')) then MenuChangeScene.Click;
   end;
 end;
 
 procedure TFViewer.MenuChangeSceneClick(Sender: TObject);
+//var t: Tmemorystream
 begin
   FSceneEdit.MenuChange.Click;
 end;
