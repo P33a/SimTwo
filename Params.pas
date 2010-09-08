@@ -7,7 +7,7 @@ uses
   Dialogs, StdCtrls, ComCtrls, ExtCtrls, GLWin32Viewer, GLcontext, Math,
   IdBaseComponent, IdComponent, IdUDPBase, IdUDPServer, IdSocketHandle, ODERobots, OdeImport,
   rxPlacemnt, Grids, GLCadencer, CPort, ShellAPI, Sockets, GLShadowVolume, GLScene,
-  CheckLst, Buttons;
+  CheckLst, Buttons, VectorTypes, VectorGeometry;
 
 type
   TFParams = class(TForm)
@@ -206,6 +206,7 @@ type
     BitBtnRemoveTags: TBitBtn;
     BitBtnAddAll: TBitBtn;
     RGSensorGL: TRadioGroup;
+    BSGConfGet: TButton;
     procedure CBShadowsClick(Sender: TObject);
     procedure CBVsyncClick(Sender: TObject);
     procedure BSetFPSClick(Sender: TObject);
@@ -259,13 +260,14 @@ type
     procedure BitBtnRemoveTagsClick(Sender: TObject);
     procedure BitBtnAddAllClick(Sender: TObject);
     procedure RGSensorGLClick(Sender: TObject);
+    procedure BSGConfGetClick(Sender: TObject);
   private
     procedure FillEditArray(ProtoName: string;
       var EditArray: array of TEdit);
     procedure SGConfRowToVar(SGRow: longword);
     procedure VarToSGConfRow(SGRow: longword);
     procedure FillSGConf;
-    procedure FillSGConfRow(var SGRow: longword; varname: string);
+    procedure FillSGConfRow(varname: string);
     { Private declarations }
   public
     EditsU, EditsI, EditsOdo : array[0..3] of TEdit;
@@ -548,9 +550,8 @@ begin
   try
     if FileExists('params.cfg') then begin
       LoadGridFromfile(SGConf, 'params.cfg');
-    end else begin;
-      FillSGConf;
     end;
+    FillSGConf;
   except
     on E: Exception do
     Showmessage(E.Message);
@@ -833,25 +834,31 @@ begin
 end;
 
 
-procedure TFParams.FillSGConfRow(var SGRow: longword; varname: string);
+procedure TFParams.FillSGConfRow(varname: string);
+var i: integer;
 begin
-  SGConf.Cells[0, SGRow] := varname;
-  VarToSGConfRow(SGRow);
-  inc(SGRow);
+  for i := 0 to SGConf.RowCount -1 do begin
+    if SGConf.Cells[0, i] = varname then exit;
+    if SGConf.Cells[0, i] = '' then begin
+      SGConf.Cells[0, i] := varname;
+      VarToSGConfRow(i);
+      break;
+    end;
+  end;
 end;
 
 procedure TFParams.FillSGConf;
-var SGRow: longword;
 begin
-  SGRow := 1;
-  FillSGConfRow(SGRow, 'Camera.Position');
-  FillSGConfRow(SGRow, 'Light.Position');
-  FillSGConfRow(SGRow, 'Light.Attenuation');
+  FillSGConfRow('Camera.Position');
+  FillSGConfRow('Light.Position');
+  FillSGConfRow('Light.Attenuation');
+  FillSGConfRow('Floor.Ambient.Color');
 end;
 
 
 procedure TFParams.SGConfRowToVar(SGRow: longword);
 var varname: string;
+    v: TVector;
 begin
   varname := SGConf.Cells[0, SGRow];
   if varname = 'Camera.Position' then begin
@@ -860,6 +867,11 @@ begin
     FViewer.GLLightSource.Position.SetPoint(GetVectorFromGrid(SGConf, 'Light.Position', FViewer.GLLightSource.Position.AsAffineVector));
   end else if varname = 'Light.Attenuation' then begin
     FViewer.GLLightSource.ConstAttenuation := GetFloatFromGrid(SGConf, 'Light.Attenuation', 1, FViewer.GLLightSource.ConstAttenuation);
+  end else if varname = 'Floor.Ambient.Color' then begin                                     //FViewer.GLPlaneFloor.Material.FrontProperties.Ambient.Color
+    SetVector(v,
+              TAffineVector(GetVectorFromGrid(SGConf, 'Floor.Ambient.Color', AffineVectorMake(FViewer.GLPlaneFloor.Material.FrontProperties.Ambient.Color))),
+              1.0);
+    FViewer.GLPlaneFloor.Material.FrontProperties.Ambient.Color := v;
   end;
 end;
 
@@ -873,6 +885,8 @@ begin
     WriteVectorToGrid(SGConf, 'Light.Position', FViewer.GLLightSource.Position.AsAffineVector);
   end else if varname = 'Light.Attenuation' then begin
     WriteFloatToGrid(SGConf, 'Light.Attenuation', 1, FViewer.GLLightSource.ConstAttenuation);
+  end else if varname = 'Floor.Ambient.Color' then begin
+    WriteVectorToGrid(SGConf, 'Floor.Ambient.Color', AffineVectorMake(FViewer.GLPlaneFloor.Material.FrontProperties.Ambient.Color));
   end;
 end;
 
@@ -888,9 +902,10 @@ end;
 procedure TFParams.SGConfDblClick(Sender: TObject);
 begin
 //  VarToSGConfRow(SGConf.Row);
-  EditGridX.Text := SGConf.Cells[1, SGConf.Row];
-  EditGridY.Text := SGConf.Cells[2, SGConf.Row];
-  EditGridZ.Text := SGConf.Cells[3, SGConf.Row];
+  BSGConfGetClick(Sender);
+//  EditGridX.Text := SGConf.Cells[1, SGConf.Row];
+//  EditGridY.Text := SGConf.Cells[2, SGConf.Row];
+//  EditGridZ.Text := SGConf.Cells[3, SGConf.Row];
 end;
 
 procedure TFParams.FormDestroy(Sender: TObject);
@@ -1153,6 +1168,13 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TFParams.BSGConfGetClick(Sender: TObject);
+begin
+  EditGridX.Text := SGConf.Cells[1, SGConf.Row];
+  EditGridY.Text := SGConf.Cells[2, SGConf.Row];
+  EditGridZ.Text := SGConf.Cells[3, SGConf.Row];
 end;
 
 end.
