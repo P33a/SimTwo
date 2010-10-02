@@ -3428,7 +3428,6 @@ begin
   dJointGroupEmpty (contactgroup);
 end;
 
-
 procedure TFViewer.FormCreate(Sender: TObject);
 var s, fl: string;
     Slist: TStringList;

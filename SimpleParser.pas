@@ -30,8 +30,9 @@ type
     LastError: string;
     Action:TSimpleAction;
 
-    Stack, Consts: array[0..maxDoubleStack-1] of double;   // TODO: change to dynamic array
-    StackIndex{, ConstsCount}: integer;
+    //Stack, Consts: array[0..maxDoubleStack-1] of double;   // TODO: change to dynamic array
+    Stack, Consts: array of double;   // TODO: change to dynamic array
+    StackIndex: integer;
 
     HashFuncs, HashVars: THash256;
     HashFuncsColisions: integer;
@@ -95,7 +96,10 @@ function BuildHashTable(const SList: TStrings; var HashTable: THash256): integer
 
 procedure TSimpleParser.Push(v: double);
 begin
-  if StackIndex >= maxDoubleStack then exit;
+  if StackIndex >= length(Stack) then begin
+    SetLength(Stack, 2 * length(Stack));
+    //exit;
+  end;
   Stack[StackIndex]:=v;
   inc(StackIndex);
 end;
@@ -126,17 +130,15 @@ begin
   idx := VarsList.IndexOf(uppercase(ConstName));
   if idx = -1 then begin
     ConstsCount := VarsList.Count;
-    if ConstsCount >=  maxDoubleStack then exit; //BAaaaad...
+    if ConstsCount >=  length(consts) then begin //exit; //BAaaaad...
+      SetLength(consts, 2 * length(consts));
+    end;
     consts[ConstsCount] := value;
-    //inc(ConstsCount);
 
     VarsList.AddObject(uppercase(ConstName), Tobject(@consts[ConstsCount]));
   end else begin
-    //VarsList.Strings[idx] :=
-    //VarsList.Objects[idx] :=
     consts[idx] := value;
   end;
-//  BuildHashTable(VarsList,HashVars);
 end;
 
 
@@ -858,6 +860,11 @@ begin
   result:=Power(v[0], v[1]);
 end;
 
+function PaHypot(const v: array of double): double;
+begin
+  result:=Hypot(v[0], v[1]);
+end;
+
 function PaExp(const v: array of double): double;
 begin
   result:=exp(v[0]);
@@ -872,6 +879,12 @@ function PaLn(const v: array of double): double;
 begin
   result:=ln(v[0]);
 end;
+
+function PaLog10(const v: array of double): double;
+begin
+  result:=log10(v[0]);
+end;
+
 
 function PaSign(const v: array of double): double;
 begin
@@ -897,12 +910,17 @@ constructor TSimpleParser.Create;
 begin
   VarsList := TStringList.create;
   FuncsList := TStringList.create;
+
+  SetLength(Stack, maxDoubleStack);
+  SetLength(Consts, maxDoubleStack);
+
   RegisterFunction('pi', PaPi, 0);
   RegisterFunction('e', PaE, 0);
 
   RegisterFunction('sqrt', PaSqrt, 1);
   RegisterFunction('sqr', PaSqr, 1);
   RegisterFunction('pow', PaPow, 2);
+  RegisterFunction('dist2d', PaHypot, 2);
 
   RegisterFunction('sin', PaSin, 1);
   RegisterFunction('cos', PaCos, 1);
@@ -929,11 +947,10 @@ begin
   RegisterFunction('frac', PaFrac, 1);
 
   RegisterFunction('ln', PaLn, 1);
-
+  RegisterFunction('log10', PaLog10, 1);
+// RoundTo
 
   HashFuncsColisions := BuildHashTable(FuncsList, HashFuncs);
-
-//  ConstsCount := 0;
 end;
 
 destructor TSimpleParser.Destroy;
