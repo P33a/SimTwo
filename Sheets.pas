@@ -306,9 +306,20 @@ end;
 
 
 procedure TFSheets.FormCreate(Sender: TObject);
+var Sel: TGridRect;
 begin
-  FormStorage.IniFileName := GetIniFineName;
   ActSheet := TSheet.Create;
+  ActSheet.SGrid := SGGlobal;
+
+  FillHeaders(SGGlobal);
+
+  Sel.Left := 1;
+  Sel.Top := 1;
+  Sel.Right := 1;
+  Sel.Bottom := 1;
+  SGGlobal.Selection := sel;
+
+  FormStorage.IniFileName := GetIniFineName;
   Last_r := 1;
   Last_c := 1;
 end;
@@ -319,17 +330,7 @@ begin
 end;
 
 procedure TFSheets.FormShow(Sender: TObject);
-var Sel: TGridRect;
 begin
-  ActSheet.SGrid := SGGlobal;
-  FillHeaders(SGGlobal);
-
-  Sel.Left := 1;
-  Sel.Top := 1;
-  Sel.Right := 1;
-  Sel.Bottom := 1;
-  SGGlobal.Selection := sel;
-
   if FileExists('Global.S2Sheet') then
     LoadSheet(ActSheet, 'Global.S2Sheet');
 
