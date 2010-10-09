@@ -25,7 +25,7 @@ object FParams: TFParams
     Top = 0
     Width = 273
     Height = 621
-    ActivePage = TabGraphics
+    ActivePage = TabPhysics
     Anchors = [akLeft, akTop, akBottom]
     TabOrder = 0
     object TabControl: TTabSheet
@@ -1739,7 +1739,8 @@ object FParams: TFParams
     FlowControl.ControlRTS = rtsDisable
     FlowControl.XonXoffOut = False
     FlowControl.XonXoffIn = False
-    Left = 220
+    Left = 152
+    Top = 28
   end
   object UDPGeneric: TIdUDPServer
     BroadcastEnabled = True

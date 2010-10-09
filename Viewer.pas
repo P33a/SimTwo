@@ -190,6 +190,8 @@ type
     MenuAbort: TMenuItem;
     GLPlaneTex: TGLPlane;
     GLPlane1: TGLPlane;
+    GLLineMeasure: TGLLines;
+    GLHUDTextMeasure: TGLHUDText;
     procedure FormCreate(Sender: TObject);
     procedure GLSceneViewerMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -228,6 +230,7 @@ type
     procedure TestTexture;
     procedure ShowOrRestoreForm(Fm: TForm);
     procedure TestSaveTexture;
+    function GetMeasureText: string;
   public
     HUDStrings: TStringList;
     TrailsCount: integer;
@@ -3486,6 +3489,7 @@ procedure TFViewer.GLSceneViewerMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var pick : TGLCustomSceneObject;
     vs, CamPos, hitPoint: TVector;
+    hit: boolean;
 begin
   pick := GLSceneViewerPick(x, y);
   if Assigned(pick) and not (ssCtrl in shift) then begin
@@ -3493,10 +3497,14 @@ begin
      NormalizeVector(vs);
      //FParams.EditDebug3.Text := format('%.2f,%.2f,%.2f', [vs[0], vs[1], vs[2]]);
     if pick.TagObject is TSolid then with WorldODE do begin
+      CamPos := GLSceneViewer.Buffer.Camera.Position.AsVector;
+      hit := Pick.RayCastIntersect(CamPos, vs, @hitPoint[0]);
+      if hit then begin
+        makevector(PickPoint, hitPoint);
+      end;
       if TSolid(pick.TagObject).Body <> nil then begin
         PickSolid := TSolid(pick.TagObject);
-        CamPos := GLSceneViewer.Buffer.Camera.Position.AsVector;
-        if PickSolid.GLObj.RayCastIntersect(CamPos, vs, @hitPoint[0]) then begin
+        if hit then begin
           CreatePickJoint(PickSolid, hitPoint[0], hitPoint[1], hitPoint[2]);
           PickDist := sqrt(sqr(hitPoint[0]-CamPos[0])+sqr(hitPoint[1]-CamPos[1])+sqr(hitPoint[2]-CamPos[2]));
         end;
@@ -4457,6 +4465,19 @@ begin
   end;
 end;
 
+function TFViewer.GetMeasureText: string;
+var dx, dy, dz, d: double;
+begin
+  with GLLineMeasure do begin
+    dx := Nodes[1].X - Nodes[0].X;
+    dy := Nodes[1].Y - Nodes[0].Y;
+    dz := Nodes[1].Z - Nodes[0].Z;
+    d := sqrt(sqr(dx) + sqr(dy) + sqr(dz));
+  end;
+  result := format('(%.5g, %.5g, %.5g) %.5g',[dx, dy, dz, d]);
+end;
+
+
 procedure TFViewer.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
@@ -4469,6 +4490,20 @@ begin
     if (key = ord('H')) then MenuSheets.Click;
     if (key = ord('I')) then MenuSnapshot.Click;
     if (key = ord('N')) then MenuChangeScene.Click;
+  end;
+
+  if (key = ord('0')) or (key = $DC) then begin
+    GLLineMeasure.Visible := not GLLineMeasure.Visible;
+  end else if (key = ord('1')) then begin
+    GLLineMeasure.Nodes[0].AsVector := WorldODE.PickPoint;
+  end else if (key = ord('2')) then begin
+    GLLineMeasure.Nodes[1].AsVector := WorldODE.PickPoint;
+  end;
+
+  if GLLineMeasure.Visible then begin
+    GLHUDTextMeasure.Text := GetMeasureText;
+  end else begin
+    GLHUDTextMeasure.Text := '';
   end;
 end;
 

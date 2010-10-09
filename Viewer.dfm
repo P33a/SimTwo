@@ -665,6 +665,13 @@ object FViewer: TFViewer
       Alignment = taLeftJustify
       Layout = tlTop
     end
+    object GLHUDTextMeasure: TGLHUDText
+      Position.Coordinates = {0000A04100002042000000000000803F}
+      Scale.Coordinates = {0000003F3333333F0000803F00000000}
+      BitmapFont = GLStoredBitmapFont
+      Alignment = taLeftJustify
+      Layout = tlTop
+    end
     object GLCylinder2: TGLCylinder
       Material.MaterialLibrary = GLMaterialLibrary
       Material.LibMaterialName = 'LibMaterialFeup'
@@ -727,6 +734,20 @@ object FViewer: TFViewer
       Height = 1.000000000000000000
       Width = 1.000000000000000000
       NoZWrite = False
+    end
+    object GLLineMeasure: TGLLines
+      Visible = False
+      AntiAliased = True
+      Nodes = <
+        item
+        end
+        item
+          X = 1.000000000000000000
+          Y = 1.000000000000000000
+          Z = 1.000000000000000000
+        end>
+      NodeSize = 0.200000002980232200
+      Options = []
     end
     object GLCamera: TGLCamera
       DepthOfView = 1000000000.000000000000000000
