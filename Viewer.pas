@@ -17,6 +17,13 @@ type
     r, g, b: single;
   end;
 
+  TSolidDef = record
+    ID: string;
+    sizeX, sizeY, SizeZ, radius: double;
+    posX, posY, posZ: double;
+    angX, angY, angZ: double;  // XYZ seq
+  end;
+
 //Physic World ODE
 type
   TWorld_ODE = class
@@ -75,7 +82,7 @@ type
     procedure CreateWheel(Robot: TRobot; Wheel: TWheel; const Pars: TWheelPars; const wFriction: TFriction; const wMotor: TMotor);
     function CreateOneRaySensor(motherbody: PdxBody; Sensor: TSensor; SensorLength: double): TSensorRay;
 
-    procedure LoadObstaclesFromXML(XMLFile: string; Parser: TSimpleParser);
+    procedure LoadObstaclesFromXML(XMLFile: string; OffsetDef: TSolidDef; Parser: TSimpleParser);
     procedure LoadSensorsFromXML(Robot: TRobot; const root: IXMLNode; Parser: TSimpleParser);
     //procedure LoadHumanoidJointsFromXML(Robot: TRobot; XMLFile: string);
     procedure LoadLinksFromXML(Robot: TRobot; const root: IXMLNode; Parser: TSimpleParser);
@@ -116,6 +123,9 @@ type
     //procedure CreateInvisiblePlane(Plane: TSolid; dirX, dirY, dirZ, offset: double);
     function CreateInvisiblePlane(planeKind: TSolidKind; dirX, dirY, dirZ, offset: double): TSolid;
     procedure CreateSensorBeamGLObj(Sensor: TSensor; SensorLength, InitialWidth, FinalWidth: double);
+    function SolidDefProcessXMLNode(var SolidDef: TSolidDef;
+      prop: IXMLNode; Parser: TSimpleParser): boolean;
+    procedure SolidDefSetDefaults(var SolidDef: TSolidDef);
 //    procedure AxisGLCreate(axis: Taxis; aRadius, aHeight: double);
 //    procedure AxisGLSetPosition(axis: Taxis);
   public
@@ -1918,17 +1928,65 @@ begin
 
 end;
 
+{  TSolidDef = record
+    ID: string;
+    sizeX, sizeY, SizeZ, radius: double;
+    posX, posY, posZ: double;
+    angX, angY, angZ: double;  // XYZ seq
+  end;}
+
+procedure TWorld_ODE.SolidDefSetDefaults(var SolidDef: TSolidDef);
+begin
+  // default values
+  with SolidDef do begin
+    ID := '';
+    sizeX := 1; sizeY := 1; sizeZ := 1;
+    posX := 0; posY := 0; posZ := 0;
+    angX := 0; angY := 0; angZ := 0;
+  end;
+end;
 
 
 
-procedure TWorld_ODE.LoadObstaclesFromXML(XMLFile: string; Parser: TSimpleParser);
+function TWorld_ODE.SolidDefProcessXMLNode(var SolidDef: TSolidDef; prop: IXMLNode; Parser: TSimpleParser): boolean;
+begin
+  with SolidDef do begin
+    result := true;
+    if prop.NodeName = 'ID' then begin
+      ID := GetNodeAttrStr(prop, 'value', ID);
+    end else if prop.NodeName = 'size' then begin
+      sizeX := GetNodeAttrRealParse(prop, 'x', sizeX, Parser);
+      sizeY := GetNodeAttrRealParse(prop, 'y', sizeY, Parser);
+      sizeZ := GetNodeAttrRealParse(prop, 'z', sizeZ, Parser);
+      sizeX := GetNodeAttrRealParse(prop, 'radius', sizeX, Parser);
+    end else if prop.NodeName = 'pos' then begin
+      posX := GetNodeAttrRealParse(prop, 'x', posX, Parser);
+      posY := GetNodeAttrRealParse(prop, 'y', posY, Parser);
+      posZ := GetNodeAttrRealParse(prop, 'z', posZ, Parser);
+    end else if prop.NodeName = 'rot_deg' then begin
+      angX := degToRad(GetNodeAttrRealParse(prop, 'x', angX, Parser));
+      angY := degToRad(GetNodeAttrRealParse(prop, 'y', angY, Parser));
+      angZ := degToRad(GetNodeAttrRealParse(prop, 'z', angZ, Parser));
+    end else begin
+      result := false;
+    end;
+  end;
+end;
+
+
+
+procedure TWorld_ODE.LoadObstaclesFromXML(XMLFile: string; OffsetDef: TSolidDef; Parser: TSimpleParser);
 var XML: IXMLDocument;
     root, obstacle, prop: IXMLNode;
-    sizeX, sizeY, sizeZ, posX, posY, posZ, angX, angY, angZ: double;
+    SolidDef: TSolidDef;
+    //sizeX, sizeY, sizeZ, posX, posY, posZ, angX, angY, angZ: double;
     colorR, colorG, colorB: double;
+    //ID: string;
+
     TextureName: string;
     TextureScale: double;
-    R: TdMatrix3;
+    R, Roff, RFinal: TdMatrix3;
+    Vec: TDVector3;
     NewObstacle: TSolid;
 begin
   XML := LoadXML(XMLFile, XMLErrors);
@@ -1945,28 +2003,11 @@ begin
     if obstacle.NodeName = 'cuboid' then begin
       prop := obstacle.FirstChild;
       // default values
-      sizeX := 1; sizeY := 1; sizeZ := 1;
-      posX := 0; posY := 0; posZ := 0;
-      angX := 0; angY := 0; angZ := 0;
+      SolidDefSetDefaults(SolidDef);
       colorR := 128/255; colorG := 128/255; colorB := 128/255;
       TextureName := ''; TextureScale := 1;
       while prop <> nil do begin
-        if prop.NodeName = 'size' then begin
-          sizeX := GetNodeAttrRealParse(prop, 'x', sizeX, Parser);
-          sizeY := GetNodeAttrRealParse(prop, 'y', sizeY, Parser);
-          sizeZ := GetNodeAttrRealParse(prop, 'z', sizeZ, Parser);
-          sizeX := GetNodeAttrRealParse(prop, 'radius', sizeX, Parser);
-        end;
-        if prop.NodeName = 'pos' then begin
-          posX := GetNodeAttrRealParse(prop, 'x', posX, Parser);
-          posY := GetNodeAttrRealParse(prop, 'y', posY, Parser);
-          posZ := GetNodeAttrRealParse(prop, 'z', posZ, Parser);
-        end;
-        if prop.NodeName = 'rot_deg' then begin
-          angX := degToRad(GetNodeAttrRealParse(prop, 'x', angX, Parser));
-          angY := degToRad(GetNodeAttrRealParse(prop, 'y', angY, Parser));
-          angZ := degToRad(GetNodeAttrRealParse(prop, 'z', angZ, Parser));
-        end;
+        SolidDefProcessXMLNode(SolidDef, prop, Parser);
         if prop.NodeName = 'color_rgb' then begin
           colorR := GetNodeAttrInt(prop, 'r', 128)/255;
           colorG := GetNodeAttrInt(prop, 'g', 128)/255;
@@ -1981,12 +2022,24 @@ begin
       // Create and position the obstacle
       NewObstacle := TSolid.Create;
       Obstacles.Add(NewObstacle);
-      NewObstacle.description := format('Obstacle at (%.1f, %.1f, %.1f)',[posX, posY, posZ]);
-      CreateBoxObstacle(NewObstacle, sizeX, sizeY, sizeZ, posX, posY, posZ);
+      with SolidDef do begin
+        if ID = '' then begin
+          NewObstacle.description := format('Obstacle at (%.1f, %.1f, %.1f)',[posX, posY, posZ]);
+        end else begin
+          NewObstacle.description := format('%s at (%.1f, %.1f, %.1f)',[ID, posX, posY, posZ]);
+        end;
+        CreateBoxObstacle(NewObstacle, sizeX, sizeY, sizeZ, posX, posY, posZ);
 
-      RFromZYXRotRel(R, angX, angY, AngZ);
-      dGeomSetRotation(NewObstacle.Geom, R);
+        RFromZYXRotRel(R, angX, angY, AngZ);
+        dGeomSetRotation(NewObstacle.Geom, R);  // Set local rotation
 
+        RFromZYXRotRel(Roff, OffsetDef.angX, OffsetDef.angY, OffsetDef.AngZ);
+        dMULTIPLY0_333(RFinal, R, Roff);        // Global rotation changes the position
+        dMULTIPLY0_331(Vec, Roff, dGeomGetPosition(NewObstacle.Geom)^);
+        dGeomSetPosition(NewObstacle.Geom, Vec[0] + OffsetDef.posX, Vec[1] + OffsetDef.posY, Vec[2] + OffsetDef.posZ);
+
+        dGeomSetRotation(NewObstacle.Geom, RFinal); // And the orientation
+      end;
       if TextureName <> '' then begin
         NewObstacle.SetTexture(TextureName, TextureScale); //'LibMaterialFeup'
       end;
@@ -3100,11 +3153,12 @@ end;
 procedure TWorld_ODE.LoadSceneFromXML(XMLFile: string);
 var XML: IXMLDocument;
     root, objNode, prop: IXMLNode;
-    posX, posY, posZ, angX, angY, angZ: double;
+    //posX, posY, posZ, angX, angY, angZ: double;
+    SolidDef: TSolidDef;
     newRobot: TRobot;
 //    thing: TSolid;
     name, filename: string;
-    mass, radius: double;
+//    mass, radius: double;
     Parser: TSimpleParser;
 //    ConstName: string;
 //    ConstValue: double;
@@ -3132,16 +3186,18 @@ begin
       if objNode.NodeName = 'robot' then begin
         prop := objNode.FirstChild;
         // default values
+        SolidDefSetDefaults(SolidDef);
         name:='robot' + inttostr(Robots.count);
         filename := '';
-        posX := 0; posY := 0; posZ := 0;
-        angX := 0; angY := 0; angZ := 0;
+        //posX := 0; posY := 0; posZ := 0;
+        //angX := 0; angY := 0; angZ := 0;
         while prop <> nil do begin
-          if prop.NodeName = 'ID' then begin
-            name := GetNodeAttrStr(prop, 'name', name);
-          end;
           if prop.NodeName = 'body' then begin
             filename := GetNodeAttrStr(prop, 'file', filename);
+          end;
+          SolidDefProcessXMLNode(SolidDef, prop, Parser);
+          {if prop.NodeName = 'ID' then begin
+            name := GetNodeAttrStr(prop, 'name', name);
           end;
           if prop.NodeName = 'pos' then begin
             posX := GetNodeAttrRealParse(prop, 'x', posX, Parser);
@@ -3152,7 +3208,7 @@ begin
             angX := degToRad(GetNodeAttrRealParse(prop, 'x', angX, Parser));
             angY := degToRad(GetNodeAttrRealParse(prop, 'y', angY, Parser));
             angZ := degToRad(GetNodeAttrRealParse(prop, 'z', angZ, Parser));
-          end;
+          end;}
           prop := prop.NextSibling;
         end;
 
@@ -3162,19 +3218,31 @@ begin
           newRobot := LoadRobotFromXML(filename, Parser);
           if newRobot <> nil then begin
             newRobot.Name := name;
-            newRobot.SetXYZTeta(posX, posY, posZ, angZ);
+            with SolidDef do newRobot.SetXYZTeta(posX, posY, posZ, angZ);
           end;
         end;
 
       end else if objNode.NodeName = 'defines' then begin
         LoadDefinesFromXML(Parser, objnode);
 
-      end else if objNode.NodeName = 'obstacles' then begin
+      end else if (objNode.NodeName = 'obstacles') or (objNode.NodeName = 'obstacle') then begin
+        prop := objNode.FirstChild;
+        // default values
+        SolidDefSetDefaults(SolidDef);
+        filename := '';
+        while prop <> nil do begin
+          if prop.NodeName = 'body' then begin
+            filename := GetNodeAttrStr(prop, 'file', filename);
+          end;
+          SolidDefProcessXMLNode(SolidDef, prop, Parser);
+          prop := prop.NextSibling;
+        end;
+
         // Create static obstacles
         filename := GetNodeAttrStr(objNode, 'file', filename);
         if fileexists(filename) then begin
           XMLFiles.Add(filename);
-          LoadObstaclesFromXML(filename, Parser);
+          LoadObstaclesFromXML(filename, SolidDef, Parser);
         end;
 
       end else if objNode.NodeName = 'things' then begin
@@ -3202,7 +3270,7 @@ begin
           LoadGlobalSensorsFromXML(filename, Parser);
         end;
 
-      end else if objNode.NodeName = 'ball' then begin
+      {end else if objNode.NodeName = 'ball' then begin
         prop := objNode.FirstChild;
         // default values
         radius := -1; mass := -1;
@@ -3223,7 +3291,7 @@ begin
           end;
           prop := prop.NextSibling;
 
-        end;
+        end;}
       end else begin // Unused Tag Generate warning
         if (XMLErrors <> nil) and (objNode.NodeName <> '#text') and (objNode.NodeName <> '#comment') then begin
           XMLErrors.Add('[Warning] ' + format('(%s): ', [XMLFile]) + 'Tag <'+ objNode.NodeName + '> not recognised!');
@@ -3304,6 +3372,7 @@ end;
 
 constructor TWorld_ODE.create;
 var plane: TSolid;
+    Center, Extents : TdVector3;
 begin
   AirDensity := 1.293; //kg/m3
   default_n_mu := 0.95;
@@ -3335,8 +3404,17 @@ begin
 //  dWorldSetQuickStepNumIterations(world, 10);
   Ode_QuickStepIters := 10;
   dWorldSetQuickStepNumIterations(world, Ode_QuickStepIters);
-  space := dHashSpaceCreate(nil);
+  space := dSimpleSpaceCreate(nil);
+  //space := dHashSpaceCreate(nil);
   //dHashSpaceSetLevels(space, -4, 1);
+ { Center[0] := 0;
+  Center[1] := 0;
+  Center[2] := 0;
+  Extents[0] := 12;
+  Extents[1] := 12;
+  Extents[2] := 12;
+
+  space := dQuadTreeSpaceCreate(nil, Center, Extents, 4);}
   contactgroup := dJointGroupCreate(0);
   dWorldSetGravity(world, 0, 0, -9.81);
 
