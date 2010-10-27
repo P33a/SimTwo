@@ -741,7 +741,7 @@ object FParams: TFParams
             Width = 149
             Height = 21
             Style = csDropDownList
-            ItemHeight = 13
+            ItemHeight = 0
             TabOrder = 8
           end
           object BJointWayPointsSave: TButton

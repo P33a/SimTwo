@@ -142,6 +142,8 @@ type
     function ProjectOpen(FileName: string): boolean;
     procedure BuildRegTypeList(Sender: TPSScript);
     procedure BuildRegTypeListEx(Sender: TPSPascalCompiler);
+    function ReadUDPPacket: string;
+    function GetUDPPacketCount: integer;
   public
     ProgCyclesCount: integer;
     ProgTime: double;
@@ -867,6 +869,9 @@ begin
   Sender.AddMethod(Self, @TFEditor.ReadUDPData, 'function ReadUDPData: string;');
   Sender.AddMethod(Self, @TFEditor.WriteUDPData, 'procedure WriteUDPData(ToIP: string; ToPort: integer; s: string);');
 
+  Sender.AddMethod(Self, @TFEditor.ReadUDPPacket, 'function ReadUDPPacket: string;');
+  Sender.AddMethod(Self, @TFEditor.GetUDPPacketCount, 'function GetUDPPacketCount: integer;');
+
   Sender.AddFunction(@SetRCValue, 'procedure SetRCValue(r, c: integer; s: string);');
   Sender.AddFunction(@GetRCValue, 'function GetRCValue(r, c: integer): double;');
   Sender.AddFunction(@GetRCText, 'function GetRCText(r, c: integer): string;');
@@ -1175,6 +1180,23 @@ begin
     UDPGenData.ReadBuffer(Pointer(result)^, UDPGenData.Size);
     UDPGenData.Clear;
   end;
+end;
+
+
+function TFEditor.ReadUDPPacket: string;
+begin
+  result := '';
+  with FParams do begin
+    if UDPGenPackets.Count > 0 then begin
+      result := UDPGenPackets.strings[0];
+      UDPGenPackets.Delete(0);
+    end;
+  end;
+end;
+
+function TFEditor.GetUDPPacketCount: integer;
+begin
+  result := FParams.UDPGenPackets.Count;
 end;
 
 procedure TFEditor.FormDestroy(Sender: TObject);
