@@ -3372,7 +3372,7 @@ end;
 
 constructor TWorld_ODE.create;
 var plane: TSolid;
-    Center, Extents : TdVector3;
+    //Center, Extents : TdVector3;
 begin
   AirDensity := 1.293; //kg/m3
   default_n_mu := 0.95;

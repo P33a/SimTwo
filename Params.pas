@@ -273,6 +273,7 @@ type
     EditsU, EditsI, EditsOdo : array[0..3] of TEdit;
     EditsIR: array[0..7] of TEdit;
     UDPGenData: TMemoryStream;
+    UDPGenPackets: TStringList;
 
     procedure FillLBRobots(LB: TListBox);
     procedure FillLBLinks(LB: TListBox; r: integer);
@@ -532,6 +533,7 @@ begin
   SGGlobalSensors.Cells[2,0] := 'Kind';
 
   UDPGenData := TMemoryStream.Create;
+  UDPGenPackets:= TStringList.Create;
 end;
 
 procedure TFParams.FormShow(Sender: TObject);
@@ -910,6 +912,7 @@ end;
 
 procedure TFParams.FormDestroy(Sender: TObject);
 begin
+  UDPGenPackets.Free;
   UDPGenData.Free;
   try
      SaveGridTofile(SGConf, 'params.cfg');
@@ -1001,9 +1004,18 @@ end;
 
 procedure TFParams.UDPGenericUDPRead(Sender: TObject; AData: TStream;
   ABinding: TIdSocketHandle);
+var str: string;
 begin
   //UDPGenData.Clear;
   UDPGenData.CopyFrom(AData, 0);
+
+  str := '';
+  AData.Position := 0;
+  SetLength(str, AData.Size);
+  AData.ReadBuffer(Pointer(str)^, AData.Size);
+  //AData.Clear;
+
+  UDPGenPackets.Add(str);
 end;
 
 
