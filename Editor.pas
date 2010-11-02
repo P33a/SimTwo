@@ -130,6 +130,7 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure MenuCutClick(Sender: TObject);
     procedure MenuCopyClick(Sender: TObject);
+    procedure FormResize(Sender: TObject);
   private
     FuncList, InsertList: TStringList;
     TypeList: TStringList;
@@ -1230,6 +1231,13 @@ begin
   LBResult.DeleteSelected;
 end;
 
+
+procedure TFEditor.FormResize(Sender: TObject);
+begin
+  if IsIconic(handle) then begin  //... form was minimized.
+    hide;
+  end;
+end;
 
 end.
 

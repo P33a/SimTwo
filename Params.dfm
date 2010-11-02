@@ -14,6 +14,7 @@ object FParams: TFParams
   Scaled = False
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnResize = FormResize
   OnShow = FormShow
   DesignSize = (
     273
@@ -25,7 +26,7 @@ object FParams: TFParams
     Top = 0
     Width = 273
     Height = 621
-    ActivePage = TabPhysics
+    ActivePage = TabControl
     Anchors = [akLeft, akTop, akBottom]
     TabOrder = 0
     object TabControl: TTabSheet
@@ -741,7 +742,7 @@ object FParams: TFParams
             Width = 149
             Height = 21
             Style = csDropDownList
-            ItemHeight = 0
+            ItemHeight = 13
             TabOrder = 8
           end
           object BJointWayPointsSave: TButton

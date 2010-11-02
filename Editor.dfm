@@ -15,6 +15,7 @@ object FEditor: TFEditor
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnResize = FormResize
   OnShow = FormShow
   DesignSize = (
     767

@@ -132,6 +132,7 @@ type
     procedure MenuDeleteClick(Sender: TObject);
     procedure MenuCopyClick(Sender: TObject);
     procedure MenuPasteClick(Sender: TObject);
+    procedure FormResize(Sender: TObject);
   private
     procedure FillHeaders(SGrid: TStringGrid);
     procedure CellsRectToStringList(CellsRect: TGridRect; SL: TStringList);
@@ -1137,6 +1138,13 @@ begin
     StringListToCellsRect(SL, ActSheet.SGrid.Selection);
   finally
     SL.Free;
+  end;
+end;
+
+procedure TFSheets.FormResize(Sender: TObject);
+begin
+  if IsIconic(handle) then begin  //... form was minimized.
+    hide;
   end;
 end;
 
