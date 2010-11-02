@@ -202,6 +202,7 @@ type
     GLPlane1: TGLPlane;
     GLLineMeasure: TGLLines;
     GLHUDTextMeasure: TGLHUDText;
+    N2: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure GLSceneViewerMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -1953,6 +1954,7 @@ begin
   with SolidDef do begin
     result := true;
     if prop.NodeName = 'ID' then begin
+      ID := GetNodeAttrStr(prop, 'name', ID);
       ID := GetNodeAttrStr(prop, 'value', ID);
     end else if prop.NodeName = 'size' then begin
       sizeX := GetNodeAttrRealParse(prop, 'x', sizeX, Parser);
@@ -3157,7 +3159,7 @@ var XML: IXMLDocument;
     SolidDef: TSolidDef;
     newRobot: TRobot;
 //    thing: TSolid;
-    name, filename: string;
+    filename: string;
 //    mass, radius: double;
     Parser: TSimpleParser;
 //    ConstName: string;
@@ -3187,7 +3189,7 @@ begin
         prop := objNode.FirstChild;
         // default values
         SolidDefSetDefaults(SolidDef);
-        name:='robot' + inttostr(Robots.count);
+        SolidDef.ID := 'robot' + inttostr(Robots.count);
         filename := '';
         //posX := 0; posY := 0; posZ := 0;
         //angX := 0; angY := 0; angZ := 0;
@@ -3217,7 +3219,7 @@ begin
           XMLFiles.Add(filename);
           newRobot := LoadRobotFromXML(filename, Parser);
           if newRobot <> nil then begin
-            newRobot.Name := name;
+            newRobot.Name := SolidDef.ID;
             with SolidDef do newRobot.SetXYZTeta(posX, posY, posZ, angZ);
           end;
         end;
@@ -3270,28 +3272,6 @@ begin
           LoadGlobalSensorsFromXML(filename, Parser);
         end;
 
-      {end else if objNode.NodeName = 'ball' then begin
-        prop := objNode.FirstChild;
-        // default values
-        radius := -1; mass := -1;
-        posX := 0; posY := 0; posZ := 0;
-
-        while prop <> nil do begin
-
-          if prop.NodeName = 'radius' then begin
-            radius := GetNodeAttrRealParse(prop, 'value', radius, Parser);
-          end;
-          if prop.NodeName = 'mass' then begin
-            mass := GetNodeAttrRealParse(prop, 'value', mass, Parser);
-          end;
-          if prop.NodeName = 'pos' then begin
-            posX := GetNodeAttrRealParse(prop, 'x', posX, Parser);
-            posY := GetNodeAttrRealParse(prop, 'y', posY, Parser);
-            posZ := GetNodeAttrRealParse(prop, 'z', posZ, Parser);
-          end;
-          prop := prop.NextSibling;
-
-        end;}
       end else begin // Unused Tag Generate warning
         if (XMLErrors <> nil) and (objNode.NodeName <> '#text') and (objNode.NodeName <> '#comment') then begin
           XMLErrors.Add('[Warning] ' + format('(%s): ', [XMLFile]) + 'Tag <'+ objNode.NodeName + '> not recognised!');

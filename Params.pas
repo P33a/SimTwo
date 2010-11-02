@@ -261,6 +261,7 @@ type
     procedure BitBtnAddAllClick(Sender: TObject);
     procedure RGSensorGLClick(Sender: TObject);
     procedure BSGConfGetClick(Sender: TObject);
+    procedure FormResize(Sender: TObject);
   private
     procedure FillEditArray(ProtoName: string;
       var EditArray: array of TEdit);
@@ -548,6 +549,7 @@ begin
   CBIRNoiseClick(Sender);
   BPhysicsSetClick(Sender);
   RGGLObjectsClick(Sender);
+  BGlobalSetClick(Sender);
 
   try
     if FileExists('params.cfg') then begin
@@ -1187,6 +1189,13 @@ begin
   EditGridX.Text := SGConf.Cells[1, SGConf.Row];
   EditGridY.Text := SGConf.Cells[2, SGConf.Row];
   EditGridZ.Text := SGConf.Cells[3, SGConf.Row];
+end;
+
+procedure TFParams.FormResize(Sender: TObject);
+begin
+  if IsIconic(handle) then begin  //... form was minimized.
+    hide;
+  end;
 end;
 
 end.

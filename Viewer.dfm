@@ -10271,6 +10271,9 @@ object FViewer: TFViewer
       ShortCut = 16456
       OnClick = MenuSheetsClick
     end
+    object N2: TMenuItem
+      Caption = '-'
+    end
     object MenuSnapshot: TMenuItem
       Caption = 'S&napshot'
       ShortCut = 16457

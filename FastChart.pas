@@ -45,6 +45,7 @@ type
     procedure BClearClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure FormResize(Sender: TObject);
   private
     procedure FillTreeView(tree: TTreeView);
     procedure FillRobotTreeView(r: integer; root: TTreeNode; tree: TTreeView);
@@ -447,6 +448,14 @@ procedure TFChart.FormKeyDown(Sender: TObject; var Key: Word;
 begin
   if (ssctrl in Shift) then begin
     if (ssShift in Shift) and (key = ord('T')) then CBFreeze.Checked := not CBFreeze.Checked;
+  end;
+end;
+
+procedure TFChart.FormResize(Sender: TObject);
+begin
+  if IsIconic(handle) then begin  //... form was minimized.
+    //ShowMessage('onresize - minimize');
+    hide;
   end;
 end;
 
