@@ -15,7 +15,6 @@ object FEditor: TFEditor
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  OnResize = FormResize
   OnShow = FormShow
   DesignSize = (
     767
@@ -600,6 +599,11 @@ object FEditor: TFEditor
       Caption = '&Copy'
       ShortCut = 16451
       OnClick = MenuCopyClick
+    end
+    object MenuPaste: TMenuItem
+      Caption = 'Paste'
+      ShortCut = 16470
+      OnClick = MenuPasteClick
     end
     object N6: TMenuItem
       Caption = '-'

@@ -1143,9 +1143,9 @@ end;
 
 procedure TFSheets.FormResize(Sender: TObject);
 begin
-  if IsIconic(handle) then begin  //... form was minimized.
-    hide;
-  end;
+  //if IsIconic(handle) then begin  //... form was minimized.
+  //  hide;  ///Bug...
+  //end;
 end;
 
 end.

@@ -1405,9 +1405,11 @@ begin
       with Measures[0] do begin
         dist := Rays[0].Measure.dist;
         has_measure := Rays[0].Measure.has_measure;
-        if has_measure then
-          //value := min(value, dist);
+        if has_measure then begin
           value := dist;
+        end else begin
+          value := 0;
+        end;
       end;
     end;
 
