@@ -10271,6 +10271,12 @@ object FViewer: TFViewer
       ShortCut = 16456
       OnClick = MenuSheetsClick
     end
+    object MenuDimensions: TMenuItem
+      Caption = '&Dimensions'
+      ShortCut = 16452
+      Visible = False
+      OnClick = MenuDimensionsClick
+    end
     object N2: TMenuItem
       Caption = '-'
     end
@@ -10322,5 +10328,11 @@ object FViewer: TFViewer
     Height = 320
     Buffer.AmbientColor.Color = {9A99993E9A99993E9A99993E0000803F}
     Left = 32
+  end
+  object TimerCadencer: TTimer
+    Interval = 10
+    OnTimer = TimerCadencerTimer
+    Left = 72
+    Top = 64
   end
 end

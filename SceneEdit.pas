@@ -107,6 +107,8 @@ begin
     NewSynEdit.Align := alClient;
     NewSynEdit.Highlighter := SynXMLSyn;
     NewSynEdit.OnStatusChange := SynEditXMLStatusChange;
+    NewSynEdit.Options := NewSynEdit.Options + [eoTabIndent, eoScrollByOneLess];
+    NewSynEdit.WantTabs := true;
     NewSynEdit.Lines.LoadFromFile(SL[i]);
 end;
 

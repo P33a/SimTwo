@@ -88,6 +88,7 @@ type
     MenuCopy: TMenuItem;
     MenuCut: TMenuItem;
     N6: TMenuItem;
+    MenuPaste: TMenuItem;
     procedure SynEditSTMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
     procedure SynEditSTStatusChange(Sender: TObject;
@@ -130,7 +131,7 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure MenuCutClick(Sender: TObject);
     procedure MenuCopyClick(Sender: TObject);
-    procedure FormResize(Sender: TObject);
+    procedure MenuPasteClick(Sender: TObject);
   private
     FuncList, InsertList: TStringList;
     TypeList: TStringList;
@@ -1231,13 +1232,11 @@ begin
   LBResult.DeleteSelected;
 end;
 
-
-procedure TFEditor.FormResize(Sender: TObject);
+procedure TFEditor.MenuPasteClick(Sender: TObject);
 begin
-  if IsIconic(handle) then begin  //... form was minimized.
-    hide;
-  end;
+  SynEditST.Refresh;
 end;
+
 
 end.
 

@@ -86,6 +86,10 @@ procedure SetSolidMass(R, i: integer; nmass: double);
 function GetSolidMass(R, i: integer): double;
 function GetSolidCenterOfMass(R, i: integer): TPoint3D;
 
+procedure SetSolidPos(R, i: integer; x, y, z: double);
+procedure SetSolidPosMat(R, i: integer; P: Matrix);
+procedure SetSolidRotationMat(R, i: integer; Rot: Matrix);
+
 function GetSolidPos(R, i: integer): TPoint3D;
 function GetSolidLinearVel(R, i: integer): TPoint3D;
 
@@ -540,6 +544,37 @@ begin
     Result.x := mass.c[0];
     Result.y := mass.c[1];
     Result.z := mass.c[2];
+  end;
+end;
+
+
+procedure SetSolidPos(R, i: integer; x, y, z: double);
+begin
+  with WorldODE.Robots[R].Solids[i] do begin
+    if Body = nil then exit;
+    dBodySetPosition(Body, x, y, z);
+  end;
+end;
+
+procedure SetSolidPosMat(R, i: integer; P: Matrix);
+begin
+  SetSolidPos(R, i, Mgetv(P, 0, 0), Mgetv(P, 1, 0), Mgetv(P, 2, 0));
+end;
+
+procedure SetSolidRotationMat(R, i: integer; Rot: Matrix);
+var RM: TdMatrix3;
+    row, col: integer;
+begin
+  with WorldODE.Robots[R].Solids[i] do begin
+    if Body = nil then exit;
+
+    for row := 0 to 2 do begin
+      for col := 0 to 2 do begin
+        RM[4*row+col] := MGetv(Rot, row, col);
+      end;
+    end;
+
+    dBodySetRotation(Body, RM);
   end;
 end;
 

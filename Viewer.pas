@@ -203,6 +203,8 @@ type
     GLLineMeasure: TGLLines;
     GLHUDTextMeasure: TGLHUDText;
     N2: TMenuItem;
+    MenuDimensions: TMenuItem;
+    TimerCadencer: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure GLSceneViewerMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -228,6 +230,8 @@ type
       Shift: TShiftState);
     procedure MenuChangeSceneClick(Sender: TObject);
     procedure MenuAbortClick(Sender: TObject);
+    procedure MenuDimensionsClick(Sender: TObject);
+    procedure TimerCadencerTimer(Sender: TObject);
   private
     { Private declarations }
     OldPick : TGLCustomSceneObject;
@@ -242,6 +246,7 @@ type
     procedure ShowOrRestoreForm(Fm: TForm);
     procedure TestSaveTexture;
     function GetMeasureText: string;
+    procedure HandleMeasureKeys(var Key: Word; Shift: TShiftState);
   public
     HUDStrings: TStringList;
     TrailsCount: integer;
@@ -266,7 +271,7 @@ implementation
 {$R *.dfm}
 
 uses ODEGL, Params, Editor, FastChart, RemoteControl, utils, StdCtrls, VerInfo,
-  SceneEdit, Sheets;
+  SceneEdit, Sheets, dimensions;
 
 
 
@@ -396,7 +401,7 @@ begin
     // Conveyor belt case
     if (o1.data <> nil) and (TSolid(o1.data).kind = skMotorBelt) then begin
         n_mode := n_mode or cardinal(dContactMu2 or dContactFDir1 or dContactMotion1);
-        dBodyVectorToWorld(b1, 1, 0, 0, n_fdir1);
+        dBodyVectorToWorld(b1, -1, 0, 0, n_fdir1);
         n_mu2 := n_mu; //0.9
         n_motion1 := TSolid(o1.data).BeltSpeed;
     end else if (o2.data <> nil) and (TSolid(o2.data).kind = skMotorBelt) then begin
@@ -1040,7 +1045,7 @@ begin
     Odo.LastAngle := Odo.Angle;
     Odo.Angle := Axis.GetPos;
     rot := Odo.Angle - Odo.LastAngle;
-    if rot >= pi then rot := rot - 2*pi;
+    if rot > pi then rot := rot - 2*pi;
     if rot <= -pi then rot := rot + 2*pi;
 
     Odo.Residue :=  Odo.Residue + Motor.Encoder.PPR * rot / (2*pi);// + randg(0,OdoNoise);
@@ -1140,6 +1145,7 @@ var XMLSolid, prop: IXMLNode;
     MotherSolidId: string;
     SolidIdx: integer;
     NewPos, ActPos: TdVector3;
+    GravityMode: integer;
 begin
   if root = nil then exit;
 
@@ -1148,6 +1154,7 @@ begin
     if pos(XMLSolid.NodeName, 'cuboid <> cylinder <> sphere <> belt <> propeller') <> 0 then begin // Tsolid
       prop := XMLSolid.FirstChild;
       // default values
+      GravityMode := 1;
       mass := 1;  ID := '-1';
       I11 := -1; I22 := -1; I33 := -1; I12 := 0; I13 := 0; I23 := 0;
       MatterProps := [];
@@ -1207,6 +1214,9 @@ begin
         end;
         if prop.NodeName = 'buoyant' then begin
           BuoyantMass := GetNodeAttrRealParse(prop, 'mass', BuoyantMass, Parser);
+        end;
+        if prop.NodeName = 'nogravity' then begin
+          GravityMode := 0;
         end;
         if prop.NodeName = 'radius' then begin
           radius := GetNodeAttrRealParse(prop, 'value', radius, Parser);
@@ -1319,7 +1329,7 @@ begin
           newSolid.SetTexture(TextureName, TextureScale); //'LibMaterialFeup'
         end;
 
-        if BuoyantMass <> 0 then begin
+        if (BuoyantMass <> 0) or (GravityMode = 0) then begin
           dBodySetGravityMode(newSolid.Body, 0);
         end;
         if XMLSolid.NodeName = 'belt' then newSolid.kind := skMotorBelt;
@@ -3549,8 +3559,9 @@ var pick : TGLCustomSceneObject;
     vs, CamPos, hitPoint: TVector;
     hit: boolean;
 begin
+  if not (Button = mbLeft) then exit; // Ignore Right(PopUpMenu) and middle buttons
   pick := GLSceneViewerPick(x, y);
-  if Assigned(pick) and not (ssCtrl in shift) then begin
+  if Assigned(pick) and not (ssCtrl in shift) and (Button = mbLeft) then begin
      vs :=  GLSceneViewer.Buffer.ScreenToVector(x, GLSceneViewer.Buffer.ViewPort.Height - y);
      NormalizeVector(vs);
      //FParams.EditDebug3.Text := format('%.2f,%.2f,%.2f', [vs[0], vs[1], vs[2]]);
@@ -3864,6 +3875,11 @@ begin
             n := random(Sensors[i].Rays.Count);
             PositionSceneObject(Sensors[i].GLObj, Sensors[i].Rays[n].Geom);
             if Sensors[i].GLObj is TGLCylinder then Sensors[i].GLObj.pitch(90);
+            if Sensors[i].Measures[0].value = 0 then begin
+              Sensors[i].GLObj.Material.FrontProperties.Emission.SetColor(0, 0, 0);
+            end else begin
+              Sensors[i].GLObj.Material.FrontProperties.Emission.SetColor(0.2, 0.2, 0.2);
+            end;
           end;
         end;
 
@@ -4550,6 +4566,12 @@ begin
     if (key = ord('N')) then MenuChangeScene.Click;
   end;
 
+  HandleMeasureKeys(Key, Shift);
+end;
+
+
+procedure TFViewer.HandleMeasureKeys(var Key: Word;  Shift: TShiftState);
+begin
   if (key = ord('0')) or (key = $DC) then begin
     GLLineMeasure.Visible := not GLLineMeasure.Visible;
   end else if (key = ord('1')) then begin
@@ -4585,6 +4607,16 @@ begin
   Solid.GLObj.Free;
   dGeomDestroy(Solid.Geom);
   dBodyDestroy(Solid.Body);
+end;
+
+procedure TFViewer.MenuDimensionsClick(Sender: TObject);
+begin
+  ShowOrRestoreForm(FDimensions);
+end;
+
+procedure TFViewer.TimerCadencerTimer(Sender: TObject);
+begin
+  GLCadencer.Progress;
 end;
 
 end.

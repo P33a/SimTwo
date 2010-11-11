@@ -15,7 +15,6 @@ object FChart: TFChart
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
-  OnResize = FormResize
   OnShow = FormShow
   DesignSize = (
     707

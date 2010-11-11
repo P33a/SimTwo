@@ -26,7 +26,8 @@ uses
   odeimport in 'ODEImport.pas',
   SimpleParser in 'SimpleParser.pas',
   uPSI_PathFinder in 'uPSI_PathFinder.pas',
-  uPSI_dynmatrix in 'uPSI_dynmatrix.pas';
+  uPSI_dynmatrix in 'uPSI_dynmatrix.pas',
+  dimensions in 'dimensions.pas' {FDimensions};
 
 {$R *.res}
 
@@ -43,5 +44,6 @@ begin
   Application.CreateForm(TFSceneEdit, FSceneEdit);
   Application.CreateForm(TFSheets, FSheets);
   Application.CreateForm(TFChooseScene, FChooseScene);
+  Application.CreateForm(TFDimensions, FDimensions);
   Application.Run;
 end.
