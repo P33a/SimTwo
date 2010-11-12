@@ -93,6 +93,8 @@ procedure SetSolidRotationMat(R, i: integer; Rot: Matrix);
 function GetSolidPos(R, i: integer): TPoint3D;
 function GetSolidLinearVel(R, i: integer): TPoint3D;
 
+function GetShelpPos(R, i: integer): TPoint3D;
+
 //Matrix versions
 function GetSolidPosMat(R, i: integer): Matrix;
 function GetSolidLinearVelMat(R, i: integer): Matrix;
@@ -589,6 +591,23 @@ begin
   with WorldODE.Robots[R].Solids[i] do begin
     if Body = nil then exit;
     v1 := dBodyGetPosition(Body)^;
+    Result.x := v1[0];
+    Result.y := v1[1];
+    Result.z := v1[2];
+  end;
+end;
+
+
+function GetShelpPos(R, i: integer): TPoint3D;
+var v1: TdVector3;
+begin
+  result.x := 0;
+  result.y := 0;
+  result.z := 0;
+
+  with WorldODE.Robots[R].Shells[i] do begin
+    if geom = nil then exit;
+    v1 := dGeomGetPosition(geom)^;
     Result.x := v1[0];
     Result.y := v1[1];
     Result.z := v1[2];
