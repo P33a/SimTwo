@@ -126,6 +126,8 @@ type
     function SolidDefProcessXMLNode(var SolidDef: TSolidDef;
       prop: IXMLNode; Parser: TSimpleParser): boolean;
     procedure SolidDefSetDefaults(var SolidDef: TSolidDef);
+    procedure CreateSphereObstacle(var Obstacle: TSolid; radius, posX,
+      posY, posZ: double);
 //    procedure AxisGLCreate(axis: Taxis; aRadius, aHeight: double);
 //    procedure AxisGLSetPosition(axis: Taxis);
   public
@@ -819,6 +821,43 @@ begin
 //  PositionSceneObject(TGLBaseSceneObject(PdxGeom(ground_box).data), ground_box);
   (OdeScene as TGLShadowVolume).Occluders.AddCaster(Obstacle.GLObj);
 end;
+
+procedure TWorld_ODE.CreateSphereObstacle(var Obstacle: TSolid; radius, posX, posY, posZ: double);
+begin
+  Obstacle.kind := skDefault;
+  // Create 1 GLSCube and a box space.
+  Obstacle.Geom := dCreateSphere(space, radius);
+  dGeomSetPosition(Obstacle.Geom, posX, posY, posZ);
+  Obstacle.GLObj := TGLSphere(ODEScene.AddNewChild(TGLSphere));
+  Obstacle.GLObj.TagObject := Obstacle;
+  Obstacle.Geom.data := Obstacle;
+
+  TGLSphere(Obstacle.GLObj).radius := radius;
+  TGLSphere(Obstacle.GLObj).Material.MaterialLibrary := FViewer.GLMaterialLibrary;
+
+  PositionSceneObject(Obstacle.GLObj, Obstacle.Geom);
+  (OdeScene as TGLShadowVolume).Occluders.AddCaster(Obstacle.GLObj);
+end;
+
+{
+  Solid.kind := skDefault;
+  Solid.Body := motherbody;
+
+  Solid.Geom := dCreateSphere(space, R);
+  dGeomSetBody(Solid.Geom, Solid.Body);
+  Solid.Geom.data := Solid;
+
+  dGeomSetOffsetPosition(Solid.Geom, posX, posY, posZ);
+
+  Solid.GLObj := TGLSceneObject(ODEScene.AddNewChild(TGLSphere));
+
+  with (Solid.GLObj as TGLSphere) do begin
+    TagObject := Solid;
+    Radius := R;
+    //Material.FrontProperties.Diffuse.AsWinColor := clyellow;
+  end;
+  (OdeScene as TGLShadowVolume).Occluders.AddCaster(Solid.GLObj);
+}
 
 //procedure TWorld_ODE.CreateInvisiblePlane(Plane: TSolid; dirX, dirY, dirZ, offset: double);
 function TWorld_ODE.CreateInvisiblePlane(planeKind: TSolidKind; dirX, dirY, dirZ, offset: double): TSolid;
@@ -1954,6 +1993,7 @@ begin
     sizeX := 1; sizeY := 1; sizeZ := 1;
     posX := 0; posY := 0; posZ := 0;
     angX := 0; angY := 0; angZ := 0;
+    radius := 0;
   end;
 end;
 
@@ -1971,6 +2011,8 @@ begin
       sizeY := GetNodeAttrRealParse(prop, 'y', sizeY, Parser);
       sizeZ := GetNodeAttrRealParse(prop, 'z', sizeZ, Parser);
       sizeX := GetNodeAttrRealParse(prop, 'radius', sizeX, Parser);
+    end else if prop.NodeName = 'radius' then begin
+      radius := GetNodeAttrRealParse(prop, 'value', radius, Parser);
     end else if prop.NodeName = 'pos' then begin
       posX := GetNodeAttrRealParse(prop, 'x', posX, Parser);
       posY := GetNodeAttrRealParse(prop, 'y', posY, Parser);
@@ -2012,7 +2054,8 @@ begin
     if obstacle.NodeName = 'defines' then begin
       LoadDefinesFromXML(Parser, obstacle);
     end;
-    if obstacle.NodeName = 'cuboid' then begin
+    if pos(obstacle.NodeName, 'cuboid<>sphere') <> 0 then begin
+    //if obstacle.NodeName = 'cuboid' then begin
       prop := obstacle.FirstChild;
       // default values
       SolidDefSetDefaults(SolidDef);
@@ -2040,7 +2083,11 @@ begin
         end else begin
           NewObstacle.description := format('%s at (%.1f, %.1f, %.1f)',[ID, posX, posY, posZ]);
         end;
-        CreateBoxObstacle(NewObstacle, sizeX, sizeY, sizeZ, posX, posY, posZ);
+        if obstacle.NodeName = 'cuboid' then begin
+          CreateBoxObstacle(NewObstacle, sizeX, sizeY, sizeZ, posX, posY, posZ);
+        end else if obstacle.NodeName = 'sphere' then begin
+          CreateSphereObstacle(NewObstacle, radius, posX, posY, posZ);
+        end;
 
         RFromZYXRotRel(R, angX, angY, AngZ);
         dGeomSetRotation(NewObstacle.Geom, R);  // Set local rotation
