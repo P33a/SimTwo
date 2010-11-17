@@ -80,7 +80,7 @@ type
     BeltSpeed: double;
     ParSurface{, MaxParSurface} : TdSurfaceParameters;
     ID: string;
-    description: string;
+    //description: string;
     BuoyantMass, Volume, Drag, StokesDrag, RollDrag: double;
     Ax, Ay, Az: double;
     ZeroPosition: TdVector3;
