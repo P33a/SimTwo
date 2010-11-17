@@ -883,7 +883,7 @@ begin
   AssignFile(F, fname);
   Rewrite(F);
   for r:=0 to MNumRows(M)-1 do begin
-    for c:=0 to MNumRows(M)-1 do begin
+    for c:=0 to MNumCols(M)-1 do begin
       write(F,Mgetv(M, r,c));
       write(F,' ');
     end;
