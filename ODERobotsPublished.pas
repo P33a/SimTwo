@@ -93,7 +93,6 @@ procedure SetSolidRotationMat(R, i: integer; Rot: Matrix);
 function GetSolidPos(R, i: integer): TPoint3D;
 function GetSolidLinearVel(R, i: integer): TPoint3D;
 
-function GetShelpPos(R, i: integer): TPoint3D;
 
 //Matrix versions
 function GetSolidPosMat(R, i: integer): Matrix;
@@ -152,6 +151,15 @@ function GetThingSpeed(T: integer): TPoint3D;
 procedure SetThingSpeed(T: integer; vx, vy, vz: double);
 
 procedure ClearThings;
+
+
+function GetShellPos(R, i: integer): TPoint3D;
+procedure SetShellColor(R, I: integer; Red, Green, Blue: byte);
+function GetShellColor(R, i: integer): TRGBAColor;
+
+function GetObstacleIndex(ID: string): integer;
+procedure SetObstacleColor(I: integer; Red, Green, Blue: byte);
+function GetObstacleColor(I, c: integer): TRGBAColor;
 
 
 function GetAxisOdo(R, i: integer): integer;
@@ -597,22 +605,6 @@ begin
   end;
 end;
 
-
-function GetShelpPos(R, i: integer): TPoint3D;
-var v1: TdVector3;
-begin
-  result.x := 0;
-  result.y := 0;
-  result.z := 0;
-
-  with WorldODE.Robots[R].Shells[i] do begin
-    if geom = nil then exit;
-    v1 := dGeomGetPosition(geom)^;
-    Result.x := v1[0];
-    Result.y := v1[1];
-    Result.z := v1[2];
-  end;
-end;
 
 function GetSolidLinearVel(R, i: integer): TPoint3D;
 var v1: TdVector3;
@@ -1362,7 +1354,6 @@ begin
     result := Things.Add(newThing);
     newThing.ID := ID;
 
-    newThing.description := ID;
     newThing.BuoyantMass := 0;
     newThing.Drag := 0;
     newThing.StokesDrag := 1e-5;
@@ -1409,6 +1400,53 @@ begin
   end;
   WorldODE.Things.ClearAll;
 end;
+
+
+function GetShellPos(R, i: integer): TPoint3D;
+var v1: TdVector3;
+begin
+  result.x := 0;
+  result.y := 0;
+  result.z := 0;
+
+  with WorldODE.Robots[R].Shells[i] do begin
+    if geom = nil then exit;
+    v1 := dGeomGetPosition(geom)^;
+    Result.x := v1[0];
+    Result.y := v1[1];
+    Result.z := v1[2];
+  end;
+end;
+
+
+procedure SetShellColor(R, I: integer; Red, Green, Blue: byte);
+begin
+  WorldODE.Robots[R].Shells[i].SetColor(Red/255, Green/255, Blue/255);
+end;
+
+
+function GetShellColor(R, I: integer): TRGBAColor;
+begin
+  with result do WorldODE.Robots[R].Shells[I].GetColor(Red, Green, Blue, Alpha);
+end;
+
+
+function GetObstacleIndex(ID: string): integer;
+begin
+  result := WorldODE.Obstacles.IndexFromID(ID);
+end;
+
+
+procedure SetObstacleColor(I: integer; Red, Green, Blue: byte);
+begin
+  WorldODE.Obstacles[I].SetColor(Red/255, Green/255, Blue/255);
+end;
+
+function GetObstacleColor(I, c: integer): TRGBAColor;
+begin
+  with result do WorldODE.Obstacles[I].GetColor(Red, Green, Blue, Alpha);
+end;
+
 
 {
 function GetLinkWayPointPos(R, i, j: integer): double;

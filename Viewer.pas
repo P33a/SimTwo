@@ -1108,8 +1108,7 @@ begin
 
   newTyre := TSolid.Create;
   Robot.Solids.Add(newTyre);
-  newTyre.ID := '-1';
-  newTyre.description := 'Tyre '+inttostr(round(deg(Pars.Angle)));
+  newTyre.ID := 'Tyre '+inttostr(round(deg(Pars.Angle)));
   // The cylinder is created with its axis vertical (Z alligned)
   CreateSolidCylinder(newTyre, Pars.mass, wdx, wdy, Pars.Radius, Pars.Radius, Pars.Width);
   newTyre.SetRotation(-sin(Pars.Angle), cos(Pars.Angle), 0, pi/2);
@@ -1306,7 +1305,6 @@ begin
         newSolid := TSolid.Create;
         SolidList.Add(newSolid);
         newSolid.ID := ID;
-        newSolid.description := ID;
         newSolid.BuoyantMass := BuoyantMass;
         newSolid.Drag := Drag;
         newSolid.StokesDrag := StokesDrag;
@@ -2035,7 +2033,7 @@ var XML: IXMLDocument;
     SolidDef: TSolidDef;
     //sizeX, sizeY, sizeZ, posX, posY, posZ, angX, angY, angZ: double;
     colorR, colorG, colorB: double;
-    //ID: string;
+    //prefixID : string;
 
     TextureName: string;
     TextureScale: double;
@@ -2079,9 +2077,9 @@ begin
       Obstacles.Add(NewObstacle);
       with SolidDef do begin
         if ID = '' then begin
-          NewObstacle.description := format('Obstacle at (%.1f, %.1f, %.1f)',[posX, posY, posZ]);
+          NewObstacle.ID := format('Obstacle at (%.1f, %.1f, %.1f)',[posX, posY, posZ]);
         end else begin
-          NewObstacle.description := format('%s at (%.1f, %.1f, %.1f)',[ID, posX, posY, posZ]);
+          NewObstacle.ID := OffsetDef.ID + ID;
         end;
         if obstacle.NodeName = 'cuboid' then begin
           CreateBoxObstacle(NewObstacle, sizeX, sizeY, sizeZ, posX, posY, posZ);
@@ -2595,9 +2593,9 @@ begin
       newShell := TSolid.Create;
       Robot.Shells.Add(newShell);
       if IDValue = '' then begin
-        newShell.description := 'Shell';
+        newShell.ID := 'Shell';
       end else begin
-        newShell.description := IDValue;
+        newShell.ID := IDValue;
       end;
 
       SolidIdx := Robot.Solids.IndexFromID(MotherSolidId);
@@ -3668,7 +3666,7 @@ begin
 
   if Assigned(pick) then begin
     if pick.TagObject is TSolid then begin
-      GLHUDTextObjName.Text := TSolid(pick.TagObject).description;
+      GLHUDTextObjName.Text := TSolid(pick.TagObject).ID;
       GLHUDTextObjName.TagFloat := 10;
       if Assigned(OldPick) then OldPick.Material.FrontProperties.Emission.Color:=clrBlack;
       pick.Material.FrontProperties.Emission.Color:=clrRed;
