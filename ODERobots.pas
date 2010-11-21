@@ -382,6 +382,7 @@ type
     procedure Insert(Index: Integer; ASensor: TSensor);
     property Items[Index: Integer]: TSensor read GetItems write SetItems; default;
     procedure ClearAll;
+    function IndexFromID(aID: string): integer;
   end;
 
 
@@ -1585,6 +1586,18 @@ end;
 procedure TSensorList.SetItems(Index: Integer; ASensor: TSensor);
 begin
   inherited Items[Index] := ASensor;
+end;
+
+function TSensorList.IndexFromID(aID: string): integer;
+var i: integer;
+begin
+  result := -1;
+  for i := 0 to Count - 1 do begin
+    if Items[i].ID = aID then begin
+      result := i;
+      exit;
+    end;
+  end;
 end;
 
 { TAxisTrajList }
