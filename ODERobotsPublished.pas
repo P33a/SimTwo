@@ -130,6 +130,10 @@ procedure SolidCanvasClear(R, i: integer);
 
 procedure SetSolidForce(R, i: integer; Fx, Fy, Fz: double);
 
+function GetGlobalSensorIndex(ID: string): integer;
+function GetGlobalSensorVal(i: integer): double;
+
+function GetSensorIndex(R: integer;ID: string): integer;
 function GetSensorVal(R, i: integer): double;
 procedure SetSensorColor(R, i: integer; Red, Green, Blue: byte);
 
@@ -154,12 +158,12 @@ procedure ClearThings;
 
 
 function GetShellPos(R, i: integer): TPoint3D;
-procedure SetShellColor(R, I: integer; Red, Green, Blue: byte);
+procedure SetShellColor(R, i: integer; Red, Green, Blue: byte);
 function GetShellColor(R, i: integer): TRGBAColor;
 
 function GetObstacleIndex(ID: string): integer;
 procedure SetObstacleColor(I: integer; Red, Green, Blue: byte);
-function GetObstacleColor(I, c: integer): TRGBAColor;
+function GetObstacleColor(I: integer): TRGBAColor;
 
 
 function GetAxisOdo(R, i: integer): integer;
@@ -842,6 +846,22 @@ begin
   end;
 end;
 
+
+function GetGlobalSensorIndex(ID: string): integer;
+begin
+  result := WorldODE.Sensors.IndexFromID(ID);
+end;
+
+function GetGlobalSensorVal(i: integer): double;
+begin
+  result := WorldODE.Sensors[i].measures[0].value;
+end;
+
+function GetSensorIndex(R: integer;ID: string): integer;
+begin
+  result := WorldODE.Robots[R].Sensors.IndexFromID(ID);
+end;
+
 function GetSensorVal(R, i: integer): double;
 begin
   result := -1;
@@ -1419,7 +1439,7 @@ begin
 end;
 
 
-procedure SetShellColor(R, I: integer; Red, Green, Blue: byte);
+procedure SetShellColor(R, i: integer; Red, Green, Blue: byte);
 begin
   WorldODE.Robots[R].Shells[i].SetColor(Red/255, Green/255, Blue/255);
 end;
@@ -1442,7 +1462,7 @@ begin
   WorldODE.Obstacles[I].SetColor(Red/255, Green/255, Blue/255);
 end;
 
-function GetObstacleColor(I, c: integer): TRGBAColor;
+function GetObstacleColor(I: integer): TRGBAColor;
 begin
   with result do WorldODE.Obstacles[I].GetColor(Red, Green, Blue, Alpha);
 end;

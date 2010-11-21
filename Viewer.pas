@@ -2168,6 +2168,7 @@ begin
       while prop <> nil do begin
         if prop.NodeName = 'ID' then begin
           IDValue := GetNodeAttrStr(prop, 'value', IDValue);
+          IDValue := GetNodeAttrStr(prop, 'name', IDValue);
         end;
         if prop.NodeName = 'absolute_coords' then begin
           AbsoluteCoords := true;
