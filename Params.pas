@@ -757,12 +757,14 @@ procedure TFParams.CBFreezeClick(Sender: TObject);
 begin
   if FViewer.GLCadencer.Mode = cmApplicationIdle then begin
     FViewer.GLCadencer.Mode := cmManual;
+    FViewer.TimerCadencer.Enabled := false;
   end else if FViewer.GLCadencer.Mode = cmManual then begin
     FViewer.GLCadencer.Mode := cmApplicationIdle;
-    // Make one step with fixed time and then release it to avoid a "time jump" 
+    // Make one step with fixed time and then release it to avoid a "time jump"
     FViewer.GLCadencer.MaxDeltaTime := FViewer.GLCadencer.FixedDeltaTime;
     FViewer.GLCadencer.Progress;
     FViewer.GLCadencer.MaxDeltaTime := 0;
+    FViewer.TimerCadencer.Enabled := true;
   end;
 end;
 
