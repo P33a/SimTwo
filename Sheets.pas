@@ -26,6 +26,7 @@ type
 
     SourceCellsList: TStringList;
     level: integer;
+    backColor: TColor;
 
     constructor Create;
     destructor Destroy; override;
@@ -106,6 +107,8 @@ type
     Undo1: TMenuItem;
     N1: TMenuItem;
     MenuDelete: TMenuItem;
+    ColorDialog: TColorDialog;
+    SpeedButtonBackColor: TSpeedButton;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure SGGlobalMouseDown(Sender: TObject; Button: TMouseButton;
@@ -133,6 +136,7 @@ type
     procedure MenuCopyClick(Sender: TObject);
     procedure MenuPasteClick(Sender: TObject);
     procedure FormResize(Sender: TObject);
+    procedure SpeedButtonBackColorClick(Sender: TObject);
   private
     procedure FillHeaders(SGrid: TStringGrid);
     procedure CellsRectToStringList(CellsRect: TGridRect; SL: TStringList);
@@ -497,7 +501,7 @@ begin
       myBackColor := clHighlight;
       myTextColor := clHighlightText;
     end else begin
-      myBackColor := Grid.Color;
+      myBackColor := SheetCell.backColor;
       myTextColor := clWindowText;
     end;
   end;
@@ -562,6 +566,8 @@ begin
     prop.SetAttribute('r', format('%d',[Sheet.CellList[i].row]));
     prop.SetAttribute('c', format('%d',[Sheet.CellList[i].col]));
     prop.SetAttribute('text', format('%s',[Sheet.CellList[i].text]));
+    if Sheet.CellList[i].backcolor <> clWindow then
+      prop.SetAttribute('backcolor', format('$%.6x',[integer(Sheet.CellList[i].backcolor)]));
     node.AppendChild(prop);
   end;
 
@@ -575,6 +581,7 @@ var XML: IXMLDocument;
     w, num: integer;
     r, c: integer;
     s: string;
+    bcolor: integer;
 begin
   XML := LoadXML(XMLFile, nil);
   if XML = nil then exit;
@@ -612,8 +619,12 @@ begin
         if prop.NodeName = 'cell' then begin
           r := GetNodeAttrInt(prop, 'r', -1);
           c := GetNodeAttrInt(prop, 'c', -1);
+          s := GetNodeAttrStr(prop, 'backcolor','');
+          bcolor := strtointdef(s, clWindow);
           s := GetNodeAttrStr(prop, 'text', '');
+          //bcolor := GetNodeAttr(prop, 'backcolor', clWindow);
           if (r >= 0) and (c >= 0) then begin
+            Sheet.EditCell(r, c).backColor := TColor(bcolor);
             Sheet.EditCell(r, c).ParseText(s);
           end;
         end;
@@ -819,6 +830,7 @@ begin
   CompiledExpr := TStringList.Create;
   //SourceCellsList := TSheetCellList.Create;
   //DependentCellsList := TSheetCellList.Create;
+  backColor := clWindow;
 end;
 
 destructor TSheetCell.Destroy;
@@ -1146,6 +1158,15 @@ begin
   //if IsIconic(handle) then begin  //... form was minimized.
   //  hide;  ///Bug...
   //end;
+end;
+
+procedure TFSheets.SpeedButtonBackColorClick(Sender: TObject);
+var SheetCell: TSheetCell;
+begin
+  SheetCell := ActSheet.EditCell(Last_r, Last_c);
+  ColorDialog.Color := SheetCell.backColor;
+  if ColorDialog.Execute then
+    SheetCell.backColor := ColorDialog.Color;
 end;
 
 end.
