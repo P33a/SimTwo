@@ -836,6 +836,10 @@ begin
   FEditor.SimTwoCloseRequested := true;
 end;
 
+function ScriptPeriod: double;
+begin
+  result := WorldODE.DecPeriod;
+end;
 
 procedure TFEditor.PSScript_Compile(Sender: TPSScript);
 var i: integer;
@@ -886,6 +890,8 @@ begin
   Sender.AddFunction(@RefreshSheets, 'procedure RefreshSheets;');
 
   Sender.AddFunction(@CloseSimTwo, 'procedure CloseSimTwo;');
+  Sender.AddFunction(@ScriptPeriod, 'function ScriptPeriod: double;');
+
 
   Sender.AddRegisteredPTRVariable('Time', 'Double');
   Sender.AddRegisteredPTRVariable('UDPDataRead', 'TMemoryStream');
