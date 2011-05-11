@@ -72,7 +72,7 @@ type
   TSolid = class
     Body: PdxBody;
     Geom : PdxGeom;
-    GLObj, AltGLObj, ShadowGlObj, CanvasGLObj: TGLSceneObject;
+    GLObj, AltGLObj, ShadowGlObj, CanvasGLObj, extraGLObj: TGLSceneObject;
     PaintBitmap: TBitmap;
     PaintBitmapCorner: TdVector3;
     kind: TSolidKind;
@@ -744,6 +744,7 @@ end;
 procedure TSolid.SetColor(R, G, B, A: single);
 begin
   if GLObj = nil then exit;
+  if A < 1 then GLObj.Material.BlendingMode := bmTransparency;
   GLObj.Material.FrontProperties.Diffuse.SetColor(R, G, B, A);
 end;
 

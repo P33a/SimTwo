@@ -10,7 +10,7 @@ uses
   GLShadowVolume, GLSkydome, GLGraph, OmniXML, OmniXMLUtils,  ODERobots,
   rxPlacemnt, ProjConfig, GLHUDObjects, Menus, GLVectorFileObjects,
   GLFireFX, GlGraphics, OpenGL1x, SimpleParser, GLBitmapFont,
-  GLMesh, jpeg;
+  GLMesh, jpeg, GLWaterPlane;
 
 type
   TRGBfloat = record
@@ -23,6 +23,7 @@ type
     posX, posY, posZ: double;
     angX, angY, angZ: double;  // XYZ seq
   end;
+
 
 //Physic World ODE
 type
@@ -207,6 +208,7 @@ type
     N2: TMenuItem;
     MenuDimensions: TMenuItem;
     TimerCadencer: TTimer;
+    GLWaterPlane1: TGLWaterPlane;
     procedure FormCreate(Sender: TObject);
     procedure GLSceneViewerMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -668,7 +670,7 @@ begin
   Solid.GLObj := TGLSceneObject(ODEScene.AddNewChild(TGLSphere));
   dBodySetDamping(Solid.Body, Solid.StokesDrag, Solid.RollDrag);
 //  dBodySetDamping(Solid.Body, Solid.StokesDrag * pi * sqr(c_radius), Solid.RollDrag * c_radius);
-
+  
   with (Solid.GLObj as TGLSphere) do begin
     TagObject := Solid;
     Radius := c_radius;
@@ -1178,12 +1180,13 @@ var XMLSolid, prop: IXMLNode;
     Surf: TdSurfaceParameters;
     dMass: TdMass;
     MatterProps: TMatterProperties;
-    hasCanvas: boolean;
+    hasCanvas, isLiquid: boolean;
     CanvasWidth, CanvasHeigth: integer;
     MotherSolidId: string;
     SolidIdx: integer;
     NewPos, ActPos: TdVector3;
     GravityMode: integer;
+    transparency: double;
 begin
   if root = nil then exit;
 
@@ -1208,18 +1211,28 @@ begin
       angX := 0; angY := 0; angZ := 0;
       colorR := 128/255; colorG := 128/255; colorB := 128/255;
       TextureName := ''; TextureScale := 1;
+      transparency := 1;
       descr := XMLSolid.NodeName + inttostr(SolidList.Count);
       Surf.mu := -1; Surf.mu2 := -1;
       Surf.soft_cfm := 1e-5;
       //Surf.soft_erp := 0.2;
       Surf.bounce := 0; Surf.bounce_vel := 0;
       hasCanvas := false;
+      isLiquid := false;
       CanvasWidth := 128; CanvasHeigth := 128;
       MotherSolidId := '';
 
       while prop <> nil do begin
         if prop.NodeName = 'solid' then begin
           MotherSolidId := GetNodeAttrStr(prop, 'id', MotherSolidId);
+        end;
+        if prop.NodeName = 'transparency' then begin
+          transparency := GetNodeAttrRealParse(prop, 'alpha', transparency, Parser);
+        end;
+        if prop.NodeName = 'liquid' then begin
+          isLiquid := true;
+          //CanvasWidth := round(GetNodeAttrRealParse(prop, 'width', CanvasWidth, Parser));
+          //CanvasHeigth := round(GetNodeAttrRealParse(prop, 'heigth', CanvasHeigth, Parser));
         end;
         if prop.NodeName = 'canvas' then begin
           hasCanvas := true;
@@ -1340,6 +1353,21 @@ begin
               PaintBitmapCorner[2] := sizeZ/2;
             end;
           end;
+          if (XMLSolid.NodeName = 'cuboid') and isLiquid then begin
+            (newSolid.GLObj as TGLCube).Parts := (newSolid.GLObj as TGLCube).Parts - [cpfront];  // remove the side where the liquid surface will be placed
+            newSolid.extraGLObj := TGLSceneObject(newSolid.GLObj.AddNewChild(TGLWaterPlane));
+            with (newSolid.extraGLObj as TGLWaterPlane) do begin
+              if transparency < 1 then begin
+                Material.BlendingMode := bmTransparency;
+                Material.FrontProperties.Diffuse.SetColor(colorR, colorG, colorB, transparency);
+              end;
+              position.Z := sizeZ/2;
+              up.SetVector(0, 0, 1);
+              Resolution := 128;
+              RainForce := 5000;
+              scale.SetVector(sizeX, sizeY, 1);
+            end;
+          end;
         end else if XMLSolid.NodeName = 'sphere' then begin
           CreateSolidSphere(newSolid, mass, posX, posY, posZ, radius);
         end else if XMLSolid.NodeName = 'cylinder' then begin
@@ -1444,7 +1472,7 @@ begin
         end;
 
         newSolid.SetZeroState();
-        newSolid.SetColor(colorR, colorG, colorB);
+        newSolid.SetColor(colorR, colorG, colorB, transparency);
         //PositionSceneObject(newSolid.GLObj, newSolid.Geom);
       end;
 
@@ -2037,6 +2065,7 @@ var XML: IXMLDocument;
 
     TextureName: string;
     TextureScale: double;
+    transparency: double;
     R, Roff, RFinal: TdMatrix3;
     Vec: TDVector3;
     NewObstacle: TSolid;
@@ -2059,6 +2088,7 @@ begin
       SolidDefSetDefaults(SolidDef);
       colorR := 128/255; colorG := 128/255; colorB := 128/255;
       TextureName := ''; TextureScale := 1;
+      transparency := 1;
       while prop <> nil do begin
         SolidDefProcessXMLNode(SolidDef, prop, Parser);
         if prop.NodeName = 'color_rgb' then begin
@@ -2069,6 +2099,9 @@ begin
         if prop.NodeName = 'texture' then begin
           TextureName := GetNodeAttrStr(prop, 'name', TextureName);
           TextureScale := GetNodeAttrRealParse(prop, 'scale', TextureScale, Parser);
+        end;
+        if prop.NodeName = 'transparency' then begin
+          transparency := GetNodeAttrRealParse(prop, 'alpha', transparency, Parser);
         end;
         prop := prop.NextSibling;
       end;
@@ -2100,7 +2133,7 @@ begin
       if TextureName <> '' then begin
         NewObstacle.SetTexture(TextureName, TextureScale); //'LibMaterialFeup'
       end;
-      NewObstacle.SetColor(colorR, colorG, colorB);
+      NewObstacle.SetColor(colorR, colorG, colorB, transparency);
       PositionSceneObject(NewObstacle.GLObj, NewObstacle.Geom);
     end;
 
