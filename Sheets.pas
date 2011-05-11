@@ -27,6 +27,7 @@ type
     SourceCellsList: TStringList;
     level: integer;
     backColor: TColor;
+    Font: TFont;
 
     constructor Create;
     destructor Destroy; override;
@@ -77,6 +78,9 @@ type
   end;
 
 
+  TClearFlag = (cfFormat, cfFormulas);
+  TClearFlagsSet = Set of TClearFlag;
+
 type
   TFSheets = class(TForm)
     PanelFormula: TPanel;
@@ -109,6 +113,9 @@ type
     MenuDelete: TMenuItem;
     ColorDialog: TColorDialog;
     SpeedButtonBackColor: TSpeedButton;
+    MenuDeleteAll: TMenuItem;
+    FontDialog: TFontDialog;
+    SpeedButtonFont: TSpeedButton;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure SGGlobalMouseDown(Sender: TObject; Button: TMouseButton;
@@ -137,6 +144,8 @@ type
     procedure MenuPasteClick(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure SpeedButtonBackColorClick(Sender: TObject);
+    procedure MenuDeleteAllClick(Sender: TObject);
+    procedure SpeedButtonFontClick(Sender: TObject);
   private
     procedure FillHeaders(SGrid: TStringGrid);
     procedure CellsRectToStringList(CellsRect: TGridRect; SL: TStringList);
@@ -429,7 +438,7 @@ begin
 end;
 
 procedure MyDrawCellText(const Canvas: TCanvas; const Rect: TRect;
-  const Text: String; const BackColor, TextColor: TColor;
+  const Text: String; const textFont: TFont; const BackColor, TextColor: TColor;
   const Alignment: TAlignment);
 const
   X_BORDER_WIDTH = 2;
@@ -437,6 +446,7 @@ const
 var
   iLeftBorder: Integer;
 begin
+  Canvas.Font := textFont;
   // calculate the left border
   iLeftBorder := 0;
   case Alignment of
@@ -455,13 +465,14 @@ begin
 end;
 
 procedure DrawButtonText(const Canvas: TCanvas; const Rect: TRect;
-  const Text: String; const BackColor, TextColor: TColor; Pushed: boolean);
+  const Text: String; const textFont: TFont; const BackColor, TextColor: TColor; Pushed: boolean);
 const
   X_BORDER_WIDTH = 2;
   Y_BORDER_WIDTH = 1;
 var
   iLeftBorder: Integer;
 begin
+  Canvas.Font := textFont;
   // calculate the left border
   iLeftBorder := Rect.Left + (Rect.Right - Rect.Left - Canvas.TextWidth(Text)) div 2;
   // set colors
@@ -507,15 +518,15 @@ begin
   end;
   // draw the text in the cell
   if (SheetCell.CellType = ctText) or (SheetCell.CellType = ctFormula) then begin
-    MyDrawCellText(Grid.Canvas, Rect, sText, myBackColor, myTextColor, myAlignment);
+    MyDrawCellText(Grid.Canvas, Rect, sText, SheetCell.Font, myBackColor, myTextColor, myAlignment);
   end else if SheetCell.CellType = ctButton then begin
     myTextColor := clBtnText;
     if SheetCell.CellButtonState = cstButtonDown then begin
       DrawFrameControl(Grid.Canvas.Handle, Rect, DFC_BUTTON, DFCS_BUTTONPUSH or DFCS_PUSHED);
-      DrawButtonText(Grid.Canvas, Rect, sText, myBackColor, myTextColor, true);
+      DrawButtonText(Grid.Canvas, Rect, sText, SheetCell.Font, myBackColor, myTextColor, true);
     end else begin
       DrawFrameControl(Grid.Canvas.Handle, Rect, DFC_BUTTON, DFCS_BUTTONPUSH);
-      DrawButtonText(Grid.Canvas, Rect, sText, myBackColor, myTextColor, false);
+      DrawButtonText(Grid.Canvas, Rect, sText, SheetCell.Font, myBackColor, myTextColor, false);
     end;
   end;
   //end;
@@ -529,11 +540,34 @@ begin
 end;
 
 
+//TFontStyle = (fsBold, fsItalic, fsUnderline, fsStrikeOut);
+
+function FontStylesToStr(FontStyles: TFontStyles): string;
+begin
+  result := '[    ]';
+  if fsBold in FontStyles then result[2] := 'B';
+  if fsItalic in FontStyles then result[3] := 'I';
+  if fsUnderline in FontStyles then result[4] := 'U';
+  if fsStrikeOut in FontStyles then result[5] := 'S';
+end;
+
+function StrToFontStyles(s: string; default: TFontStyles): TFontStyles;
+begin
+  result := default;
+  if length(s) <> 6 then exit;
+  result := [];
+  if s[2] = 'B' then result := result + [fsBold];
+  if s[3] = 'I' then result := result + [fsItalic];
+  if s[4] = 'I' then result := result + [fsUnderline];
+  if s[5] = 'S' then result := result + [fsStrikeOut];
+end;
+
 procedure TFSheets.SaveSheet(XMLFile: string; Sheet: TSheet);
 var XML: IXMLDocument;
     node, prop: IXMLElement;
     PI: IXMLProcessingInstruction;
     i: integer;
+    s, def_s: string;
 begin
   XML := CreateXMLDoc;
   PI := XML.CreateProcessingInstruction('xml', 'version="1.0"');
@@ -561,13 +595,22 @@ begin
   node := XML.CreateElement('cells');
   XML.DocumentElement.AppendChild(node);
 
+  def_s := FontStylesToStr(Sheet.DefaultSheetCell.Font.Style);
   for i := 0 to Sheet.CellList.Count - 1 do begin
+    if Sheet.CellList[i].text = '' then continue;
     prop := XML.CreateElement('cell');
     prop.SetAttribute('r', format('%d',[Sheet.CellList[i].row]));
     prop.SetAttribute('c', format('%d',[Sheet.CellList[i].col]));
     prop.SetAttribute('text', format('%s',[Sheet.CellList[i].text]));
     if Sheet.CellList[i].backcolor <> clWindow then
       prop.SetAttribute('backcolor', format('$%.6x',[integer(Sheet.CellList[i].backcolor)]));
+    if Sheet.CellList[i].Font.Name <> Sheet.DefaultSheetCell.Font.Name then
+      prop.SetAttribute('font', format('%s',[Sheet.CellList[i].Font.Name]));
+    if Sheet.CellList[i].Font.Size <> Sheet.DefaultSheetCell.Font.Size then
+      prop.SetAttribute('fsize', format('%d',[Sheet.CellList[i].Font.Size]));
+    s := FontStylesToStr(Sheet.CellList[i].Font.Style);
+    if s <> def_s then
+      prop.SetAttribute('style', s);
     node.AppendChild(prop);
   end;
 
@@ -580,7 +623,7 @@ var XML: IXMLDocument;
     root, node, prop: IXMLNode;
     w, num: integer;
     r, c: integer;
-    s: string;
+    s, def_s: string;
     bcolor: integer;
 begin
   XML := LoadXML(XMLFile, nil);
@@ -588,6 +631,8 @@ begin
 
   root:=XML.SelectSingleNode('/sheet');
   if root = nil then exit;
+
+  def_s := FontStylesToStr(Sheet.DefaultSheetCell.Font.Style);
 
   node := root.FirstChild;
   while node <> nil do begin
@@ -626,6 +671,9 @@ begin
           if (r >= 0) and (c >= 0) then begin
             Sheet.EditCell(r, c).backColor := TColor(bcolor);
             Sheet.EditCell(r, c).ParseText(s);
+            Sheet.EditCell(r, c).Font.Name := GetNodeAttrStr(prop, 'font', Sheet.DefaultSheetCell.Font.Name);
+            Sheet.EditCell(r, c).Font.Size := GetNodeAttrInt(prop, 'fsize', Sheet.DefaultSheetCell.Font.Size);
+            Sheet.EditCell(r, c).Font.Style := StrToFontStyles(GetNodeAttrStr(prop, 'style', def_s), Sheet.DefaultSheetCell.Font.Style);
           end;
         end;
 
@@ -831,10 +879,12 @@ begin
   //SourceCellsList := TSheetCellList.Create;
   //DependentCellsList := TSheetCellList.Create;
   backColor := clWindow;
+  font := TFont.Create;
 end;
 
 destructor TSheetCell.Destroy;
 begin
+  font.Free;
   CompiledExpr.Free;
   SourceCellsList.Free;
   //DependentCellsList.Free;
@@ -1055,13 +1105,16 @@ begin
 end;
 
 
-procedure ClearCells(CellsRect: TGridRect);
+procedure ClearCells(CellsRect: TGridRect; ClearFlags: TClearFlagsSet);
 var r, c: integer;
 //    SheetCell: TSheetCell;
 begin
   for r := CellsRect.top to CellsRect.bottom do begin
     for c := CellsRect.Left to CellsRect.Right do begin
-      FSheets.ActSheet.EditCell(r, c).ParseText('');
+      if cfFormulas in ClearFlags then
+        FSheets.ActSheet.EditCell(r, c).ParseText('');
+      if cfFormat in ClearFlags then
+        FSheets.ActSheet.EditCell(r, c).backColor := clWindow;
     end;
   end;
 end;
@@ -1069,7 +1122,7 @@ end;
 
 procedure TFSheets.MenuDeleteClick(Sender: TObject);
 begin
-  ClearCells(ActSheet.SGrid.Selection);
+  ClearCells(ActSheet.SGrid.Selection, [cfFormulas]);
 end;
 
 
@@ -1077,6 +1130,7 @@ procedure TFSheets.CellsRectToStringList(CellsRect: TGridRect; SL: TStringList);
 var r, c: integer;
 begin
   Sl.Clear;
+  SL.Add('sheet_selection');
   SL.Add(inttostr(CellsRect.top));
   SL.Add(inttostr(CellsRect.Left));
   SL.Add(inttostr(CellsRect.bottom));
@@ -1097,18 +1151,19 @@ begin
   r := CellsRect.top;
   c := CellsRect.Left;
   try
-    CellsRect.top := strtoint(SL[0]);
+    if SL[0] <> 'sheet_selection' then exit;
+    CellsRect.top := strtoint(SL[1]);
     r_offset := r - CellsRect.top;
     CellsRect.top := CellsRect.top + r_offset;
 
-    CellsRect.Left := strtoint(SL[1]);
+    CellsRect.Left := strtoint(SL[2]);
     c_offset := c - CellsRect.Left;
     CellsRect.Left := CellsRect.Left + c_offset;
 
-    CellsRect.bottom := strtoint(SL[2]) + r_offset;
-    CellsRect.Right := strtoint(SL[3]) + c_offset;
+    CellsRect.bottom := strtoint(SL[3]) + r_offset;
+    CellsRect.Right := strtoint(SL[4]) + c_offset;
 
-    i := 4;
+    i := 5;
     for r := CellsRect.top to CellsRect.bottom do begin
       for c := CellsRect.Left to CellsRect.Right do begin
         Sheet.EditCell(r, c).ParseText(SL[i]);
@@ -1167,6 +1222,21 @@ begin
   ColorDialog.Color := SheetCell.backColor;
   if ColorDialog.Execute then
     SheetCell.backColor := ColorDialog.Color;
+end;
+
+procedure TFSheets.MenuDeleteAllClick(Sender: TObject);
+begin
+  ClearCells(ActSheet.SGrid.Selection, [cfFormat, cfFormulas]);
+
+end;
+
+procedure TFSheets.SpeedButtonFontClick(Sender: TObject);
+var SheetCell: TSheetCell;
+begin
+  SheetCell := ActSheet.EditCell(Last_r, Last_c);
+  FontDialog.Font := SheetCell.font;
+  if FontDialog.Execute then
+    SheetCell.font.Assign(FontDialog.Font);
 end;
 
 end.

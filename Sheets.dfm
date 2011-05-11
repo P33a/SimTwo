@@ -93,6 +93,21 @@ object FSheets: TFSheets
         40B0122015680002001400000000000000000000000000000000}
       OnClick = SpeedButtonBackColorClick
     end
+    object SpeedButtonFont: TSpeedButton
+      Left = 808
+      Top = 3
+      Width = 24
+      Height = 24
+      Anchors = [akTop, akRight]
+      Caption = 'f'
+      Font.Charset = ANSI_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -16
+      Font.Name = 'Tahoma'
+      Font.Style = [fsBold]
+      ParentFont = False
+      OnClick = SpeedButtonFontClick
+    end
     object CBNames: TComboBox
       Left = 4
       Top = 4
@@ -105,7 +120,7 @@ object FSheets: TFSheets
     object EditFormula: TEdit
       Left = 204
       Top = 4
-      Width = 621
+      Width = 597
       Height = 21
       TabOrder = 1
       OnExit = EditFormulaExit
@@ -289,9 +304,23 @@ object FSheets: TFSheets
       ShortCut = 46
       OnClick = MenuDeleteClick
     end
+    object MenuDeleteAll: TMenuItem
+      Caption = 'Delete &All'
+      ShortCut = 8238
+      OnClick = MenuDeleteAllClick
+    end
   end
   object ColorDialog: TColorDialog
     Left = 340
+    Top = 61
+  end
+  object FontDialog: TFontDialog
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    Left = 376
     Top = 61
   end
 end
