@@ -749,6 +749,22 @@ object FViewer: TFViewer
       NodeSize = 0.200000002980232200
       Options = []
     end
+    object GLWaterPlane1: TGLWaterPlane
+      Material.FrontProperties.Diffuse.Color = {CDCC4C3FCDCC4C3FCDCC4C3F0000003F}
+      Material.FrontProperties.Specular.Color = {00000000000000000000000000000000}
+      Material.BlendingMode = bmTransparency
+      Direction.Coordinates = {00000000000080BF0000000000000000}
+      Position.Coordinates = {0000000000000000CDCCCC3D0000803F}
+      Up.Coordinates = {00000000000000000000803F00000000}
+      Visible = False
+      Active = False
+      RainTimeInterval = 5000
+      RainForce = 5000.000000000000000000
+      Viscosity = 0.999000012874603300
+      Elastic = 10.000000000000000000
+      Resolution = 128
+      SimulationFrequency = 100.000000000000000000
+    end
     object GLCamera: TGLCamera
       DepthOfView = 1000000000.000000000000000000
       FocalLength = 76.633468627929690000
