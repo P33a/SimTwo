@@ -148,7 +148,11 @@ procedure SetThingPos(T: integer; x, y, z: double);
 function GetThingSize(T: integer): TPoint3D;
 procedure SetThingSize(T: integer; x, y, z: double);
 
+function AddThingBox(ID: string; mass, posx, posY, posZ, sizeX, sizeY, sizeZ: double; rgb24: integer): integer;
 function AddThingSphere(ID: string; mass, posX, posY, posZ, radius: double; rgb24: integer): integer;
+function AddThingCylinder(ID: string; mass, posx, posY, posZ, radius, len: double; rgb24: integer): integer;
+function DeleteThing(ID: string): integer;
+
 procedure SetThingForce(T: integer; Fx, Fy, Fz: double);
 
 function GetThingSpeed(T: integer): TPoint3D;
@@ -1365,8 +1369,10 @@ begin
   (FViewer.GLDTrails.Children[T] as TGLLines).Nodes.Clear;
 end;
 
+type
+  TThingType = (ttBox, ttSphere, ttCylinder);
 
-function AddThingSphere(ID: string; mass, posx, posY, posZ, radius: double; rgb24: integer): integer;
+function AddThing(ThingType: TThingType; ID: string; mass, posx, posY, posZ, sx, sy, sz: double; rgb24: integer): integer;
 var newThing: TSolid;
 begin
   with WorldODE do begin
@@ -1379,12 +1385,67 @@ begin
     newThing.StokesDrag := 1e-5;
     newThing.RollDrag := 1e-3;
 
-    CreateSolidSphere(newThing, mass, posX, posY, posZ, radius);
+    if ThingType = ttBox then begin
+      CreateSolidBox(newThing, mass, posX, posY, posZ, sx, sy, sz);
+    end else if ThingType = ttSphere then begin
+      CreateSolidSphere(newThing, mass, posX, posY, posZ, sx{:radius});
+    end else if ThingType = ttCylinder then begin
+      CreateSolidCylinder(newThing, mass, posX, posY, posZ, sx, sz);
+    end;
 
     newThing.SetZeroState();
     newThing.SetColorRGB(rgb24);
   end;
 end;
+
+
+function AddThingSphere(ID: string; mass, posx, posY, posZ, radius: double; rgb24: integer): integer;
+begin
+  result := AddThing(ttSphere, ID, mass, posx, posY, posZ, radius, 0, 0, rgb24);
+end;
+
+
+function AddThingBox(ID: string; mass, posx, posY, posZ, sizeX, sizeY, sizeZ: double; rgb24: integer): integer;
+begin
+  result := AddThing(ttBox, ID, mass, posx, posY, posZ, sizeX, sizeY, sizeZ, rgb24);
+end;
+
+function AddThingCylinder(ID: string; mass, posx, posY, posZ, radius, len: double; rgb24: integer): integer;
+begin
+  result := AddThing(ttCylinder, ID, mass, posx, posY, posZ, radius, 0, len, rgb24);
+end;
+
+
+function RemoveAndFreeThing(killThing: TSolid): integer;
+//var killThing: TSolid;
+begin
+  with WorldODE do begin
+    result := Things.remove(killThing);
+    if result >= 0 then
+      killThing.Free;
+  end;
+end;
+
+
+function DeleteThing(ID: string): integer;
+var killThing: TSolid;
+//    idx: integer;
+begin
+  with WorldODE do begin
+    result := Things.IndexFromID(ID);
+    if result < 0 then exit;
+    killThing := Things[result];
+    result := Things.remove(killThing);
+    if result >= 0 then begin
+      dGeomDestroy(killThing.Geom);
+      dBodyDestroy(killThing.Body);
+      ODEScene.Remove(killThing.GLObj, false);
+      killThing.GLObj.Free;
+      killThing.Free;
+    end;
+  end;
+end;
+
 
 procedure SetThingForce(T: integer; Fx, Fy, Fz: double);
 begin
