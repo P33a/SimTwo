@@ -47,6 +47,7 @@ type
     Things: TSolidList;
     Sensors: TSensorList;
 
+    OldPick : TGLCustomSceneObject;
     PickSolid: TSolid;
     PickJoint: TdJointID;
     PickPoint, TargetPickPoint: TVector;
@@ -238,7 +239,6 @@ type
     procedure TimerCadencerTimer(Sender: TObject);
   private
     { Private declarations }
-    OldPick : TGLCustomSceneObject;
     my,mx: integer;
     t_delta, t_last, t_act: int64;
     KeyVals: TKeyVals;
@@ -3702,14 +3702,14 @@ begin
     if pick.TagObject is TSolid then begin
       GLHUDTextObjName.Text := TSolid(pick.TagObject).ID;
       GLHUDTextObjName.TagFloat := 10;
-      if Assigned(OldPick) then OldPick.Material.FrontProperties.Emission.Color:=clrBlack;
+      if Assigned(WorldODE.OldPick) then WorldODE.OldPick.Material.FrontProperties.Emission.Color:=clrBlack;
       pick.Material.FrontProperties.Emission.Color:=clrRed;
-      OldPick := Pick;
+      WorldODE.OldPick := Pick;
     end else begin
       GLHUDTextObjName.Text := '';
       GLHUDTextObjName.TagFloat := 0;
-      if Assigned(OldPick) then OldPick.Material.FrontProperties.Emission.Color:=clrBlack;
-      OldPick := nil;
+      if Assigned(WorldODE.OldPick) then WorldODE.OldPick.Material.FrontProperties.Emission.Color:=clrBlack;
+      WorldODE.OldPick := nil;
     end;
     if pick.TagObject is TAxis then begin
       GLHUDTextObjName.Text := TAxis(pick.TagObject).ParentLink.description;
@@ -4683,6 +4683,9 @@ procedure TWorld_ODE.DeleteSolid(Solid: TSolid);
 begin
   (OdeScene as TGLShadowVolume).Occluders.RemoveCaster(Solid.GLObj);
   ODEScene.Remove(Solid.GLObj, false);
+  if Solid.GLObj = oldpick then begin
+    oldpick := nil;
+  end;
   Solid.GLObj.Free;
   dGeomDestroy(Solid.Geom);
   dBodyDestroy(Solid.Body);

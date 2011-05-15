@@ -15,7 +15,7 @@ x Obstaculos
 
 x Elementos extra no robot
 x load da configuração do robot
-- sistema de desenhar pistas (simone)
+x sistema de desenhar pistas (simone)
 - Sensor de branco no chão (simone)
 - Controlo por script (simone)
 

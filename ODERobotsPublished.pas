@@ -1429,7 +1429,6 @@ end;
 
 function DeleteThing(ID: string): integer;
 var killThing: TSolid;
-//    idx: integer;
 begin
   with WorldODE do begin
     result := Things.IndexFromID(ID);
@@ -1437,10 +1436,7 @@ begin
     killThing := Things[result];
     result := Things.remove(killThing);
     if result >= 0 then begin
-      dGeomDestroy(killThing.Geom);
-      dBodyDestroy(killThing.Body);
-      ODEScene.Remove(killThing.GLObj, false);
-      killThing.GLObj.Free;
+      DeleteSolid(killThing);
       killThing.Free;
     end;
   end;
