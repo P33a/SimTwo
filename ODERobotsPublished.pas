@@ -72,6 +72,7 @@ procedure StopFire;
 procedure StopSolidFire(R, I: integer);
 procedure StartSolidFire(R, I: integer);
 
+function GetSceneConstant(constantName: string; defaultValue: double): double;
 
 procedure SetRobotPos(R: integer; x, y, z, teta: double);
 
@@ -144,6 +145,12 @@ procedure SetThingColor(T, c: integer; Red, Green, Blue: byte);
 
 function GetThingPos(T: integer): TPoint3D;
 procedure SetThingPos(T: integer; x, y, z: double);
+
+function GetThingRotMat(T: integer): Matrix;
+procedure SetThingRotationMat(T: integer; Rot: Matrix);
+
+function GetThingAgularVelMat(T: integer): Matrix;
+
 
 function GetThingSize(T: integer): TPoint3D;
 procedure SetThingSize(T: integer; x, y, z: double);
@@ -417,6 +424,18 @@ begin
 end;
 
 
+function GetSceneConstant(constantName: string; defaultValue: double): double;
+var idx: integer;
+begin
+  idx := WorldODE.Parser.VarsList.IndexOf(uppercase(constantName));
+  if idx >= 0 then begin
+    result:= pdouble(WorldODE.Parser.VarsList.Objects[idx])^;
+  end else begin
+    result := defaultValue;
+  end;
+end;
+
+
 procedure SetRobotPos(R: integer; x, y, z, teta: double);
 begin
   WorldODE.Robots[R].SetXYZTeta(x, y, z, teta);
@@ -510,6 +529,56 @@ procedure SetThingSize(T: integer; x, y, z: double);
 begin
   WorldODE.Things[T].SetSize(x, y, z);
 end;
+
+function GetThingRotMat(T: integer): Matrix;
+var pR: PdMatrix3;
+    row, col: integer;
+begin
+  result := Mzeros(3,3);
+
+  with WorldODE.Things[T] do begin
+    if Body = nil then exit;
+    pR := dBodyGetRotation(Body);
+    for row := 0 to 2 do begin
+      for col := 0 to 2 do begin
+        Msetv(Result, row, col, pR^[4*row+col]);
+      end;
+    end;
+  end;
+end;
+
+procedure SetThingRotationMat(T: integer; Rot: Matrix);
+var RM: TdMatrix3;
+    row, col: integer;
+begin
+  with WorldODE.Things[T] do begin
+    if Body = nil then exit;
+
+    for row := 0 to 2 do begin
+      for col := 0 to 2 do begin
+        RM[4*row+col] := MGetv(Rot, row, col);
+      end;
+    end;
+
+    dBodySetRotation(Body, RM);
+  end;
+end;
+
+
+function GetThingAgularVelMat(T: integer): Matrix;
+var v: PdVector3;
+begin
+  result := Mzeros(3,1);
+
+  with WorldODE.Things[T] do begin
+    if Body = nil then exit;
+    v := dBodyGetAngularVel(Body);
+    Msetv(Result, 0, 0, v^[0]);
+    Msetv(Result, 1, 0, v^[1]);
+    Msetv(Result, 2, 0, v^[2]);
+  end;
+end;
+
 
 
 function GetThingIndex(ID: string): integer;
