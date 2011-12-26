@@ -24,6 +24,29 @@ type
     angX, angY, angZ: double;  // XYZ seq
   end;
 
+  TSolidXMLProperties = record
+    radius, sizeX, sizeY, sizeZ, posX, posY, posZ, angX, angY, angZ, mass: double;
+    I11, I22, I33, I12, I13, I23: double;
+    BuoyantMass, Drag, StokesDrag, RollDrag: double;
+    colorR, colorG, colorB: double;
+    ID: string;
+    descr: string;
+    TextureName: string;
+    TextureScale: double;
+    MeshFile, MeshShadowFile: string;
+    MeshScale: double;
+    MeshCastsShadows: boolean;
+    Surf: TdSurfaceParameters;
+    dMass: TdMass;
+    MatterProps: TMatterProperties;
+    hasCanvas, isLiquid: boolean;
+    CanvasWidth, CanvasHeigth: integer;
+    MotherSolidId: string;
+    SolidIdx: integer;
+    NewPos, ActPos: TdVector3;
+    GravityMode: integer;
+    transparency: double;
+end;
 
 //Physic World ODE
 type
@@ -63,6 +86,7 @@ type
     Ode_UseQuickStep: boolean;
 
     XMLFiles, XMLErrors: TStringList;
+    Parser: TSimpleParser;
 
     destructor destroy; override;
     constructor create;
@@ -130,6 +154,10 @@ type
     procedure SolidDefSetDefaults(var SolidDef: TSolidDef);
     procedure CreateSphereObstacle(var Obstacle: TSolid; radius, posX,
       posY, posZ: double);
+    procedure LoadSolidXMLProperties(XMLSolid: IXMLNode;
+      Parser: TSimpleParser);
+    procedure InitSolidXMLProperties(
+      var SolidXMLProperties: TSolidXMLProperties);
 //    procedure AxisGLCreate(axis: Taxis; aRadius, aHeight: double);
 //    procedure AxisGLSetPosition(axis: Taxis);
   public
@@ -210,6 +238,7 @@ type
     MenuDimensions: TMenuItem;
     TimerCadencer: TTimer;
     GLWaterPlane1: TGLWaterPlane;
+    GLCameraMem: TGLCamera;
     procedure FormCreate(Sender: TObject);
     procedure GLSceneViewerMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -1157,7 +1186,179 @@ begin
   if at <> nil then exit;
   x := strtofloatdef(at.NodeValue, x);
   //if not TryStrToFloat(at.NodeValue, x) then exit;
+end;
+
+
+type TSolidXMLProperties = record
+    radius, sizeX, sizeY, sizeZ, posX, posY, posZ, angX, angY, angZ, mass: double;
+    I11, I22, I33, I12, I13, I23: double;
+    BuoyantMass, Drag, StokesDrag, RollDrag: double;
+    colorR, colorG, colorB: double;
+    ID: string;
+    descr: string;
+    TextureName: string;
+    TextureScale: double;
+    MeshFile, MeshShadowFile: string;
+    MeshScale: double;
+    MeshCastsShadows: boolean;
+    Surf: TdSurfaceParameters;
+    dMass: TdMass;
+    MatterProps: TMatterProperties;
+    hasCanvas, isLiquid: boolean;
+    CanvasWidth, CanvasHeigth: integer;
+    MotherSolidId: string;
+    SolidIdx: integer;
+    NewPos, ActPos: TdVector3;
+    GravityMode: integer;
+    transparency: double;
 end;}
+
+procedure TWorld_ODE.InitSolidXMLProperties(var SolidXMLProperties: TSolidXMLProperties);
+begin
+  with SolidXMLProperties do begin
+    GravityMode := 1;
+    mass := 1;  ID := '-1';
+    I11 := -1; I22 := -1; I33 := -1; I12 := 0; I13 := 0; I23 := 0;
+    MatterProps := [];
+    MeshFile := '';
+    MeshShadowFile := '';
+    MeshScale := 1;
+    MeshCastsShadows := true;
+    BuoyantMass := 0;
+    Drag := 0; StokesDrag := 1e-5; RollDrag := 1e-3;
+    radius := 1;
+    sizeX := 1; sizeY := 1; sizeZ := 1;
+    posX := 0; posY := 0; posZ := 0;
+    angX := 0; angY := 0; angZ := 0;
+    colorR := 128/255; colorG := 128/255; colorB := 128/255;
+    TextureName := ''; TextureScale := 1;
+    transparency := 1;
+    //descr := XMLSolid.NodeName + inttostr(SolidList.Count);
+    Surf.mu := -1; Surf.mu2 := -1;
+    Surf.soft_cfm := 1e-5;
+    //Surf.soft_erp := 0.2;
+    Surf.bounce := 0; Surf.bounce_vel := 0;
+    hasCanvas := false;
+    isLiquid := false;
+    CanvasWidth := 128; CanvasHeigth := 128;
+    MotherSolidId := '';
+  end;
+end;
+
+
+procedure TWorld_ODE.LoadSolidXMLProperties(XMLSolid: IXMLNode; Parser: TSimpleParser);
+var prop: IXMLNode;
+    R: TdMatrix3;
+    newSolid: TSolid;
+    SolidXMLProperties: TSolidXMLProperties;
+begin
+
+  if pos(XMLSolid.NodeName, 'cuboid <> cylinder <> sphere <> belt <> propeller') <> 0 then begin // Tsolid
+
+    prop := XMLSolid.FirstChild;
+    // default values
+    InitSolidXMLProperties(SolidXMLProperties);
+    //SolidXMLProperties.descr := XMLSolid.NodeName + inttostr(SolidList.Count);
+
+    while prop <> nil do with SolidXMLProperties do begin
+      if prop.NodeName = 'solid' then begin
+        MotherSolidId := GetNodeAttrStr(prop, 'id', MotherSolidId);
+      end;
+      if prop.NodeName = 'transparency' then begin
+        transparency := GetNodeAttrRealParse(prop, 'alpha', transparency, Parser);
+      end;
+      if prop.NodeName = 'liquid' then begin
+        isLiquid := true;
+        //CanvasWidth := round(GetNodeAttrRealParse(prop, 'width', CanvasWidth, Parser));
+        //CanvasHeigth := round(GetNodeAttrRealParse(prop, 'heigth', CanvasHeigth, Parser));
+      end;
+      if prop.NodeName = 'canvas' then begin
+        hasCanvas := true;
+        CanvasWidth := round(GetNodeAttrRealParse(prop, 'width', CanvasWidth, Parser));
+        CanvasHeigth := round(GetNodeAttrRealParse(prop, 'heigth', CanvasHeigth, Parser));
+      end;
+      if prop.NodeName = 'metallic' then begin
+        MatterProps := MatterProps + [smMetallic];
+      end;
+      if prop.NodeName = 'ferromagnetic' then begin
+        MatterProps := MatterProps + [smFerromagnetic];
+      end;
+      if prop.NodeName = 'surface' then begin
+        Surf.mu := GetNodeAttrRealParse(prop, 'mu', Surf.mu, Parser);
+        Surf.mu2 := GetNodeAttrRealParse(prop, 'mu2', Surf.mu2, Parser);
+        Surf.soft_cfm := GetNodeAttrRealParse(prop, 'softness', Surf.soft_cfm, Parser);
+        Surf.bounce := GetNodeAttrRealParse(prop, 'bounce', Surf.bounce, Parser);
+        Surf.bounce_vel := GetNodeAttrRealParse(prop, 'bounce_tresh', Surf.bounce_vel, Parser);
+      end;
+      if prop.NodeName = 'mesh' then begin
+        MeshFile := GetNodeAttrStr(prop, 'file', MeshFile);
+        MeshShadowFile := GetNodeAttrStr(prop, 'shadowfile', MeshShadowFile);
+        MeshScale := GetNodeAttrRealParse(prop, 'scale', MeshScale, Parser);
+        MeshCastsShadows := GetNodeAttrBool(prop, 'shadow', MeshCastsShadows);
+      end;
+      if prop.NodeName = 'drag' then begin
+        Drag := GetNodeAttrRealParse(prop, 'coefficient', Drag, Parser);
+        StokesDrag := GetNodeAttrRealParse(prop, 'stokes', StokesDrag, Parser);
+        RollDrag := GetNodeAttrRealParse(prop, 'roll', RollDrag, Parser);
+      end;
+      if prop.NodeName = 'buoyant' then begin
+        BuoyantMass := GetNodeAttrRealParse(prop, 'mass', BuoyantMass, Parser);
+      end;
+      if prop.NodeName = 'nogravity' then begin
+        GravityMode := 0;
+      end;
+      if prop.NodeName = 'radius' then begin
+        radius := GetNodeAttrRealParse(prop, 'value', radius, Parser);
+      end;
+      if prop.NodeName = 'size' then begin
+        sizeX := GetNodeAttrRealParse(prop, 'x', sizeX, Parser);
+        sizeY := GetNodeAttrRealParse(prop, 'y', sizeY, Parser);
+        sizeZ := GetNodeAttrRealParse(prop, 'z', sizeZ, Parser);
+        radius := GetNodeAttrRealParse(prop, 'radius', radius, Parser);
+      end;
+      if prop.NodeName = 'pos' then begin
+        posX := GetNodeAttrRealParse(prop, 'x', posX, Parser);
+        posY := GetNodeAttrRealParse(prop, 'y', posY, Parser);
+        posZ := GetNodeAttrRealParse(prop, 'z', posZ, Parser);
+      end;
+      if prop.NodeName = 'rot_deg' then begin
+        angX := degToRad(GetNodeAttrRealParse(prop, 'x', angX, Parser));
+        angY := degToRad(GetNodeAttrRealParse(prop, 'y', angY, Parser));
+        angZ := degToRad(GetNodeAttrRealParse(prop, 'z', angZ, Parser));
+      end;
+      if prop.NodeName = 'color_rgb' then begin
+        colorR := GetNodeAttrInt(prop, 'r', 128)/255;
+        colorG := GetNodeAttrInt(prop, 'g', 128)/255;
+        colorB := GetNodeAttrInt(prop, 'b', 128)/255;
+      end;
+      if prop.NodeName = 'mass' then begin
+        mass := GetNodeAttrRealParse(prop, 'value', mass, Parser);
+        //I11, I22, I33, I12, I13, I23
+        I11 := GetNodeAttrRealParse(prop, 'I11', I11, Parser);
+        I22 := GetNodeAttrRealParse(prop, 'I22', I22, Parser);
+        I33 := GetNodeAttrRealParse(prop, 'I33', I33, Parser);
+        I12 := GetNodeAttrRealParse(prop, 'I12', I12, Parser);
+        I13 := GetNodeAttrRealParse(prop, 'I13', I13, Parser);
+        I23 := GetNodeAttrRealParse(prop, 'I23', I23, Parser);
+      end;
+      if prop.NodeName = 'ID' then begin
+        ID := GetNodeAttrStr(prop, 'value', ID);
+      end;
+      if prop.NodeName = 'texture' then begin
+        TextureName := GetNodeAttrStr(prop, 'name', TextureName);
+        TextureScale := GetNodeAttrRealParse(prop, 'scale', TextureScale, Parser);
+      end;
+      prop := prop.NextSibling;
+    end;
+
+
+  end else begin // Unused Tag Generate warning
+    if (XMLErrors <> nil) and (XMLSolid.NodeName <> '#text') and (XMLSolid.NodeName <> '#comment') then begin
+      XMLErrors.Add('[Warning]: Tag <'+ XMLSolid.NodeName + '> not recognised!');
+    end;
+  end;
+
+end;
 
 
 //procedure TWorld_ODE.LoadHumanoidBonesFromXML(Robot: TRobot; XMLFile: string);
@@ -1192,7 +1393,9 @@ begin
 
   XMLSolid := root.FirstChild;
   while XMLSolid <> nil do begin
-    if pos(XMLSolid.NodeName, 'cuboid <> cylinder <> sphere <> belt <> propeller') <> 0 then begin // Tsolid
+    if XMLSolid.NodeName = 'defines' then begin
+      LoadDefinesFromXML(Parser, XMLSolid);
+    end else if pos(XMLSolid.NodeName, 'cuboid <> cylinder <> sphere <> belt <> propeller') <> 0 then begin // Tsolid
       prop := XMLSolid.FirstChild;
       // default values
       GravityMode := 1;
@@ -2069,6 +2272,8 @@ var XML: IXMLDocument;
     R, Roff, RFinal: TdMatrix3;
     Vec: TDVector3;
     NewObstacle: TSolid;
+
+    Surf: TdSurfaceParameters; //TOD=: unify with solids
 begin
   XML := LoadXML(XMLFile, XMLErrors);
   if XML = nil then exit;
@@ -2089,6 +2294,12 @@ begin
       colorR := 128/255; colorG := 128/255; colorB := 128/255;
       TextureName := ''; TextureScale := 1;
       transparency := 1;
+
+      Surf.mu := -1; Surf.mu2 := -1;
+      Surf.soft_cfm := 1e-5;
+      //Surf.soft_erp := 0.2;
+      Surf.bounce := 0; Surf.bounce_vel := 0;
+
       while prop <> nil do begin
         SolidDefProcessXMLNode(SolidDef, prop, Parser);
         if prop.NodeName = 'color_rgb' then begin
@@ -2102,6 +2313,13 @@ begin
         end;
         if prop.NodeName = 'transparency' then begin
           transparency := GetNodeAttrRealParse(prop, 'alpha', transparency, Parser);
+        end;
+        if prop.NodeName = 'surface' then begin
+          Surf.mu := GetNodeAttrRealParse(prop, 'mu', Surf.mu, Parser);
+          Surf.mu2 := GetNodeAttrRealParse(prop, 'mu2', Surf.mu2, Parser);
+          Surf.soft_cfm := GetNodeAttrRealParse(prop, 'softness', Surf.soft_cfm, Parser);
+          Surf.bounce := GetNodeAttrRealParse(prop, 'bounce', Surf.bounce, Parser);
+          Surf.bounce_vel := GetNodeAttrRealParse(prop, 'bounce_tresh', Surf.bounce_vel, Parser);
         end;
         prop := prop.NextSibling;
       end;
@@ -2118,6 +2336,15 @@ begin
           CreateBoxObstacle(NewObstacle, sizeX, sizeY, sizeZ, posX, posY, posZ);
         end else if obstacle.NodeName = 'sphere' then begin
           CreateSphereObstacle(NewObstacle, radius, posX, posY, posZ);
+        end;
+
+        if Surf.mu >= 0 then begin
+          NewObstacle.ParSurface.mode := $FF;
+          NewObstacle.ParSurface.mu := Surf.mu;
+          if Surf.mu2 >= 0 then NewObstacle.ParSurface.mu2 := Surf.mu2;
+          NewObstacle.ParSurface.soft_cfm := Surf.soft_cfm;
+          NewObstacle.ParSurface.bounce := Surf.bounce;
+          NewObstacle.ParSurface.bounce_vel := Surf.bounce_vel;
         end;
 
         RFromZYXRotRel(R, angX, angY, AngZ);
@@ -2179,6 +2406,7 @@ begin
        (sensor.NodeName = 'floorline') or
        (sensor.NodeName = 'ranger2d') or
        (sensor.NodeName = 'pentip') or
+       (sensor.NodeName = 'imu') or
        (sensor.NodeName = 'beacon') then begin
       // default values
       IDValue := '';
@@ -2261,7 +2489,8 @@ begin
       else if sensor.NodeName = 'beacon' then newSensor.kind := skBeacon
       else if sensor.NodeName = 'floorline' then newSensor.kind := skFloorLine
       else if sensor.NodeName = 'pentip' then newSensor.kind := skPenTip
-      else if sensor.NodeName = 'ranger2d' then newSensor.kind := skRanger2D;
+      else if sensor.NodeName = 'ranger2d' then newSensor.kind := skRanger2D
+      else if sensor.NodeName = 'imu' then newSensor.kind := skIMU;
 
       //newSensor.Tags.Delimiter := ';';
       //newSensor.Tags.DelimitedText := stags;
@@ -2269,6 +2498,7 @@ begin
 
       newSensor.Noise := Noise;
       newSensor.Period := sensor_period;
+      Sensors.Add(newSensor);
 
       if Robot <> nil then begin // It is a Robot sensor
         Robot.Sensors.Add(newSensor);
@@ -2283,16 +2513,17 @@ begin
         MotherGLObj := MotherSolid.GLObj;
 
       end else begin // It is a global sensor
-        Sensors.Add(newSensor);
-
         MotherBody := nil;
         MotherGLObj := ODEScene;
       end;
 
-      if newSensor.kind in [skIRSharp, skCapacitive, skInductive, skFloorLine, skPenTip] then begin
+      if newSensor.kind in [skIRSharp, skCapacitive, skInductive, skFloorLine, skPenTip, skIMU] then begin
         newRay := CreateOneRaySensor(MotherBody, newSensor, SLen);
         newRay.Place(posX, posY, posZ, angX, angY, AngZ, AbsoluteCoords);
         CreateSensorBeamGLObj(newSensor, SLen, SInitialWidth, SFinalWidth);
+        if newSensor.kind = skIMU then begin // No collisions for the IMU
+          dGeomDisable(newRay.Geom);
+        end;
       end else if newSensor.kind in [skBeacon] then begin
         CreateSensorBody(newSensor, MotherGLObj, 0.1, 0.02, posX, posY, posZ);
       end else if newSensor.kind in [skRanger2D] then begin
@@ -3230,12 +3461,22 @@ begin
 
   prop := root.FirstChild;
   while prop <> nil do begin
+
     if prop.NodeName = 'const' then begin
       ConstName := GetNodeAttrStr(prop, 'name', ConstName);
       ConstValue := GetNodeAttrRealParse(prop, 'value', ConstValue, Parser);
       if ConstName <> '' then
         Parser.RegisterConst(ConstName, ConstValue);
+
+    end else if prop.NodeName = 'arg' then begin
+      ConstName := GetNodeAttrStr(prop, 'name', ConstName);
+      ConstValue := GetNodeAttrRealParse(prop, 'value', ConstValue, Parser);
+      if ConstName <> '' then begin
+        if not Parser.ConstIsDefined(ConstName) then
+          Parser.RegisterConst(ConstName, ConstValue);
+      end;
     end;
+
     prop := prop.NextSibling;
   end;
 end;
@@ -3244,25 +3485,12 @@ end;
 procedure TWorld_ODE.LoadSceneFromXML(XMLFile: string);
 var XML: IXMLDocument;
     root, objNode, prop: IXMLNode;
-    //posX, posY, posZ, angX, angY, angZ: double;
     SolidDef: TSolidDef;
     newRobot: TRobot;
-//    thing: TSolid;
     filename: string;
-//    mass, radius: double;
-    Parser: TSimpleParser;
-//    ConstName: string;
-//    ConstValue: double;
+    //Parser: TSimpleParser; // Now is a member of TWorld_ODE
 begin
-{  XML:=CreateXMLDoc;
-  XML.Load(XMLFile);
-  if XML.ParseError.Reason<>'' then begin
-    with FParams.MemoDebug.Lines do begin
-      Add('XML file error:' + XMLFile);
-      Add(XML.ParseError.Reason);
-    end;
-    exit;
-  end;}
+
   XMLFiles.Add(XMLFile);
   XML := LoadXML(XMLFile, XMLErrors);
   if XML = nil then exit;
@@ -3270,7 +3498,7 @@ begin
   root:=XML.SelectSingleNode('/scene');
   if root = nil then exit;
 
-  Parser := TSimpleParser.Create;
+  //Parser := TSimpleParser.Create;
   try
     objNode := root.FirstChild;
     while objNode <> nil do begin
@@ -3280,26 +3508,13 @@ begin
         SolidDefSetDefaults(SolidDef);
         SolidDef.ID := 'robot' + inttostr(Robots.count);
         filename := '';
-        //posX := 0; posY := 0; posZ := 0;
-        //angX := 0; angY := 0; angZ := 0;
         while prop <> nil do begin
-          if prop.NodeName = 'body' then begin
+          if prop.NodeName = 'defines' then begin
+            LoadDefinesFromXML(Parser, prop);
+          end else if prop.NodeName = 'body' then begin
             filename := GetNodeAttrStr(prop, 'file', filename);
           end;
           SolidDefProcessXMLNode(SolidDef, prop, Parser);
-          {if prop.NodeName = 'ID' then begin
-            name := GetNodeAttrStr(prop, 'name', name);
-          end;
-          if prop.NodeName = 'pos' then begin
-            posX := GetNodeAttrRealParse(prop, 'x', posX, Parser);
-            posY := GetNodeAttrRealParse(prop, 'y', posY, Parser);
-            posZ := GetNodeAttrRealParse(prop, 'z', posZ, Parser);
-          end;
-          if prop.NodeName = 'rot_deg' then begin
-            angX := degToRad(GetNodeAttrRealParse(prop, 'x', angX, Parser));
-            angY := degToRad(GetNodeAttrRealParse(prop, 'y', angY, Parser));
-            angZ := degToRad(GetNodeAttrRealParse(prop, 'z', angZ, Parser));
-          end;}
           prop := prop.NextSibling;
         end;
 
@@ -3338,6 +3553,15 @@ begin
 
       end else if objNode.NodeName = 'things' then begin
         // Create things
+
+        prop := objNode.FirstChild;
+        while prop <> nil do begin
+          if prop.NodeName = 'defines' then begin
+            LoadDefinesFromXML(Parser, prop);
+          end;
+          prop := prop.NextSibling;
+        end;
+
         filename := GetNodeAttrStr(objNode, 'file', filename);
         if fileexists(filename) then begin
           XMLFiles.Add(filename);
@@ -3371,7 +3595,7 @@ begin
     end;
 
   finally
-    Parser.Free;
+    //Parser.Free;
   end;
 
 end;
@@ -3467,6 +3691,7 @@ begin
 
   XMLFiles := TStringList.Create;
   XMLErrors := TStringList.Create;
+  Parser := TSimpleParser.Create;
 
   //Create physic
   world := dWorldCreate();
@@ -3557,6 +3782,7 @@ begin
   //TODO Destroy the bodies
   dWorldDestroy(world);
 
+  Parser.Free;
   XMLErrors.Free;
   XMLFiles.Free;
 
@@ -3668,14 +3894,17 @@ procedure TFViewer.GLSceneViewerMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
   if [ssShift, ssleft, ssCtrl] <= shift then begin
-    GLScene.CurrentGLCamera.MoveTargetInEyeSpace(0, -0.03*(mx-x), 0.03*(my-y));
+    //GLScene.CurrentGLCamera.MoveTargetInEyeSpace(0, -0.03*(mx-x), 0.03*(my-y));
+    GLCamera.MoveTargetInEyeSpace(0, -0.03*(mx-x), 0.03*(my-y));
     //GLDummyTargetCam.Position := GLScene.CurrentGLCamera.TargetObject.Position;
     //UpdateCamPos(FParams.RGCamera.ItemIndex);
     my := y;
     mx := x;
   end else if [ssleft, ssCtrl] <= shift then begin
-    GLScene.CurrentGLCamera.MoveAroundTarget(my-y,mx-x);
-    GLDummyCamPos.Position := GLScene.CurrentGLCamera.Position;
+    //GLScene.CurrentGLCamera.MoveAroundTarget(my-y,mx-x);
+    //GLDummyCamPos.Position := GLScene.CurrentGLCamera.Position;
+    GLCamera.MoveAroundTarget(my-y,mx-x);
+    GLDummyCamPos.Position := GLCamera.Position;
     //UpdateCamPos(FParams.RGCamera.ItemIndex);
     my := y;
     mx := x;
@@ -3943,24 +4172,6 @@ begin
           if Shells[i].GLObj is TGLCylinder then Shells[i].GLObj.pitch(90);
           //Shells[i].UpdateGLCanvas;
         end;
-        //Sensors
-        for i := 0 to Sensors.Count-1 do begin
-          if Sensors[i].GLObj = nil then continue;
-          //if Sensors[i].Rays.Count = 1 then begin
-          //  PositionSceneObject(Sensors[i].GLObj, Sensors[i].Rays[0].Geom);
-          //  if Sensors[i].GLObj is TGLCylinder then Sensors[i].GLObj.pitch(90);
-          //end;
-          if Sensors[i].Rays.Count > 0 then begin
-            n := random(Sensors[i].Rays.Count);
-            PositionSceneObject(Sensors[i].GLObj, Sensors[i].Rays[n].Geom);
-            if Sensors[i].GLObj is TGLCylinder then Sensors[i].GLObj.pitch(90);
-            if Sensors[i].Measures[0].value = 0 then begin
-              Sensors[i].GLObj.Material.FrontProperties.Emission.SetColor(0, 0, 0);
-            end else begin
-              Sensors[i].GLObj.Material.FrontProperties.Emission.SetColor(0.2, 0.2, 0.2);
-            end;
-          end;
-        end;
 
         // Solids
         for i := 0 to Solids.Count-1 do begin
@@ -4017,18 +4228,22 @@ begin
 
         Things[i].UpdateGLCanvas;
       end;
+
       //Sensors
       for i := 0 to Sensors.Count-1 do begin
         if Sensors[i].GLObj = nil then continue;
         if Sensors[i].Rays.Count > 0 then begin
           PositionSceneObject(Sensors[i].GLObj, Sensors[i].Rays[0].Geom);
           if Sensors[i].GLObj is TGLCylinder then Sensors[i].GLObj.pitch(90);
+          if Sensors[i].Measures[0].value = 0 then begin
+            Sensors[i].GLObj.Material.FrontProperties.Emission.SetColor(0, 0, 0);
+          end else begin
+            Sensors[i].GLObj.Material.FrontProperties.Emission.SetColor(0.2, 0.2, 0.2);
+          end;
         end;
       end;
+
     end;
-    //TestTexture;
-//    if WorldODE.ball_geom <> nil then
-//      PositionSceneObject(FViewer.GLSphere_ball, WorldODE.ball_geom);
 end;
 
 
@@ -4043,8 +4258,11 @@ var theta, w, Tq: double;
     vs: TVector;
     Curpos: TPoint;
     newFixedTime: double;
+    GLBmp32: TGLBitmap32;
+    Bmp32: TBitmap;
 begin
-  GLScene.CurrentGLCamera.Position := GLDummyCamPos.Position;
+  //GLScene.CurrentGLCamera.Position := GLDummyCamPos.Position;
+  GLCamera.Position := GLDummyCamPos.Position;
   if WorldODE.ODEEnable <> False then begin
     QueryPerformanceCounter(t_start);
     t_itot := 0;
@@ -4073,13 +4291,9 @@ begin
               WorldODE.UpdateOdometry(Axes[i]);
             end;
 
-            for i := 0 to Sensors.Count - 1 do begin
-              Sensors[i].NoiseModel;
-              //if Sensors[i].kind = skIRSharp then begin
-                // Process IR sensors noise
-                //IRSharpNoiseModel(Sensors[i]);
-              //end;
-            end;
+            //for i := 0 to Sensors.Count - 1 do begin
+            //  Sensors[i].NoiseModel;
+            //end;
 
             // Fill RemState
             if r = Fparams.LBRobots.ItemIndex then begin
@@ -4103,10 +4317,6 @@ begin
         with WorldODE do begin
           for i := 0 to Sensors.Count - 1 do begin
             Sensors[i].NoiseModel;
-            //if Sensors[i].kind = skIRSharp then begin
-              // Process IR sensors noise
-              //IRSharpNoiseModel(Sensors[i]);
-            //end;
           end;
         end;
         FParams.ShowGlobalState;
@@ -4246,15 +4456,9 @@ begin
           end;
         end;
 
-
-        // Reset sensors measure
-        with WorldODE.Robots[r] do begin
-          for i:=0 to Sensors.Count - 1 do begin
-            Sensors[i].PreProcess;
-          end;
-        end;
       end; //end robot loop
 
+      // Reset sensors measure
       with WorldODE do begin
         for i:=0 to Sensors.Count - 1 do begin
           Sensors[i].PreProcess;
@@ -4284,23 +4488,7 @@ begin
       QueryPerformanceCounter(t_i2);
       t_itot := t_itot + t_i2 - t_i1;
 
-      // Process Robot Sensors
-      for r := 0 to WorldODE.Robots.Count-1 do begin
-        with WorldODE.Robots[r] do begin
-          for i := 0 to Sensors.Count - 1 do begin
-            with Sensors[i] do begin
-              PostProcess;
-              TimeFromLastMeasure := TimeFromLastMeasure + WorldODE.Ode_dt;
-              if TimeFromLastMeasure > Sensors[i].Period then begin
-                TimeFromLastMeasure := TimeFromLastMeasure - Sensors[i].Period;
-                UpdateMeasures;
-              end;
-            end;
-          end;
-        end;
-      end;
-
-      // Process World Sensors
+      // Post Process Sensors
       for i := 0 to WorldODE.Sensors.Count - 1 do begin
         with WorldODE.Sensors[i] do begin
           PostProcess;
@@ -4328,7 +4516,13 @@ begin
 
     FParams.ShowCameraConfig(GLCamera);
 
-    //GLMemoryViewer.Render(nil);
+    GLMemoryViewer.Render(nil);
+    GLBmp32 := GLMemoryViewer.Buffer.CreateSnapShot;
+    Bmp32 := GLBmp32.Create32BitsBitmap;
+
+    FDimensions.ImageCam.Canvas.Draw(0,0, Bmp32);
+    Bmp32.free;
+    GLBmp32.Free;
 
     QueryPerformanceCounter(t_end_gl);
     FParams.EditDebug.text := format('%.2f (%.2f) %.2f [%.2f]',[(t_end_gl - t_start)/t_delta, t_itot/t_delta, (t_end_gl - t_end)/t_delta, (t_act - t_last)/t_delta]);
@@ -4416,8 +4610,10 @@ procedure TFViewer.FormMouseWheel(Sender: TObject; Shift: TShiftState;
 begin
   //Mouse wheel zoom + -
   if (WorldODE.PickSolid = nil) or (WorldODE.PickJoint = nil ) then begin
-    GLScene.CurrentGLCamera.AdjustDistanceToTarget(Power(1.1, WheelDelta / 120));
-    GLDummyCamPos.Position := GLScene.CurrentGLCamera.Position;
+    //GLScene.CurrentGLCamera.AdjustDistanceToTarget(Power(1.1, WheelDelta / 120));
+    //GLDummyCamPos.Position := GLScene.CurrentGLCamera.Position;
+    GLCamera.AdjustDistanceToTarget(Power(1.1, WheelDelta / 120));
+    GLDummyCamPos.Position := GLCamera.Position;
     UpdateCamPos(FParams.RGCamera.ItemIndex);
   //Mouse wheel object distance + -
   end else with WorldODE do begin

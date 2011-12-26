@@ -84,6 +84,7 @@ type
     procedure RegisterVariable(VarName: string; pvar: pdouble);
     procedure RegisterConst(ConstName: string; value: double);
     function RegisterFunction(FuncName: string; pFunc: TParserFunction; numArgs: integer): integer;
+    function ConstIsDefined(ConstName: string): boolean;
 
   end;
 
@@ -139,6 +140,15 @@ begin
   end else begin
     consts[idx] := value;
   end;
+end;
+
+
+function TSimpleParser.ConstIsDefined(ConstName: string): boolean;
+var idx: integer;
+begin
+  //Test if constname already exists
+  idx := VarsList.IndexOf(uppercase(ConstName));
+  result := (idx <> -1);
 end;
 
 
