@@ -100,6 +100,7 @@ begin
     NewTabSheet.Name := 'TS' + inttostr(i);
     NewTabSheet.PageControl := PageControlXML;
     NewTabSheet.Caption := SL[i];
+
     NewSynEdit := TSynEdit.Create(self);
     NewSynEdit.Name := 'SE' + inttostr(i);
     SL.Objects[i] := NewSynEdit;
@@ -110,15 +111,14 @@ begin
     NewSynEdit.Options := NewSynEdit.Options + [eoTabIndent, eoScrollByOneLess];
     NewSynEdit.WantTabs := true;
     NewSynEdit.Lines.LoadFromFile(SL[i]);
+
+    NewTabSheet.Visible := true;
 end;
 
 
 procedure TFSceneEdit.FormShow(Sender: TObject);
 var i: integer;
-//    NewTabSheet: TTabSheet;
-//    NewSynEdit: TSynEdit;
-   TmpSynEdit: TSynEdit;
-//   coord: TBufferCoord;
+    TmpSynEdit: TSynEdit;
 begin
   TabScene.TabVisible := false;
   SynEditXML.Lines.AddStrings(WorldODE.XMLFiles);
@@ -130,13 +130,15 @@ begin
   end;
   FormStorage.RestoreFormPlacement;
 
+  PageControlXML.SelectNextPage(true); // Bug workarround: without it, the selected tab and the
+  PageControlXML.SelectNextPage(false);// panel become out of sync
+
   TmpSynEdit := GetSynEdit();
   if TmpSynEdit = nil then exit;
   TmpSynEdit.CaretY := FormStorage.ReadInteger('CursorLine',TmpSynEdit.CaretY);
   TmpSynEdit.CaretX := FormStorage.ReadInteger('CursorCol',TmpSynEdit.CaretX);
   TmpSynEdit.UpdateCaret;
-  //coord.Line := 100;
-  //SynEditXML.SetCaretAndSelection(coord, coord, coord);
+
   TmpSynEdit.SetFocus;
 end;
 
@@ -161,7 +163,7 @@ end;
 function TFSceneEdit.GetSynEdit: TSynEdit;
 var i: integer;
 begin
-  result := nil; 
+  result := nil;
   i := PageControlXML.TabIndex;
   if i<0 then exit;
   if (WorldODE.XMLFiles.Objects[i] is TSynEdit) then begin
