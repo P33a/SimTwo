@@ -286,7 +286,7 @@ type
   TSensor = class;
 
   TSensorMeasure = class
-    dist, value: double;
+    value, dist: double;
     pos, normal: TdVector3;
     HitSolid: TSolid;
     has_measure: boolean;
@@ -328,7 +328,8 @@ type
     active: boolean;
   end;
 
-  TSensorKind = (skGeneric, skIR, skIRSharp, skSonar, skCapacitive, skInductive, skBeacon, skFloorLine, skRanger2D, skPenTip);
+  TSensorKind = (skGeneric, skIR, skIRSharp, skSonar, skCapacitive, skInductive,
+                 skBeacon, skFloorLine, skRanger2D, skPenTip, skIMU);
 
   TSensor = class
     ID: string;
@@ -349,7 +350,7 @@ type
   public
     Measures: array of TSensorMeasure;
 
-    constructor Create;
+    constructor Create(MeasuresCount: integer = 1);
     destructor Destroy; override;
     procedure SetColor(R, G, B: single; A: single = -1);
     //property Measures[Index: Integer]: TSensorMeasure read GetMeasure write SetMeasure; default;
@@ -364,7 +365,8 @@ type
 
 const
   SensorKindStrings: array[TSensorKind] of string =
-  ('Generic', 'IR', 'IRSharp', 'Sonar', 'Capacitive', 'Inductive', 'Beacon', 'FloorLine', 'Ranger2D', 'PenTip');
+  ('Generic', 'IR', 'IRSharp', 'Sonar', 'Capacitive', 'Inductive',
+   'Beacon', 'FloorLine', 'Ranger2D', 'PenTip', 'IMU');
 
 type
   TSensorList = class(TList)
@@ -464,7 +466,7 @@ end;
 
 destructor TRobot.Destroy;
 begin
-  Sensors.ClearAll;
+//  Sensors.ClearAll;
   Sensors.Free;
   AxesWayPointsIDs.Free;
   //Axes.ClearAll; // TAxisList does not owns the axis
@@ -1273,14 +1275,17 @@ end;
 
 { TSensor }
 
-constructor TSensor.Create;
+constructor TSensor.Create(MeasuresCount: integer = 1);
+var i: integer;
 begin
   Tags := TStringlist.Create;
 
   Rays := TSensorRayList.Create;
 
-  SetLength(Measures, 1);
-  Measures[0] := TSensorMeasure.Create;
+  SetLength(Measures, MeasuresCount);
+  for i := 0 to MeasuresCount - 1 do begin
+    Measures[i] := TSensorMeasure.Create;
+  end;
 end;
 
 destructor TSensor.Destroy;
@@ -1484,6 +1489,9 @@ begin
           value := 1; // Can be used as an on/off presure sensor
         end;
       end;
+    end;
+
+    skIMU: begin
     end;
 
   end;
