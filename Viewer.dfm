@@ -769,8 +769,17 @@ object FViewer: TFViewer
       DepthOfView = 1000000000.000000000000000000
       FocalLength = 76.633468627929690000
       NearPlaneBias = 0.009999999776482582
-      TargetObject = GLDummyTargetCam
+      TargetObject = GLEarthSkyDome
       Position.Coordinates = {0000003FCDCC2CC0CDCC0C400000803F}
+      Direction.Coordinates = {000000000000803F0000000000000000}
+      Up.Coordinates = {00000000000000000000803F00000000}
+    end
+    object GLCameraMem: TGLCamera
+      DepthOfView = 1000000000.000000000000000000
+      FocalLength = 50.000000000000000000
+      NearPlaneBias = 0.009999999776482582
+      TargetObject = GLDummyTargetCam
+      Position.Coordinates = {0000003F000040C0000040400000803F}
       Direction.Coordinates = {000000000000803F0000000000000000}
       Up.Coordinates = {00000000000000000000803F00000000}
     end
@@ -10290,7 +10299,6 @@ object FViewer: TFViewer
     object MenuDimensions: TMenuItem
       Caption = '&Dimensions'
       ShortCut = 16452
-      Visible = False
       OnClick = MenuDimensionsClick
     end
     object N2: TMenuItem
@@ -10339,9 +10347,9 @@ object FViewer: TFViewer
     Top = 120
   end
   object GLMemoryViewer: TGLMemoryViewer
-    Camera = GLCamera
-    Width = 240
-    Height = 320
+    Camera = GLCameraMem
+    Width = 320
+    Height = 240
     Buffer.AmbientColor.Color = {9A99993E9A99993E9A99993E0000803F}
     Left = 32
   end
