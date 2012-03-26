@@ -66,6 +66,7 @@ type
     alpha: integer;
   end;
 
+procedure SetFireScale(x, y, z: double);
 procedure SetFirePosition(x, y, z: double);
 procedure StartFire;
 procedure StopFire;
@@ -139,6 +140,7 @@ function GetSensorVal(R, i: integer): double;
 procedure SetSensorColor(R, i: integer; Red, Green, Blue: byte);
 
 function GetThingIndex(ID: string): integer;
+function GetThingsCount: integer;
 
 function GetThingColor(T, c: integer): TRGBAColor;
 procedure SetThingColor(T, c: integer; Red, Green, Blue: byte);
@@ -159,11 +161,18 @@ function AddThingBox(ID: string; mass, posx, posY, posZ, sizeX, sizeY, sizeZ: do
 function AddThingSphere(ID: string; mass, posX, posY, posZ, radius: double; rgb24: integer): integer;
 function AddThingCylinder(ID: string; mass, posx, posY, posZ, radius, len: double; rgb24: integer): integer;
 function DeleteThing(ID: string): integer;
+procedure MeshThing(ID, MeshFile, MeshShadowFile: string; MeshScale: double; MeshCastsShadows: boolean);
 
 procedure SetThingForce(T: integer; Fx, Fy, Fz: double);
+procedure SetThingForceAtRelPos(T: integer; Fx, Fy, Fz, Px, Py, Pz: double);
+procedure SetThingRelForce(T: integer; Fx, Fy, Fz: double);
+procedure SetThingRelForceAtRelPos(T: integer; Fx, Fy, Fz, Px, Py, Pz: double);
+
+procedure SetThingSurfaceMu(T: integer; mu, mu2: double);
 
 function GetThingSpeed(T: integer): TPoint3D;
 procedure SetThingSpeed(T: integer; vx, vy, vz: double);
+function GetThingAngularVel(T: integer): TPoint3D;
 
 procedure ClearThings;
 
@@ -191,6 +200,10 @@ function GetAxisTWPower(R, i: integer): double;
 function GetAxisStateRef(R, i: integer): TAxisState;
 function GetAxisPosRef(R, i: integer): double;
 function GetAxisSpeedRef(R, i: integer): double;
+
+function GetAxisMotorSpeed(R, i: integer): double;
+function GetAxisMotorPos(R, i: integer): double;
+function GetAxisMotorPosDeg(R, i: integer): double;
 
 function GetAxisEnergy(R, i: integer): double;
 procedure ResetAxisEnergy(R, i: integer);
@@ -411,7 +424,8 @@ const
 
 implementation
 
-uses Math, Viewer, odeimport, utils, Keyboard, GLObjects, SysUtils;
+uses Math, Viewer, odeimport, utils, Keyboard, GLObjects, SysUtils,
+  Classes;
 
 function Deg(angle: double): double;
 begin
@@ -586,6 +600,10 @@ begin
   result := WorldODE.Things.IndexFromID(ID);
 end;
 
+function GetThingsCount: integer;
+begin
+  result := WorldODE.Things.Count;
+end;
 
 function GetSolidIndex(R: integer; ID: string): integer;
 begin
@@ -1062,6 +1080,27 @@ begin
 end;
 
 
+function GetAxisMotorSpeed(R, i: integer): double;
+begin
+  with WorldODE.Robots[r].Axes[i].Motor do begin
+    result := w;
+  end;
+end;
+
+function GetAxisMotorPos(R, i: integer): double;
+begin
+  with WorldODE.Robots[r].Axes[i].Motor do begin
+    result := teta;
+  end;
+end;
+
+function GetAxisMotorPosDeg(R, i: integer): double;
+begin
+  with WorldODE.Robots[r].Axes[i].Motor do begin
+    result := deg(teta);
+  end;
+end;
+
 function GetAxisSpring(R, i: integer): TSpringDef;
 begin
   with WorldODE.Robots[r].Axes[i] do begin
@@ -1081,7 +1120,7 @@ begin
   with WorldODE.Robots[r].Axes[i] do begin
     result.Bv := Friction.Bv;
     result.Fc := Friction.Fc;
-    result.CoulombLimit := Friction.CoulombLimit;
+//    result.CoulombLimit := Friction.CoulombLimit;
   end;
 end;
 
@@ -1135,7 +1174,7 @@ begin
   with WorldODE.Robots[r].Axes[i].Friction do begin
     Bv := nBv;
     Fc := nFc;
-    CoulombLimit := nCoulombLimit;
+//    CoulombLimit := nCoulombLimit;
   end;
 end;
 
@@ -1381,6 +1420,11 @@ begin
     result := IsKeyDown(TVirtualKeyCode(k));
 end;
 
+procedure SetFireScale(x, y, z: double);
+begin
+  FViewer.GLDummyCFire.Scale.SetVector(x, y, z);
+end;
+
 
 procedure SetFirePosition(x, y, z: double);
 begin
@@ -1445,6 +1489,8 @@ function AddThing(ThingType: TThingType; ID: string; mass, posx, posY, posZ, sx,
 var newThing: TSolid;
 begin
   with WorldODE do begin
+    if Things.IndexFromID(ID) >= 0 then
+      raise Exception.Create('AddThing Error - Dulpicate ID: ' + ID);
     newThing := TSolid.Create;
     result := Things.Add(newThing);
     newThing.ID := ID;
@@ -1464,6 +1510,17 @@ begin
 
     newThing.SetZeroState();
     newThing.SetColorRGB(rgb24);
+  end;
+end;
+
+procedure MeshThing(ID, MeshFile, MeshShadowFile: string; MeshScale: double; MeshCastsShadows: boolean);
+var idx: integer;
+begin
+  with WorldODE do begin
+    idx := Things.IndexFromID(ID);
+    if idx < 0 then exit;
+    LoadSolidMesh(Things[idx], MeshFile, MeshShadowFile, MeshScale, MeshCastsShadows);
+    Things[idx].GLObj.Visible := false;
   end;
 end;
 
@@ -1514,7 +1571,30 @@ end;
 
 procedure SetThingForce(T: integer; Fx, Fy, Fz: double);
 begin
-  WorldODE.Things[T].SetForce(Fx, Fy, Fz);
+  dBodyAddForce(WorldODE.Things[T].Body, Fx, Fy, Fz);
+end;
+
+procedure SetThingForceAtRelPos(T: integer; Fx, Fy, Fz, Px, Py, Pz: double);
+begin
+  dBodyAddRelForceAtRelPos(WorldODE.Things[T].Body, Fx, Fy, Fz, Px, Py, Pz);
+end;
+
+
+procedure SetThingRelForce(T: integer; Fx, Fy, Fz: double);
+begin
+  dBodyAddRelForce(WorldODE.Things[T].Body, Fx, Fy, Fz);
+end;
+
+procedure SetThingRelForceAtRelPos(T: integer; Fx, Fy, Fz, Px, Py, Pz: double);
+begin
+  dBodyAddRelForceAtRelPos(WorldODE.Things[T].Body, Fx, Fy, Fz, Px, Py, Pz);
+end;
+
+
+procedure SetThingSurfaceMu(T: integer; mu, mu2: double);
+begin
+  WorldODE.Things[T].SetSurfacePars(mu, mu2, 0, 0, 0);
+//  if mu2 <> 0 then WorldODE.Things[T].kind := skOmniSurface;
 end;
 
 
@@ -1526,6 +1606,20 @@ begin
   result.z := 0;
 
   v1 := WorldODE.Things[T].GetLinSpeed;
+
+  Result.x := v1[0];
+  Result.y := v1[1];
+  Result.z := v1[2];
+end;
+
+function GetThingAngularVel(T: integer): TPoint3D;
+var v1: TdVector3;
+begin
+  result.x := 0;
+  result.y := 0;
+  result.z := 0;
+
+  v1 := WorldODE.Things[T].GetAngularVel;
 
   Result.x := v1[0];
   Result.y := v1[1];

@@ -1053,7 +1053,7 @@ var ir, ic: integer;
 begin
   for ir := 0 to M.rows - 1 do begin
     for ic := 0 to M.cols - 1 do begin
-      FSheets.ActSheet.EditCell(r + ir, c + ic).ParseText(format('%g',[MGetv(M, ir ,ic)]));
+      FSheets.ActSheet.EditCell(r + ir, c + ic).ParseText(format('%.7g',[MGetv(M, ir ,ic)]));
     end;
   end;
 end;

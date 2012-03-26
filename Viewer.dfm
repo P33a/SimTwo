@@ -1,10 +1,10 @@
 object FViewer: TFViewer
-  Left = 366
-  Top = 207
+  Left = 477
+  Top = 167
   AutoScroll = False
   Caption = 'SimTwo View'
-  ClientHeight = 572
-  ClientWidth = 733
+  ClientHeight = 526
+  ClientWidth = 795
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -25,14 +25,18 @@ object FViewer: TFViewer
   object GLSceneViewer: TGLSceneViewer
     Left = 0
     Top = 0
-    Width = 733
-    Height = 572
+    Width = 795
+    Height = 526
     Camera = GLCamera
-    Buffer.BackgroundColor = clBlack
+    Buffer.FogEnvironment.FogColor.Color = {00000000F8FEFE3E0000803F0000803F}
+    Buffer.FogEnvironment.FogStart = 1.000000000000000000
+    Buffer.FogEnvironment.FogEnd = 10.000000000000000000
+    Buffer.BackgroundColor = clBackground
     Buffer.AmbientColor.Color = {9A99993E9A99993E9A99993E0000803F}
     Buffer.ContextOptions = [roDoubleBuffer, roStencilBuffer, roRenderToWindow]
+    Buffer.FogEnable = True
     Buffer.AntiAliasing = aa2x
-    FieldOfView = 150.000000000000000000
+    FieldOfView = 147.509658813476600000
     Align = alClient
     PopupMenu = PopupMenu
     OnMouseDown = GLSceneViewerMouseDown
@@ -47,14 +51,14 @@ object FViewer: TFViewer
       Turbidity = 15.000000000000000000
       ExtendedOptions = []
       Slices = 48
-      Stacks = 24
+      Stacks = 12
     end
     object GLLightSource: TGLLightSource
       Ambient.Color = {BEC0403FBEC0403FBEC0403F0000803F}
       ConstAttenuation = 1.000000000000000000
       Position.Coordinates = {9A99993F666626C00000F0400000803F}
       LightStyle = lsOmni
-      Specular.Color = {0000803F0000803F0000803F0000803F}
+      Specular.Color = {0000803F0000803F0000803FCDCC4C3E}
       SpotCutOff = 180.000000000000000000
     end
     object GLXYZGrid: TGLXYZGrid
@@ -197,7 +201,9 @@ object FViewer: TFViewer
             Caster = GLSphere_Ball
           end>
         Capping = svcDefault
+        Options = [svoCacheSilhouettes, svoScissorClips, svoWorldScissorClip]
         Mode = svmDarkening
+        DarkeningColor.Color = {0000000000000000000000009A99993E}
         object GLSphere_Ball: TGLSphere
           Position.Coordinates = {00000000000000000000C03F0000803F}
           Visible = False
@@ -612,6 +618,7 @@ object FViewer: TFViewer
           Material.Texture.MappingMode = tmmObjectLinear
           Material.Texture.MappingSCoordinates.Coordinates = {0000A040000000000000000000000000}
           Material.Texture.MappingTCoordinates.Coordinates = {000000000000A0400000000000000000}
+          Material.MaterialLibrary = GLMaterialLibrary
           Direction.Coordinates = {00000000000000800000803F00000000}
           Height = 24.000000000000000000
           Width = 24.000000000000000000
@@ -728,8 +735,9 @@ object FViewer: TFViewer
     end
     object GLPlane1: TGLPlane
       Material.Texture.Disabled = False
-      Position.Coordinates = {0000000000000000CDCC4C3E0000803F}
-      Up.Coordinates = {000000000000803F0000008000000000}
+      Direction.Coordinates = {00000000000080BF0000000000000000}
+      Position.Coordinates = {00000000000040410000003F0000803F}
+      Up.Coordinates = {00000000000000000000803F00000000}
       Visible = False
       Height = 1.000000000000000000
       Width = 1.000000000000000000
@@ -770,7 +778,7 @@ object FViewer: TFViewer
       FocalLength = 76.633468627929690000
       NearPlaneBias = 0.009999999776482582
       TargetObject = GLEarthSkyDome
-      Position.Coordinates = {0000003FCDCC2CC0CDCC0C400000803F}
+      Position.Coordinates = {0000003FCDCC2CC00000C03F0000803F}
       Direction.Coordinates = {000000000000803F0000000000000000}
       Up.Coordinates = {00000000000000000000803F00000000}
     end
@@ -778,10 +786,8 @@ object FViewer: TFViewer
       DepthOfView = 1000000000.000000000000000000
       FocalLength = 50.000000000000000000
       NearPlaneBias = 0.009999999776482582
-      TargetObject = GLDummyTargetCam
       Position.Coordinates = {0000003F000040C0000040400000803F}
-      Direction.Coordinates = {000000000000803F0000000000000000}
-      Up.Coordinates = {00000000000000000000803F00000000}
+      Direction.Coordinates = {00000000000000800000803F00000000}
     end
   end
   object GLCadencer: TGLCadencer
@@ -10296,10 +10302,10 @@ object FViewer: TFViewer
       ShortCut = 16456
       OnClick = MenuSheetsClick
     end
-    object MenuDimensions: TMenuItem
-      Caption = '&Dimensions'
-      ShortCut = 16452
-      OnClick = MenuDimensionsClick
+    object MenuCameras: TMenuItem
+      Caption = 'C&ameras'
+      ShortCut = 16449
+      OnClick = MenuCamerasClick
     end
     object N2: TMenuItem
       Caption = '-'
@@ -10321,6 +10327,11 @@ object FViewer: TFViewer
       Caption = '&Abort'
       ShortCut = 49220
       OnClick = MenuAbortClick
+    end
+    object MenuQuit: TMenuItem
+      Caption = 'Quit'
+      ShortCut = 16465
+      OnClick = MenuQuitClick
     end
   end
   object GLMaterialLibrary3ds: TGLMaterialLibrary
@@ -10345,13 +10356,6 @@ object FViewer: TFViewer
     UseInterval = True
     Left = 40
     Top = 120
-  end
-  object GLMemoryViewer: TGLMemoryViewer
-    Camera = GLCameraMem
-    Width = 320
-    Height = 240
-    Buffer.AmbientColor.Color = {9A99993E9A99993E9A99993E0000803F}
-    Left = 32
   end
   object TimerCadencer: TTimer
     Interval = 10

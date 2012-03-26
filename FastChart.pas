@@ -224,6 +224,8 @@ begin
       //FillTreeViewItem(r, i, 'Mech Power', @GetAxisTWPower, sub_nonde, tree);
       FillTreeViewItem(r, i, 'Pos ref', @GetAxisPosRefDeg, sub_nonde, tree);
       FillTreeViewItem(r, i, 'Speed ref', @GetAxisSpeedRefDeg, sub_nonde, tree);
+      FillTreeViewItem(r, i, 'Motor Speed', @GetAxisMotorSpeed, sub_nonde, tree);
+      FillTreeViewItem(r, i, 'Motor Pos', @GetAxisMotorPosDeg, sub_nonde, tree);
     end;
   end;
 end;

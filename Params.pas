@@ -7,7 +7,7 @@ uses
   Dialogs, StdCtrls, ComCtrls, ExtCtrls, GLWin32Viewer, GLcontext, Math,
   IdBaseComponent, IdComponent, IdUDPBase, IdUDPServer, IdSocketHandle, ODERobots, OdeImport,
   rxPlacemnt, Grids, GLCadencer, CPort, ShellAPI, Sockets, GLShadowVolume, GLScene,
-  CheckLst, Buttons, VectorTypes, VectorGeometry;
+  CheckLst, Buttons, VectorTypes, VectorGeometry, GLTexture, IdUDPClient;
 
 type
   TFParams = class(TForm)
@@ -165,8 +165,6 @@ type
     Label48: TLabel;
     EditODE_ERP: TEdit;
     TabGlobal: TTabSheet;
-    Label8: TLabel;
-    EditRemoteIP: TEdit;
     Label1: TLabel;
     EditScriptPeriod: TEdit;
     BGlobalSet: TButton;
@@ -207,6 +205,13 @@ type
     BitBtnAddAll: TBitBtn;
     RGSensorGL: TRadioGroup;
     BSGConfGet: TButton;
+    CBFog: TCheckBox;
+    ShapeSelColor: TShape;
+    ColorDialog: TColorDialog;
+    ComboGroundTextures: TComboBox;
+    UDPImageServer: TIdUDPClient;
+    EditRemoteIP: TEdit;
+    Label8: TLabel;
     procedure CBShadowsClick(Sender: TObject);
     procedure CBVsyncClick(Sender: TObject);
     procedure BSetFPSClick(Sender: TObject);
@@ -261,6 +266,10 @@ type
     procedure BitBtnAddAllClick(Sender: TObject);
     procedure RGSensorGLClick(Sender: TObject);
     procedure BSGConfGetClick(Sender: TObject);
+    procedure ShapeSelColorMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure CBFogClick(Sender: TObject);
+    procedure ComboGroundTexturesClick(Sender: TObject);
   private
     procedure FillEditArray(ProtoName: string;
       var EditArray: array of TEdit);
@@ -297,7 +306,8 @@ implementation
 
 {$R *.dfm}
 
-uses JPeg, GLFile3DS, Viewer, Editor, FastChart, ODERobotsPublished, WayPointsEdit, ProjConfig, utils;
+uses JPeg, GLFile3DS, Viewer, Editor, FastChart, ODERobotsPublished, WayPointsEdit, ProjConfig, utils,
+  cameras;
 
 procedure TFParams.BSetFPSClick(Sender: TObject);
 var fps: integer;
@@ -314,8 +324,10 @@ procedure TFParams.CBVsyncClick(Sender: TObject);
 begin
   if CBVsync.checked then begin
     FViewer.GLSceneViewer.VSync := vsmSync;
+    FCameras.GLSceneViewer.VSync := vsmSync;
   end else begin
     FViewer.GLSceneViewer.VSync := vsmNoSync;
+    FCameras.GLSceneViewer.VSync := vsmNoSync;
   end;
 end;
 
@@ -324,8 +336,10 @@ procedure TFParams.CBAntiAliasingClick(Sender: TObject);
 begin
   if CBAntiAliasing.checked then begin
     FViewer.GLSceneViewer.Buffer.AntiAliasing := aa2x;
+    FCameras.GLSceneViewer.Buffer.AntiAliasing := aa2x;
   end else begin
     FViewer.GLSceneViewer.Buffer.AntiAliasing := aaNone;
+    FCameras.GLSceneViewer.Buffer.AntiAliasing := aaNone;
   end;
 end;
 
@@ -347,6 +361,8 @@ end;
 procedure TFParams.CBGroundTextureClick(Sender: TObject);
 begin
   FViewer.GLPlaneFloor.Material.Texture.Disabled:=not CBGroundTexture.Checked;
+//  FViewer.GLMaterialLibrary.Materials.
+//  FViewer.GLPlaneFloor.Material.LibMaterialName
 end;
 
 procedure TFParams.CBSkyDomeClick(Sender: TObject);
@@ -519,6 +535,7 @@ begin
 end;
 
 procedure TFParams.FormCreate(Sender: TObject);
+var i: integer;
 begin
   FormStorage.IniFileName := GetIniFineName;
 
@@ -534,6 +551,10 @@ begin
 
   UDPGenData := TMemoryStream.Create;
   UDPGenPackets:= TStringList.Create;
+
+  for i := 0 to FViewer.GLMaterialLibrary.Materials.Count - 1 do begin
+    ComboGroundTextures.Items.Add(FViewer.GLMaterialLibrary.Materials.Items[i].Name);
+  end;
 end;
 
 procedure TFParams.FormShow(Sender: TObject);
@@ -546,10 +567,14 @@ begin
   FillEditArray('EditOdo', EditsOdo);
   FillEditArray('EditIR', EditsIR);
 
+  ComboGroundTexturesClick(Sender);
   CBIRNoiseClick(Sender);
   BPhysicsSetClick(Sender);
   RGGLObjectsClick(Sender);
   BGlobalSetClick(Sender);
+  CBFogClick(Sender);
+  FViewer.GLSceneViewer.Buffer.FogEnvironment.FogColor.AsWinColor := ShapeSelColor.Brush.Color;
+  FCameras.GLSceneViewer.Buffer.FogEnvironment.FogColor.AsWinColor := ShapeSelColor.Brush.Color;
 
   try
     if FileExists('params.cfg') then begin
@@ -858,7 +883,7 @@ begin
   FillSGConfRow('Camera.Position');
   FillSGConfRow('Light.Position');
   FillSGConfRow('Light.Attenuation');
-  FillSGConfRow('Floor.Ambient.Color');
+  FillSGConfRow('Floor.Diffuse.Color');
 end;
 
 
@@ -873,11 +898,11 @@ begin
     FViewer.GLLightSource.Position.SetPoint(GetVectorFromGrid(SGConf, 'Light.Position', FViewer.GLLightSource.Position.AsAffineVector));
   end else if varname = 'Light.Attenuation' then begin
     FViewer.GLLightSource.ConstAttenuation := GetFloatFromGrid(SGConf, 'Light.Attenuation', 1, FViewer.GLLightSource.ConstAttenuation);
-  end else if varname = 'Floor.Ambient.Color' then begin                                     //FViewer.GLPlaneFloor.Material.FrontProperties.Ambient.Color
+  end else if varname = 'Floor.Diffuse.Color' then begin                                     //FViewer.GLPlaneFloor.Material.FrontProperties.Ambient.Color
     SetVector(v,
-              TAffineVector(GetVectorFromGrid(SGConf, 'Floor.Ambient.Color', AffineVectorMake(FViewer.GLPlaneFloor.Material.FrontProperties.Ambient.Color))),
+              TAffineVector(GetVectorFromGrid(SGConf, 'Floor.Diffuse.Color', AffineVectorMake(FViewer.GLPlaneFloor.Material.FrontProperties.Diffuse.Color))),
               1.0);
-    FViewer.GLPlaneFloor.Material.FrontProperties.Ambient.Color := v;
+    FViewer.GLPlaneFloor.Material.FrontProperties.Diffuse.Color := v;
   end;
 end;
 
@@ -891,8 +916,8 @@ begin
     WriteVectorToGrid(SGConf, 'Light.Position', FViewer.GLLightSource.Position.AsAffineVector);
   end else if varname = 'Light.Attenuation' then begin
     WriteFloatToGrid(SGConf, 'Light.Attenuation', 1, FViewer.GLLightSource.ConstAttenuation);
-  end else if varname = 'Floor.Ambient.Color' then begin
-    WriteVectorToGrid(SGConf, 'Floor.Ambient.Color', AffineVectorMake(FViewer.GLPlaneFloor.Material.FrontProperties.Ambient.Color));
+  end else if varname = 'Floor.Diffuse.Color' then begin
+    WriteVectorToGrid(SGConf, 'Floor.Diffuse.Color', AffineVectorMake(FViewer.GLPlaneFloor.Material.FrontProperties.Diffuse.Color));
   end;
 end;
 
@@ -1081,7 +1106,7 @@ begin
     for i := 0 to WorldODE.Robots[r].Solids.Count - 1 do begin
       with WorldODE.Robots[r].Solids[i] do begin
         GLObj.Visible := true;
-        if AltGLObj <> nil then begin
+        if assigned(AltGLObj) then begin
           AltGLObj.Visible := RGGLObjects.ItemIndex in [1, 2];   // 0 - Original  1 - Mesh  2 - Both
           GLObj.Visible := RGGLObjects.ItemIndex in [0, 2];
         end;
@@ -1093,7 +1118,27 @@ begin
           //end;
       end;
     end;
+    for i := 0 to WorldODE.Robots[r].Shells.Count - 1 do begin
+      with WorldODE.Robots[r].Shells[i] do begin
+        GLObj.Visible := true;
+        if assigned(AltGLObj) then begin
+          AltGLObj.Visible := RGGLObjects.ItemIndex in [1, 2];   // 0 - Original  1 - Mesh  2 - Both
+          GLObj.Visible := RGGLObjects.ItemIndex in [0, 2];
+        end;
+      end;
+    end;
   end;
+
+  for i := 0 to WorldODE.Things.Count - 1 do begin
+    with WorldODE.Things[i] do begin
+      GLObj.Visible := true;
+      if assigned(AltGLObj) then begin
+        AltGLObj.Visible := RGGLObjects.ItemIndex in [1, 2];   // 0 - Original  1 - Mesh  2 - Both
+        GLObj.Visible := RGGLObjects.ItemIndex in [0, 2];
+      end;
+    end;
+  end;
+
 end;
 
 procedure TFParams.ShowGlobalState;
@@ -1191,6 +1236,29 @@ begin
   EditGridX.Text := SGConf.Cells[1, SGConf.Row];
   EditGridY.Text := SGConf.Cells[2, SGConf.Row];
   EditGridZ.Text := SGConf.Cells[3, SGConf.Row];
+end;
+
+procedure TFParams.ShapeSelColorMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if ColorDialog.Execute then begin
+     FViewer.GLSceneViewer.Buffer.FogEnvironment.FogColor.AsWinColor := ColorDialog.Color;
+     FCameras.GLSceneViewer.Buffer.FogEnvironment.FogColor.AsWinColor := ColorDialog.Color;
+     ShapeSelColor.Brush.Color := ColorDialog.Color;
+  end;
+end;
+
+procedure TFParams.CBFogClick(Sender: TObject);
+begin
+  FViewer.GLSceneViewer.Buffer.FogEnable := CBFog.Checked;
+  FCameras.GLSceneViewer.Buffer.FogEnable := CBFog.Checked;
+end;
+
+procedure TFParams.ComboGroundTexturesClick(Sender: TObject);
+var idx: integer;
+begin
+  idx := ComboGroundTextures.ItemIndex;
+  if idx < 0 then exit;
+  FViewer.GLPlaneFloor.Material.LibMaterialName := ComboGroundTextures.Items[idx];
 end;
 
 end.
