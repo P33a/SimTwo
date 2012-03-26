@@ -1,8 +1,8 @@
 object FSceneEdit: TFSceneEdit
-  Left = 380
-  Top = 356
-  Width = 770
-  Height = 606
+  Left = 373
+  Top = 119
+  Width = 909
+  Height = 879
   Caption = 'XML Scene Edit'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -20,16 +20,16 @@ object FSceneEdit: TFSceneEdit
   TextHeight = 13
   object Splitter: TSplitter
     Left = 0
-    Top = 440
-    Width = 762
+    Top = 713
+    Width = 901
     Height = 3
     Cursor = crVSplit
     Align = alBottom
   end
   object StatusBar: TStatusBar
     Left = 0
-    Top = 540
-    Width = 762
+    Top = 813
+    Width = 901
     Height = 20
     Panels = <
       item
@@ -57,8 +57,8 @@ object FSceneEdit: TFSceneEdit
   end
   object LBErrors: TListBox
     Left = 0
-    Top = 443
-    Width = 762
+    Top = 716
+    Width = 901
     Height = 97
     Align = alBottom
     ItemHeight = 13
@@ -68,8 +68,8 @@ object FSceneEdit: TFSceneEdit
   object PageControlXML: TPageControl
     Left = 0
     Top = 0
-    Width = 762
-    Height = 440
+    Width = 901
+    Height = 713
     ActivePage = TabScene
     Align = alClient
     TabOrder = 2
@@ -79,8 +79,8 @@ object FSceneEdit: TFSceneEdit
       object SynEditXML: TSynEdit
         Left = 0
         Top = 4
-        Width = 754
-        Height = 408
+        Width = 893
+        Height = 681
         Align = alBottom
         Enabled = False
         Font.Charset = DEFAULT_CHARSET

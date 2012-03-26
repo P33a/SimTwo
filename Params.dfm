@@ -154,7 +154,7 @@ object FParams: TFParams
         Top = 168
         Width = 261
         Height = 425
-        ActivePage = TabAxis
+        ActivePage = TabGlobal
         Anchors = [akLeft, akTop, akBottom]
         TabOrder = 4
         object TabGlobal: TTabSheet
@@ -163,13 +163,6 @@ object FParams: TFParams
           DesignSize = (
             253
             397)
-          object Label8: TLabel
-            Left = 0
-            Top = 374
-            Width = 14
-            Height = 13
-            Caption = 'IP:'
-          end
           object Label1: TLabel
             Left = 8
             Top = 8
@@ -177,21 +170,12 @@ object FParams: TFParams
             Height = 13
             Caption = 'Script Period:'
           end
-          object EditRemoteIP: TEdit
-            Left = 20
-            Top = 370
-            Width = 109
-            Height = 21
-            TabOrder = 0
-            Text = '127.0.0.1'
-            OnChange = EditRemoteIPChange
-          end
           object EditScriptPeriod: TEdit
             Left = 76
             Top = 4
             Width = 41
             Height = 21
-            TabOrder = 1
+            TabOrder = 0
             Text = '40'
           end
           object BGlobalSet: TButton
@@ -200,7 +184,7 @@ object FParams: TFParams
             Width = 47
             Height = 21
             Caption = 'Set'
-            TabOrder = 2
+            TabOrder = 1
             OnClick = BGlobalSetClick
           end
           object SGGlobalSensors: TStringGrid
@@ -215,7 +199,7 @@ object FParams: TFParams
             FixedCols = 0
             RowCount = 128
             Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSelect]
-            TabOrder = 3
+            TabOrder = 2
             ColWidths = (
               53
               31
@@ -741,7 +725,7 @@ object FParams: TFParams
             Width = 149
             Height = 21
             Style = csDropDownList
-            ItemHeight = 13
+            ItemHeight = 0
             TabOrder = 8
           end
           object BJointWayPointsSave: TButton
@@ -936,7 +920,7 @@ object FParams: TFParams
       end
       object Label54: TLabel
         Left = 184
-        Top = 134
+        Top = 144
         Width = 29
         Height = 13
         Alignment = taRightJustify
@@ -944,11 +928,18 @@ object FParams: TFParams
       end
       object Label55: TLabel
         Left = 168
-        Top = 156
+        Top = 166
         Width = 46
         Height = 13
         Alignment = taRightJustify
         Caption = 'Trail Size:'
+      end
+      object ShapeSelColor: TShape
+        Left = 88
+        Top = 160
+        Width = 20
+        Height = 20
+        OnMouseDown = ShapeSelColorMouseDown
       end
       object CBShadows: TCheckBox
         Left = 8
@@ -1006,9 +997,9 @@ object FParams: TFParams
       object CBGroundTexture: TCheckBox
         Left = 8
         Top = 116
-        Width = 97
+        Width = 65
         Height = 17
-        Caption = 'Ground Texture'
+        Caption = 'Ground'
         TabOrder = 5
         OnClick = CBGroundTextureClick
       end
@@ -1026,7 +1017,7 @@ object FParams: TFParams
       object CBHotCPU: TCheckBox
         Left = 8
         Top = 148
-        Width = 97
+        Width = 73
         Height = 17
         Caption = 'Hot CPU'
         TabOrder = 7
@@ -1236,7 +1227,7 @@ object FParams: TFParams
       end
       object EditTrailsCount: TEdit
         Left = 216
-        Top = 130
+        Top = 140
         Width = 45
         Height = 21
         TabOrder = 31
@@ -1244,7 +1235,7 @@ object FParams: TFParams
       end
       object EditTrailSize: TEdit
         Left = 216
-        Top = 152
+        Top = 162
         Width = 45
         Height = 21
         TabOrder = 32
@@ -1252,7 +1243,7 @@ object FParams: TFParams
       end
       object BSetTrailPars: TButton
         Left = 216
-        Top = 104
+        Top = 114
         Width = 45
         Height = 21
         Caption = 'Set'
@@ -1295,6 +1286,25 @@ object FParams: TFParams
         Caption = 'Get'
         TabOrder = 36
         OnClick = BSGConfGetClick
+      end
+      object CBFog: TCheckBox
+        Left = 8
+        Top = 164
+        Width = 77
+        Height = 17
+        Caption = 'Fog - Color:'
+        TabOrder = 37
+        OnClick = CBFogClick
+      end
+      object ComboGroundTextures: TComboBox
+        Left = 88
+        Top = 114
+        Width = 111
+        Height = 21
+        Style = csDropDownList
+        ItemHeight = 13
+        TabOrder = 38
+        OnClick = ComboGroundTexturesClick
       end
     end
     object TabDebug: TTabSheet
@@ -1642,6 +1652,13 @@ object FParams: TFParams
           Height = 13
           Caption = 'UDP Port:'
         end
+        object Label8: TLabel
+          Left = 12
+          Top = 36
+          Width = 14
+          Height = 13
+          Caption = 'IP:'
+        end
         object EditUDPPort: TEdit
           Left = 64
           Top = 8
@@ -1657,8 +1674,18 @@ object FParams: TFParams
           Height = 17
           Caption = 'Connect'
           TabOrder = 1
+          Visible = False
           OnClick = CBUDPConnectClick
         end
+      end
+      object EditRemoteIP: TEdit
+        Left = 32
+        Top = 124
+        Width = 109
+        Height = 21
+        TabOrder = 2
+        Text = '127.0.0.1'
+        OnChange = EditRemoteIPChange
       end
     end
   end
@@ -1721,7 +1748,11 @@ object FParams: TFParams
       'PGRobots.TabIndex'
       'CBTags.Checked'
       'LBSelectedTags.Items'
-      'RGSensorGL.ItemIndex')
+      'RGSensorGL.ItemIndex'
+      'ShapeSelColor.Brush'
+      'CBFog.Checked'
+      'ComboGroundTextures.ItemIndex'
+      'EditRemoteIP.Text')
     StoredValues = <>
     Left = 236
     Top = 60
@@ -1749,5 +1780,15 @@ object FParams: TFParams
     OnUDPRead = UDPGenericUDPRead
     Left = 180
     Top = 28
+  end
+  object ColorDialog: TColorDialog
+    Left = 120
+    Top = 180
+  end
+  object UDPImageServer: TIdUDPClient
+    BroadcastEnabled = True
+    Port = 9898
+    Left = 180
+    Top = 92
   end
 end

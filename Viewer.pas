@@ -10,9 +10,14 @@ uses
   GLShadowVolume, GLSkydome, GLGraph, OmniXML, OmniXMLUtils,  ODERobots,
   rxPlacemnt, ProjConfig, GLHUDObjects, Menus, GLVectorFileObjects,
   GLFireFX, GlGraphics, OpenGL1x, SimpleParser, GLBitmapFont,
-  GLMesh, jpeg, GLWaterPlane;
+  GLMesh, jpeg, GLWaterPlane, glzbuffer;
 
 type
+  TRemoteImage = packed record
+    id, Number, size, NumPackets, ActPacket: integer;
+    data: array[0..511] of byte;
+  end;
+
   TRGBfloat = record
     r, g, b: single;
   end;
@@ -28,6 +33,7 @@ type
     radius, sizeX, sizeY, sizeZ, posX, posY, posZ, angX, angY, angZ, mass: double;
     I11, I22, I33, I12, I13, I23: double;
     BuoyantMass, Drag, StokesDrag, RollDrag: double;
+    BuoyanceX, BuoyanceY, BuoyanceZ: double;
     colorR, colorG, colorB: double;
     ID: string;
     descr: string;
@@ -87,6 +93,10 @@ type
 
     XMLFiles, XMLErrors: TStringList;
     Parser: TSimpleParser;
+
+    MemCameraSolid: TSolid;
+    RemoteImage: TRemoteImage;
+    RemoteImageDecimation: integer;
 
     destructor destroy; override;
     constructor create;
@@ -149,13 +159,11 @@ type
     //procedure CreateInvisiblePlane(Plane: TSolid; dirX, dirY, dirZ, offset: double);
     function CreateInvisiblePlane(planeKind: TSolidKind; dirX, dirY, dirZ, offset: double): TSolid;
     procedure CreateSensorBeamGLObj(Sensor: TSensor; SensorLength, InitialWidth, FinalWidth: double);
-    function SolidDefProcessXMLNode(var SolidDef: TSolidDef;
-      prop: IXMLNode; Parser: TSimpleParser): boolean;
+    function SolidDefProcessXMLNode(var SolidDef: TSolidDef; prop: IXMLNode; Parser: TSimpleParser): boolean;
     procedure SolidDefSetDefaults(var SolidDef: TSolidDef);
     procedure CreateSphereObstacle(var Obstacle: TSolid; radius, posX,
       posY, posZ: double);
-    procedure LoadSolidXMLProperties(XMLSolid: IXMLNode;
-      Parser: TSimpleParser);
+//    procedure LoadSolidXMLProperties(XMLSolid: IXMLNode; Parser: TSimpleParser);
     procedure InitSolidXMLProperties(
       var SolidXMLProperties: TSolidXMLProperties);
 //    procedure AxisGLCreate(axis: Taxis; aRadius, aHeight: double);
@@ -165,6 +173,8 @@ type
     procedure CreateSolidCylinder(var Solid: TSolid; cmass, posX, posY, posZ: double; c_radius, c_length: double);
     procedure CreateSolidSphere(var Solid: TSolid; bmass, posX, posY, posZ: double; c_radius: double);
     procedure DeleteSolid(Solid: TSolid);
+    procedure LoadSolidMesh(newSolid: TSolid; MeshFile, MeshShadowFile: string; MeshScale: double;
+      MeshCastsShadows: boolean);
 
     procedure exportGLPolygonsText(St: TStringList; tags: TStrings);
     procedure getGLPolygonsTags(TagsList: TStrings);
@@ -227,7 +237,6 @@ type
     MenuSnapshot: TMenuItem;
     MenuChangeScene: TMenuItem;
     GLCone1: TGLCone;
-    GLMemoryViewer: TGLMemoryViewer;
     N1: TMenuItem;
     MenuAbort: TMenuItem;
     GLPlaneTex: TGLPlane;
@@ -235,10 +244,11 @@ type
     GLLineMeasure: TGLLines;
     GLHUDTextMeasure: TGLHUDText;
     N2: TMenuItem;
-    MenuDimensions: TMenuItem;
+    MenuCameras: TMenuItem;
     TimerCadencer: TTimer;
     GLWaterPlane1: TGLWaterPlane;
     GLCameraMem: TGLCamera;
+    MenuQuit: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure GLSceneViewerMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -264,10 +274,12 @@ type
       Shift: TShiftState);
     procedure MenuChangeSceneClick(Sender: TObject);
     procedure MenuAbortClick(Sender: TObject);
-    procedure MenuDimensionsClick(Sender: TObject);
+    procedure MenuCamerasClick(Sender: TObject);
     procedure TimerCadencerTimer(Sender: TObject);
+    procedure MenuQuitClick(Sender: TObject);
   private
     { Private declarations }
+
     my,mx: integer;
     t_delta, t_last, t_act: int64;
     KeyVals: TKeyVals;
@@ -280,11 +292,12 @@ type
     procedure TestSaveTexture;
     function GetMeasureText: string;
     procedure HandleMeasureKeys(var Key: Word; Shift: TShiftState);
+    procedure UpdateGLCameras;
   public
     HUDStrings: TStringList;
     TrailsCount: integer;
     CurrentProject: string;
-    
+
     procedure SetTrailCount(NewCount, NodeCount: integer);
     procedure AddTrailNode(T: integer; x, y, z: double);
     procedure DelTrailNode(T: integer);
@@ -304,7 +317,7 @@ implementation
 {$R *.dfm}
 
 uses ODEGL, Params, Editor, FastChart, RemoteControl, utils, StdCtrls, VerInfo,
-  SceneEdit, Sheets, dimensions;
+  SceneEdit, Sheets, cameras, ChooseScene;
 
 
 
@@ -413,22 +426,27 @@ begin
     end else}
 
     //FParams.EditDebug.Text := format('%d- %.2f %.2f %.2f',[n, n_fdir1[0], n_fdir1[1], n_fdir1[2]]);
-    if (o1.data <> nil) and (TSolid(o1.data).kind = skOmniWheel) then begin
+    if (o1.data <> nil) and (TSolid(o1.data).kind in [skOmniWheel, skOmniSurface]) then begin
         n_mode := n_mode or cardinal(dContactMu2 or dContactFDir1);
-        dBodyVectorToWorld(b1, 0, 0, 1, n_fdir1);
-        //n_fdir1 := Vector3Cross(contact[0].geom.normal, n_fdir1);
-        //dNormalize3(n_fdir1);
-        tmp := n_mu2;
-        n_mu2 := n_mu;
-        n_mu := tmp; //0.001;
-    end else if (o2.data <> nil) and (TSolid(o2.data).kind = skOmniWheel) then begin
+        if TSolid(o1.data).kind = skOmniWheel then begin
+          dBodyVectorToWorld(b1, 0, 0, 1, n_fdir1);
+          tmp := n_mu2;
+          n_mu2 := n_mu;
+          n_mu := tmp; //0.001;
+        end else begin
+          dBodyVectorToWorld(b1, 0, 1, 0, n_fdir1);
+        end;
+    end else if (o2.data <> nil) and (TSolid(o2.data).kind in [skOmniWheel, skOmniSurface]) then begin
         n_mode := n_mode or cardinal(dContactMu2 or dContactFDir1);
-        dBodyVectorToWorld(b2, 0, 0, 1, n_fdir1);
-        //n_fdir1 := Vector3Cross(contact[0].geom.normal, n_fdir1);
-        //dNormalize3(n_fdir1);
-        tmp := n_mu2;
-        n_mu2 := n_mu;
-        n_mu := tmp; //0.001;
+        //dBodyVectorToWorld(b2, 0, 0, 1, n_fdir1);
+        if TSolid(o2.data).kind = skOmniWheel then begin
+          dBodyVectorToWorld(b2, 0, 0, 1, n_fdir1);
+          tmp := n_mu2;
+          n_mu2 := n_mu;
+          n_mu := tmp; //0.001;
+        end else begin
+          dBodyVectorToWorld(b2, 0, 1, 0, n_fdir1);
+        end;
     end;
 
     // Conveyor belt case
@@ -1226,6 +1244,7 @@ begin
     MeshCastsShadows := true;
     BuoyantMass := 0;
     Drag := 0; StokesDrag := 1e-5; RollDrag := 1e-3;
+    BuoyanceX := 0; BuoyanceY := 0; BuoyanceZ := 0;
     radius := 1;
     sizeX := 1; sizeY := 1; sizeZ := 1;
     posX := 0; posY := 0; posZ := 0;
@@ -1245,7 +1264,7 @@ begin
   end;
 end;
 
-
+{
 procedure TWorld_ODE.LoadSolidXMLProperties(XMLSolid: IXMLNode; Parser: TSimpleParser);
 var prop: IXMLNode;
     R: TdMatrix3;
@@ -1301,8 +1320,11 @@ begin
         StokesDrag := GetNodeAttrRealParse(prop, 'stokes', StokesDrag, Parser);
         RollDrag := GetNodeAttrRealParse(prop, 'roll', RollDrag, Parser);
       end;
-      if prop.NodeName = 'buoyant' then begin
+      if (prop.NodeName = 'buoyant') or (prop.NodeName = 'buoyance') then begin
         BuoyantMass := GetNodeAttrRealParse(prop, 'mass', BuoyantMass, Parser);
+        BuoyanceX := GetNodeAttrRealParse(prop, 'x', BuoyanceX, Parser);
+        BuoyanceY := GetNodeAttrRealParse(prop, 'y', BuoyanceY, Parser);
+        BuoyanceZ := GetNodeAttrRealParse(prop, 'z', BuoyanceZ, Parser);
       end;
       if prop.NodeName = 'nogravity' then begin
         GravityMode := 0;
@@ -1359,6 +1381,56 @@ begin
   end;
 
 end;
+}
+procedure TWorld_ODE.LoadSolidMesh(newSolid: TSolid; MeshFile, MeshShadowFile: string; MeshScale: double; MeshCastsShadows: boolean);
+begin
+  // create mesh file
+  if MeshFile <> '' then begin
+    //newSolid.GLObj.Visible := false;
+    newSolid.AltGLObj := TGLSceneObject(ODEScene.AddNewChild(TGLFreeForm));
+    with (newSolid.AltGLObj as TGLFreeForm) do begin
+      TagObject := newSolid;
+      MaterialLibrary := FViewer.GLMaterialLibrary3ds;
+      //Material.MaterialLibrary := FViewer.GLMaterialLibrary3ds; //???
+      //LightmapLibrary := FViewer.GLMaterialLibrary3ds;
+      try
+        LoadFromFile(MeshFile);
+      except on e: Exception do
+        showmessage(E.Message);
+      end;
+      Scale.x := MeshScale;
+      Scale.y := MeshScale;
+      Scale.z := MeshScale;
+    end;
+    PositionSceneObject(newSolid.AltGLObj, newSolid.Geom);
+
+    if MeshCastsShadows and (MeshShadowFile = '') then
+      (OdeScene as TGLShadowVolume).Occluders.AddCaster(newSolid.AltGLObj);
+  end;
+
+  // create shadow mesh file
+  if MeshShadowFile <> '' then begin
+    newSolid.ShadowGlObj := TGLSceneObject(ODEScene.Parent.AddNewChild(TGLFreeForm));
+    //newSolid.ShadowGlObj := TGLSceneObject(ODEScene.AddNewChild(TGLFreeForm));
+    with (newSolid.ShadowGlObj as TGLFreeForm) do begin
+      Visible := false;
+      TagObject := newSolid;
+      MaterialLibrary := FViewer.GLMaterialLibrary3ds;
+      try
+        LoadFromFile(MeshShadowFile);
+      except on e: Exception do
+        showmessage(E.Message);
+      end;
+      Scale.x := MeshScale;
+      Scale.y := MeshScale;
+      Scale.z := MeshScale;
+    end;
+    PositionSceneObject(newSolid.ShadowGlObj, newSolid.Geom);
+    with (OdeScene as TGLShadowVolume).Occluders.AddCaster(newSolid.ShadowGlObj) do begin
+      CastingMode := scmParentVisible;// scmAlways; //scmVisible;
+    end;
+  end;
+end;
 
 
 //procedure TWorld_ODE.LoadHumanoidBonesFromXML(Robot: TRobot; XMLFile: string);
@@ -1368,6 +1440,7 @@ var XMLSolid, prop: IXMLNode;
     radius, sizeX, sizeY, sizeZ, posX, posY, posZ, angX, angY, angZ, mass: double;
     I11, I22, I33, I12, I13, I23: double;
     BuoyantMass, Drag, StokesDrag, RollDrag: double;
+    BuoyanceX, BuoyanceY, BuoyanceZ: double;
     colorR, colorG, colorB: double;
     ID: string;
     R: TdMatrix3;
@@ -1407,6 +1480,7 @@ begin
       MeshScale := 1;
       MeshCastsShadows := true;
       BuoyantMass := 0;
+      BuoyanceX := 0; BuoyanceY := 0; BuoyanceZ := 0;
       Drag := 0; StokesDrag := 1e-5; RollDrag := 1e-3;
       radius := 1;
       sizeX := 1; sizeY := 1; sizeZ := 1;
@@ -1466,9 +1540,12 @@ begin
           StokesDrag := GetNodeAttrRealParse(prop, 'stokes', StokesDrag, Parser);
           RollDrag := GetNodeAttrRealParse(prop, 'roll', RollDrag, Parser);
         end;
-        if prop.NodeName = 'buoyant' then begin
-          BuoyantMass := GetNodeAttrRealParse(prop, 'mass', BuoyantMass, Parser);
-        end;
+      if (prop.NodeName = 'buoyant') or (prop.NodeName = 'buoyance') then begin
+        BuoyantMass := GetNodeAttrRealParse(prop, 'mass', BuoyantMass, Parser);
+        BuoyanceX := GetNodeAttrRealParse(prop, 'x', BuoyanceX, Parser);
+        BuoyanceY := GetNodeAttrRealParse(prop, 'y', BuoyanceY, Parser);
+        BuoyanceZ := GetNodeAttrRealParse(prop, 'z', BuoyanceZ, Parser);
+      end;
         if prop.NodeName = 'nogravity' then begin
           GravityMode := 0;
         end;
@@ -1525,6 +1602,9 @@ begin
         newSolid.Drag := Drag;
         newSolid.StokesDrag := StokesDrag;
         newSolid.RollDrag := RollDrag;
+        newSolid.BuoyanceCenter[0] := BuoyanceX;
+        newSolid.BuoyanceCenter[1] := BuoyanceY;
+        newSolid.BuoyanceCenter[2] := Buoyancez;
 
         if (XMLSolid.NodeName = 'cuboid') or (XMLSolid.NodeName = 'belt') or (XMLSolid.NodeName = 'propeller')then begin
           CreateSolidBox(newSolid, mass, posX, posY, posZ, sizeX, sizeY, sizeZ);
@@ -1597,7 +1677,7 @@ begin
           newSolid.SetTexture(TextureName, TextureScale); //'LibMaterialFeup'
         end;
 
-        if (BuoyantMass <> 0) or (GravityMode = 0) then begin
+        if (GravityMode = 0) then begin
           dBodySetGravityMode(newSolid.Body, 0);
         end;
         if XMLSolid.NodeName = 'belt' then newSolid.kind := skMotorBelt;
@@ -1605,50 +1685,7 @@ begin
 
         newSolid.MatterProperties := MatterProps;
 
-        // create mesh file
-        if MeshFile <> '' then begin
-          //newSolid.GLObj.Visible := false;
-          newSolid.AltGLObj := TGLSceneObject(ODEScene.AddNewChild(TGLFreeForm));
-          with (newSolid.AltGLObj as TGLFreeForm) do begin
-            TagObject := newSolid;
-            MaterialLibrary := FViewer.GLMaterialLibrary3ds;
-            try
-              LoadFromFile(MeshFile);
-            except on e: Exception do
-              showmessage(E.Message);
-            end;
-            Scale.x := MeshScale;
-            Scale.y := MeshScale;
-            Scale.z := MeshScale;
-          end;
-          PositionSceneObject(newSolid.AltGLObj, newSolid.Geom);
-
-          if MeshCastsShadows and (MeshShadowFile = '') then
-            (OdeScene as TGLShadowVolume).Occluders.AddCaster(newSolid.AltGLObj);
-        end;
-
-        // create shadow mesh file
-        if MeshShadowFile <> '' then begin
-          newSolid.ShadowGlObj := TGLSceneObject(ODEScene.Parent.AddNewChild(TGLFreeForm));
-          //newSolid.ShadowGlObj := TGLSceneObject(ODEScene.AddNewChild(TGLFreeForm));
-          with (newSolid.ShadowGlObj as TGLFreeForm) do begin
-            Visible := false;
-            TagObject := newSolid;
-            MaterialLibrary := FViewer.GLMaterialLibrary3ds;
-            try
-              LoadFromFile(MeshShadowFile);
-            except on e: Exception do
-              showmessage(E.Message);
-            end;
-            Scale.x := MeshScale;
-            Scale.y := MeshScale;
-            Scale.z := MeshScale;
-          end;
-          PositionSceneObject(newSolid.ShadowGlObj, newSolid.Geom);
-          with (OdeScene as TGLShadowVolume).Occluders.AddCaster(newSolid.ShadowGlObj) do begin
-            CastingMode := scmParentVisible;// scmAlways; //scmVisible;
-          end;
-        end;
+        LoadSolidMesh(newSolid, MeshFile, MeshShadowFile, MeshScale, MeshCastsShadows);
 
         if Surf.mu >= 0 then begin
           newSolid.ParSurface.mode := $FF;
@@ -1754,15 +1791,25 @@ begin
     Ki := 1.4e-2;
     Imax := 4;
     Vmax := 24;
+
     GearRatio := 10;
+
+    JRotor := 0;
+    BRotor := 1e-3;
+
+    KGearBox := 5e-1 / Motor.GearRatio;
+    BGearBox := 1e-1 / Motor.GearRatio;
+
+    KGearBox2 := 0;
+    BGearBox2 := 0;
 
     Controller.active := false;
     //Controller.active := true;
     with Controller do begin
-      Kp := 0.5;
+      Kp := 1;
       Ki := 0;
       Kd := 0;
-      Kf := 0.5;
+      Kf := 0;
       Y_sat := 24;
       ticks := 0;
       Sek := 0;
@@ -1774,7 +1821,7 @@ begin
   with DefFriction do begin
     Bv := 1e-5;
     Fc := 1e-3;
-    CoulombLimit := 1e-2;
+//    CoulombLimit := 1e-2;
   end;
 
   with DefSpring do begin
@@ -2585,17 +2632,26 @@ begin
       Imax := GetNodeAttrRealParse(prop, 'imax', Imax, Parser);
       active := GetNodeAttrBool(prop, 'active', active);
       simple := GetNodeAttrBool(prop, 'simple', simple);
-    end;
-    if prop.NodeName = 'gear' + sufix then begin
+
+    end else if prop.NodeName = 'rotor' + sufix then begin
+      JRotor := GetNodeAttrRealParse(prop, 'J', JRotor, Parser);
+      JRotor := GetNodeAttrRealParse(prop, 'j', JRotor, Parser);
+      BRotor := GetNodeAttrRealParse(prop, 'bv', BRotor, Parser);
+      QRotor := GetNodeAttrRealParse(prop, 'fc', QRotor, Parser);
+
+    end else if prop.NodeName = 'gear' + sufix then begin
       GearRatio := GetNodeAttrRealParse(prop, 'ratio', GearRatio, Parser);
-    end;
-    if prop.NodeName = 'encoder' + sufix then begin
+      KGearBox  := GetNodeAttrRealParse(prop, 'ke', KGearBox, Parser);
+      BGearBox  := GetNodeAttrRealParse(prop, 'bv', BGearBox, Parser);
+      KGearBox2 := GetNodeAttrRealParse(prop, 'ke2', KGearBox, Parser);
+      BGearBox2 := GetNodeAttrRealParse(prop, 'kv2', BGearBox, Parser);
+
+    end else if prop.NodeName = 'encoder' + sufix then begin
       Encoder.PPR := GetNodeAttrInt(prop, 'ppr', Encoder.PPR);
       Encoder.NoiseMean := GetNodeAttrRealParse(prop, 'mean', Encoder.NoiseMean, Parser);
       Encoder.NoiseStDev := GetNodeAttrRealParse(prop, 'stdev', Encoder.NoiseStDev, Parser);
-    end;
 
-    if prop.NodeName = 'controller' + sufix then begin
+    end else if prop.NodeName = 'controller' + sufix then begin
       with Controller do begin
         Kp := GetNodeAttrRealParse(prop, 'kp', Kp, Parser);
         Ki := GetNodeAttrRealParse(prop, 'ki', Ki, Parser);
@@ -2654,6 +2710,17 @@ begin
     Vmax := 24;
     GearRatio := 10;
 
+    GearRatio := 10;
+
+    JRotor := 0;
+    BRotor := 1e-3;
+
+    KGearBox := 5e-1 / Motor.GearRatio;
+    BGearBox := 1e-1 / Motor.GearRatio;
+
+    KGearBox2 := 0;
+    BGearBox2 := 0;
+
     Controller.active := false;
     //Controller.active := true;
     with Controller do begin
@@ -2672,7 +2739,7 @@ begin
   with DefFriction do begin
     Bv := 1e-5;
     Fc := 1e-3;
-    CoulombLimit := 1e-2;
+//    CoulombLimit := 1e-2;
   end;
 
   with RGB do begin
@@ -2795,12 +2862,16 @@ var ShellNode, prop: IXMLNode;
     PGeomPos: PdVector3;
     i: integer;
     MatterProps: TMatterProperties;
+    focalLength: double;
+    decimation: integer;
+    actRemGLCamera: TGLCamera;
+    transparency: double;
 begin
   if root = nil then exit;
 
   ShellNode := root.FirstChild;
   while ShellNode <> nil do begin
-    if pos(ShellNode.NodeName, 'cuboid<>cylinder<>sphere') <> 0 then begin
+    if pos(ShellNode.NodeName, 'cuboid<>cylinder<>sphere<>camera') <> 0 then begin
       prop := ShellNode.FirstChild;
       // default values
       mass := 0;
@@ -2811,7 +2882,10 @@ begin
       angX := 0; angY := 0; angZ := 0;
       colorR := 128/255; colorG := 128/255; colorB := 128/255;
       MatterProps := [];
+      focalLength := 50;
+      decimation := 4;
       MotherSolidId := '';
+      transparency := 1;
       while prop <> nil do begin
         if prop.NodeName = 'ID' then begin
           IDValue := GetNodeAttrStr(prop, 'value', IDValue);
@@ -2824,6 +2898,12 @@ begin
         end;
         if prop.NodeName = 'radius' then begin
           radius := GetNodeAttrRealParse(prop, 'value', radius, Parser);
+        end;
+        if prop.NodeName = 'focal' then begin
+          focalLength := GetNodeAttrRealParse(prop, 'length', focalLength, Parser);
+        end;
+        if prop.NodeName = 'frame' then begin
+          decimation := GetNodeAttrInt(prop, 'decimation', decimation);
         end;
         if prop.NodeName = 'size' then begin
           sizeX := GetNodeAttrRealParse(prop, 'x', sizeX, Parser);
@@ -2845,6 +2925,9 @@ begin
           colorR := GetNodeAttrInt(prop, 'r', 128)/255;
           colorG := GetNodeAttrInt(prop, 'g', 128)/255;
           colorB := GetNodeAttrInt(prop, 'b', 128)/255;
+        end;
+        if prop.NodeName = 'transparency' then begin
+          transparency := GetNodeAttrRealParse(prop, 'alpha', transparency, Parser);
         end;
         if prop.NodeName = 'metallic' then begin
           MatterProps := MatterProps + [smMetallic];
@@ -2886,6 +2969,15 @@ begin
       end else if ShellNode.NodeName = 'sphere' then begin
         CreateShellSphere(newShell, MotherSolid.Body, posX, posY, posZ, radius);
         if mass > 0 then dMassSetSphereTotal(NewMass, mass, radius);
+      end else if ShellNode.NodeName = 'camera' then begin
+        CreateShellBox(newShell, MotherSolid.Body, posX, posY, posZ, sizeX, sizeY, sizeZ);
+        if mass > 0 then dMassSetBoxTotal(NewMass, mass, sizeX, sizeY, sizeZ);
+        MemCameraSolid := newShell;
+        actRemGLCamera := TGLCamera(OdeScene.Scene.cameras.FindChild('GLCameraMem', true));
+        if assigned(actRemGLCamera) then begin
+          actRemGLCamera.FocalLength := focalLength;
+          actRemGLCamera.tag := decimation; // Latter a propper storage for the cameras
+        end;
       end;
       newShell.MatterProperties := MatterProps;
 
@@ -2925,6 +3017,10 @@ begin
 
       with newShell.GLObj as TGLSceneObject do begin
         Material.FrontProperties.Diffuse.SetColor(colorR, colorG, colorB);
+        if transparency < 1 then begin
+          Material.BlendingMode := bmTransparency;
+          Material.FrontProperties.Diffuse.SetColor(colorR, colorG, colorB, transparency);
+        end;
       end;
       PositionSceneObject(newShell.GLObj, newShell.Geom);
     end;
@@ -3429,7 +3525,7 @@ begin
       CreateGLPolygoLine(aWinColor, posX, -posY, posZ, lineLength, lineWidth, -angle, s_tag);
     end;
     if clone_vflip then begin
-      CreateGLPolygoLine(aWinColor, -posX, posY, posZ, lineLength, lineWidth, 180 - angle, s_tag);
+      CreateGLPolygoLine(aWinColor, -posX, posY + lineWidth, posZ, lineLength, lineWidth, 180 - angle, s_tag);
     end;
 
     posX := posX + x_disp;
@@ -3835,6 +3931,22 @@ begin
   if DirectoryExists(s) then begin
     SetCurrentDir(s);
     CurrentProject := s;
+  end else begin
+    //FSceneEdit.MenuChange.Click;
+    SetCurrentDir('base');
+    FChooseScene := TFChooseScene.Create(FViewer);
+    try
+      FChooseScene.showmodal;
+
+      if FChooseScene.ModalResult = mrCancel then Close;
+      if FChooseScene.SelectedDir = '' then Close;
+
+      SetCurrentDir('../' + FChooseScene.SelectedDir);
+      CurrentProject := FChooseScene.SelectedDir;
+    finally
+      FChooseScene.Free;
+    end;
+
   end;
 
   FormStorage.IniFileName := GetIniFineName;
@@ -3953,6 +4065,7 @@ var old_Im, dI, err: double;
     max_delta_Im: double;
     minLim, maxLim: double;
     ev, ebt: double;
+    Td, dtheta, TB, TK, tau: double;
 begin
   max_delta_Im := 0.15; // A/ms
   with Axis do begin
@@ -4004,8 +4117,11 @@ begin
       old_Im := Motor.Im;
 
       if not Motor.simple then begin
-        ev := w * Motor.GearRatio * Motor.Ki ;
-        ev := max(-Motor.Vmax, min(Motor.Vmax, ev));
+        if Motor.JRotor > 0 then begin
+          ev := Motor.w * Motor.Ki ;
+        end else begin
+          ev := w * Motor.GearRatio * Motor.Ki ;
+        end;
 
         if Motor.Li <> 0 then begin
           if Motor.Ri <> 0 then begin
@@ -4022,25 +4138,6 @@ begin
             Motor.Im := Motor.Imax * sign(Motor.voltage);
           end;
         end;
-
-{        if Motor.Ri <> 0 then begin
-          if Motor.Li/Motor.Ri > 1/(5*dt) then begin
-            Motor.Im := (Motor.voltage - ev) / Motor.Ri;
-          end else begin
-            //dI := dt / Motor.Li * (Motor.voltage - ev - Motor.Ri* Motor.Im);
-            //Motor.Im := Motor.Im + dI;
-            ebt := exp(-dt*Motor.Ri / Motor.Li);
-            Motor.Im := ebt * Motor.Im + (1 - ebt) * (Motor.voltage - ev) / Motor.Ri;
-          end;
-        end else begin
-          if Motor.Li <> 0 then begin
-            dI := dt / Motor.Li * (Motor.voltage - ev);
-            Motor.Im := Motor.Im + dI;
-          end else begin
-            Motor.Im := Motor.Imax * sign(Motor.voltage);
-          end;
-        end;
-}
       end else begin
         Motor.Im := Motor.voltage / Motor.Ri;
       end;
@@ -4049,13 +4146,13 @@ begin
       if Motor.Im > old_Im + max_delta_Im then Motor.Im := old_Im + max_delta_Im;
       if Motor.Im < old_Im - max_delta_Im then Motor.Im := old_Im - max_delta_Im;
 
-      if abs(Motor.voltage)>1e-3 then begin
+      //if abs(Motor.voltage)>1e-3 then begin
         //iw := max(-Pars.Imax , min(Pars.Imax , iw));
         // this limit is dependent on the current sensor placement
         // Here is assumed that it is only active on the "on" time of the PWM
         //Motor.Im := max(-Motor.Imax / duty, min(Motor.Imax / duty, Motor.Im));
         Motor.Im := max(-Motor.Imax, min(Motor.Imax, Motor.Im));
-      end;
+      //end;
     end else begin
       Motor.Im := 0;
     end;
@@ -4070,11 +4167,52 @@ begin
     // Limit it to avoid instability
     //if Friction.CoulombLimit >= 0 then
     //  Tq := max(-Friction.CoulombLimit * abs(w), min(Friction.CoulombLimit * abs(w), Tq));
-    //T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Tq - Spring.K * diffangle(Theta, Spring.ZeroPos);
-    //T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Tq - Spring.K * (Theta - Spring.ZeroPos);
-    T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * filt_speed - Spring.K * (Theta - Spring.ZeroPos);
-    //T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Spring.K * (Theta - Spring.ZeroPos);
 
+{    with motor do begin
+      JRotor := 1e-4;
+      //JRotor := 0;
+      BRotor := 1e-3;
+
+      KGearBox := 5e-2; //GearRatio = 500
+      BGearBox := 1e-5;
+      //KGearBox := 5e-1; //GearRatio = 12
+      //BGearBox := 1e-2;
+
+      KGearBox2 := 0;
+      BGearBox2 := 0;
+    end;
+}
+    if Motor.JRotor > 0 then begin
+      tau :=  Motor.JRotor / WorldODE.Ode_dt;
+      dtheta := diffangle(Motor.teta, Theta);
+
+      TB := Motor.BGearBox  * (Motor.w - filt_speed *  Motor.GearRatio);
+      // TB limit: it avoids some crashes when BGearBox is to high
+      if 0.2 * abs(Motor.JRotor / TB) < WorldODE.Ode_dt then begin
+        if TB > 0 then TB := 0.2 * tau
+        else TB := -0.2 * tau
+      end;
+
+      TK := (Motor.KGearBox + Motor.KGearBox2 * sign(dtheta) * dtheta ) * dtheta;
+
+      Td := TK + TB;
+
+      {if abs(Motor.JRotor / Td) < WorldODE.Ode_dt then begin
+        if Td > 0 then Td := 0.5 *Motor.JRotor / WorldODE.Ode_dt
+        else Td := -0.5 *Motor.JRotor / WorldODE.Ode_dt
+      end;}
+  //  ebt := exp(-dt*Motor.Ri / Motor.Li);
+  //  Motor.Im := ebt * Motor.Im + (1 - ebt) * (Motor.voltage - ev) / Motor.Ri;
+
+      Motor.w := Motor.w + (Motor.Im * Motor.Ki - Motor.BRotor * Motor.w - Td) * WorldODE.Ode_dt / Motor.JRotor;
+      Motor.teta := Motor.teta  + Motor.w * WorldODE.Ode_dt / Motor.GearRatio;
+
+      T := Td * Motor.GearRatio - Friction.Bv * filt_speed - Spring.K * (Theta - Spring.ZeroPos);;
+    end else begin
+      //T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Spring.K * diffangle(Theta, Spring.ZeroPos);
+      T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * filt_speed - Spring.K * (Theta - Spring.ZeroPos);
+      //T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Spring.K * (Theta - Spring.ZeroPos);
+    end;
   end;
 end;
 
@@ -4220,11 +4358,20 @@ begin
 
     // Global Objects
     with WorldODE do begin
+      // Things
       for i := 0 to Things.Count-1 do begin
-        if Things[i].GLObj = nil then continue;
+        if assigned(Things[i].GLObj) then begin
+          PositionSceneObject(Things[i].GLObj, Things[i].Geom);
+          if Things[i].GLObj is TGLCylinder then Things[i].GLObj.pitch(90);
+        end;
 
-        PositionSceneObject(Things[i].GLObj, Things[i].Geom);
-        if Things[i].GLObj is TGLCylinder then Things[i].GLObj.pitch(90);
+        if assigned(Things[i].AltGLObj) then begin
+          PositionSceneObject(Things[i].AltGLObj, Things[i].Geom);
+        end;
+
+        if assigned(Things[i].ShadowGlObj) then begin
+          PositionSceneObject(Things[i].ShadowGlObj, Things[i].Geom);
+        end;
 
         Things[i].UpdateGLCanvas;
       end;
@@ -4258,8 +4405,6 @@ var theta, w, Tq: double;
     vs: TVector;
     Curpos: TPoint;
     newFixedTime: double;
-    GLBmp32: TGLBitmap32;
-    Bmp32: TBitmap;
 begin
   //GLScene.CurrentGLCamera.Position := GLDummyCamPos.Position;
   GLCamera.Position := GLDummyCamPos.Position;
@@ -4321,6 +4466,14 @@ begin
         end;
         FParams.ShowGlobalState;
 
+        if Fparams.RGControlBlock.ItemIndex = 1 then begin  // Script controller
+          FEditor.RunOnce; // One call to the script, in the begining, for all robots
+          if FEditor.SimTwoCloseRequested then begin
+            close;
+            exit;
+          end;
+        end;
+
         for r := 0 to WorldODE.Robots.Count-1 do begin
           with WorldODE.Robots[r] do begin
 
@@ -4334,12 +4487,12 @@ begin
                   Wheels[i].Axle.Axis[0].ref.w := Keyvals[i]*30; //TODO: angular speed constant
                 end;
               end;
-            end else if Fparams.RGControlBlock.ItemIndex = 1 then begin  // Script controller
+            {end else if Fparams.RGControlBlock.ItemIndex = 1 then begin  // Script controller
               if r = 0 then FEditor.RunOnce; // One call to the script, in the begining, for all robots
               if FEditor.SimTwoCloseRequested then begin
                 close;
                 exit;
-              end;
+              end;}
             end else if Fparams.RGControlBlock.ItemIndex = 2 then begin  // LAN controller
               Fparams.UDPServer.SendBuffer(Fparams.EditRemoteIP.Text, 9801, RemState, sizeof(RemState));
               // Test if A new position was requested
@@ -4431,15 +4584,11 @@ begin
 
         // Buoyancy
         dWorldGetGravity(WorldODE.world, v1);
-        dNormalize3(v1);
         for i:=0 to WorldODE.Robots[r].Solids.Count-1 do begin
           with WorldODE.Robots[r].Solids[i] do begin
             if BuoyantMass <> 0 then begin
                v2 := Vector3ScalarMul(v1, BuoyantMass);
-               //v2 := Vector3ScalarMul(v1, BuoyantMass * Volume);
-               //v2 := Vector3ScalarMul(v1, BuoyantMass );
-               //FParams.EditDebug3.text := format('%g',[Volume]);
-               dBodyAddForce(Body, v2[0], v2[1], v2[2]);
+               dBodyAddForceAtRelPos(Body, v2[0], v2[1], v2[2], BuoyanceCenter[0], BuoyanceCenter[1], BuoyanceCenter[2]);
             end;
           end;
         end;
@@ -4451,7 +4600,7 @@ begin
                v1 := dBodyGetAngularVel(Body)^;
                //dBodyVectorFromWorld(Body, v1[0], v1[1], v1[2], v2);
                //dBodyAddRelForce(Body, 0.01*v2[0], 0, 0);
-               dBodyAddForce(Body, 0.01*v1[0], 0.01*v1[1], 0.01*v1[2]);    // TODO 0.01 ???
+               dBodyAddForce(Body, 0.1*v1[0], 0.1*v1[1], 0.1*v1[2]);    // TODO 0.01 ???
             end;
           end;
         end;
@@ -4516,19 +4665,87 @@ begin
 
     FParams.ShowCameraConfig(GLCamera);
 
-    GLMemoryViewer.Render(nil);
-    GLBmp32 := GLMemoryViewer.Buffer.CreateSnapShot;
-    Bmp32 := GLBmp32.Create32BitsBitmap;
+    if assigned(WorldODE.MemCameraSolid) then begin
+      GLCameraMem.Position := WorldODE.MemCameraSolid.GLObj.Position;
+      GLCameraMem.Direction := WorldODE.MemCameraSolid.GLObj.Direction;
+      GLCameraMem.up := WorldODE.MemCameraSolid.GLObj.up;
+    end;
+    //UpdateGLCameras;
 
-    FDimensions.ImageCam.Canvas.Draw(0,0, Bmp32);
-    Bmp32.free;
-    GLBmp32.Free;
+   // In scene camera
+   // GLMemoryViewer.Render(nil);
+   // GLBmp32 := GLMemoryViewer.Buffer.CreateSnapShot;
+    //FDimensions.GLSceneViewer.Refresh;
 
     QueryPerformanceCounter(t_end_gl);
     FParams.EditDebug.text := format('%.2f (%.2f) %.2f [%.2f]',[(t_end_gl - t_start)/t_delta, t_itot/t_delta, (t_end_gl - t_end)/t_delta, (t_act - t_last)/t_delta]);
 
     //GLSceneViewer.Invalidate;
 
+  end;
+end;
+
+
+procedure TFViewer.UpdateGLCameras;
+var GLBmp32: TGLBitmap32;
+    Bmp32: TBitmap;
+    JpegImage: TJpegImage;
+    Stream: TMemoryStream;
+    i, sz, MTU: integer;
+begin
+  //Fcameras.UpdateGLCameras;
+  exit;
+
+  if FCameras.Visible then begin
+    with WorldODE do begin
+      inc(RemoteImageDecimation);
+      if RemoteImageDecimation >= GLCameraMem.Tag then begin
+        RemoteImageDecimation := 0;
+      end else exit;
+    end;
+
+    GLBmp32 := FCameras.GLSceneViewer.Buffer.CreateSnapShot;
+    Bmp32 := GLBmp32.Create32BitsBitmap;
+    //FDimensions.ImageCam.Canvas.Draw(0,0, Bmp32);
+    Stream := TMemoryStream.Create;
+    JpegImage := TJpegImage.Create;
+    JpegImage.Smoothing := true;
+    JpegImage.Performance := jpBestQuality;
+    JpegImage.CompressionQuality := FCameras.SBQuality.Position;
+
+    JpegImage.Assign(Bmp32);
+    JpegImage.Compress;
+    JpegImage.SaveToStream(Stream);
+    FCameras.EditJPGSize.Text := inttostr(Stream.Position);
+
+    if FCameras.CBSendImage.Checked then begin
+      MTU := 512;
+      with WorldODE do begin
+        RemoteImage.id := $5241;
+        inc(RemoteImage.Number);
+        RemoteImage.size := Stream.Position;
+        RemoteImage.NumPackets := (RemoteImage.size + MTU - 1) div MTU;
+        RemoteImage.ActPacket := 0;
+
+        Stream.Seek(0, soFromBeginning);
+
+        for i := 0 to RemoteImage.NumPackets - 1 do begin
+          RemoteImage.ActPacket := i;
+          sz := min(RemoteImage.size - (i * MTU), MTU);
+          Stream.readBuffer(RemoteImage.data[0], sz);
+          Fparams.UDPServer.SendBuffer(Fparams.EditRemoteIP.Text, 9898, RemoteImage, sizeof(RemoteImage) - 512 + sz);
+        end;
+      end;
+    end;      
+    if FCameras.CBShowJpeg.Checked then begin
+      Stream.Seek(0, soFromBeginning);
+      JpegImage.LoadFromStream(Stream);
+      FCameras.ImageCam.Canvas.Draw(0,0, JpegImage);
+    end;
+    Stream.Free;
+    JpegImage.Free;
+    Bmp32.free;
+    GLBmp32.Free;
   end;
 end;
 
@@ -4580,7 +4797,19 @@ end;
 procedure TFViewer.FormClose(Sender: TObject; var Action: TCloseAction);
 var fl: string;
     Slist: TStringList;
+    i: integer;
 begin
+  // Save the forms z-order so it can be later restored
+  Slist := TStringList.Create;
+  try
+    for i := 0 to Screen.FormCount - 1 do begin
+      Slist.add(Screen.Forms[i].Name);
+    end;
+    Slist.SaveToFile('Zorder.txt');
+  finally
+    Slist.Free;
+  end;
+
   FSheets.Close;
   FSceneEdit.Close;
 
@@ -4622,13 +4851,35 @@ begin
 end;
 
 procedure TFViewer.FormShow(Sender: TObject);
+var SL: TStringList;
+    i, j: integer;
 begin
-  FParams.show;
-  FEditor.show;
-  FChart.show;
-  FSheets.show;
+  // Recover the forms z-order
+  if FileExists('zorder.txt') then begin
+    SL := TStringList.Create;
+    try
+      SL.LoadFromFile('zorder.txt');
+      // show them from back to front
+      for i := SL.Count - 1 downto 0 do begin
+        if pos(SL[i], 'FParams|FEditor|FChart|FSheets|FSceneEdit') <> 0 then begin
+          for j := 0 to Screen.FormCount - 1 do begin
+            if SL[i] = Screen.Forms[j].Name then begin
+              Screen.Forms[j].Show;
+            end;
+          end;
+        end;
+      end;
+    finally
+      SL.Free;
+    end;
+  end else begin   // if there is no z-order file then use the default sequence
+    FParams.show;
+    FEditor.show;
+    FChart.show;
+    FSheets.show;
+    FSceneEdit.Show;
+  end;
 
-  FSceneEdit.Show;
   if WorldODE.XMLErrors.Count > 0 then begin
     FSceneEdit.LBErrors.Items.AddStrings(WorldODE.XMLErrors);
   end;
@@ -4710,6 +4961,7 @@ begin
     end;
   end;
 end;
+
 
 procedure TFViewer.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
@@ -4839,6 +5091,7 @@ begin
     if (key = ord('H')) then MenuSheets.Click;
     if (key = ord('I')) then MenuSnapshot.Click;
     if (key = ord('N')) then MenuChangeScene.Click;
+    if (key = ord('A')) then MenuCameras.Click;
   end;
 
   HandleMeasureKeys(Key, Shift);
@@ -4875,27 +5128,42 @@ begin
                  mtConfirmation , [mbOk,mbCancel], 0) = mrOk then halt(1);
 end;
 
+procedure TFViewer.MenuQuitClick(Sender: TObject);
+begin
+  close;
+end;
+
+
 procedure TWorld_ODE.DeleteSolid(Solid: TSolid);
 begin
   (OdeScene as TGLShadowVolume).Occluders.RemoveCaster(Solid.GLObj);
   ODEScene.Remove(Solid.GLObj, false);
-  if Solid.GLObj = oldpick then begin
+  if (Solid.GLObj = oldpick) or
+     (Solid.AltGLObj = oldpick) or
+     (Solid.ShadowGlObj = oldpick) or
+     (Solid.CanvasGLObj = oldpick) or
+     (Solid.extraGLObj = oldpick) then begin
     oldpick := nil;
   end;
+  Solid.extraGLObj.Free;
+  Solid.CanvasGLObj.Free;
+  Solid.ShadowGlObj.Free;
+  Solid.AltGLObj.Free;
   Solid.GLObj.Free;
   dGeomDestroy(Solid.Geom);
   dBodyDestroy(Solid.Body);
 end;
 
-procedure TFViewer.MenuDimensionsClick(Sender: TObject);
+procedure TFViewer.MenuCamerasClick(Sender: TObject);
 begin
-  ShowOrRestoreForm(FDimensions);
+  ShowOrRestoreForm(FCameras);
 end;
 
 procedure TFViewer.TimerCadencerTimer(Sender: TObject);
 begin
   GLCadencer.Progress;
 end;
+
 
 end.
 

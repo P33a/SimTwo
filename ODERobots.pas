@@ -23,7 +23,7 @@ const MaxDim = 8;
   skOmniWheel = 1;
   skMotorBelt = 2;}
 type
-  TSolidKind = (skDefault, skOmniWheel, skMotorBelt, skPropeller, skFloor, skWall);
+  TSolidKind = (skDefault, skOmniWheel, skOmniSurface, skMotorBelt, skPropeller, skFloor, skWall);
 
 type
   TControlMode = (cmPIDPosition, cmPIDSpeed, cmState);
@@ -34,7 +34,7 @@ type
 
   TFriction = record
     Bv, Fc: double;
-    CoulombLimit: double;
+//    CoulombLimit: double;
   end;
 
   TSpring = record
@@ -60,6 +60,10 @@ type
     Ri, Li, Ki, Vmax, Imax: double;
     Im: double;
     GearRatio: double;
+    JRotor, teta, w: double;
+    BRotor, QRotor: double;
+    KGearBox, BGearBox: double;
+    KGearBox2, BGearBox2: double;
     Encoder: TEncoder;
     Controller: TMotController;
     voltage, PowerDrain, EnergyDrain: double;
@@ -82,6 +86,8 @@ type
     ID: string;
     //description: string;
     BuoyantMass, Volume, Drag, StokesDrag, RollDrag: double;
+    BuoyanceCenter: TdVector3;
+    Thrust: double;
     Ax, Ay, Az: double;
     ZeroPosition: TdVector3;
     ZeroRotation: TdMatrix3;
@@ -102,9 +108,12 @@ type
     function GetPosition: TdVector3;
     function GetRotation: TdMatrix3;
     function GetLinSpeed: TdVector3;
+    function GetAngularVel: TdVector3;
+    procedure SetAngularVel(wX, wY, wZ: double);
     procedure SetSize(sizeX, sizeY, sizeZ: double);
     procedure GetSize(out sizeX, sizeY, sizeZ: double);
     procedure SetForce(FX, FY, FZ: double);
+    procedure SetSurfacePars(mu, mu2, softness, bounce, bounce_tresh: double);
     procedure UpdateGLCanvas;
   end;
 
@@ -834,6 +843,12 @@ begin
   dBodySetLinearVel(Body, vX, vY, vZ);
 end;
 
+procedure TSolid.SetAngularVel(wX, wY, wZ: double);
+begin
+  dBodySetAngularVel(Body, wX, wY, wZ);
+end;
+
+
 procedure TSolid.SetSize(sizeX, sizeY, sizeZ: double);
 begin
   if dGeomGetClass(Geom) = dBoxClass then begin
@@ -886,6 +901,7 @@ begin
   dBodySetForce(Body, Fx, Fy, Fz);
 end;
 
+
 function TSolid.GetLinSpeed: TdVector3;
 begin
   result :=dBodyGetLinearVel(Body)^;
@@ -900,6 +916,31 @@ begin
     img.AssignFromBitmap24WithoutRGBSwap(PaintBitmap);
     CanvasGLObj.Material.Texture.Image.endUpdate;
   end;
+end;
+
+procedure TSolid.SetSurfacePars(mu, mu2, softness, bounce, bounce_tresh: double);
+begin
+  if mu >= 0 then begin
+    ParSurface.mode := $FF;
+    ParSurface.mu := mu;
+    if mu2 >= 0 then begin
+      ParSurface.mu2 := mu2;
+      kind := skOmniSurface;
+    end else begin
+      kind := skDefault;
+    end;
+    ParSurface.soft_cfm := softness;
+    ParSurface.bounce := bounce;
+    ParSurface.bounce_vel := bounce_tresh;
+  end else begin
+    ParSurface.mode := 0;
+    kind := skDefault;
+  end;
+end;
+
+function TSolid.GetAngularVel: TdVector3;
+begin
+  result :=dBodyGetAngularVel(Body)^;
 end;
 
 { TAxis }
