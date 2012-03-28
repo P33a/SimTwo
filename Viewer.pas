@@ -1035,6 +1035,7 @@ begin
 
   dJointAttach(PickJoint, Solid.body, nil);
   dJointSetBallAnchor(PickJoint, anchor_x, anchor_y, anchor_z);
+  dJointSetBallParam(PickJoint, dParamCFM, 1e-2);
   PickLinDamping := dBodyGetLinearDamping(Solid.Body);
   PickAngularDamping := dBodyGetAngularDamping(Solid.Body);
   dBodySetDamping(Solid.Body, 1e-2, 1e-1);
@@ -3951,7 +3952,7 @@ begin
 
   FormStorage.IniFileName := GetIniFineName;
 //  GetProcessAffinityMask(
-  SetThreadAffinityMask(GetCurrentThreadId(), 1);
+//  SetThreadAffinityMask(GetCurrentThreadId(), 1);
 //  SetThreadAffinityMask(GetCurrentProcessId(), 1);
   QueryPerformanceFrequency(t_delta);
   t_delta := t_delta div 1000;
@@ -3979,12 +3980,12 @@ begin
   if not (Button = mbLeft) then exit; // Ignore Right(PopUpMenu) and middle buttons
   pick := GLSceneViewerPick(x, y);
   if Assigned(pick) and not (ssCtrl in shift) and (Button = mbLeft) then begin
-     vs :=  GLSceneViewer.Buffer.ScreenToVector(x, GLSceneViewer.Buffer.ViewPort.Height - y);
-     NormalizeVector(vs);
-     //FParams.EditDebug3.Text := format('%.2f,%.2f,%.2f', [vs[0], vs[1], vs[2]]);
+    vs :=  GLSceneViewer.Buffer.ScreenToVector(x, GLSceneViewer.Buffer.ViewPort.Height - y);
+    NormalizeVector(vs);
     if pick.TagObject is TSolid then with WorldODE do begin
       CamPos := GLSceneViewer.Buffer.Camera.Position.AsVector;
       hit := Pick.RayCastIntersect(CamPos, vs, @hitPoint[0]);
+      //FParams.Edit3DProjection.Text := format('%.2f,%.2f,%.2f', [hitPoint[0], hitPoint[1], hitPoint[2]]);
       if hit then begin
         makevector(PickPoint, hitPoint);
       end;

@@ -725,7 +725,7 @@ object FParams: TFParams
             Width = 149
             Height = 21
             Style = csDropDownList
-            ItemHeight = 0
+            ItemHeight = 13
             TabOrder = 8
           end
           object BJointWayPointsSave: TButton
@@ -1080,7 +1080,7 @@ object FParams: TFParams
         Left = 0
         Top = 384
         Width = 261
-        Height = 209
+        Height = 169
         Anchors = [akLeft, akTop, akBottom]
         ColCount = 4
         DefaultColWidth = 50
@@ -1305,6 +1305,13 @@ object FParams: TFParams
         ItemHeight = 13
         TabOrder = 38
         OnClick = ComboGroundTexturesClick
+      end
+      object Edit3DProjection: TEdit
+        Left = 0
+        Top = 564
+        Width = 121
+        Height = 21
+        TabOrder = 39
       end
     end
     object TabDebug: TTabSheet

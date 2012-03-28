@@ -212,6 +212,7 @@ type
     UDPImageServer: TIdUDPClient;
     EditRemoteIP: TEdit;
     Label8: TLabel;
+    Edit3DProjection: TEdit;
     procedure CBShadowsClick(Sender: TObject);
     procedure CBVsyncClick(Sender: TObject);
     procedure BSetFPSClick(Sender: TObject);
