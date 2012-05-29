@@ -785,7 +785,7 @@ object FViewer: TFViewer
     object GLCameraMem: TGLCamera
       DepthOfView = 1000000000.000000000000000000
       FocalLength = 50.000000000000000000
-      NearPlaneBias = 0.009999999776482582
+      NearPlaneBias = 0.001000000047497451
       Position.Coordinates = {0000003F000040C0000040400000803F}
       Direction.Coordinates = {00000000000000800000803F00000000}
     end

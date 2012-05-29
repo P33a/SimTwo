@@ -1035,7 +1035,7 @@ begin
 
   dJointAttach(PickJoint, Solid.body, nil);
   dJointSetBallAnchor(PickJoint, anchor_x, anchor_y, anchor_z);
-  dJointSetBallParam(PickJoint, dParamCFM, 1e-2);
+  dJointSetBallParam(PickJoint, dParamCFM, 5e-2);
   PickLinDamping := dBodyGetLinearDamping(Solid.Body);
   PickAngularDamping := dBodyGetAngularDamping(Solid.Body);
   dBodySetDamping(Solid.Body, 1e-2, 1e-1);
@@ -1541,12 +1541,17 @@ begin
           StokesDrag := GetNodeAttrRealParse(prop, 'stokes', StokesDrag, Parser);
           RollDrag := GetNodeAttrRealParse(prop, 'roll', RollDrag, Parser);
         end;
-      if (prop.NodeName = 'buoyant') or (prop.NodeName = 'buoyance') then begin
-        BuoyantMass := GetNodeAttrRealParse(prop, 'mass', BuoyantMass, Parser);
-        BuoyanceX := GetNodeAttrRealParse(prop, 'x', BuoyanceX, Parser);
-        BuoyanceY := GetNodeAttrRealParse(prop, 'y', BuoyanceY, Parser);
-        BuoyanceZ := GetNodeAttrRealParse(prop, 'z', BuoyanceZ, Parser);
-      end;
+        {if prop.NodeName = 'thrust' then begin
+          Drag := GetNodeAttrRealParse(prop, 'coefficient', Drag, Parser);
+          StokesDrag := GetNodeAttrRealParse(prop, 'stokes', StokesDrag, Parser);
+          RollDrag := GetNodeAttrRealParse(prop, 'roll', RollDrag, Parser);
+        end;}
+        if (prop.NodeName = 'buoyant') or (prop.NodeName = 'buoyance') then begin
+          BuoyantMass := GetNodeAttrRealParse(prop, 'mass', BuoyantMass, Parser);
+          BuoyanceX := GetNodeAttrRealParse(prop, 'x', BuoyanceX, Parser);
+          BuoyanceY := GetNodeAttrRealParse(prop, 'y', BuoyanceY, Parser);
+          BuoyanceZ := GetNodeAttrRealParse(prop, 'z', BuoyanceZ, Parser);
+        end;
         if prop.NodeName = 'nogravity' then begin
           GravityMode := 0;
         end;
@@ -3976,16 +3981,22 @@ procedure TFViewer.GLSceneViewerMouseDown(Sender: TObject;
 var pick : TGLCustomSceneObject;
     vs, CamPos, hitPoint: TVector;
     hit: boolean;
+    t: double;
 begin
   if not (Button = mbLeft) then exit; // Ignore Right(PopUpMenu) and middle buttons
   pick := GLSceneViewerPick(x, y);
   if Assigned(pick) and not (ssCtrl in shift) and (Button = mbLeft) then begin
     vs :=  GLSceneViewer.Buffer.ScreenToVector(x, GLSceneViewer.Buffer.ViewPort.Height - y);
     NormalizeVector(vs);
+    CamPos := GLSceneViewer.Buffer.Camera.Position.AsVector;
+    //if pick.Name = 'GLPlaneFloor' then begin
+    if vs[2] <> 0 then begin
+      t := - Campos[2] / vs[2];
+      FParams.Edit3DProjection.Text := format('%.3f,%.3f,%.3f', [Campos[0] + t * vs[0], Campos[1] + t * vs[1], Campos[2] + t * vs[2]]);
+    end;
     if pick.TagObject is TSolid then with WorldODE do begin
-      CamPos := GLSceneViewer.Buffer.Camera.Position.AsVector;
       hit := Pick.RayCastIntersect(CamPos, vs, @hitPoint[0]);
-      //FParams.Edit3DProjection.Text := format('%.2f,%.2f,%.2f', [hitPoint[0], hitPoint[1], hitPoint[2]]);
+//      FParams.Edit3DProjection.Text := format('%.2f,%.2f,%.2f', [hitPoint[0], hitPoint[1], hitPoint[2]]);
       if hit then begin
         makevector(PickPoint, hitPoint);
       end;
@@ -4601,7 +4612,8 @@ begin
                v1 := dBodyGetAngularVel(Body)^;
                //dBodyVectorFromWorld(Body, v1[0], v1[1], v1[2], v2);
                //dBodyAddRelForce(Body, 0.01*v2[0], 0, 0);
-               dBodyAddForce(Body, 0.1*v1[0], 0.1*v1[1], 0.1*v1[2]);    // TODO 0.01 ???
+               thrust := 0.1;    // TODO 0.01 ???
+               dBodyAddForce(Body, Thrust * v1[0], Thrust * v1[1], Thrust * v1[2]);
             end;
           end;
         end;
