@@ -1,1384 +1,1525 @@
 object FParams: TFParams
-  Left = 998
-  Top = 113
-  Width = 281
+  Left = 1004
   Height = 679
+  Top = 119
+  Width = 281
   Caption = 'Config'
+  ClientHeight = 679
+  ClientWidth = 281
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'Tahoma'
-  Font.Style = []
-  OldCreateOrder = False
-  Scaled = False
+  OnClose = FormClose
+  OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
-  DesignSize = (
-    273
-    652)
-  PixelsPerInch = 96
-  TextHeight = 13
+  SessionProperties = 'CBAntiAliasing.Checked;CBAxis.Checked;CBEndlessWorld.Checked;CBFog.Checked;CBFreeze.Checked;CBGrid.Checked;CBGroundTexture.Checked;CBHotCPU.Checked;CBIRNoise.Checked;CBModBusInputOverride.Checked;CBModBusOutputOverride.Checked;CBShadows.Checked;CBSkyDome.Checked;CBTags.Checked;CBUDPConnect.Checked;CBVsync.Checked;CBWorldQuickStep.Checked;ComboGroundTextures.ItemIndex;EditDefaultFriction.Text;EditModBusInputOffset.Text;EditModBusOutputOffset.Text;EditModBusPort.Text;EditODE_CFM.Text;EditOde_dt.Text;EditODE_ERP.Text;EditQuickStepIterations.Text;EditRemoteIP.Text;EditRobotSetTeta.Text;EditRobotSetX.Text;EditRobotSetY.Text;EditRobotSetZ.Text;EditScriptPeriod.Text;EditSetCamLookX.Text;EditSetCamLookY.Text;EditSetCamLookZ.Text;EditSetCamX.Text;EditSetCamY.Text;EditSetCamZ.Text;EditTargetFPS.Text;EditTimeSpeed.Text;EditTrailsCount.Text;EditTrailSize.Text;EditUDPPort.Text;EditWindSpeedX.Text;EditWindSpeedY.Text;EditWindSpeedZ.Text;LBSelectedTags.Items;PageControl.ActivePage;PGRobots.TabIndex;RGCamera.ItemIndex;RGControlBlock.ItemIndex;RGGLObjects.ItemIndex;RGSensorGL.ItemIndex;ShapeSelColor.Brush;Top;Left'
+  LCLVersion = '1.8.2.0'
+  Scaled = False
   object PageControl: TPageControl
     Left = 0
+    Height = 621
     Top = 0
     Width = 273
-    Height = 621
     ActivePage = TabControl
-    Anchors = [akLeft, akTop, akBottom]
+    Anchors = [akTop, akLeft, akBottom]
+    TabIndex = 0
     TabOrder = 0
     object TabControl: TTabSheet
       Caption = 'Control'
-      DesignSize = (
-        265
-        593)
+      ClientHeight = 595
+      ClientWidth = 265
       object Label28: TLabel
         Left = 124
+        Height = 13
         Top = 18
         Width = 69
-        Height = 13
         Caption = 'Robot Position'
+        ParentColor = False
       end
       object Label27: TLabel
         Left = 124
+        Height = 13
         Top = 40
         Width = 10
-        Height = 13
         Caption = 'X:'
+        ParentColor = False
       end
       object Label35: TLabel
         Left = 196
+        Height = 13
         Top = 40
         Width = 10
-        Height = 13
         Caption = 'X:'
+        ParentColor = False
       end
       object Label36: TLabel
         Left = 196
+        Height = 13
         Top = 60
         Width = 10
-        Height = 13
         Caption = 'Y:'
+        ParentColor = False
       end
       object Label29: TLabel
         Left = 124
+        Height = 13
         Top = 60
         Width = 10
-        Height = 13
         Caption = 'Y:'
+        ParentColor = False
       end
       object Label13: TLabel
         Left = 124
+        Height = 13
         Top = 100
         Width = 9
-        Height = 13
         Caption = 'q:'
-        Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
         Font.Name = 'Symbol'
-        Font.Style = []
+        ParentColor = False
         ParentFont = False
       end
       object Label39: TLabel
         Left = 196
+        Height = 13
         Top = 80
         Width = 10
-        Height = 13
         Caption = 'Z:'
+        ParentColor = False
       end
       object Label37: TLabel
         Left = 196
+        Height = 13
         Top = 100
         Width = 9
-        Height = 13
         Caption = 'q:'
-        Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
         Font.Name = 'Symbol'
-        Font.Style = []
+        ParentColor = False
         ParentFont = False
       end
       object Label49: TLabel
         Left = 124
+        Height = 13
         Top = 80
         Width = 10
-        Height = 13
         Caption = 'Z:'
+        ParentColor = False
       end
       object RGControlBlock: TRadioGroup
         Left = 0
+        Height = 65
         Top = 100
         Width = 113
-        Height = 65
+        AutoFill = True
         Caption = 'Control Block'
+        ChildSizing.LeftRightSpacing = 6
+        ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+        ChildSizing.EnlargeVertical = crsHomogenousChildResize
+        ChildSizing.ShrinkHorizontal = crsScaleChilds
+        ChildSizing.ShrinkVertical = crsScaleChilds
+        ChildSizing.Layout = cclLeftToRightThenTopToBottom
+        ChildSizing.ControlsPerLine = 1
+        ClientHeight = 47
+        ClientWidth = 109
         ItemIndex = 0
         Items.Strings = (
           'None'
           'Script'
-          'Remote')
-        TabOrder = 0
+          'Remote'
+        )
         OnClick = RGControlBlockClick
+        TabOrder = 0
       end
       object BEditScript: TButton
         Left = 200
+        Height = 21
         Top = 144
         Width = 59
-        Height = 21
         Caption = 'Edit Script'
-        TabOrder = 1
         OnClick = BEditScriptClick
+        TabOrder = 1
       end
       object BTest: TButton
         Left = 138
+        Height = 21
         Top = 144
         Width = 59
-        Height = 21
         Caption = 'Test'
-        TabOrder = 2
         OnClick = BTestClick
+        TabOrder = 2
       end
       object LBRobots: TListBox
         Left = 0
+        Height = 97
         Top = 0
         Width = 113
-        Height = 97
-        ItemHeight = 13
-        TabOrder = 3
+        ItemHeight = 0
         OnClick = LBRobotsClick
+        TabOrder = 3
       end
       object PGRobots: TPageControl
         Left = 0
+        Height = 425
         Top = 168
         Width = 261
-        Height = 425
-        ActivePage = TabAxis
-        Anchors = [akLeft, akTop, akBottom]
+        ActivePage = TabGlobal
+        Anchors = [akTop, akLeft, akBottom]
+        TabIndex = 0
         TabOrder = 4
         object TabGlobal: TTabSheet
           Caption = 'Global'
+          ClientHeight = 399
+          ClientWidth = 253
           ImageIndex = 2
-          DesignSize = (
-            253
-            397)
           object Label1: TLabel
             Left = 8
+            Height = 13
             Top = 8
             Width = 64
-            Height = 13
             Caption = 'Script Period:'
+            ParentColor = False
           end
           object EditScriptPeriod: TEdit
             Left = 76
+            Height = 21
             Top = 4
             Width = 41
-            Height = 21
+            AutoSize = False
             TabOrder = 0
             Text = '40'
           end
           object BGlobalSet: TButton
             Left = 204
+            Height = 21
             Top = 4
             Width = 47
-            Height = 21
             Caption = 'Set'
-            TabOrder = 1
             OnClick = BGlobalSetClick
+            TabOrder = 1
           end
           object SGGlobalSensors: TStringGrid
             Left = 0
+            Height = 313
             Top = 56
             Width = 157
-            Height = 313
-            Anchors = [akLeft, akTop, akBottom]
+            Anchors = [akTop, akLeft, akBottom]
             ColCount = 3
             DefaultColWidth = 61
             DefaultRowHeight = 14
             FixedCols = 0
-            RowCount = 128
             Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSelect]
+            RowCount = 128
             TabOrder = 2
+            TitleFont.Color = clWindowText
+            TitleFont.Height = -11
+            TitleFont.Name = 'Tahoma'
             ColWidths = (
               53
               31
-              49)
+              49
+            )
           end
         end
         object TabRobot: TTabSheet
           Caption = 'Robot'
+          ClientHeight = 399
+          ClientWidth = 253
           object Label6: TLabel
             Left = 16
+            Height = 13
             Top = 240
             Width = 56
-            Height = 13
             Caption = 'General I/O'
+            ParentColor = False
           end
           object Label19: TLabel
             Left = 8
+            Height = 13
             Top = 56
             Width = 17
-            Height = 13
             Caption = 'U0:'
+            ParentColor = False
           end
           object Label20: TLabel
             Left = 84
+            Height = 13
             Top = 56
             Width = 30
-            Height = 13
             Caption = 'Odo0:'
+            ParentColor = False
           end
           object Label21: TLabel
             Left = 84
+            Height = 13
             Top = 76
             Width = 30
-            Height = 13
             Caption = 'Odo1:'
+            ParentColor = False
           end
           object Label18: TLabel
             Left = 8
+            Height = 13
             Top = 76
             Width = 17
-            Height = 13
             Caption = 'U1:'
+            ParentColor = False
           end
           object Label14: TLabel
             Left = 184
+            Height = 13
             Top = 56
             Width = 14
-            Height = 13
             Caption = 'I0:'
+            ParentColor = False
           end
           object Label15: TLabel
             Left = 184
+            Height = 13
             Top = 76
             Width = 14
-            Height = 13
             Caption = 'I1:'
+            ParentColor = False
           end
           object Label16: TLabel
             Left = 8
+            Height = 13
             Top = 96
             Width = 17
-            Height = 13
             Caption = 'U2:'
+            ParentColor = False
           end
           object Label17: TLabel
             Left = 84
+            Height = 13
             Top = 96
             Width = 30
-            Height = 13
             Caption = 'Odo2:'
+            ParentColor = False
           end
           object Label22: TLabel
             Left = 184
+            Height = 13
             Top = 96
             Width = 14
-            Height = 13
             Caption = 'I2:'
+            ParentColor = False
           end
           object Label23: TLabel
             Left = 184
+            Height = 13
             Top = 116
             Width = 14
-            Height = 13
             Caption = 'I3:'
+            ParentColor = False
           end
           object Label25: TLabel
             Left = 84
+            Height = 13
             Top = 116
             Width = 30
-            Height = 13
             Caption = 'Odo3:'
+            ParentColor = False
           end
           object Label26: TLabel
             Left = 8
+            Height = 13
             Top = 116
             Width = 17
-            Height = 13
             Caption = 'U3:'
+            ParentColor = False
           end
           object Label2: TLabel
             Left = 184
+            Height = 13
             Top = 168
             Width = 16
-            Height = 13
             Caption = 'S0:'
+            ParentColor = False
           end
           object Label3: TLabel
             Left = 184
+            Height = 13
             Top = 188
             Width = 16
-            Height = 13
             Caption = 'S1:'
+            ParentColor = False
           end
           object Label5: TLabel
             Left = 184
+            Height = 13
             Top = 208
             Width = 16
-            Height = 13
             Caption = 'S2:'
+            ParentColor = False
           end
           object Label7: TLabel
             Left = 184
+            Height = 13
             Top = 228
             Width = 16
-            Height = 13
             Caption = 'S3:'
+            ParentColor = False
           end
           object Label30: TLabel
             Left = 184
+            Height = 13
             Top = 248
             Width = 16
-            Height = 13
             Caption = 'S4:'
+            ParentColor = False
           end
           object Label31: TLabel
             Left = 184
+            Height = 13
             Top = 268
             Width = 16
-            Height = 13
             Caption = 'S5:'
+            ParentColor = False
           end
           object Label32: TLabel
             Left = 184
+            Height = 13
             Top = 288
             Width = 16
-            Height = 13
             Caption = 'S6:'
+            ParentColor = False
           end
           object Label33: TLabel
             Left = 184
+            Height = 13
             Top = 308
             Width = 16
-            Height = 13
             Caption = 'S7:'
+            ParentColor = False
           end
           object Label34: TLabel
             Left = 188
+            Height = 13
             Top = 144
             Width = 42
-            Height = 13
             Caption = 'Sensors:'
+            ParentColor = False
           end
           object CBIO1: TCheckBox
             Left = 16
+            Height = 19
             Top = 260
-            Width = 40
-            Height = 17
+            Width = 38
             Alignment = taLeftJustify
             Caption = 'IO1'
             TabOrder = 0
           end
           object CBIO2: TCheckBox
             Left = 16
+            Height = 19
             Top = 276
-            Width = 40
-            Height = 17
+            Width = 38
             Alignment = taLeftJustify
             Caption = 'IO2'
             TabOrder = 1
           end
           object CBIO3: TCheckBox
             Left = 16
+            Height = 19
             Top = 292
-            Width = 40
-            Height = 17
+            Width = 38
             Alignment = taLeftJustify
             Caption = 'IO3'
             TabOrder = 2
           end
           object CBIO4: TCheckBox
             Left = 16
+            Height = 19
             Top = 308
-            Width = 40
-            Height = 17
+            Width = 38
             Alignment = taLeftJustify
             Caption = 'IO4'
             TabOrder = 3
           end
           object CBIO5: TCheckBox
             Left = 64
+            Height = 19
             Top = 260
-            Width = 40
-            Height = 17
+            Width = 38
             Alignment = taLeftJustify
             Caption = 'IO5'
             TabOrder = 4
           end
           object CBIO6: TCheckBox
             Left = 64
+            Height = 19
             Top = 276
-            Width = 40
-            Height = 17
+            Width = 38
             Alignment = taLeftJustify
             Caption = 'IO6'
             TabOrder = 5
           end
           object CBIO7: TCheckBox
             Left = 64
+            Height = 19
             Top = 292
-            Width = 40
-            Height = 17
+            Width = 38
             Alignment = taLeftJustify
             Caption = 'IO7'
             TabOrder = 6
           end
           object CBIO8: TCheckBox
             Left = 64
+            Height = 19
             Top = 308
-            Width = 40
-            Height = 17
+            Width = 38
             Alignment = taLeftJustify
             Caption = 'IO8'
             TabOrder = 7
           end
           object EditU0: TEdit
             Left = 32
+            Height = 21
             Top = 52
             Width = 41
-            Height = 21
+            AutoSize = False
             TabOrder = 8
             Text = '100'
           end
           object EditOdo0: TEdit
             Left = 120
+            Height = 21
             Top = 52
             Width = 41
-            Height = 21
+            AutoSize = False
             TabOrder = 9
             Text = '0'
           end
           object EditOdo1: TEdit
             Left = 120
+            Height = 21
             Top = 72
             Width = 41
-            Height = 21
+            AutoSize = False
             TabOrder = 10
             Text = '0'
           end
           object EditU1: TEdit
             Left = 32
+            Height = 21
             Top = 72
             Width = 41
-            Height = 21
+            AutoSize = False
             TabOrder = 11
             Text = '200'
           end
           object EditI0: TEdit
             Left = 208
+            Height = 21
             Top = 52
             Width = 41
-            Height = 21
+            AutoSize = False
             TabOrder = 12
             Text = '0'
           end
           object EditI1: TEdit
             Left = 208
+            Height = 21
             Top = 72
             Width = 41
-            Height = 21
+            AutoSize = False
             TabOrder = 13
             Text = '0'
           end
           object EditU2: TEdit
             Left = 32
+            Height = 21
             Top = 92
             Width = 41
-            Height = 21
+            AutoSize = False
             TabOrder = 14
             Text = '100'
           end
           object EditOdo2: TEdit
             Left = 120
+            Height = 21
             Top = 92
             Width = 41
-            Height = 21
+            AutoSize = False
             TabOrder = 15
             Text = '0'
           end
           object EditI2: TEdit
             Left = 208
+            Height = 21
             Top = 92
             Width = 41
-            Height = 21
+            AutoSize = False
             TabOrder = 16
             Text = '0'
           end
           object EditI3: TEdit
             Left = 208
+            Height = 21
             Top = 112
             Width = 41
-            Height = 21
             TabOrder = 17
             Text = '0'
           end
           object EditOdo3: TEdit
             Left = 120
+            Height = 21
             Top = 112
             Width = 41
-            Height = 21
+            AutoSize = False
             TabOrder = 18
             Text = '0'
           end
           object EditU3: TEdit
             Left = 32
+            Height = 21
             Top = 112
             Width = 41
-            Height = 21
+            AutoSize = False
             TabOrder = 19
             Text = '200'
           end
           object CBPIDsActive: TCheckBox
             Left = 8
+            Height = 19
             Top = 28
-            Width = 53
-            Height = 17
+            Width = 42
             Caption = 'PIDs'
+            OnClick = CBPIDsActiveClick
             State = cbGrayed
             TabOrder = 20
-            OnClick = CBPIDsActiveClick
           end
           object EditIR0: TEdit
             Left = 208
+            Height = 21
             Top = 164
             Width = 41
-            Height = 21
+            AutoSize = False
             TabOrder = 21
             Text = '0'
           end
           object EditIR1: TEdit
             Left = 208
+            Height = 21
             Top = 184
             Width = 41
-            Height = 21
+            AutoSize = False
             TabOrder = 22
             Text = '0'
           end
           object EditIR2: TEdit
             Left = 208
+            Height = 21
             Top = 204
             Width = 41
-            Height = 21
+            AutoSize = False
             TabOrder = 23
             Text = '0'
           end
           object EditIR3: TEdit
             Left = 208
+            Height = 21
             Top = 224
             Width = 41
-            Height = 21
+            AutoSize = False
             TabOrder = 24
             Text = '0'
           end
           object EditIR4: TEdit
             Left = 208
+            Height = 21
             Top = 244
             Width = 41
-            Height = 21
+            AutoSize = False
             TabOrder = 25
             Text = '0'
           end
           object EditIR5: TEdit
             Left = 208
+            Height = 21
             Top = 264
             Width = 41
-            Height = 21
+            AutoSize = False
             TabOrder = 26
             Text = '0'
           end
           object EditIR6: TEdit
             Left = 208
+            Height = 21
             Top = 284
             Width = 41
-            Height = 21
+            AutoSize = False
             TabOrder = 27
             Text = '0'
           end
           object EditIR7: TEdit
             Left = 208
+            Height = 21
             Top = 304
             Width = 41
-            Height = 21
+            AutoSize = False
             TabOrder = 28
             Text = '0'
           end
           object CBIRNoise: TCheckBox
             Left = 184
+            Height = 19
             Top = 332
-            Width = 65
-            Height = 17
+            Width = 60
             Caption = 'IR Noise'
+            OnClick = CBIRNoiseClick
             State = cbGrayed
             TabOrder = 29
-            OnClick = CBIRNoiseClick
           end
         end
         object TabAxis: TTabSheet
           Caption = 'Axis'
+          ClientHeight = 399
+          ClientWidth = 253
           ImageIndex = 1
-          DesignSize = (
-            253
-            397)
           object Label38: TLabel
             Left = 0
+            Height = 13
             Top = 62
             Width = 21
-            Height = 13
             Caption = 'Pos:'
-            Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
             Font.Height = -11
             Font.Name = 'Tahoma'
-            Font.Style = []
+            ParentColor = False
             ParentFont = False
           end
           object Label41: TLabel
             Left = 0
+            Height = 13
             Top = 32
             Width = 50
-            Height = 13
             Caption = 'WayPoint:'
+            ParentColor = False
           end
           object SGJoints: TStringGrid
             Left = 4
+            Height = 313
             Top = 84
             Width = 253
-            Height = 313
-            Anchors = [akLeft, akTop, akBottom]
+            Anchors = [akTop, akLeft, akBottom]
             DefaultColWidth = 61
             DefaultRowHeight = 14
             FixedCols = 0
-            RowCount = 128
             Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSelect]
+            RowCount = 128
             TabOrder = 0
+            TitleFont.Color = clWindowText
+            TitleFont.Height = -11
+            TitleFont.Name = 'Tahoma'
             ColWidths = (
               68
               39
               38
               36
-              47)
+              47
+            )
           end
           object EditJointTeta: TEdit
             Left = 22
+            Height = 21
             Top = 58
             Width = 41
-            Height = 21
+            AutoSize = False
             TabOrder = 1
           end
           object EditJointTetaRef: TEdit
             Left = 66
+            Height = 21
             Top = 58
             Width = 41
-            Height = 21
+            AutoSize = False
             TabOrder = 2
             Text = '0'
           end
           object BSetJointTetaRef: TButton
             Left = 108
+            Height = 21
             Top = 58
             Width = 45
-            Height = 21
             Caption = 'Set Ref'
-            TabOrder = 3
             OnClick = BSetJointTetaRefClick
+            TabOrder = 3
           end
           object EditLoadJointPoints: TEdit
             Left = 0
+            Height = 21
             Top = 4
             Width = 153
-            Height = 21
             TabOrder = 4
             Text = 'JointWayPoints.xml'
           end
           object BLoadJointWayPoints: TButton
             Left = 204
+            Height = 21
             Top = 4
             Width = 45
-            Height = 21
             Caption = 'Load'
-            TabOrder = 5
             OnClick = BLoadJointWayPointsClick
+            TabOrder = 5
           end
           object BSetAll: TButton
             Left = 204
+            Height = 21
             Top = 58
             Width = 45
-            Height = 21
             Caption = 'Set All'
-            TabOrder = 6
             OnClick = BSetAllClick
+            TabOrder = 6
           end
           object BSetJointWayPointTeta: TButton
             Left = 156
+            Height = 21
             Top = 58
             Width = 45
-            Height = 21
             Caption = 'Set WP'
-            TabOrder = 7
             OnClick = BSetJointWayPointTetaClick
+            TabOrder = 7
           end
           object ComboWayPointName: TComboBox
             Left = 52
+            Height = 21
             Top = 28
             Width = 149
-            Height = 21
-            Style = csDropDownList
             ItemHeight = 13
+            Style = csDropDownList
             TabOrder = 8
           end
           object BJointWayPointsSave: TButton
             Left = 156
+            Height = 21
             Top = 4
             Width = 45
-            Height = 21
             Caption = 'Save'
-            TabOrder = 9
             OnClick = BJointWayPointsSaveClick
+            TabOrder = 9
           end
           object BWayPointEdit: TButton
             Left = 204
+            Height = 21
             Top = 28
             Width = 45
-            Height = 21
             Caption = 'Edit'
-            TabOrder = 10
             OnClick = BWayPointEditClick
+            TabOrder = 10
           end
         end
       end
       object BFreeze: TButton
         Left = 138
+        Height = 21
         Top = 120
         Width = 59
-        Height = 21
         Caption = 'Freeze'
-        TabOrder = 5
         OnClick = BFreezeClick
+        TabOrder = 5
       end
       object BStep: TButton
         Left = 200
+        Height = 21
         Top = 120
         Width = 59
-        Height = 21
         Caption = 'Step'
-        TabOrder = 6
         OnClick = BStepClick
+        TabOrder = 6
       end
       object CBFreeze: TCheckBox
         Left = 124
+        Height = 19
         Top = 0
-        Width = 65
-        Height = 17
+        Width = 53
         Caption = 'Freeze'
-        TabOrder = 7
         OnClick = CBFreezeClick
+        TabOrder = 7
       end
       object BSetPosition: TButton
         Left = 212
+        Height = 18
         Top = 14
         Width = 45
-        Height = 18
         Caption = 'Set'
-        TabOrder = 8
         OnClick = BSetPositionClick
+        TabOrder = 8
       end
       object EditRobotX: TEdit
         Left = 140
+        Height = 21
         Top = 36
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 9
         Text = '0'
       end
       object EditRobotSetX: TEdit
         Left = 212
+        Height = 21
         Top = 36
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 10
         Text = '0'
       end
       object EditRobotSetY: TEdit
         Left = 212
+        Height = 21
         Top = 56
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 11
         Text = '0'
       end
       object EditRobotY: TEdit
         Left = 140
+        Height = 21
         Top = 56
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 12
         Text = '0'
       end
       object EditRobotTeta: TEdit
         Left = 140
+        Height = 21
         Top = 96
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 13
         Text = '0'
       end
       object EditRobotSetZ: TEdit
         Left = 212
+        Height = 21
         Top = 76
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 14
         Text = '0'
       end
       object EditRobotSetTeta: TEdit
         Left = 212
+        Height = 21
         Top = 96
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 15
         Text = '0'
       end
       object EditRobotZ: TEdit
         Left = 140
+        Height = 21
         Top = 76
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 16
         Text = '0'
       end
     end
     object TabGraphics: TTabSheet
       Caption = 'Graphics'
+      ClientHeight = 595
+      ClientWidth = 265
       ImageIndex = 1
-      DesignSize = (
-        265
-        593)
       object Label24: TLabel
         Left = 4
+        Height = 13
         Top = 8
         Width = 57
-        Height = 13
         Caption = 'Target FPS:'
+        ParentColor = False
       end
       object Label9: TLabel
         Left = 112
+        Height = 13
         Top = 218
         Width = 10
-        Height = 13
         Caption = 'X:'
+        ParentColor = False
       end
       object Label10: TLabel
         Left = 112
+        Height = 13
         Top = 242
         Width = 10
-        Height = 13
         Caption = 'Y:'
+        ParentColor = False
       end
       object Label11: TLabel
         Left = 112
+        Height = 13
         Top = 266
         Width = 10
-        Height = 13
         Caption = 'Z:'
+        ParentColor = False
       end
       object Label12: TLabel
         Left = 128
+        Height = 13
         Top = 198
         Width = 37
-        Height = 13
         Caption = 'Position'
+        ParentColor = False
       end
       object Label50: TLabel
         Left = 176
+        Height = 13
         Top = 198
         Width = 35
-        Height = 13
         Caption = 'Look at'
+        ParentColor = False
       end
       object Label51: TLabel
         Left = 4
+        Height = 13
         Top = 294
         Width = 37
-        Height = 13
         Caption = 'Camera'
+        ParentColor = False
       end
       object Label52: TLabel
         Left = 8
+        Height = 13
         Top = 310
         Width = 41
-        Height = 13
         Caption = 'Position:'
+        ParentColor = False
       end
       object Label53: TLabel
         Left = 8
+        Height = 13
         Top = 332
         Width = 39
-        Height = 13
         Caption = 'Look at:'
+        ParentColor = False
       end
       object Label54: TLabel
         Left = 184
+        Height = 13
         Top = 144
         Width = 29
-        Height = 13
         Alignment = taRightJustify
         Caption = 'Trails:'
+        ParentColor = False
       end
       object Label55: TLabel
         Left = 168
+        Height = 13
         Top = 166
         Width = 46
-        Height = 13
         Alignment = taRightJustify
         Caption = 'Trail Size:'
+        ParentColor = False
       end
       object ShapeSelColor: TShape
         Left = 88
+        Height = 20
         Top = 160
         Width = 20
-        Height = 20
         OnMouseDown = ShapeSelColorMouseDown
       end
       object CBShadows: TCheckBox
         Left = 8
+        Height = 19
         Top = 68
-        Width = 97
-        Height = 17
+        Width = 63
         Caption = 'Shadows'
         Checked = True
+        OnClick = CBShadowsClick
         State = cbChecked
         TabOrder = 0
-        OnClick = CBShadowsClick
       end
       object CBVsync: TCheckBox
         Left = 8
+        Height = 19
         Top = 36
-        Width = 97
-        Height = 17
+        Width = 48
         Caption = 'Vsync'
-        TabOrder = 1
         OnClick = CBVsyncClick
+        TabOrder = 1
       end
       object CBAntiAliasing: TCheckBox
         Left = 8
+        Height = 19
         Top = 52
-        Width = 97
-        Height = 17
+        Width = 75
         Caption = 'AntiAliasing'
         Checked = True
+        OnClick = CBAntiAliasingClick
         State = cbChecked
         TabOrder = 2
-        OnClick = CBAntiAliasingClick
       end
       object CBGrid: TCheckBox
         Left = 8
+        Height = 19
         Top = 84
-        Width = 89
-        Height = 17
+        Width = 39
         Caption = 'Grid'
         Checked = True
+        OnClick = CBGridClick
         State = cbChecked
         TabOrder = 3
-        OnClick = CBGridClick
       end
       object CBAxis: TCheckBox
         Left = 8
+        Height = 19
         Top = 100
-        Width = 89
-        Height = 17
+        Width = 40
         Caption = 'Axis'
         Checked = True
+        OnClick = CBAxisClick
         State = cbChecked
         TabOrder = 4
-        OnClick = CBAxisClick
       end
       object CBGroundTexture: TCheckBox
         Left = 8
+        Height = 19
         Top = 116
-        Width = 65
-        Height = 17
+        Width = 55
         Caption = 'Ground'
-        TabOrder = 5
         OnClick = CBGroundTextureClick
+        TabOrder = 5
       end
       object CBSkyDome: TCheckBox
         Left = 8
+        Height = 19
         Top = 132
-        Width = 89
-        Height = 17
+        Width = 64
         Caption = 'SkyDome'
         Checked = True
+        OnClick = CBSkyDomeClick
         State = cbChecked
         TabOrder = 6
-        OnClick = CBSkyDomeClick
       end
       object CBHotCPU: TCheckBox
         Left = 8
+        Height = 19
         Top = 148
-        Width = 73
-        Height = 17
+        Width = 60
         Caption = 'Hot CPU'
-        TabOrder = 7
         OnClick = CBHotCPUClick
+        TabOrder = 7
       end
       object EditTargetFPS: TEdit
         Left = 64
+        Height = 21
         Top = 4
         Width = 45
-        Height = 21
         TabOrder = 8
         Text = '60'
       end
       object BSetFPS: TButton
         Left = 125
+        Height = 25
         Top = 2
         Width = 32
-        Height = 25
         Caption = 'Set'
-        TabOrder = 9
         OnClick = BSetFPSClick
+        TabOrder = 9
       end
       object RGCamera: TRadioGroup
         Left = 0
+        Height = 93
         Top = 192
         Width = 109
-        Height = 93
+        AutoFill = True
         Caption = 'Camera'
+        ChildSizing.LeftRightSpacing = 6
+        ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+        ChildSizing.EnlargeVertical = crsHomogenousChildResize
+        ChildSizing.ShrinkHorizontal = crsScaleChilds
+        ChildSizing.ShrinkVertical = crsScaleChilds
+        ChildSizing.Layout = cclLeftToRightThenTopToBottom
+        ChildSizing.ControlsPerLine = 1
+        ClientHeight = 75
+        ClientWidth = 105
         ItemIndex = 0
         Items.Strings = (
           'Fixed'
           'Look at Robot'
           'Move with Robot'
           'Above Robot'
-          'Top View')
+          'Top View'
+        )
         TabOrder = 10
       end
       object EditCamX: TEdit
         Left = 128
+        Height = 21
         Top = 214
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 11
       end
       object EditCamY: TEdit
         Left = 128
+        Height = 21
         Top = 238
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 12
       end
       object EditCamZ: TEdit
         Left = 128
+        Height = 21
         Top = 262
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 13
       end
       object SGConf: TStringGrid
         Left = 0
+        Height = 169
         Top = 384
         Width = 261
-        Height = 169
-        Anchors = [akLeft, akTop, akBottom]
+        Anchors = [akTop, akLeft, akBottom]
         ColCount = 4
         DefaultColWidth = 50
         DefaultRowHeight = 14
         FixedCols = 0
-        RowCount = 128
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSelect]
+        RowCount = 128
         TabOrder = 14
+        TitleFont.Color = clWindowText
+        TitleFont.Height = -11
+        TitleFont.Name = 'Tahoma'
         OnDblClick = SGConfDblClick
         ColWidths = (
           87
           50
           50
-          50)
+          50
+        )
       end
       object EditGridX: TEdit
         Left = 76
+        Height = 21
         Top = 360
         Width = 60
-        Height = 21
-        TabOrder = 15
+        AutoSize = False
         OnKeyPress = EditGridKeyPress
+        TabOrder = 15
       end
       object EditGridY: TEdit
         Left = 139
+        Height = 21
         Top = 360
         Width = 60
-        Height = 21
-        TabOrder = 16
+        AutoSize = False
         OnKeyPress = EditGridKeyPress
+        TabOrder = 16
       end
       object EditGridZ: TEdit
         Left = 202
+        Height = 21
         Top = 360
         Width = 60
-        Height = 21
-        TabOrder = 17
         OnKeyPress = EditGridKeyPress
+        TabOrder = 17
       end
       object BSGConfSet: TButton
         Left = 38
+        Height = 21
         Top = 360
         Width = 33
-        Height = 21
         Caption = 'Set'
-        TabOrder = 18
         OnClick = BSGConfSetClick
+        TabOrder = 18
       end
       object EditCamLookX: TEdit
         Left = 176
+        Height = 21
         Top = 214
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 19
       end
       object EditCamLookY: TEdit
         Left = 176
+        Height = 21
         Top = 238
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 20
       end
       object EditCamLookZ: TEdit
         Left = 176
+        Height = 21
         Top = 262
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 21
       end
       object EditSetCamX: TEdit
         Left = 52
+        Height = 21
         Top = 306
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 22
         Text = '1'
       end
       object EditSetCamY: TEdit
         Left = 100
+        Height = 21
         Top = 306
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 23
         Text = '1'
       end
       object EditSetCamZ: TEdit
         Left = 148
+        Height = 21
         Top = 306
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 24
         Text = '1'
       end
       object BSetCamPars: TButton
         Left = 232
+        Height = 43
         Top = 306
         Width = 33
-        Height = 43
         Caption = 'Set'
-        TabOrder = 25
         OnClick = BSetCamParsClick
+        TabOrder = 25
       end
       object EditSetCamLookX: TEdit
         Left = 52
+        Height = 21
         Top = 328
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 26
         Text = '0'
       end
       object EditSetCamLookY: TEdit
         Left = 100
+        Height = 21
         Top = 328
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 27
         Text = '0'
       end
       object EditSetCamLookZ: TEdit
         Left = 148
+        Height = 21
         Top = 328
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 28
         Text = '0'
       end
       object BGetCamPos: TButton
         Left = 196
+        Height = 21
         Top = 306
         Width = 33
-        Height = 21
         Caption = 'Get'
-        TabOrder = 29
         OnClick = BGetCamPosClick
+        TabOrder = 29
       end
       object Button1: TButton
         Left = 196
+        Height = 21
         Top = 328
         Width = 33
-        Height = 21
         Caption = 'Get'
-        TabOrder = 30
         OnClick = Button1Click
+        TabOrder = 30
       end
       object EditTrailsCount: TEdit
         Left = 216
+        Height = 21
         Top = 140
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 31
         Text = '8'
       end
       object EditTrailSize: TEdit
         Left = 216
+        Height = 21
         Top = 162
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 32
         Text = '200'
       end
       object BSetTrailPars: TButton
         Left = 216
+        Height = 21
         Top = 114
         Width = 45
-        Height = 21
         Caption = 'Set'
-        TabOrder = 33
         OnClick = BSetTrailParsClick
+        TabOrder = 33
       end
       object RGGLObjects: TRadioGroup
         Left = 192
+        Height = 65
         Top = 34
         Width = 73
-        Height = 65
+        AutoFill = True
         Caption = 'GLObjects'
+        ChildSizing.LeftRightSpacing = 6
+        ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+        ChildSizing.EnlargeVertical = crsHomogenousChildResize
+        ChildSizing.ShrinkHorizontal = crsScaleChilds
+        ChildSizing.ShrinkVertical = crsScaleChilds
+        ChildSizing.Layout = cclLeftToRightThenTopToBottom
+        ChildSizing.ControlsPerLine = 1
+        ClientHeight = 47
+        ClientWidth = 69
         ItemIndex = 1
         Items.Strings = (
           'Original'
           'Mesh'
-          'Both')
-        TabOrder = 34
+          'Both'
+        )
         OnClick = RGGLObjectsClick
+        TabOrder = 34
       end
       object RGSensorGL: TRadioGroup
         Left = 108
+        Height = 65
         Top = 34
         Width = 81
-        Height = 65
+        AutoFill = True
         Caption = 'Show Sensors'
+        ChildSizing.LeftRightSpacing = 6
+        ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+        ChildSizing.EnlargeVertical = crsHomogenousChildResize
+        ChildSizing.ShrinkHorizontal = crsScaleChilds
+        ChildSizing.ShrinkVertical = crsScaleChilds
+        ChildSizing.Layout = cclLeftToRightThenTopToBottom
+        ChildSizing.ControlsPerLine = 1
+        ClientHeight = 47
+        ClientWidth = 77
         ItemIndex = 0
         Items.Strings = (
           'All'
           'One Ray'
-          'None')
-        TabOrder = 35
+          'None'
+        )
         OnClick = RGSensorGLClick
+        TabOrder = 35
       end
       object BSGConfGet: TButton
         Left = 1
+        Height = 21
         Top = 360
         Width = 33
-        Height = 21
         Caption = 'Get'
-        TabOrder = 36
         OnClick = BSGConfGetClick
+        TabOrder = 36
       end
       object CBFog: TCheckBox
         Left = 8
+        Height = 19
         Top = 164
         Width = 77
-        Height = 17
         Caption = 'Fog - Color:'
-        TabOrder = 37
         OnClick = CBFogClick
+        TabOrder = 37
       end
       object ComboGroundTextures: TComboBox
         Left = 88
+        Height = 21
         Top = 114
         Width = 111
-        Height = 21
-        Style = csDropDownList
         ItemHeight = 13
-        TabOrder = 38
         OnClick = ComboGroundTexturesClick
+        Style = csDropDownList
+        TabOrder = 38
       end
       object Edit3DProjection: TEdit
         Left = 0
+        Height = 21
         Top = 564
         Width = 121
-        Height = 21
         TabOrder = 39
       end
     end
     object TabDebug: TTabSheet
       Caption = 'Debug'
+      ClientHeight = 595
+      ClientWidth = 265
       ImageIndex = 2
       object EditDEbug2: TEdit
         Left = 0
+        Height = 21
         Top = 8
         Width = 269
-        Height = 21
+        AutoSize = False
         TabOrder = 0
       end
       object EditDebug3: TEdit
         Left = 0
+        Height = 21
         Top = 60
         Width = 269
-        Height = 21
+        AutoSize = False
         TabOrder = 1
       end
       object MemoDebug: TMemo
         Left = 0
+        Height = 349
         Top = 92
         Width = 265
-        Height = 349
         TabOrder = 2
         WordWrap = False
       end
       object BExportTrack: TButton
         Left = 0
+        Height = 25
         Top = 444
         Width = 75
-        Height = 25
         Caption = 'Export Track'
-        TabOrder = 3
         OnClick = BExportTrackClick
+        TabOrder = 3
       end
       object CBTags: TCheckBox
         Left = 0
+        Height = 19
         Top = 472
-        Width = 73
-        Height = 17
+        Width = 43
         Caption = 'Tags'
         TabOrder = 4
       end
       object LBSelectedTags: TListBox
         Left = 0
+        Height = 93
         Top = 492
         Width = 73
-        Height = 93
-        ItemHeight = 13
+        ItemHeight = 0
         TabOrder = 5
       end
       object LBAllTags: TListBox
         Left = 104
+        Height = 93
         Top = 492
         Width = 73
-        Height = 93
-        ItemHeight = 13
+        ItemHeight = 0
         TabOrder = 6
       end
       object BitBtnAddTags: TBitBtn
         Left = 76
+        Height = 25
         Top = 496
         Width = 25
-        Height = 25
-        TabOrder = 7
-        OnClick = BitBtnAddTagsClick
         Glyph.Data = {
           36030000424D3603000000000000360000002800000010000000100000000100
           1800000000000003000000000000000000000000000000000000000000000000
@@ -1405,15 +1546,16 @@ object FParams: TFParams
           6C2D000000000000000000000000000000000000000000000000000000000000
           0000000000000000000000000000000000000000000000000000000000000000
           0000000000000000000000000000000000000000000000000000000000000000
-          0000000000000000000000000000000000000000000000000000}
+          0000000000000000000000000000000000000000000000000000
+        }
+        OnClick = BitBtnAddTagsClick
+        TabOrder = 7
       end
       object BitBtnRemoveTags: TBitBtn
         Left = 76
+        Height = 25
         Top = 524
         Width = 25
-        Height = 25
-        TabOrder = 8
-        OnClick = BitBtnRemoveTagsClick
         Glyph.Data = {
           36030000424D3603000000000000360000002800000010000000100000000100
           1800000000000003000000000000000000000000000000000000000000000000
@@ -1440,124 +1582,173 @@ object FParams: TFParams
           0000916D2D1D1609000000000000000000000000000000000000000000000000
           0000000000000000000000000000000000000000000000000000000000000000
           0000000000000000000000000000000000000000000000000000000000000000
-          0000000000000000000000000000000000000000000000000000}
+          0000000000000000000000000000000000000000000000000000
+        }
+        OnClick = BitBtnRemoveTagsClick
+        TabOrder = 8
       end
       object BitBtnAddAll: TBitBtn
         Left = 76
+        Height = 25
         Top = 552
         Width = 25
-        Height = 25
         Caption = 'All'
-        TabOrder = 9
         OnClick = BitBtnAddAllClick
+        TabOrder = 9
       end
     end
     object TabPhysics: TTabSheet
       Caption = 'Physics'
+      ClientHeight = 595
+      ClientWidth = 265
       ImageIndex = 3
       object Label40: TLabel
         Left = 4
+        Height = 13
         Top = 8
         Width = 72
-        Height = 13
         Caption = 'Default Frition:'
+        ParentColor = False
       end
       object Label42: TLabel
         Left = 4
+        Height = 13
         Top = 32
         Width = 75
-        Height = 13
         Caption = 'ODE Time Step:'
+        ParentColor = False
       end
       object Label43: TLabel
         Left = 132
+        Height = 13
         Top = 32
         Width = 21
-        Height = 13
         Caption = '(ms)'
+        ParentColor = False
       end
       object Label44: TLabel
         Left = 4
+        Height = 13
         Top = 56
         Width = 59
-        Height = 13
         Caption = 'Time Speed:'
+        ParentColor = False
       end
       object Label47: TLabel
         Left = 4
+        Height = 13
         Top = 92
         Width = 49
-        Height = 13
         Caption = 'ODE CFM:'
+        ParentColor = False
       end
       object Label48: TLabel
         Left = 4
+        Height = 13
         Top = 116
         Width = 47
-        Height = 13
         Caption = 'ODE ERP:'
+        ParentColor = False
       end
       object Label4: TLabel
         Left = 4
+        Height = 13
         Top = 152
         Width = 76
-        Height = 13
         Caption = 'Step Iterations:'
+        ParentColor = False
+      end
+      object Label61: TLabel
+        Left = 4
+        Height = 13
+        Top = 202
+        Width = 57
+        Caption = 'Wind Speed'
+        ParentColor = False
+      end
+      object Label62: TLabel
+        Left = 68
+        Height = 13
+        Top = 202
+        Width = 10
+        Caption = 'X:'
+        ParentColor = False
+      end
+      object Label63: TLabel
+        Left = 68
+        Height = 13
+        Top = 226
+        Width = 10
+        Caption = 'Y:'
+        ParentColor = False
+      end
+      object Label64: TLabel
+        Left = 68
+        Height = 13
+        Top = 250
+        Width = 10
+        Caption = 'Z:'
+        ParentColor = False
       end
       object EditDefaultFriction: TEdit
         Left = 84
+        Height = 21
         Top = 4
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 0
         Text = '0.95'
       end
       object BPhysicsSet: TButton
         Left = 204
+        Height = 25
         Top = 0
         Width = 55
-        Height = 25
         Caption = 'Set'
-        TabOrder = 1
         OnClick = BPhysicsSetClick
+        TabOrder = 1
       end
       object EditOde_dt: TEdit
         Left = 84
+        Height = 21
         Top = 28
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 2
         Text = '1'
       end
       object EditTimeSpeed: TEdit
         Left = 84
+        Height = 21
         Top = 52
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 3
         Text = '1'
       end
       object EditODE_CFM: TEdit
         Left = 84
+        Height = 21
         Top = 88
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 4
         Text = '1e-5'
       end
       object EditODE_ERP: TEdit
         Left = 84
+        Height = 21
         Top = 112
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 5
         Text = '0.4'
       end
       object CBWorldQuickStep: TCheckBox
         Left = 136
+        Height = 19
         Top = 150
-        Width = 97
-        Height = 17
+        Width = 96
         Caption = 'WorldQuickStep'
         Checked = True
         State = cbChecked
@@ -1565,143 +1756,601 @@ object FParams: TFParams
       end
       object EditQuickStepIterations: TEdit
         Left = 84
+        Height = 21
         Top = 148
         Width = 45
-        Height = 21
+        AutoSize = False
         TabOrder = 7
         Text = '10'
+      end
+      object CBEndlessWorld: TCheckBox
+        Left = 136
+        Height = 19
+        Top = 176
+        Width = 87
+        Caption = 'Endless World'
+        TabOrder = 8
+      end
+      object EditWindSpeedX: TEdit
+        Left = 84
+        Height = 21
+        Top = 198
+        Width = 45
+        AutoSize = False
+        TabOrder = 9
+        Text = '0'
+      end
+      object EditWindSpeedY: TEdit
+        Left = 84
+        Height = 21
+        Top = 222
+        Width = 45
+        AutoSize = False
+        TabOrder = 10
+        Text = '0'
+      end
+      object EditWindSpeedZ: TEdit
+        Left = 84
+        Height = 21
+        Top = 246
+        Width = 45
+        AutoSize = False
+        TabOrder = 11
+        Text = '0'
       end
     end
     object TabIO: TTabSheet
       Caption = 'I/O'
+      ClientHeight = 595
+      ClientWidth = 265
       ImageIndex = 4
-      DesignSize = (
-        265
-        593)
+      object Label56: TLabel
+        Left = 4
+        Height = 13
+        Top = 196
+        Width = 64
+        Caption = 'Modbus Port:'
+        ParentColor = False
+      end
+      object ShapeModBusState: TShape
+        Left = 140
+        Height = 21
+        Top = 192
+        Width = 21
+        Shape = stCircle
+      end
+      object Label57: TLabel
+        Left = 4
+        Height = 13
+        Top = 220
+        Width = 35
+        Caption = 'Inputs:'
+        ParentColor = False
+      end
+      object Label58: TLabel
+        Left = 96
+        Height = 13
+        Top = 220
+        Width = 26
+        Caption = 'Coils:'
+        ParentColor = False
+      end
+      object ShapeInput0: TShape
+        Left = 8
+        Height = 21
+        Top = 285
+        Width = 21
+        OnMouseDown = ShapeInputMouseDown
+        Shape = stCircle
+      end
+      object ShapeOutput0: TShape
+        Left = 104
+        Height = 21
+        Top = 285
+        Width = 21
+        OnMouseDown = ShapeOutputMouseDown
+        Shape = stCircle
+      end
+      object Label59: TLabel
+        Left = 4
+        Height = 13
+        Top = 240
+        Width = 35
+        Caption = 'Offset:'
+        ParentColor = False
+      end
+      object Label60: TLabel
+        Left = 96
+        Height = 13
+        Top = 240
+        Width = 35
+        Caption = 'Offset:'
+        ParentColor = False
+      end
+      object ShapeInput1: TShape
+        Tag = 1
+        Left = 8
+        Height = 21
+        Top = 309
+        Width = 21
+        OnMouseDown = ShapeInputMouseDown
+        Shape = stCircle
+      end
+      object ShapeInput2: TShape
+        Tag = 2
+        Left = 8
+        Height = 21
+        Top = 333
+        Width = 21
+        OnMouseDown = ShapeInputMouseDown
+        Shape = stCircle
+      end
+      object ShapeInput3: TShape
+        Tag = 3
+        Left = 8
+        Height = 21
+        Top = 357
+        Width = 21
+        OnMouseDown = ShapeInputMouseDown
+        Shape = stCircle
+      end
+      object ShapeInput4: TShape
+        Tag = 4
+        Left = 8
+        Height = 21
+        Top = 381
+        Width = 21
+        OnMouseDown = ShapeInputMouseDown
+        Shape = stCircle
+      end
+      object ShapeInput5: TShape
+        Tag = 5
+        Left = 8
+        Height = 21
+        Top = 405
+        Width = 21
+        OnMouseDown = ShapeInputMouseDown
+        Shape = stCircle
+      end
+      object ShapeInput6: TShape
+        Tag = 6
+        Left = 8
+        Height = 21
+        Top = 429
+        Width = 21
+        OnMouseDown = ShapeInputMouseDown
+        Shape = stCircle
+      end
+      object ShapeInput7: TShape
+        Tag = 7
+        Left = 8
+        Height = 21
+        Top = 453
+        Width = 21
+        OnMouseDown = ShapeInputMouseDown
+        Shape = stCircle
+      end
+      object ShapeOutput1: TShape
+        Tag = 1
+        Left = 104
+        Height = 21
+        Top = 309
+        Width = 21
+        OnMouseDown = ShapeOutputMouseDown
+        Shape = stCircle
+      end
+      object ShapeOutput2: TShape
+        Tag = 2
+        Left = 104
+        Height = 21
+        Top = 333
+        Width = 21
+        OnMouseDown = ShapeOutputMouseDown
+        Shape = stCircle
+      end
+      object ShapeOutput3: TShape
+        Tag = 3
+        Left = 104
+        Height = 21
+        Top = 357
+        Width = 21
+        OnMouseDown = ShapeOutputMouseDown
+        Shape = stCircle
+      end
+      object ShapeOutput4: TShape
+        Tag = 4
+        Left = 104
+        Height = 21
+        Top = 381
+        Width = 21
+        OnMouseDown = ShapeOutputMouseDown
+        Shape = stCircle
+      end
+      object ShapeOutput5: TShape
+        Tag = 5
+        Left = 104
+        Height = 21
+        Top = 405
+        Width = 21
+        OnMouseDown = ShapeOutputMouseDown
+        Shape = stCircle
+      end
+      object ShapeOutput6: TShape
+        Tag = 6
+        Left = 104
+        Height = 21
+        Top = 429
+        Width = 21
+        OnMouseDown = ShapeOutputMouseDown
+        Shape = stCircle
+      end
+      object ShapeOutput7: TShape
+        Tag = 7
+        Left = 104
+        Height = 21
+        Top = 453
+        Width = 21
+        OnMouseDown = ShapeOutputMouseDown
+        Shape = stCircle
+      end
+      object LabelInBit0: TLabel
+        Left = 32
+        Height = 13
+        Top = 288
+        Width = 21
+        Caption = 'Bit 0'
+        ParentColor = False
+      end
+      object LabelInBit1: TLabel
+        Left = 32
+        Height = 13
+        Top = 312
+        Width = 21
+        Caption = 'Bit 0'
+        ParentColor = False
+      end
+      object LabelInBit2: TLabel
+        Left = 32
+        Height = 13
+        Top = 336
+        Width = 21
+        Caption = 'Bit 0'
+        ParentColor = False
+      end
+      object LabelInBit3: TLabel
+        Left = 32
+        Height = 13
+        Top = 360
+        Width = 21
+        Caption = 'Bit 0'
+        ParentColor = False
+      end
+      object LabelInBit4: TLabel
+        Left = 32
+        Height = 13
+        Top = 384
+        Width = 21
+        Caption = 'Bit 0'
+        ParentColor = False
+      end
+      object LabelInBit5: TLabel
+        Left = 32
+        Height = 13
+        Top = 408
+        Width = 21
+        Caption = 'Bit 0'
+        ParentColor = False
+      end
+      object LabelInBit6: TLabel
+        Left = 32
+        Height = 13
+        Top = 432
+        Width = 21
+        Caption = 'Bit 0'
+        ParentColor = False
+      end
+      object LabelInBit7: TLabel
+        Left = 32
+        Height = 13
+        Top = 456
+        Width = 21
+        Caption = 'Bit 0'
+        ParentColor = False
+      end
+      object LabelOutBit0: TLabel
+        Left = 128
+        Height = 13
+        Top = 288
+        Width = 21
+        Caption = 'Bit 0'
+        ParentColor = False
+      end
+      object LabelOutBit1: TLabel
+        Left = 128
+        Height = 13
+        Top = 312
+        Width = 21
+        Caption = 'Bit 0'
+        ParentColor = False
+      end
+      object LabelOutBit2: TLabel
+        Left = 128
+        Height = 13
+        Top = 336
+        Width = 21
+        Caption = 'Bit 0'
+        ParentColor = False
+      end
+      object LabelOutBit3: TLabel
+        Left = 128
+        Height = 13
+        Top = 360
+        Width = 21
+        Caption = 'Bit 0'
+        ParentColor = False
+      end
+      object LabelOutBit4: TLabel
+        Left = 128
+        Height = 13
+        Top = 384
+        Width = 21
+        Caption = 'Bit 0'
+        ParentColor = False
+      end
+      object LabelOutBit5: TLabel
+        Left = 128
+        Height = 13
+        Top = 408
+        Width = 21
+        Caption = 'Bit 0'
+        ParentColor = False
+      end
+      object LabelOutBit6: TLabel
+        Left = 128
+        Height = 13
+        Top = 432
+        Width = 21
+        Caption = 'Bit 0'
+        ParentColor = False
+      end
+      object LabelOutBit7: TLabel
+        Left = 128
+        Height = 13
+        Top = 456
+        Width = 21
+        Caption = 'Bit 0'
+        ParentColor = False
+      end
       object Panel1: TPanel
         Left = 0
+        Height = 89
         Top = 0
         Width = 265
-        Height = 89
         Alignment = taLeftJustify
         BevelOuter = bvLowered
+        ClientHeight = 89
+        ClientWidth = 265
         TabOrder = 0
         object Label45: TLabel
           Left = 8
+          Height = 13
           Top = 9
           Width = 48
-          Height = 13
           Caption = 'Com Port:'
+          ParentColor = False
         end
         object BComConf: TButton
           Left = 188
+          Height = 21
           Top = 6
           Width = 69
-          Height = 21
           Caption = 'Configure'
-          TabOrder = 0
           OnClick = BComConfClick
+          TabOrder = 0
         end
         object CBComOpen: TCheckBox
           Left = 64
+          Height = 19
           Top = 8
-          Width = 45
-          Height = 17
+          Width = 46
           Caption = 'Open'
-          TabOrder = 1
           OnClick = CBComOpenClick
+          TabOrder = 1
         end
         object BComWrite: TButton
           Left = 8
+          Height = 21
           Top = 34
           Width = 44
-          Height = 21
           Caption = 'Write'
-          TabOrder = 2
           OnClick = BComWriteClick
+          TabOrder = 2
         end
         object BComRead: TButton
           Left = 8
+          Height = 21
           Top = 62
           Width = 44
-          Height = 21
           Caption = 'Read'
-          TabOrder = 3
           OnClick = BComReadClick
+          TabOrder = 3
         end
         object EditComRead: TEdit
           Left = 64
+          Height = 21
           Top = 62
           Width = 197
-          Height = 21
+          AutoSize = False
           TabOrder = 4
         end
         object EditComWrite: TEdit
           Left = 64
+          Height = 21
           Top = 34
           Width = 197
-          Height = 21
+          AutoSize = False
           TabOrder = 5
         end
       end
       object Panel2: TPanel
         Left = 0
+        Height = 89
         Top = 92
         Width = 265
-        Height = 89
-        Anchors = [akLeft, akTop, akRight]
+        Anchors = [akTop, akLeft, akRight]
         BevelOuter = bvLowered
+        ClientHeight = 89
+        ClientWidth = 265
         TabOrder = 1
         object Label46: TLabel
           Left = 12
+          Height = 13
           Top = 12
           Width = 47
-          Height = 13
           Caption = 'UDP Port:'
+          ParentColor = False
         end
         object Label8: TLabel
           Left = 12
+          Height = 13
           Top = 36
           Width = 14
-          Height = 13
           Caption = 'IP:'
+          ParentColor = False
         end
         object EditUDPPort: TEdit
           Left = 64
+          Height = 21
           Top = 8
           Width = 57
-          Height = 21
+          AutoSize = False
           TabOrder = 0
           Text = '9808'
         end
         object CBUDPConnect: TCheckBox
           Left = 128
+          Height = 19
           Top = 10
-          Width = 73
-          Height = 17
+          Width = 60
           Caption = 'Connect'
-          TabOrder = 1
-          Visible = False
           OnClick = CBUDPConnectClick
+          TabOrder = 1
         end
       end
       object EditRemoteIP: TEdit
         Left = 32
+        Height = 21
         Top = 124
         Width = 109
-        Height = 21
+        AutoSize = False
+        OnChange = EditRemoteIPChange
         TabOrder = 2
         Text = '127.0.0.1'
-        OnChange = EditRemoteIPChange
+      end
+      object EditModBusPort: TEdit
+        Left = 76
+        Height = 21
+        Top = 192
+        Width = 57
+        AutoSize = False
+        TabOrder = 3
+        Text = '5502'
+      end
+      object BModBusConnect: TButton
+        Left = 192
+        Height = 21
+        Top = 188
+        Width = 69
+        Caption = 'Connect'
+        OnClick = BModBusConnectClick
+        TabOrder = 4
+      end
+      object BModBusDisconnect: TButton
+        Left = 192
+        Height = 21
+        Top = 212
+        Width = 69
+        Caption = 'Disconnect'
+        OnClick = BModBusDisconnectClick
+        TabOrder = 5
+      end
+      object MemoModBus: TMemo
+        Left = 0
+        Height = 81
+        Top = 484
+        Width = 265
+        TabOrder = 6
+      end
+      object BModbusTest: TButton
+        Left = 188
+        Height = 25
+        Top = 568
+        Width = 75
+        Caption = 'Modbus Test'
+        OnClick = BModbusTestClick
+        TabOrder = 7
+      end
+      object EditModBusInputOffset: TEdit
+        Left = 44
+        Height = 21
+        Top = 236
+        Width = 33
+        AutoSize = False
+        TabOrder = 8
+        Text = '0'
+      end
+      object EditModBusOutputOffset: TEdit
+        Left = 136
+        Height = 21
+        Top = 236
+        Width = 33
+        AutoSize = False
+        TabOrder = 9
+        Text = '0'
+      end
+      object CBModBusInputOverride: TCheckBox
+        Left = 12
+        Height = 19
+        Top = 260
+        Width = 62
+        Caption = 'Override'
+        TabOrder = 10
+      end
+      object CBModBusOutputOverride: TCheckBox
+        Left = 108
+        Height = 19
+        Top = 260
+        Width = 62
+        Caption = 'Override'
+        TabOrder = 11
+      end
+      object BModbusOffsetSet: TButton
+        Left = 192
+        Height = 21
+        Top = 236
+        Width = 45
+        Caption = 'Set'
+        OnClick = BModbusOffsetSetClick
+        TabOrder = 12
+      end
+      object ProgressBarModBus: TProgressBar
+        Left = 192
+        Height = 13
+        Top = 260
+        Width = 69
+        Max = 10
+        Smooth = True
+        TabOrder = 13
       end
     end
   end
   object EditDebug: TEdit
     Left = 4
+    Height = 21
     Top = 628
     Width = 269
-    Height = 21
     Anchors = [akLeft, akBottom]
+    AutoSize = False
     TabOrder = 1
     Text = 'EditDebug'
   end
@@ -1709,93 +2358,79 @@ object FParams: TFParams
     Bindings = <>
     DefaultPort = 9800
     OnUDPRead = UDPServerUDPRead
-    Left = 244
+    left = 172
+    top = 400
   end
-  object FormStorage: TFormStorage
-    IniSection = 'Config'
-    UseRegistry = False
-    StoredProps.Strings = (
-      'CBAntiAliasing.Checked'
-      'CBAxis.Checked'
-      'CBHotCPU.Checked'
-      'CBGrid.Checked'
-      'CBGroundTexture.Checked'
-      'CBShadows.Checked'
-      'CBSkyDome.Checked'
-      'CBVsync.Checked'
-      'EditTargetFPS.Text'
-      'RGCamera.ItemIndex'
-      'CBIRNoise.Checked'
-      'RGControlBlock.ItemIndex'
-      'CBFreeze.Checked'
-      'EditDefaultFriction.Text'
-      'EditRobotSetTeta.Text'
-      'EditRobotSetX.Text'
-      'EditRobotSetY.Text'
-      'EditRobotSetZ.Text'
-      'EditOde_dt.Text'
-      'EditTimeSpeed.Text'
-      'PageControl.ActivePage'
-      'EditUDPPort.Text'
-      'CBUDPConnect.Checked'
-      'EditODE_CFM.Text'
-      'EditODE_ERP.Text'
-      'EditScriptPeriod.Text'
-      'CBWorldQuickStep.Checked'
-      'EditQuickStepIterations.Text'
-      'EditSetCamLookX.Text'
-      'EditSetCamLookY.Text'
-      'EditSetCamLookZ.Text'
-      'EditSetCamX.Text'
-      'EditSetCamY.Text'
-      'EditSetCamZ.Text'
-      'EditTrailsCount.Text'
-      'EditTrailSize.Text'
-      'RGGLObjects.ItemIndex'
-      'PGRobots.TabIndex'
-      'CBTags.Checked'
-      'LBSelectedTags.Items'
-      'RGSensorGL.ItemIndex'
-      'ShapeSelColor.Brush'
-      'CBFog.Checked'
-      'ComboGroundTextures.ItemIndex'
-      'EditRemoteIP.Text')
-    StoredValues = <>
-    Left = 236
-    Top = 60
-  end
-  object ComPort: TComPort
+  object SdpoSerial1: TSdpoSerial
+    Active = False
     BaudRate = br115200
-    Port = 'COM1'
-    Parity.Bits = prNone
-    StopBits = sbOneStopBit
-    DataBits = dbEight
-    Events = []
-    FlowControl.OutCTSFlow = False
-    FlowControl.OutDSRFlow = False
-    FlowControl.ControlDTR = dtrDisable
-    FlowControl.ControlRTS = rtsDisable
-    FlowControl.XonXoffOut = False
-    FlowControl.XonXoffIn = False
-    Left = 152
-    Top = 28
+    AltBaudRate = 0
+    DataBits = db8bits
+    Parity = pNone
+    FlowControl = fcNone
+    StopBits = sbOne
+    Device = 'COM1'
+    left = 152
+    top = 28
   end
   object UDPGeneric: TIdUDPServer
     BroadcastEnabled = True
     Bindings = <>
     DefaultPort = 9808
     OnUDPRead = UDPGenericUDPRead
-    Left = 180
-    Top = 28
+    left = 172
+    top = 456
   end
   object ColorDialog: TColorDialog
-    Left = 120
-    Top = 180
+    Color = clBlack
+    CustomColors.Strings = (
+      'ColorA=000000'
+      'ColorB=000080'
+      'ColorC=008000'
+      'ColorD=008080'
+      'ColorE=800000'
+      'ColorF=800080'
+      'ColorG=808000'
+      'ColorH=808080'
+      'ColorI=C0C0C0'
+      'ColorJ=0000FF'
+      'ColorK=00FF00'
+      'ColorL=00FFFF'
+      'ColorM=FF0000'
+      'ColorN=FF00FF'
+      'ColorO=FFFF00'
+      'ColorP=FFFFFF'
+      'ColorQ=C0DCC0'
+      'ColorR=F0CAA6'
+      'ColorS=F0FBFF'
+      'ColorT=A4A0A0'
+    )
+    left = 156
+    top = 160
   end
-  object UDPImageServer: TIdUDPClient
-    BroadcastEnabled = True
-    Port = 9898
-    Left = 180
-    Top = 92
+  object TCPModBus: TIdTCPServer
+    OnStatus = TCPModBusStatus
+    Bindings = <>
+    DefaultPort = 0
+    MaxConnections = 1
+    OnConnect = TCPModBusConnect
+    OnDisconnect = TCPModBusDisconnect
+    OnException = TCPModBusException
+    TerminateWaitTime = 100
+    OnExecute = TCPModBusExecute
+    left = 204
+    top = 300
+  end
+  object Timer: TTimer
+    Interval = 100
+    OnTimer = TimerTimer
+    left = 200
+    top = 360
+  end
+  object IniPropStorage: TIniPropStorage
+    StoredValues = <>
+    IniSection = 'Config'
+    left = 73
+    top = 342
   end
 end

@@ -1,11 +1,13 @@
 unit FastChart;
 
+{$MODE Delphi}
+
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, TeEngine, Series, ExtCtrls, TeeProcs, Chart, StdCtrls, IniFiles,
-  rxPlacemnt, Menus, CheckLst, ProjConfig, ImgList, ComCtrls;
+  SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, ExtCtrls, StdCtrls, IniFiles, Menus, ProjConfig,
+  ComCtrls, IniPropStorage, TAGraph, TASeries;
 
 type
   TSeriesFunction =  function(r,i: integer): Double;
@@ -18,13 +20,16 @@ type
   end;
 
 type
+
+  { TFChart }
+
   TFChart = class(TForm)
     Chart: TChart;
     CBFreeze: TCheckBox;
+    IniPropStorage: TIniPropStorage;
     Label1: TLabel;
     EditMaxPoints: TEdit;
     BSet: TButton;
-    FormStorage: TFormStorage;
     BSave: TButton;
     EditFileName: TEdit;
     TreeView: TTreeView;
@@ -57,7 +62,7 @@ type
     MaxPoints : integer;
     physTime_zero: double; 
 
-    procedure AddSeriesValue(var Series: TFastLineSeries; X, Y: double);
+    procedure AddSeriesValue(var Series: TLineSeries; X, Y: double);
     procedure AddPoint(x, r, y, u: double);
     procedure AddSample(r: integer; t: double);
 
@@ -75,7 +80,7 @@ implementation
 
 uses Params, ODERobotsPublished, Viewer, ODERobots;
 
-{$R *.dfm}
+{$R *.lfm}
 
 
 function RandColor(i: integer): TColor;
@@ -106,11 +111,11 @@ end;
 procedure TFChart.FormCreate(Sender: TObject);
 begin
   SeriesNameList := TStringList.Create;
-  FormStorage.IniFileName := GetIniFineName;
+  IniPropStorage.IniFileName := GetIniFineName;
   physTime_zero := 0;
 end;
 
-procedure TFChart.AddSeriesValue(var Series: TFastLineSeries; X,Y: double);
+procedure TFChart.AddSeriesValue(var Series: TLineSeries; X,Y: double);
 begin
   if Series.Count > MaxPoints then begin
     Series.Delete(0);
@@ -131,10 +136,10 @@ end;
 procedure TFChart.CBFreezeClick(Sender: TObject);
 var i: integer;
 begin
-  Chart.UndoZoom;
+  Chart.ZoomFull();
   if not CBFreeze.Checked then begin
     for i := 0 to Chart.SeriesCount -1 do begin
-      Chart.Series[i].Clear;
+      (Chart.Series[i] as TLineSeries).Clear;
     end;
     physTime_zero := WorldODE.physTime;
   end;
@@ -144,7 +149,7 @@ procedure TFChart.FormShow(Sender: TObject);
 var fname: string;
 begin
   MaxPoints := strtointdef(EditMaxPoints.Text, 400);
-  fname := ChangeFileExt(FormStorage.IniFileName,'.LogSeries.txt');
+  fname := ChangeFileExt(IniPropStorage.IniFileName,'.LogSeries.txt');
   if fileexists(fname) then
     SeriesNameList.LoadFromFile(fname);
   FillTreeView(TreeView);
@@ -155,10 +160,12 @@ procedure TFChart.AddSample(r: integer; t: double);
 var i: integer;
     v: double;
     df: TSeriesDef;
+    LS: TLineSeries;
 begin
   if CBFreeze.Checked then exit;
   for i := 0 to Chart.SeriesCount - 1 do begin
-    with Chart.Series[i] do begin
+    LS := Chart.Series[i] as TLineSeries;
+    with LS do begin
       if tag = 0 then continue;
       df := TSeriesDef(Tag);
       if df.RobotNum = r then begin
@@ -173,10 +180,10 @@ end;
 procedure TFChart.BSaveClick(Sender: TObject);
 var s: string;
 begin
-  Chart.PrintResolution := -100;
+  //Chart.PrintResolution := -100;
   s := ChangeFileExt(EditFileName.Text, '.emf');
-  Chart.SaveToMetafileEnh(s);
-  Chart.PrintResolution := 0;
+  Chart.SaveToBitmapFile(s);
+  //Chart.PrintResolution := 0;
 end;
 
 
@@ -204,9 +211,11 @@ begin
     //FillRobotStateTreeView(num,node,tree);
     FillTreeViewItem(r, 0, 'x', @GetSolidX, node, tree);
     FillTreeViewItem(r, 0, 'y', @GetSolidY, node, tree);
+    FillTreeViewItem(r, 0, 'z', @GetSolidZ, node, tree);
     FillTreeViewItem(r, 0, 'theta', @GetSolidTheta, node, tree);
     FillTreeViewItem(r, 0, 'Vx', @GetSolidVx, node, tree);
     FillTreeViewItem(r, 0, 'Vy', @GetSolidVy, node, tree);
+    FillTreeViewItem(r, 0, 'Vz', @GetSolidVz, node, tree);
 
     node:=AddChild(root,'Axes');
     node.Data:=nil;
@@ -245,7 +254,7 @@ begin
     //FillBallTreeView(node,tree);
     for i:=0 to WorldODE.Robots.Count-1 do begin
       //node:=Add(nil,'Robot '+inttostr(i+1));
-      node:=Add(nil,WorldODE.Robots[i].Name);
+      node:=Add(nil,WorldODE.Robots[i].ID);
       node.Data:=nil;
       FillRobotTreeView(i,node,tree);
     end;
@@ -330,7 +339,7 @@ end;
 
 procedure TFChart.RemoveAllSeries(tree: TTreeView);
 var i: integer;
-    cs: TChartSeries;
+    cs: TBasicChartSeries;
 //    df: TSeriesDef;
 //    node: TTreeNode;
 //    derivative: boolean;
@@ -339,7 +348,7 @@ begin
 
   // clear chart series
   with Chart do begin
-    While SeriesList.Count>0 do begin
+    While Series.Count>0 do begin
       cs:=Series[0];
       RemoveSeries(cs);
       cs.Free;
@@ -359,7 +368,7 @@ end;
 
 procedure TFChart.RefreshChart(tree: TTreeView);
 var i{, cnt}: integer;
-    cs: TChartSeries;
+    cs: TLineSeries;
     df: TSeriesDef;
 //    node: TTreeNode;
 //    derivative: boolean;
@@ -370,9 +379,8 @@ begin
 
     // clear chart series
     with Chart do begin
-      While SeriesList.Count>0 do begin
-        cs:=Series[0];
-        RemoveSeries(cs);
+      While Series.Count>0 do begin
+        RemoveSeries(Series[0]);
         cs.Free;
       end;
     end;
@@ -383,7 +391,7 @@ begin
         //Inc(cnt);
 
         // create new chart series for each variable
-        cs:=TFastLineSeries.Create(FChart);
+        cs:=TLineSeries.Create(FChart);
         cs.SeriesColor:=RandColor(i);
         cs.Title := GetNodePathText(tree, tree.Items[i]);
         df := TSeriesDef(tree.Items[i].Data);
@@ -403,23 +411,23 @@ begin
 end;
 
 procedure TFChart.BSaveLogClick(Sender: TObject);
-var cs: TChartSeries;
+var cs: TLineSeries;
     i, c, TotLines, TotCols: integer;
     str: string;
     sl: TStringList;
 begin
   with Chart do begin
-    if SeriesList.Count <= 0 then exit;
+    if Series.Count <= 0 then exit;
     //if SaveDialogLog.Execute then begin
     //  SaveDialogLog.InitialDir:=ExtractFilePath(SaveDialogLog.FileName);
-    TotCols := SeriesList.Count;
-    TotLines := Series[0].XValues.Count;
+    TotCols := Series.Count;
+    TotLines := (Series[0] as TLineSeries).Count;
     sl:=TStringList.Create;
     try
       for i := 0 to TotLines - 1 do begin
         str := '';
         for c := 0 to TotCols - 1 do begin
-          cs:=Series[c];
+          cs:=Series[c] as TLineSeries;
           str := str + format('%g ',[cs.YValue[i]]);
         end;
         sl.Add(str);
@@ -435,7 +443,7 @@ end;
 
 procedure TFChart.FormDestroy(Sender: TObject);
 begin
-  SeriesNameList.SaveToFile(ChangeFileExt(FormStorage.IniFileName,'.LogSeries.txt'));
+  SeriesNameList.SaveToFile(ChangeFileExt(IniPropStorage.IniFileName,'.LogSeries.txt'));
   SeriesNameList.Free;
 end;
 

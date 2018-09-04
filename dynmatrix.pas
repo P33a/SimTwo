@@ -20,6 +20,8 @@
 
 unit dynmatrix;
 
+{$MODE Delphi}
+
 interface
 
 uses
@@ -76,6 +78,7 @@ function MelementMult(const A, B: Matrix): Matrix;
 function Mmin(const M: Matrix): double;
 function Mmax(const M: Matrix): double;
 function MmaxAbs(const M: Matrix): double;
+function MallNorm(const M: Matrix): double;
 
 //function Mfunc(const A: Matrix; f: TDoubleFunc): Matrix;
 
@@ -633,6 +636,17 @@ begin
   for i := 1 to M.rows * M.cols - 1 do begin
     if (result < M.data[i]) then result := M.data[i];
   end;
+end;
+
+// <- sqrt(sum all elements)
+function MallNorm(const M: Matrix): double;
+var i: Longword;
+begin
+  result := M.data[0] * M.data[0];
+  for i := 1 to M.rows * M.cols - 1 do begin
+    result := result + M.data[i] * M.data[i];
+  end;
+  result := sqrt(result);
 end;
 
 

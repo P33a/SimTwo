@@ -1,18 +1,15 @@
 object FViewer: TFViewer
-  Left = 477
-  Top = 167
-  AutoScroll = False
+  Left = 362
+  Height = 524
+  Top = 138
+  Width = 757
   Caption = 'SimTwo View'
-  ClientHeight = 526
-  ClientWidth = 795
+  ClientHeight = 524
+  ClientWidth = 757
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
-  Font.Style = []
-  OldCreateOrder = False
-  Scaled = False
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
@@ -20,199 +17,323 @@ object FViewer: TFViewer
   OnKeyDown = FormKeyDown
   OnMouseWheel = FormMouseWheel
   OnShow = FormShow
-  PixelsPerInch = 96
-  TextHeight = 13
+  SessionProperties = 'GLDummyCamPos.Position;Top;Left;Width;Height'
+  LCLVersion = '1.8.2.0'
   object GLSceneViewer: TGLSceneViewer
     Left = 0
+    Height = 524
     Top = 0
-    Width = 795
-    Height = 526
+    Width = 757
     Camera = GLCamera
-    Buffer.FogEnvironment.FogColor.Color = {00000000F8FEFE3E0000803F0000803F}
-    Buffer.FogEnvironment.FogStart = 1.000000000000000000
-    Buffer.FogEnvironment.FogEnd = 10.000000000000000000
+    Buffer.FogEnvironment.FogColor.Color = {
+      00000000F8FEFE3E0000803F0000803F
+    }
+    Buffer.FogEnvironment.FogStart = 1
+    Buffer.FogEnvironment.FogEnd = 10
     Buffer.BackgroundColor = clBackground
-    Buffer.AmbientColor.Color = {9A99993E9A99993E9A99993E0000803F}
+    Buffer.AmbientColor.Color = {
+      9A99993E9A99993E9A99993E0000803F
+    }
     Buffer.ContextOptions = [roDoubleBuffer, roStencilBuffer, roRenderToWindow]
     Buffer.FogEnable = True
     Buffer.AntiAliasing = aa2x
-    FieldOfView = 147.509658813476600000
+    FieldOfView = 147.392211914063
     Align = alClient
     PopupMenu = PopupMenu
     OnMouseDown = GLSceneViewerMouseDown
     OnMouseMove = GLSceneViewerMouseMove
     OnMouseUp = GLSceneViewerMouseUp
+    TabOrder = 0
   end
   object GLScene: TGLScene
+    left = 188
+    top = 292
+    object GLLightSource: TGLLightSource
+      TagFloat = 0
+      Ambient.Color = {
+        BEC0403FBEC0403FBEC0403F0000803F
+      }
+      ConstAttenuation = 1
+      LinearAttenuation = 0
+      QuadraticAttenuation = 0
+      Position.Coordinates = {
+        9A99993F666626C00000F0400000803F
+      }
+      LightStyle = lsOmni
+      Specular.Color = {
+        0000803F0000803F0000803FCDCC4C3E
+      }
+      SpotCutOff = 180
+      SpotExponent = 0
+    end
+    object GLXYZGrid: TGLXYZGrid
+      TagFloat = 0
+      PitchAngle = 0
+      Position.Coordinates = {
+        00000000000000006F12033B0000803F
+      }
+      RollAngle = 0
+      TurnAngle = 0
+      AntiAliased = True
+      LineColor.Color = {
+        3333333F3333333F3333333F0000803F
+      }
+      LineWidth = 2
+      XSamplingScale.Min = -5
+      XSamplingScale.Max = 5
+      XSamplingScale.Origin = 0
+      XSamplingScale.Step = 1
+      YSamplingScale.Min = -5
+      YSamplingScale.Max = 5
+      YSamplingScale.Origin = 0
+      YSamplingScale.Step = 1
+      ZSamplingScale.Min = 0
+      ZSamplingScale.Max = 0
+      ZSamplingScale.Origin = 0
+      ZSamplingScale.Step = 0.100000001490116
+    end
+    object GLDTrails: TGLDummyCube
+      TagFloat = 0
+      PitchAngle = 0
+      RollAngle = 0
+      TurnAngle = 0
+      CubeSize = 1
+    end
     object GLEarthSkyDome: TGLEarthSkyDome
+      TagFloat = 0
+      PitchAngle = 0
+      RollAngle = 0
+      TurnAngle = 0
+      Pickable = False
       Bands = <>
       Stars = <>
-      SunElevation = 75.000000000000000000
-      Turbidity = 15.000000000000000000
+      SunElevation = 75
+      Turbidity = 15
       ExtendedOptions = []
       Slices = 48
       Stacks = 12
     end
-    object GLLightSource: TGLLightSource
-      Ambient.Color = {BEC0403FBEC0403FBEC0403F0000803F}
-      ConstAttenuation = 1.000000000000000000
-      Position.Coordinates = {9A99993F666626C00000F0400000803F}
-      LightStyle = lsOmni
-      Specular.Color = {0000803F0000803F0000803FCDCC4C3E}
-      SpotCutOff = 180.000000000000000000
-    end
-    object GLXYZGrid: TGLXYZGrid
-      Position.Coordinates = {00000000000000006F12033B0000803F}
-      AntiAliased = True
-      LineColor.Color = {3333333F3333333F3333333F0000803F}
-      LineWidth = 2.000000000000000000
-      XSamplingScale.Min = -5.000000000000000000
-      XSamplingScale.Max = 5.000000000000000000
-      XSamplingScale.Step = 1.000000000000000000
-      YSamplingScale.Min = -5.000000000000000000
-      YSamplingScale.Max = 5.000000000000000000
-      YSamplingScale.Step = 1.000000000000000000
-      ZSamplingScale.Step = 0.100000001490116100
-    end
-    object GLDTrails: TGLDummyCube
-      CubeSize = 1.000000000000000000
-    end
     object GLDummyCubeAxis: TGLDummyCube
-      Position.Coordinates = {00000000000000006F12833A0000803F}
-      CubeSize = 1.000000000000000000
+      TagFloat = 0
+      PitchAngle = 0
+      Position.Coordinates = {
+        00000000000000006F12833A0000803F
+      }
+      RollAngle = 0
+      TurnAngle = 0
+      CubeSize = 1
       object GLFlatText_X: TGLFlatText
-        Position.Coordinates = {6666663FCDCC4CBD000000000000803F}
-        Scale.Coordinates = {6F12833B6F12833BCDCCCC3D00000000}
-        BitmapFont = GLStoredBitmapFont
+        TagFloat = 0
+        PitchAngle = 0
+        Position.Coordinates = {
+          6666663FCDCC4CBD000000000000803F
+        }
+        RollAngle = 0
+        Scale.Coordinates = {
+          6F12833B6F12833BCDCCCC3D00000000
+        }
+        TurnAngle = 0
         Text = 'x'
         Alignment = taLeftJustify
         Layout = tlTop
-        ModulateColor.Color = {9A93133FE4DB5B3FEBE0E03E0000803F}
+        ModulateColor.Color = {
+          9A93133FE4DB5B3FEBE0E03E0000803F
+        }
         Options = []
       end
       object GLFlatText_Y: TGLFlatText
-        Position.Coordinates = {9A9919BE3333733F000000000000803F}
-        Scale.Coordinates = {6F12833B6F12833BCDCCCC3D00000000}
-        BitmapFont = GLStoredBitmapFont
+        TagFloat = 0
+        PitchAngle = 0
+        Position.Coordinates = {
+          9A9919BE3333733F000000000000803F
+        }
+        RollAngle = 0
+        Scale.Coordinates = {
+          6F12833B6F12833BCDCCCC3D00000000
+        }
+        TurnAngle = 0
         Text = 'y'
         Alignment = taLeftJustify
         Layout = tlTop
-        ModulateColor.Color = {9A93133FE4DB5B3FEBE0E03E0000803F}
+        ModulateColor.Color = {
+          9A93133FE4DB5B3FEBE0E03E0000803F
+        }
         Options = []
       end
       object GLFlatTextOrigin: TGLFlatText
-        Position.Coordinates = {00000000CDCC4CBD000000000000803F}
-        Scale.Coordinates = {6F12833B6F12833BCDCCCC3D00000000}
-        BitmapFont = GLStoredBitmapFont
+        TagFloat = 0
+        PitchAngle = 0
+        Position.Coordinates = {
+          00000000CDCC4CBD000000000000803F
+        }
+        RollAngle = 0
+        Scale.Coordinates = {
+          6F12833B6F12833BCDCCCC3D00000000
+        }
+        TurnAngle = 0
         Text = '(0, 0)'
         Alignment = taCenter
         Layout = tlTop
-        ModulateColor.Color = {9A93133FE4DB5B3FEBE0E03E0000803F}
+        ModulateColor.Color = {
+          9A93133FE4DB5B3FEBE0E03E0000803F
+        }
         Options = []
       end
       object GLPolygonArrowX: TGLPolygon
-        Material.FrontProperties.Ambient.Color = {CDCCCC3DCDCCCC3DCDCCCC3D0000803F}
-        Material.FrontProperties.Diffuse.Color = {CDCC4C3E9A99193FCDCC4C3E0000803F}
-        Position.Coordinates = {48E17A3F0000000017B7D1380000803F}
-        RollAngle = -90.000000000000000000
-        Scale.Coordinates = {CDCCCC3D0000803F0000803F00000000}
-        Up.Coordinates = {0000803F2EBD3BB30000000000000000}
-        Nodes = <
+        TagFloat = 0
+        Material.FrontProperties.Ambient.Color = {
+          CDCCCC3DCDCCCC3DCDCCCC3D0000803F
+        }
+        Material.FrontProperties.Diffuse.Color = {
+          CDCC4C3E9A99193FCDCC4C3E0000803F
+        }
+        PitchAngle = 0
+        Position.Coordinates = {
+          48E17A3F0000000017B7D1380000803F
+        }
+        RollAngle = -90
+        Scale.Coordinates = {
+          CDCCCC3D0000803F0000803F00000000
+        }
+        TurnAngle = 0
+        Up.Coordinates = {
+          0000803F2EBD3BB30000000000000000
+        }
+        Nodes = <        
           item
-            Y = 0.150000005960464500
-          end
+            Y = 0.150000005960464
+          end        
           item
-            X = -0.500000000000000000
-          end
+            X = -0.5
+          end        
           item
-            X = -0.200000002980232200
-          end
+            X = -0.200000002980232
+          end        
           item
-            X = -0.200000002980232200
-            Y = -1.000000000000000000
-          end
+            X = -0.200000002980232
+            Y = -1
+          end        
           item
-            X = 0.200000002980232200
-            Y = -1.000000000000000000
-          end
+            X = 0.200000002980232
+            Y = -1
+          end        
           item
-            X = 0.200000002980232200
-          end
+            X = 0.200000002980232
+          end        
           item
-            X = 0.500000000000000000
+            X = 0.5
           end>
       end
       object GLPolygonArrowY: TGLPolygon
-        Material.FrontProperties.Ambient.Color = {CDCCCC3DCDCCCC3DCDCCCC3D0000803F}
-        Material.FrontProperties.Diffuse.Color = {CDCC4C3E9A99193FCDCC4C3E0000803F}
-        Position.Coordinates = {0000000048E17A3F17B7D1380000803F}
-        Scale.Coordinates = {CDCCCC3D0000803F0000803F00000000}
-        Nodes = <
+        TagFloat = 0
+        Material.FrontProperties.Ambient.Color = {
+          CDCCCC3DCDCCCC3DCDCCCC3D0000803F
+        }
+        Material.FrontProperties.Diffuse.Color = {
+          CDCC4C3E9A99193FCDCC4C3E0000803F
+        }
+        PitchAngle = 0
+        Position.Coordinates = {
+          0000000048E17A3F17B7D1380000803F
+        }
+        RollAngle = 0
+        Scale.Coordinates = {
+          CDCCCC3D0000803F0000803F00000000
+        }
+        TurnAngle = 0
+        Nodes = <        
           item
-            Y = 0.150000005960464500
-          end
+            Y = 0.150000005960464
+          end        
           item
-            X = -0.500000000000000000
-          end
+            X = -0.5
+          end        
           item
-            X = -0.200000002980232200
-          end
+            X = -0.200000002980232
+          end        
           item
-            X = -0.200000002980232200
-            Y = -1.000000000000000000
-          end
+            X = -0.200000002980232
+            Y = -1
+          end        
           item
-            X = 0.200000002980232200
-            Y = -1.000000000000000000
-          end
+            X = 0.200000002980232
+            Y = -1
+          end        
           item
-            X = 0.200000002980232200
-          end
+            X = 0.200000002980232
+          end        
           item
-            X = 0.500000000000000000
+            X = 0.5
           end>
       end
     end
     object ODEScene: TGLDummyCube
-      CubeSize = 1.000000000000000000
+      TagFloat = 0
+      PitchAngle = 0
+      RollAngle = 0
+      TurnAngle = 0
+      CubeSize = 1
       object GLDummyTargetCam: TGLDummyCube
-        Position.Coordinates = {00000000000000000000803F0000803F}
-        CubeSize = 1.000000000000000000
+        TagFloat = 0
+        PitchAngle = 0
+        Position.Coordinates = {
+          00000000000000000000803F0000803F
+        }
+        RollAngle = 0
+        TurnAngle = 0
+        CubeSize = 1
       end
       object GLDummyTargetCamRel: TGLDummyCube
-        CubeSize = 1.000000000000000000
+        TagFloat = 0
+        PitchAngle = 0
+        RollAngle = 0
+        TurnAngle = 0
+        CubeSize = 1
       end
       object GLDummyCamPos: TGLDummyCube
-        Position.Coordinates = {0000003FCDCC2CC0CDCC0C400000803F}
-        CubeSize = 1.000000000000000000
+        TagFloat = 0
+        PitchAngle = 0
+        Position.Coordinates = {
+          0000003FCDCC2CC0CDCC0C400000803F
+        }
+        RollAngle = 0
+        TurnAngle = 0
+        CubeSize = 1
       end
       object GLDummyCamPosRel: TGLDummyCube
-        Position.Coordinates = {00000000000080BF0000803F0000803F}
-        CubeSize = 1.000000000000000000
+        TagFloat = 0
+        PitchAngle = 0
+        Position.Coordinates = {
+          00000000000080BF0000803F0000803F
+        }
+        RollAngle = 0
+        TurnAngle = 0
+        CubeSize = 1
       end
       object GLShadowVolume: TGLShadowVolume
-        Up.Coordinates = {000000000000803F0000008000000000}
-        Lights = <
+        TagFloat = 0
+        PitchAngle = 0
+        RollAngle = 0
+        TurnAngle = 0
+        Lights = <        
           item
+            EffectiveRadius = 0
             LightSource = GLLightSource
           end>
-        Occluders = <
-          item
-            Caster = GLSphere_Ball
-          end>
+        Occluders = <>
         Capping = svcDefault
         Options = [svoCacheSilhouettes, svoScissorClips, svoWorldScissorClip]
         Mode = svmDarkening
-        DarkeningColor.Color = {0000000000000000000000009A99993E}
-        object GLSphere_Ball: TGLSphere
-          Position.Coordinates = {00000000000000000000C03F0000803F}
-          Visible = False
-          Radius = 0.100000001490116100
-        end
+        DarkeningColor.Color = {
+          0000000000000000000000009A99993E
+        }
         object GLPlaneFloor: TGLPlane
-          Material.FrontProperties.Diffuse.Color = {0000000079E9E63E000000000000803F}
+          TagFloat = 0
+          Material.FrontProperties.Diffuse.Color = {
+            0000000079E9E63E000000000000803F
+          }
           Material.Texture.Image.Picture.Data = {
-            0A544A504547496D6167654D320000FFD8FFE000104A46494600010201004800
+            0A544A706567496D6167654D320000FFD8FFE000104A46494600010201004800
             480000FFE109064578696600004D4D002A000000080007011200030000000100
             010000011A00050000000100000062011B0005000000010000006A0128000300
             0000010002000001310002000000140000007201320002000000140000008687
@@ -614,201 +735,344 @@ object FViewer: TFViewer
             9A82E4E3EACD4E75A8AFDAE5FECAB8A4B4D5FDED78F414E34E5FECF8FED7F2E2
             853B8A55BEDD2A2BCAB8A42AD9D6ADF6BA1AD69FF0980AACDFD5FDAA55A9E1D3
             EFFF0082C42A84BD47D8E83E5D7F6BFCAC2A88B1E7CF6FE734F4B87BFD9E5FB3
-            FEB6282A571D16BC797E1D4F87C3CB1508AF8ABFEECFC3AD314BFFD9}
+            FEB6282A571D16BC797E1D4F87C3CB1508AF8ABFEECFC3AD314BFFD9
+          }
           Material.Texture.MappingMode = tmmObjectLinear
-          Material.Texture.MappingSCoordinates.Coordinates = {0000A040000000000000000000000000}
-          Material.Texture.MappingTCoordinates.Coordinates = {000000000000A0400000000000000000}
+          Material.Texture.MappingSCoordinates.Coordinates = {
+            0000A040000000000000000000000000
+          }
+          Material.Texture.MappingTCoordinates.Coordinates = {
+            000000000000A0400000000000000000
+          }
           Material.MaterialLibrary = GLMaterialLibrary
-          Direction.Coordinates = {00000000000000800000803F00000000}
-          Height = 24.000000000000000000
-          Width = 24.000000000000000000
-          NoZWrite = False
+          PitchAngle = 0
+          RollAngle = 0
+          TurnAngle = 0
+          Height = 24
+          Width = 24
+          XOffset = 0
+          YOffset = 0
           object GLLinesXY: TGLLines
+            TagFloat = 0
+            PitchAngle = 0
+            RollAngle = 0
+            TurnAngle = 0
             Visible = False
-            LineColor.Color = {CDCC4C3FF8FEFE3EACC8483E0000803F}
-            LineWidth = 3.000000000000000000
-            Nodes = <
+            LineColor.Color = {
+              CDCC4C3FF8FEFE3EACC8483E0000803F
+            }
+            LineWidth = 3
+            Nodes = <            
               item
-              end
+              end            
               item
-                X = 0.500000000000000000
-                Y = 0.500000000000000000
-              end
+                X = 0.5
+                Y = 0.5
+              end            
               item
-                Y = 1.000000000000000000
+                Y = 1
               end>
             NodesAspect = lnaInvisible
             Options = []
           end
         end
         object GLCylinder1: TGLCylinder
+          TagFloat = 0
           Material.MaterialLibrary = GLMaterialLibrary
           Material.LibMaterialName = 'LibMaterialBumps'
+          PitchAngle = 0
+          RollAngle = 0
+          TurnAngle = 0
           Visible = False
-          BottomRadius = 0.500000000000000000
-          Height = 1.000000000000000000
-          TopRadius = 0.500000000000000000
+          BottomRadius = 0.5
+          Height = 1
+          TopRadius = 0.5
         end
       end
     end
     object GLDummyCFire: TGLDummyCube
-      CubeSize = 1.000000000000000000
+      TagFloat = 0
+      PitchAngle = 0
+      RollAngle = 0
+      TurnAngle = 0
+      CubeSize = 1
       EffectsData = {
-        0201060A54474C424669726546580200060F474C4669726546584D616E616765
-        72}
+        0458434F4C02010201060A54474C424669726546580201020006000200020006
+        0F474C4669726546584D616E61676572
+      }
     end
     object GLHUDTextObjName: TGLHUDText
-      Position.Coordinates = {0000A04100002041000000000000803F}
-      Scale.Coordinates = {0000003F3333333F0000803F00000000}
-      BitmapFont = GLStoredBitmapFont
+      TagFloat = 0
+      PitchAngle = 0
+      Position.Coordinates = {
+        0000A04100002041000000000000803F
+      }
+      RollAngle = 0
+      Scale.Coordinates = {
+        0000003F3333333F0000803F00000000
+      }
+      TurnAngle = 0
       Text = 'ObjectName'
-      Alignment = taLeftJustify
-      Layout = tlTop
+      Rotation = 0
     end
     object GLHUDTextGeneric: TGLHUDText
-      Position.Coordinates = {0000A04100002042000000000000803F}
-      Scale.Coordinates = {0000003F3333333F0000803F00000000}
-      BitmapFont = GLStoredBitmapFont
-      Alignment = taLeftJustify
-      Layout = tlTop
+      TagFloat = 0
+      PitchAngle = 0
+      Position.Coordinates = {
+        0000A04100002042000000000000803F
+      }
+      RollAngle = 0
+      Scale.Coordinates = {
+        0000003F3333333F0000803F00000000
+      }
+      TurnAngle = 0
+      Rotation = 0
     end
     object GLHUDTextMeasure: TGLHUDText
-      Position.Coordinates = {0000A04100002042000000000000803F}
-      Scale.Coordinates = {0000003F3333333F0000803F00000000}
-      BitmapFont = GLStoredBitmapFont
-      Alignment = taLeftJustify
-      Layout = tlTop
+      TagFloat = 0
+      PitchAngle = 0
+      Position.Coordinates = {
+        0000A04100002042000000000000803F
+      }
+      RollAngle = 0
+      Scale.Coordinates = {
+        0000003F3333333F0000803F00000000
+      }
+      TurnAngle = 0
+      Rotation = 0
     end
     object GLCylinder2: TGLCylinder
+      TagFloat = 0
       Material.MaterialLibrary = GLMaterialLibrary
       Material.LibMaterialName = 'LibMaterialFeup'
-      Direction.Coordinates = {000000000000803F0000000000000000}
-      PitchAngle = 90.000000000000000000
-      Up.Coordinates = {0000000000000000000080BF00000000}
+      Direction.Coordinates = {
+        000000000000803F0000000000000000
+      }
+      PitchAngle = 90
+      RollAngle = 0
+      TurnAngle = 0
+      Up.Coordinates = {
+        0000000000000000000080BF00000000
+      }
       Visible = False
-      BottomRadius = 0.100000001490116100
-      Height = 1.000000000000000000
-      TopRadius = 0.100000001490116100
+      BottomRadius = 0.100000001490116
+      Height = 1
+      TopRadius = 0.100000001490116
       Alignment = caTop
     end
     object GLCube1: TGLCube
+      TagFloat = 0
       Material.Texture.TextureMode = tmModulate
       Material.Texture.TextureWrap = twNone
       Material.Texture.FilteringQuality = tfAnisotropic
-      Material.Texture.MappingTCoordinates.Coordinates = {00000000000000000000803F00000000}
+      Material.Texture.MappingTCoordinates.Coordinates = {
+        00000000000000000000803F00000000
+      }
       Material.Texture.Disabled = False
       Material.FaceCulling = fcNoCull
-      Material.TextureEx = <
+      Material.TextureEx = <      
         item
           Texture.MappingMode = tmmObjectLinear
-          Texture.MappingTCoordinates.Coordinates = {00000000000000000000803F00000000}
+          Texture.MappingTCoordinates.Coordinates = {
+            00000000000000000000803F00000000
+          }
           TextureIndex = 0
-          TextureOffset.Coordinates = {0000003F0000003F0000000000000000}
+          TextureOffset.Coordinates = {
+            0000003F0000003F0000000000000000
+          }
         end>
-      Position.Coordinates = {00000000000000000000003F0000803F}
+      PitchAngle = 0
+      Position.Coordinates = {
+        00000000000000000000003F0000803F
+      }
+      RollAngle = 0
+      TurnAngle = 0
       Visible = False
       Parts = [cpBottom]
-      CubeSize = {0000803F6F12833A0000803F}
-    end
-    object GLFreeForm1: TGLFreeForm
+      CubeSize = {
+        0000803F6F12833A0000803F
+      }
     end
     object GLCone1: TGLCone
-      Material.FrontProperties.Diffuse.Color = {CDCC4C3FCDCC4C3FCDCC4C3F0000003F}
+      TagFloat = 0
+      Material.FrontProperties.Diffuse.Color = {
+        CDCC4C3FCDCC4C3FCDCC4C3F0000003F
+      }
       Material.BlendingMode = bmTransparency
-      Scale.Coordinates = {0000003F0000803F0000803F00000000}
+      PitchAngle = 0
+      RollAngle = 0
+      Scale.Coordinates = {
+        0000003F0000803F0000803F00000000
+      }
+      TurnAngle = 0
       Visible = False
-      BottomRadius = 0.500000000000000000
-      Height = 1.000000000000000000
+      BottomRadius = 0.5
+      Height = 1
     end
     object GLPlaneTex: TGLPlane
-      Material.FrontProperties.Ambient.Color = {0000003F0000003F0000003F0000803F}
-      Material.FrontProperties.Diffuse.Color = {0000803F0000803F0000803F0000803F}
+      TagFloat = 0
+      Material.FrontProperties.Ambient.Color = {
+        0000003F0000003F0000003F0000803F
+      }
+      Material.FrontProperties.Diffuse.Color = {
+        0000803F0000803F0000803F0000803F
+      }
       Material.Texture.TextureMode = tmModulate
       Material.Texture.Disabled = False
-      Direction.Coordinates = {00000000000080BF0000000000000000}
-      Position.Coordinates = {00000000000000000000003F0000803F}
-      Up.Coordinates = {00000000000000000000803F00000000}
+      Direction.Coordinates = {
+        00000000000080BF0000000000000000
+      }
+      PitchAngle = 0
+      Position.Coordinates = {
+        00000000000000000000003F0000803F
+      }
+      RollAngle = 0
+      TurnAngle = 0
+      Up.Coordinates = {
+        00000000000000000000803F00000000
+      }
       Visible = False
-      Height = 1.000000000000000000
-      Width = 1.000000000000000000
-      NoZWrite = False
+      Height = 1
+      Width = 1
+      XOffset = 0
+      YOffset = 0
     end
     object GLPlane1: TGLPlane
+      TagFloat = 0
       Material.Texture.Disabled = False
-      Direction.Coordinates = {00000000000080BF0000000000000000}
-      Position.Coordinates = {00000000000040410000003F0000803F}
-      Up.Coordinates = {00000000000000000000803F00000000}
+      Direction.Coordinates = {
+        00000000000080BF0000000000000000
+      }
+      PitchAngle = 0
+      Position.Coordinates = {
+        00000000000040410000003F0000803F
+      }
+      RollAngle = 0
+      TurnAngle = 0
+      Up.Coordinates = {
+        00000000000000000000803F00000000
+      }
       Visible = False
-      Height = 1.000000000000000000
-      Width = 1.000000000000000000
-      NoZWrite = False
+      Height = 1
+      Width = 1
+      XOffset = 0
+      YOffset = 0
     end
     object GLLineMeasure: TGLLines
+      TagFloat = 0
+      PitchAngle = 0
+      RollAngle = 0
+      TurnAngle = 0
       Visible = False
       AntiAliased = True
-      Nodes = <
+      Nodes = <      
         item
-        end
+        end      
         item
-          X = 1.000000000000000000
-          Y = 1.000000000000000000
-          Z = 1.000000000000000000
+          X = 1
+          Y = 1
+          Z = 1
         end>
-      NodeSize = 0.200000002980232200
+      NodeSize = 0.200000002980232
       Options = []
     end
     object GLWaterPlane1: TGLWaterPlane
-      Material.FrontProperties.Diffuse.Color = {CDCC4C3FCDCC4C3FCDCC4C3F0000003F}
-      Material.FrontProperties.Specular.Color = {00000000000000000000000000000000}
+      TagFloat = 0
+      Material.FrontProperties.Diffuse.Color = {
+        CDCC4C3FCDCC4C3FCDCC4C3F0000003F
+      }
+      Material.FrontProperties.Specular.Color = {
+        00000000000000000000000000000000
+      }
       Material.BlendingMode = bmTransparency
-      Direction.Coordinates = {00000000000080BF0000000000000000}
-      Position.Coordinates = {0000000000000000CDCCCC3D0000803F}
-      Up.Coordinates = {00000000000000000000803F00000000}
+      Direction.Coordinates = {
+        00000000000080BF0000000000000000
+      }
+      PitchAngle = 0
+      Position.Coordinates = {
+        0000000000000000CDCCCC3D0000803F
+      }
+      RollAngle = 0
+      TurnAngle = 0
+      Up.Coordinates = {
+        00000000000000000000803F00000000
+      }
       Visible = False
       Active = False
       RainTimeInterval = 5000
-      RainForce = 5000.000000000000000000
-      Viscosity = 0.999000012874603300
-      Elastic = 10.000000000000000000
+      RainForce = 5000
+      Viscosity = 0.999000012874603
+      Elastic = 10
       Resolution = 128
-      SimulationFrequency = 100.000000000000000000
+      SimulationFrequency = 100
+    end
+    object GLDisk1: TGLDisk
+      TagFloat = 0
+      Material.FaceCulling = fcNoCull
+      PitchAngle = 0
+      Position.Coordinates = {
+        00000000000000000000803F0000803F
+      }
+      RollAngle = 0
+      TurnAngle = 0
+      Visible = False
+      InnerRadius = 0.100000001490116
+      OuterRadius = 0.5
+      StartAngle = 90
+      SweepAngle = 15
     end
     object GLCamera: TGLCamera
-      DepthOfView = 1000000000.000000000000000000
-      FocalLength = 76.633468627929690000
-      NearPlaneBias = 0.009999999776482582
+      TagFloat = 0
+      DepthOfView = 1000000000
+      FocalLength = 76.6334686279297
+      NearPlaneBias = 0.00999999977648258
       TargetObject = GLEarthSkyDome
-      Position.Coordinates = {0000003FCDCC2CC00000C03F0000803F}
-      Direction.Coordinates = {000000000000803F0000000000000000}
-      Up.Coordinates = {00000000000000000000803F00000000}
+      Position.Coordinates = {
+        0000003FCDCC2CC00000C03F0000803F
+      }
+      Direction.Coordinates = {
+        000000000000803F0000000000000000
+      }
+      Up.Coordinates = {
+        00000000000000000000803F00000000
+      }
     end
     object GLCameraMem: TGLCamera
-      DepthOfView = 1000000000.000000000000000000
-      FocalLength = 50.000000000000000000
-      NearPlaneBias = 0.001000000047497451
-      Position.Coordinates = {0000003F000040C0000040400000803F}
-      Direction.Coordinates = {00000000000000800000803F00000000}
+      TagFloat = 0
+      DepthOfView = 1000000000
+      FocalLength = 50
+      NearPlaneBias = 0.00100000004749745
+      Position.Coordinates = {
+        0000003F000040C0000040400000803F
+      }
+      Direction.Coordinates = {
+        00000000000000800000803F00000000
+      }
     end
   end
   object GLCadencer: TGLCadencer
     Scene = GLScene
     Enabled = False
-    FixedDeltaTime = 0.016666666666666700
+    MaxDeltaTime = 0
+    MinDeltaTime = 0
+    FixedDeltaTime = 0.0166666666666667
     Mode = cmApplicationIdle
     SleepLength = 1
     OnProgress = GLCadencerProgress
-    Top = 32
+    left = 196
+    top = 44
   end
   object Timer: TTimer
     Enabled = False
     OnTimer = TimerTimer
-    Left = 72
-    Top = 36
+    left = 72
+    top = 36
   end
   object GLMaterialLibrary: TGLMaterialLibrary
-    Materials = <
+    Materials = <    
       item
         Name = 'MatBumps'
+        Tag = 0
         Material.Texture.Image.Picture.Data = {
           07544269746D617036FD0200424D36FD0200000000003600000028000000FF00
           0000FF000000010018000000000000FD0200130B0000130B0000000000000000
@@ -6932,17 +7196,21 @@ object FViewer: TFViewer
           C0C0BFBFBFBEBEBEBEBEBEBEBEBEBFBFBFBFBFBFC0C0C0C1C1C1C1C1C1C1C1C1
           C3C3C3C5C5C5C6C6C6C9C9C9D2D2D2E9E9E9FFFFFFFFFFFFFFFFFFFFFFFFD9D9
           D9C9C9C9C3C3C3C1C1C1C0C0C0BFBFBFBEBEBEBEBEBEBEBEBEBEBEBEBFBFBF00
-          0000}
+          0000
+        }
         Material.Texture.TextureMode = tmModulate
         Material.Texture.MappingMode = tmmObjectLinear
-        Material.Texture.MappingTCoordinates.Coordinates = {000000000000803F0000000000000000}
         Material.Texture.Disabled = False
-        Tag = 0
-        TextureScale.Coordinates = {00004040000040400000404000000000}
-      end
+        TextureScale.Coordinates = {
+          00004040000040400000404000000000
+        }
+      end    
       item
         Name = 'MatFeup'
-        Material.FrontProperties.Ambient.Color = {9A99193F9A99193F9A99193F0000803F}
+        Tag = 0
+        Material.FrontProperties.Ambient.Color = {
+          9A99193F9A99193F9A99193F0000803F
+        }
         Material.Texture.Image.Picture.Data = {
           07544269746D617036C00000424D36C000000000000036000000280000008000
           000080000000010018000000000000C000000000000000000000000000000000
@@ -8482,16 +8750,21 @@ object FViewer: TFViewer
           0000000000000000000000000000000000000000000000000000000000000000
           0000000000000000000000000000000000000000000000000000000000000000
           0000000000000000000000000000000000000000000000000000000000000000
-          0000}
+          0000
+        }
         Material.Texture.TextureMode = tmModulate
         Material.Texture.MappingMode = tmmObjectLinear
-        Material.Texture.MappingSCoordinates.Coordinates = {000000000000803F0000000000000000}
+        Material.Texture.MappingSCoordinates.Coordinates = {
+          000000000000803F0000000000000000
+        }
         Material.Texture.Disabled = False
-        Tag = 0
-        TextureOffset.Coordinates = {0000003F0000003F0000000000000000}
-      end
+        TextureOffset.Coordinates = {
+          0000003F0000003F0000000000000000
+        }
+      end    
       item
         Name = 'MatBallTriangle'
+        Tag = 0
         Material.Texture.Image.Picture.Data = {
           07544269746D617036C00000424D36C000000000000036000000280000008000
           000080000000010018000000000000C00000EC040000EC040000000000000000
@@ -10031,17 +10304,22 @@ object FViewer: TFViewer
           0000000000000000000000000000000000000000000000000000000000000000
           0000000000000000000000000000000000000000000000000000000000000000
           0000000000000000000000000000000000000000000000000000000000000000
-          0000}
+          0000
+        }
         Material.Texture.MappingMode = tmmObjectLinear
-        Material.Texture.MappingSCoordinates.Coordinates = {000000000000803F0000000000000000}
+        Material.Texture.MappingSCoordinates.Coordinates = {
+          000000000000803F0000000000000000
+        }
         Material.Texture.Disabled = False
-        Tag = 0
-        TextureOffset.Coordinates = {0000003F0000003F0000000000000000}
-      end
+        TextureOffset.Coordinates = {
+          0000003F0000003F0000000000000000
+        }
+      end    
       item
         Name = 'MatConvBelt'
+        Tag = 0
         Material.Texture.Image.Picture.Data = {
-          0A544A504547496D616765EA190000FFD8FFE000104A46494600010101004800
+          0A544A706567496D616765EA190000FFD8FFE000104A46494600010101004800
           480000FFE100164578696600004D4D002A00000008000000000000FFDB004300
           0503040404030504040405050506070C08070707070F0B0B090C110F1212110F
           111113161C1713141A1511111821181A1D1D1F1F1F13172224221E241C1E1F1E
@@ -10248,35 +10526,24 @@ object FViewer: TFViewer
           868AB0D5CFE308E82A563E90492CC8001CFE5A04FF006595EF496ADC08888DF6
           94903750C15000195FD71F3D033566DD9E5DDBF7D2D6A44F1C0B1AC663272AD1
           A83C8EDA025ED157248DD75B4C5E47049109271E99CE8286292DF048516F0582
-          B9F77ECC4E3D4727412AD44254117318238CD31FF3D07FFFD9}
+          B9F77ECC4E3D4727412AD44254117318238CD31FF3D07FFFD9
+        }
         Material.Texture.TextureMode = tmModulate
         Material.Texture.MappingMode = tmmObjectLinear
-        Material.Texture.MappingSCoordinates.Coordinates = {000000000000803F0000000000000000}
+        Material.Texture.MappingSCoordinates.Coordinates = {
+          000000000000803F0000000000000000
+        }
         Material.Texture.Disabled = False
-        Tag = 0
-        TextureOffset.Coordinates = {0000003F0000003F0000000000000000}
+        TextureOffset.Coordinates = {
+          0000003F0000003F0000000000000000
+        }
       end>
-    Top = 60
-  end
-  object GLStoredBitmapFont: TGLStoredBitmapFont
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWhite
-    Font.Height = -32
-    Font.Name = 'Arial'
-    Font.Style = []
-    Top = 88
-  end
-  object FormStorage: TFormStorage
-    IniSection = 'Viewer'
-    Options = [fpPosition]
-    UseRegistry = False
-    StoredProps.Strings = (
-      'GLDummyCamPos.Position')
-    StoredValues = <>
-    Top = 120
+    left = 184
+    top = 228
   end
   object PopupMenu: TPopupMenu
-    Top = 152
+    left = 344
+    top = 164
     object MenuConfig: TMenuItem
       Caption = '&Config'
       ShortCut = 16455
@@ -10335,32 +10602,55 @@ object FViewer: TFViewer
     end
   end
   object GLMaterialLibrary3ds: TGLMaterialLibrary
-    Left = 40
-    Top = 88
+    left = 204
+    top = 92
   end
   object GLFireFXManager: TGLFireFXManager
-    FireDir.Coordinates = {00000000000000000000803F00000000}
-    InitialDir.Coordinates = {00000000000000000000803F00000000}
+    FireDir.Coordinates = {
+      00000000000000000000803F00000000
+    }
+    InitialDir.Coordinates = {
+      00000000000000000000803F00000000
+    }
     Cadencer = GLCadencer
     MaxParticles = 32
-    ParticleSize = 0.100000001490116100
-    OuterColor.Color = {0000803F00000000000000000000803F}
-    FireDensity = 1.500000000000000000
-    FireEvaporation = 2.000000000000000000
+    ParticleSize = 0.100000001490116
+    OuterColor.Color = {
+      0000803F00000000000000000000803F
+    }
+    FireDensity = 1.5
+    FireEvaporation = 2
+    FireCrown = 0
     ParticleLife = 1
-    FireBurst = 0.009999999776482582
-    FireRadius = 0.100000001490116100
+    FireBurst = 0.00999999977648258
+    FireRadius = 0.100000001490116
     Disabled = True
     Paused = False
-    ParticleInterval = 0.050000000745058060
+    ParticleInterval = 0.0500000007450581
     UseInterval = True
-    Left = 40
-    Top = 120
+    left = 196
+    top = 164
   end
   object TimerCadencer: TTimer
     Interval = 10
     OnTimer = TimerCadencerTimer
-    Left = 72
-    Top = 64
+    left = 76
+    top = 132
+  end
+  object IniPropStorage: TIniPropStorage
+    StoredValues = <>
+    IniSection = 'Viewer'
+    left = 516
+    top = 155
+  end
+  object GLWindowsBitmapFont: TGLWindowsBitmapFont
+    Font.CharSet = ANSI_CHARSET
+    Font.Color = clWhite
+    Font.Height = -27
+    Font.Name = 'Liberation Sans'
+    Font.Pitch = fpVariable
+    Font.Quality = fqDraft
+    left = 308
+    top = 36
   end
 end

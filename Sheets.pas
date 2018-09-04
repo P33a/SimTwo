@@ -1,11 +1,13 @@
 unit Sheets;
 
+{$MODE Delphi}
+
 interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, rxPlacemnt, Grids, ComCtrls, StdCtrls, ExtCtrls, Menus, Buttons, OmniXML,
-  OmniXMLUtils, SimpleParser, math, dynmatrix, clipbrd;
+  Dialogs, Grids, ComCtrls, StdCtrls, ExtCtrls, Menus, Buttons, OmniXML,
+  OmniXMLUtils, SimpleParser, math, dynmatrix, clipbrd, IniPropStorage;
 
 type
   TSheet = class;
@@ -82,7 +84,11 @@ type
   TClearFlagsSet = Set of TClearFlag;
 
 type
+
+  { TFSheets }
+
   TFSheets = class(TForm)
+    IniPropStorage: TIniPropStorage;
     PanelFormula: TPanel;
     CBNames: TComboBox;
     EditFormula: TEdit;
@@ -90,7 +96,6 @@ type
     PageControl: TPageControl;
     TabGlobal: TTabSheet;
     SGGlobal: TStringGrid;
-    FormStorage: TFormStorage;
     MainMenu: TMainMenu;
     PopupMenu: TPopupMenu;
     SpeedButtonOK: TSpeedButton;
@@ -182,7 +187,7 @@ function RCValue(const v: array of double): double;
 
 implementation
 
-{$R *.dfm}
+{$R *.lfm}
 
 uses Viewer, ProjConfig;
 
@@ -333,7 +338,7 @@ begin
   Sel.Bottom := 1;
   SGGlobal.Selection := sel;
 
-  FormStorage.IniFileName := GetIniFineName;
+  IniPropStorage.IniFileName := GetIniFineName;
   Last_r := 1;
   Last_c := 1;
 end;
@@ -445,6 +450,7 @@ const
   Y_BORDER_WIDTH = 1;
 var
   iLeftBorder: Integer;
+  newTextStyle: TTextStyle;
 begin
   Canvas.Font := textFont;
   // calculate the left border
@@ -454,14 +460,21 @@ begin
     taRightJustify: iLeftBorder := Rect.Right - X_BORDER_WIDTH - Canvas.TextWidth(Text) -1;
     taCenter      : iLeftBorder := Rect.Left + (Rect.Right - Rect.Left - Canvas.TextWidth(Text)) div 2;
   end;
+
   // set colors
   Canvas.Font.Color := TextColor;
   Canvas.Brush.Color := BackColor;
   // paint the text
   //ExtTextOut(Canvas.Handle, iLeftBorder, Rect.Top + Y_BORDER_WIDTH, ETO_CLIPPED or ETO_OPAQUE,
   //           @Rect, PChar(Text), Length(Text), nil);
-  //Canvas.Brush.Style := bsclear;
-  Canvas.TextRect(Rect, iLeftBorder, Rect.Top + Y_BORDER_WIDTH, Text);
+
+  Canvas.Brush.Style := bsSolid;
+  //Canvas.Brush.Style := bsClear;
+  //newTextStyle := Canvas.TextStyle;
+  //newTextStyle.Opaque := true;
+  //Canvas.TextStyle := newTextStyle;
+  //Canvas.FrameRect(Rect);
+  //Canvas.TextRect(Rect, iLeftBorder, Rect.Top + Y_BORDER_WIDTH, Text);
 end;
 
 procedure DrawButtonText(const Canvas: TCanvas; const Rect: TRect;
@@ -501,25 +514,26 @@ begin
   // get the values depending on the grid settings.
   sText := Grid.Cells[ACol, ARow];
 
-  myAlignment := taLeftJustify;
-  if (ARow < Grid.FixedRows) or (ACol < Grid.FixedCols) then begin
-    myBackColor := Grid.FixedColor;
-    myAlignment := taCenter;
-    myTextColor := Grid.Font.Color;
-  end else begin
-    if (acol >= Grid.Selection.Left) and (acol <= Grid.Selection.Right) and
-       (arow >= Grid.Selection.top) and (arow <= Grid.Selection.bottom) then begin
-      myBackColor := clHighlight;
-      myTextColor := clHighlightText;
-    end else begin
-      myBackColor := SheetCell.backColor;
-      myTextColor := clWindowText;
-    end;
-  end;
+  //myAlignment := taLeftJustify;
+  //if (ARow < Grid.FixedRows) or (ACol < Grid.FixedCols) then begin
+  //  myBackColor := Grid.FixedColor;
+  //  myAlignment := taCenter;
+  //  myTextColor := Grid.Font.Color;
+  //end else begin
+  //  if (acol >= Grid.Selection.Left) and (acol <= Grid.Selection.Right) and
+  //     (arow >= Grid.Selection.top) and (arow <= Grid.Selection.bottom) then begin
+  //    myBackColor := clHighlight;
+  //    myTextColor := clHighlightText;
+  //  end else begin
+  //    myBackColor := SheetCell.backColor;
+  //    myTextColor := clWindowText;
+  //  end;
+  //end;
   // draw the text in the cell
-  if (SheetCell.CellType = ctText) or (SheetCell.CellType = ctFormula) then begin
-    MyDrawCellText(Grid.Canvas, Rect, sText, SheetCell.Font, myBackColor, myTextColor, myAlignment);
-  end else if SheetCell.CellType = ctButton then begin
+  //if (SheetCell.CellType = ctText) or (SheetCell.CellType = ctFormula) then begin
+  //  MyDrawCellText(Grid.Canvas, Rect, sText, SheetCell.Font, myBackColor, myTextColor, myAlignment);
+  //end else
+  if SheetCell.CellType = ctButton then begin
     myTextColor := clBtnText;
     if SheetCell.CellButtonState = cstButtonDown then begin
       DrawFrameControl(Grid.Canvas.Handle, Rect, DFC_BUTTON, DFCS_BUTTONPUSH or DFCS_PUSHED);

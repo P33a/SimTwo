@@ -1,0 +1,166 @@
+object FMain: TFMain
+  Left = 373
+  Height = 302
+  Top = 149
+  Width = 314
+  Caption = 'IPControl'
+  ClientHeight = 302
+  ClientWidth = 314
+  OnClose = FormClose
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  OnShow = FormShow
+  SessionProperties = 'CBListen.Checked;CBLoopBack.Checked;EditIP.Text;EditListenPort.Text;EditMess.Text;MemoLoopBack.Lines;Height;Width'
+  LCLVersion = '0.9.30'
+  object Label1: TLabel
+    Left = 196
+    Height = 14
+    Top = 61
+    Width = 17
+    Caption = 'V1:'
+    ParentColor = False
+  end
+  object Label2: TLabel
+    Left = 196
+    Height = 14
+    Top = 85
+    Width = 17
+    Caption = 'V2:'
+    ParentColor = False
+  end
+  object Label3: TLabel
+    Left = 196
+    Height = 14
+    Top = 108
+    Width = 26
+    Caption = 'Fork:'
+    ParentColor = False
+  end
+  object EditIP: TEdit
+    Left = 197
+    Height = 21
+    Top = 28
+    Width = 114
+    TabOrder = 0
+    Text = '127.0.0.1:9808'
+  end
+  object EditListenPort: TEdit
+    Left = 60
+    Height = 21
+    Top = 4
+    Width = 81
+    TabOrder = 1
+    Text = '9810'
+  end
+  object CBListen: TCheckBox
+    Left = 4
+    Height = 17
+    Top = 6
+    Width = 52
+    Caption = 'Listen:'
+    OnClick = CBListenClick
+    TabOrder = 2
+  end
+  object CBLoopBack: TCheckBox
+    Left = 197
+    Height = 17
+    Top = 6
+    Width = 65
+    Caption = 'LoopBack'
+    TabOrder = 3
+  end
+  object EditCount: TEdit
+    Left = 268
+    Height = 21
+    Top = 4
+    Width = 43
+    TabOrder = 4
+    Text = '0'
+  end
+  object EditV1: TEdit
+    Left = 231
+    Height = 21
+    Top = 56
+    Width = 80
+    TabOrder = 5
+    Text = '0'
+  end
+  object EditV2: TEdit
+    Left = 231
+    Height = 21
+    Top = 80
+    Width = 80
+    TabOrder = 6
+    Text = '0'
+  end
+  object EditFork: TEdit
+    Left = 231
+    Height = 21
+    Top = 104
+    Width = 80
+    TabOrder = 7
+    Text = '0'
+  end
+  object PageControl1: TPageControl
+    Left = 0
+    Height = 272
+    Top = 30
+    Width = 192
+    ActivePage = TabRawIn
+    Anchors = [akTop, akLeft, akBottom]
+    TabIndex = 0
+    TabOrder = 8
+    object TabRawIn: TTabSheet
+      Caption = 'RawIn'
+      ClientHeight = 246
+      ClientWidth = 184
+      object MemoIn: TMemo
+        Left = 0
+        Height = 242
+        Top = 4
+        Width = 184
+        Anchors = [akTop, akLeft, akBottom]
+        TabOrder = 0
+      end
+    end
+    object TabSensors: TTabSheet
+      Caption = 'Sensors'
+      ClientHeight = 246
+      ClientWidth = 184
+      object SGSensors: TStringGrid
+        Left = 0
+        Height = 240
+        Top = 4
+        Width = 180
+        Anchors = [akTop, akLeft, akBottom]
+        ColCount = 2
+        DefaultColWidth = 80
+        DefaultRowHeight = 16
+        FixedCols = 0
+        FixedRows = 0
+        RowCount = 128
+        ScrollBars = ssVertical
+        TabOrder = 0
+      end
+    end
+  end
+  object UDP: TLUDPComponent
+    Port = 0
+    OnReceive = UDPReceive
+    OnError = UDPError
+    Timeout = 0
+    left = 36
+    top = 84
+  end
+  object IniPropStorage: TIniPropStorage
+    StoredValues = <>
+    IniSection = 'Main'
+    left = 88
+    top = 84
+  end
+  object Timer: TTimer
+    OnTimer = TimerTimer
+    left = 52
+    top = 148
+  end
+end

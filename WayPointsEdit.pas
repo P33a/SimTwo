@@ -1,5 +1,7 @@
 unit WayPointsEdit;
 
+{$MODE Delphi}
+
 interface
 
 uses
@@ -37,7 +39,7 @@ implementation
 
 uses Params, Viewer, ODERobots;
 
-{$R *.dfm}
+{$R *.lfm}
 
 procedure TFWayPointsEdit.FormShow(Sender: TObject);
 begin

@@ -1,17 +1,32 @@
 unit Params;
 
+{$MODE Delphi}
+
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ComCtrls, ExtCtrls, GLWin32Viewer, GLcontext, Math,
-  IdBaseComponent, IdComponent, IdUDPBase, IdUDPServer, IdSocketHandle, ODERobots, OdeImport,
-  rxPlacemnt, Grids, GLCadencer, CPort, ShellAPI, Sockets, GLShadowVolume, GLScene,
-  CheckLst, Buttons, VectorTypes, VectorGeometry, GLTexture, IdUDPClient;
+  LCLIntf, Windows, SysUtils, Variants, Classes, Graphics, Controls,
+  Forms, Dialogs, StdCtrls, ComCtrls, ExtCtrls, GLWin32Viewer, GLcontext, Math,
+  IdComponent, IdUDPBase, IdUDPServer, IdSocketHandle,
+  ODERobots, OdeImport, Grids, GLCadencer, SdpoSerial, Sockets,
+  GLShadowVolume, GLScene, Buttons, IniPropStorage,
+  GLVectorGeometry, GLTexture, IdUDPClient, IdTCPServer,
+  modbusTCP, IdThread, IdCustomTCPServer, IdContext;
 
 type
+
+  TShutdownThread = class(TThread)
+  protected
+  procedure Execute; override;
+  end;
+
+
+  { TFParams }
+
   TFParams = class(TForm)
+    IniPropStorage: TIniPropStorage;
     PageControl: TPageControl;
+    SdpoSerial1: TSdpoSerial;
     TabControl: TTabSheet;
     RGControlBlock: TRadioGroup;
     TabGraphics: TTabSheet;
@@ -41,7 +56,6 @@ type
     Label12: TLabel;
     EditDebug3: TEdit;
     MemoDebug: TMemo;
-    FormStorage: TFormStorage;
     LBRobots: TListBox;
     PGRobots: TPageControl;
     TabRobot: TTabSheet;
@@ -145,7 +159,7 @@ type
     EditGridY: TEdit;
     EditGridZ: TEdit;
     BSGConfSet: TButton;
-    ComPort: TComPort;
+    ComPort: TSdpoSerial;
     TabIO: TTabSheet;
     Panel1: TPanel;
     Label45: TLabel;
@@ -209,10 +223,68 @@ type
     ShapeSelColor: TShape;
     ColorDialog: TColorDialog;
     ComboGroundTextures: TComboBox;
-    UDPImageServer: TIdUDPClient;
     EditRemoteIP: TEdit;
     Label8: TLabel;
     Edit3DProjection: TEdit;
+    Label56: TLabel;
+    EditModBusPort: TEdit;
+    BModBusConnect: TButton;
+    BModBusDisconnect: TButton;
+    ShapeModBusState: TShape;
+    TCPModBus: TIdTCPServer;
+    MemoModBus: TMemo;
+    BModbusTest: TButton;
+    Label57: TLabel;
+    Label58: TLabel;
+    ShapeInput0: TShape;
+    ShapeOutput0: TShape;
+    Label59: TLabel;
+    EditModBusInputOffset: TEdit;
+    Label60: TLabel;
+    EditModBusOutputOffset: TEdit;
+    CBModBusInputOverride: TCheckBox;
+    CBModBusOutputOverride: TCheckBox;
+    ShapeInput1: TShape;
+    ShapeInput2: TShape;
+    ShapeInput3: TShape;
+    ShapeInput4: TShape;
+    ShapeInput5: TShape;
+    ShapeInput6: TShape;
+    ShapeInput7: TShape;
+    ShapeOutput1: TShape;
+    ShapeOutput2: TShape;
+    ShapeOutput3: TShape;
+    ShapeOutput4: TShape;
+    ShapeOutput5: TShape;
+    ShapeOutput6: TShape;
+    ShapeOutput7: TShape;
+    LabelInBit0: TLabel;
+    BModbusOffsetSet: TButton;
+    LabelInBit1: TLabel;
+    LabelInBit2: TLabel;
+    LabelInBit3: TLabel;
+    LabelInBit4: TLabel;
+    LabelInBit5: TLabel;
+    LabelInBit6: TLabel;
+    LabelInBit7: TLabel;
+    LabelOutBit0: TLabel;
+    LabelOutBit1: TLabel;
+    LabelOutBit2: TLabel;
+    LabelOutBit3: TLabel;
+    LabelOutBit4: TLabel;
+    LabelOutBit5: TLabel;
+    LabelOutBit6: TLabel;
+    LabelOutBit7: TLabel;
+    ProgressBarModBus: TProgressBar;
+    Timer: TTimer;
+    CBEndlessWorld: TCheckBox;
+    Label61: TLabel;
+    Label62: TLabel;
+    EditWindSpeedX: TEdit;
+    EditWindSpeedY: TEdit;
+    Label63: TLabel;
+    Label64: TLabel;
+    EditWindSpeedZ: TEdit;
     procedure CBShadowsClick(Sender: TObject);
     procedure CBVsyncClick(Sender: TObject);
     procedure BSetFPSClick(Sender: TObject);
@@ -225,6 +297,7 @@ type
     procedure EditRemoteIPChange(Sender: TObject);
     procedure RGControlBlockClick(Sender: TObject);
     procedure BTestClick(Sender: TObject);
+    procedure TCPModBusDisconnect(AContext: TIdContext);
     procedure UDPServerUDPRead(Sender: TObject; AData: TStream;
       ABinding: TIdSocketHandle);
     procedure CBPIDsActiveClick(Sender: TObject);
@@ -271,6 +344,26 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure CBFogClick(Sender: TObject);
     procedure ComboGroundTexturesClick(Sender: TObject);
+    procedure BModBusConnectClick(Sender: TObject);
+    procedure BModBusDisconnectClick(Sender: TObject);
+    procedure TCPModBusConnect(AThread: TIdContext);
+    procedure TCPModBusStatus(ASender: TObject; const AStatus: TIdStatus;
+      const AStatusText: String);
+    procedure TCPModBusNoCommandHandler(ASender: TIdTCPServer;
+      const AData: String; AThread: TIdContext);
+    procedure TCPModBusExecute(AThread: TIdContext);
+    procedure TCPModBusException(AThread: TIdContext;
+      AException: Exception);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure BModbusTestClick(Sender: TObject);
+    procedure BModbusOffsetSetClick(Sender: TObject);
+    procedure ModbusRefreshLEDs;
+    procedure ShapeOutputMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure ShapeInputMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure TimerTimer(Sender: TObject);
   private
     procedure FillEditArray(ProtoName: string;
       var EditArray: array of TEdit);
@@ -278,6 +371,9 @@ type
     procedure VarToSGConfRow(SGRow: longword);
     procedure FillSGConf;
     procedure FillSGConfRow(varname: string);
+    procedure FillLabelArray(ParentControl: TTabSheet; ProtoName: string; var LabelArray: array of TLabel);
+    procedure FillLEDArray(ParentControl: TTabSheet; ProtoName: string; var LEDArray: array of TShape);
+    procedure TCPModBusDisconnectAndWait;
     { Private declarations }
   public
     EditsU, EditsI, EditsOdo : array[0..3] of TEdit;
@@ -285,6 +381,14 @@ type
     UDPGenData: TMemoryStream;
     UDPGenPackets: TStringList;
 
+    ModbusData: TModbus;
+    ModBusDisconnected, ModBusWantsToDisconnected: boolean;
+    ModBusInLEDs, ModBusOutLEDs: array[0..7] of TShape;
+    ModBusInLabels, ModBusOutLabels: array[0..7] of TLabel;
+    ModBusInputsOffset, ModBusOutputsOffset: integer;
+
+
+    function ModBusClientsCount: integer;
     procedure FillLBRobots(LB: TListBox);
     procedure FillLBLinks(LB: TListBox; r: integer);
     procedure ShowRobotState;
@@ -303,11 +407,17 @@ var
   dt: double;
 
 
+function getModbusInput(bit_addr: integer): boolean;
+procedure setModbusInput(bit_addr: integer; new_state: boolean);
+function getModbusCoil(bit_addr: integer): boolean;
+procedure setModbusCoil(bit_addr: integer; new_state: boolean);
+
+
 implementation
 
-{$R *.dfm}
+{$R *.lfm}
 
-uses JPeg, GLFile3DS, Viewer, Editor, FastChart, ODERobotsPublished, WayPointsEdit, ProjConfig, utils,
+uses GLFile3DS, Viewer, Editor, FastChart, ODERobotsPublished, WayPointsEdit, ProjConfig, utils,
   cameras;
 
 procedure TFParams.BSetFPSClick(Sender: TObject);
@@ -323,24 +433,30 @@ end;
 
 procedure TFParams.CBVsyncClick(Sender: TObject);
 begin
+  FViewer.GLCadencer.Enabled := false;
   if CBVsync.checked then begin
     FViewer.GLSceneViewer.VSync := vsmSync;
-    FCameras.GLSceneViewer.VSync := vsmSync;
+    //FCameras.GLSceneViewer.VSync := vsmSync;
   end else begin
     FViewer.GLSceneViewer.VSync := vsmNoSync;
-    FCameras.GLSceneViewer.VSync := vsmNoSync;
+    //FCameras.GLSceneViewer.VSync := vsmNoSync;
   end;
+  FViewer.GLCadencer.Enabled := true;
 end;
 
 
 procedure TFParams.CBAntiAliasingClick(Sender: TObject);
 begin
+  if not assigned(FViewer) then exit;
+  if not assigned(FCameras) then exit;
+
   if CBAntiAliasing.checked then begin
     FViewer.GLSceneViewer.Buffer.AntiAliasing := aa2x;
-    FCameras.GLSceneViewer.Buffer.AntiAliasing := aa2x;
+    //FCameras.GLSceneViewer.Buffer.AntiAliasing := aa2x;
   end else begin
-    FViewer.GLSceneViewer.Buffer.AntiAliasing := aaNone;
-    FCameras.GLSceneViewer.Buffer.AntiAliasing := aaNone;
+    //FViewer.GLSceneViewer.Buffer.AntiAliasing := TGLAntiAliasing.aaNone;
+    FViewer.GLSceneViewer.Buffer.AntiAliasing := TGLAntiAliasing.aaDefault;
+    //FCameras.GLSceneViewer.Buffer.AntiAliasing := TGLAntiAliasing.aaNone;
   end;
 end;
 
@@ -403,7 +519,13 @@ begin
     prs := ' ' + ParamStr(i);
   end;
   FViewer.Close;
-  ShellExecute(Handle, 'open', pchar(Application.ExeName), pchar(prs), nil,  SW_SHOWNORMAL);
+  OpenDocument(pchar(Application.ExeName)); { *Converted from ShellExecute* }
+end;
+
+procedure TFParams.TCPModBusDisconnect(AContext: TIdContext);
+begin
+  ModBusDisconnected := true;
+  ShapeModBusState.Brush.Color := clRed;
 end;
 
 function GetListValue(L: TStrings; QName: string): string;
@@ -441,13 +563,13 @@ begin
   idx := LBRobots.ItemIndex;
   if (idx < 0) or (idx >= WorldODE.Robots.Count) then exit;
   wp_idx := ComboWayPointName.ItemIndex;
-
+  { TODO
   for i := low(EditsU) to high(EditsU) do begin
     if WorldODE.Robots[idx].Links.Count > i then begin
-      {if not CBPIDsActive.Checked then
-        EditsU[i].Text := format('%5.1f',[WorldODE.Robots[idx].Links[i].Axis.ref.volts])
-      else
-        EditsU[i].Text := format('%5.1f',[WorldODE.Robots[idx].Links[i].Axis.ref.w]);}
+      //if not CBPIDsActive.Checked then
+      //  EditsU[i].Text := format('%5.1f',[WorldODE.Robots[idx].Links[i].Axis.ref.volts])
+      //else
+      //  EditsU[i].Text := format('%5.1f',[WorldODE.Robots[idx].Links[i].Axis.ref.w]);
       EditsU[i].Text := format('%5.1f',[WorldODE.Robots[idx].Links[i].Axis[0].Motor.voltage]);
     end else begin
       EditsU[i].Text := '';
@@ -479,6 +601,7 @@ begin
       EditsIR[i].Text := '';
     end;
   end;
+  }
 
   theta := 0;
   with WorldODE.Robots[idx] do begin
@@ -538,7 +661,9 @@ end;
 procedure TFParams.FormCreate(Sender: TObject);
 var i: integer;
 begin
-  FormStorage.IniFileName := GetIniFineName;
+  IniPropStorage.IniFileName := GetIniFineName;
+
+  ModbusData := TModbus.Create;
 
   SGJoints.Cells[0,0] := 'ID';
   SGJoints.Cells[1,0] := 'Pos';
@@ -567,6 +692,13 @@ begin
   FillEditArray('EditI', EditsI);
   FillEditArray('EditOdo', EditsOdo);
   FillEditArray('EditIR', EditsIR);
+
+  FillLabelArray(TabIO, 'LabelInBit', ModBusInLabels);
+  FillLabelArray(TabIO, 'LabelOutBit', ModBusOutLabels);
+  FillLEDArray(TabIO, 'ShapeInput', ModBusInLEDs);
+  FillLEDArray(TabIO, 'ShapeOutput', ModBusOutLEDs);
+
+  BModbusOffsetSetClick(Sender);
 
   ComboGroundTexturesClick(Sender);
   CBIRNoiseClick(Sender);
@@ -623,12 +755,41 @@ begin
   end;
 end;
 
+
+procedure TFParams.FillLabelArray(ParentControl: TTabSheet; ProtoName: string; var LabelArray: array of TLabel);
+var i, cnt: integer;
+begin
+  cnt := low(LabelArray);
+  for i := 0 to ParentControl.ControlCount-1 do begin
+    if cnt > high(LabelArray) then exit;
+    if LowerCase(ParentControl.Controls[i].Name) = LowerCase(ProtoName + inttostr(cnt)) then begin
+      LabelArray[cnt] := TLabel(ParentControl.Controls[i]);
+      inc(cnt);
+    end;
+  end;
+end;
+
+
+procedure TFParams.FillLEDArray(ParentControl: TTabSheet;  ProtoName: string; var LEDArray: array of TShape);
+var i, cnt: integer;
+begin
+  cnt := low(LEDArray);
+  for i := 0 to ParentControl.ControlCount-1 do begin
+    if cnt > high(LEDArray) then exit;
+    if LowerCase(ParentControl.Controls[i].Name) = LowerCase(ProtoName + inttostr(cnt)) then begin
+      LEDArray[cnt] := TShape(ParentControl.Controls[i]);
+      inc(cnt);
+    end;
+  end;
+end;
+
+
 procedure TFParams.FillLBRobots(LB: TListBox);
 var i: integer;
 begin
   for i:=0 to WorldODE.Robots.Count-1 do begin
     with WorldODE.Robots[i] do begin
-      LB.Items.Add(format('%s',[Name]));
+      LB.Items.Add(format('%s',[id]));
     end;
   end;
 end;
@@ -806,6 +967,10 @@ begin
     dWorldSetCFM(world, Ode_CFM);
     dWorldSetERP(world, Ode_ERP);
     dWorldSetQuickStepNumIterations(world, Ode_QuickStepIters);
+
+    WindSpeed[0] := strtofloatdef(EditWindSpeedX.Text, 0);
+    WindSpeed[1] := strtofloatdef(EditWindSpeedY.Text, 0);
+    WindSpeed[2] := strtofloatdef(EditWindSpeedZ.Text, 0);
   end;
 end;
 
@@ -944,6 +1109,8 @@ procedure TFParams.FormDestroy(Sender: TObject);
 begin
   UDPGenPackets.Free;
   UDPGenData.Free;
+  ModbusData.Free;
+  
   try
      SaveGridTofile(SGConf, 'params.cfg');
   except
@@ -960,13 +1127,13 @@ end;
 
 procedure TFParams.BComConfClick(Sender: TObject);
 begin
-  ComPort.ShowSetupDialog;
+  //TODO ComPort.ShowSetupDialog;
 end;
 
 procedure TFParams.CBComOpenClick(Sender: TObject);
 begin
   if CBComOpen.Checked then begin
-    if not ComPort.Connected then begin
+    if not ComPort.Active then begin
       try
         ComPort.open;
       except
@@ -986,7 +1153,8 @@ function ReadComPort: string;
 begin
   with FParams.ComPort do begin
     try
-      ReadStr(result, InputCount);
+      result := ReadData();
+      //InputCount := 0;
     except
       on E: exception do begin
         showmessage(E.Message);
@@ -999,7 +1167,7 @@ end;
 procedure WriteComPort(s: string);
 begin
   try
-    FParams.ComPort.WriteStr(s);
+    FParams.ComPort.WriteData(s);
     //FParams.EditComRead.Text := s;
   except
     on E: exception do begin
@@ -1260,6 +1428,259 @@ begin
   idx := ComboGroundTextures.ItemIndex;
   if idx < 0 then exit;
   FViewer.GLPlaneFloor.Material.LibMaterialName := ComboGroundTextures.Items[idx];
+end;
+
+procedure TFParams.BModBusConnectClick(Sender: TObject);
+begin
+  if TCPModBus.Active then exit;
+  ShapeModBusState.Brush.Color := clYellow;
+  TCPModBus.Active := false;
+  TCPModBus.DefaultPort := StrToInt(EditModBusPort.Text);
+  TCPModBus.Active := true;
+end;
+
+procedure TFParams.BModBusDisconnectClick(Sender: TObject);
+begin
+  ModBusWantsToDisconnected := true;
+
+  try
+    TCPModBus.Active := false;
+  except
+  end;
+
+  //TCPModBusDisconnectAndWait;
+end;
+
+procedure TFParams.TCPModBusConnect(AThread: TIdContext);
+begin
+  ShapeModBusState.Brush.Color := clGreen;
+end;
+
+procedure TFParams.TCPModBusStatus(ASender: TObject;
+  const AStatus: TIdStatus; const AStatusText: String);
+begin
+  MemoModBus.Lines.Add('Status:' + AStatusText);
+end;
+
+procedure TFParams.TCPModBusNoCommandHandler(ASender: TIdTCPServer;
+  const AData: String; AThread: TIdContext);
+begin
+  MemoModBus.Lines.Add('data:' + AData);
+end;
+
+procedure TFParams.TCPModBusExecute(AThread: TIdContext);
+var msg, s: string;
+    i: integer;
+begin
+  //AThread.Connection.CheckForDisconnect(false, true);
+  try
+  //TODO msg := AThread.Connection.CurrentReadBuffer;
+  except on E: Exception do
+    MemoModBus.Lines.Add('Exception(in):' + E.Message);
+  end;
+  if msg ='' then exit;
+
+  ProgressBarModBus.Position := ProgressBarModBus.Position + 1;
+  if ProgressBarModBus.Position >= ProgressBarModBus.Max then
+    ProgressBarModBus.Position := 0;
+
+  ModBusData.ProcessModBusMessage(msg);
+
+  if ModBusData.response <> '' then begin
+    //TODO AThread.Connection.Write(ModBusData.response);
+    ModBusData.response := '';
+    //ModbusRefreshLEDs;
+  end;
+  if ModBusData.Header.FunctionCode = 15 then
+    ModbusRefreshLEDs;
+
+  exit;
+
+  s := '';
+  for i := 1 to length(ModBusData.response) do begin
+    s := s + IntToHex(ord(ModBusData.response[i]), 2) + ' ';
+  end;
+  MemoModBus.Lines.Add('MSG:' + s);
+  //MemoModBus.Lines.Add(format('Header: Len = %d Code = %d',[ModBusData.Header.LengthField, ModBusData.Header.FunctionCode]));
+  ModBusData.response := '';
+end;
+
+procedure TFParams.TCPModBusException(AThread: TIdContext;
+  AException: Exception);
+begin
+  MemoModBus.Lines.Add('Exception signal:' + AException.Message);
+end;
+
+procedure TFParams.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+begin
+  ModBusDisconnected := not TCPModBus.Active;
+  try
+    TCPModBus.Active := false;
+  except
+  end;
+end;
+
+procedure TFParams.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  while not ModBusDisconnected do
+    Application.ProcessMessages;
+end;
+
+
+function TFParams.ModBusClientsCount: integer;
+begin
+  {TODO
+  with TCPModBus.Threads.LockList do try
+    result := Count;
+  finally
+    TCPModBus.Threads.UnlockList;
+  end;}
+end;
+
+
+procedure TFParams.BModbusTestClick(Sender: TObject);
+begin
+  MemoModBus.Lines.Add(inttostr(ModBusClientsCount));
+end;
+
+procedure TFParams.BModbusOffsetSetClick(Sender: TObject);
+var i: integer;
+begin
+  ModBusInputsOffset := strtointdef(EditModBusInputOffset.Text, 0);
+  for i := low(ModBusInLabels) to high(ModBusInLabels) do begin
+    ModBusInLabels[i].Caption := 'Bit ' + inttostr(i + ModBusInputsOffset);
+  end;
+
+  ModBusOutputsOffset := strtointdef(EditModBusOutputOffset.Text, 0);
+  for i := low(ModBusOutLabels) to high(ModBusOutLabels) do begin
+    ModBusOutLabels[i].Caption := 'Bit ' + inttostr(i + ModBusOutputsOffset);
+  end;
+
+  ModbusRefreshLEDs;
+end;
+
+
+procedure TFParams.ModbusRefreshLEDs;
+var i: integer;
+    OnOffColors: array[boolean] of TCOlor;
+begin
+  OnOffColors[true] := clred;
+  OnOffColors[false] := $000030;
+  for i := low(ModBusInLEDs) to high(ModBusInLEDs) do begin
+    ModBusInLEDs[i].Brush.Color := OnOffColors[ModbusData.Inputs[i + ModBusInputsOffset] <> 0];
+  end;
+  for i := low(ModBusOutLEDs) to high(ModBusOutLEDs) do begin
+    ModBusOutLEDs[i].Brush.Color := OnOffColors[ModbusData.Coils[i + ModBusOutputsOffset] <> 0];
+  end;
+end;
+
+procedure TFParams.ShapeOutputMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var LED: TShape;
+    index: integer;
+begin
+  if not CBModBusOutputOverride.Checked then exit;
+
+  LED := Sender as TShape;
+  index := LED.Tag;
+
+  if ModbusData.Coils[index + ModBusOutputsOffset] <> 0 then begin
+    ModbusData.Coils[index + ModBusOutputsOffset] := 0;
+  end else begin
+    ModbusData.Coils[index + ModBusOutputsOffset] := 1;
+  end;
+
+  ModbusRefreshLEDs;
+end;
+
+procedure TFParams.ShapeInputMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var LED: TShape;
+    index: integer;
+begin
+  if not CBModBusInputOverride.Checked then exit;
+
+  LED := Sender as TShape;
+  index := LED.Tag;
+
+  if ModbusData.Inputs[index + ModBusInputsOffset] <> 0 then begin
+    ModbusData.Inputs[index + ModBusInputsOffset] := 0;
+  end else begin
+    ModbusData.Inputs[index + ModBusInputsOffset] := 1;
+  end;
+
+  ModbusRefreshLEDs;
+end;
+
+function getModbusCoil(bit_addr: integer): boolean;
+begin
+  with FParams do begin
+    if (bit_addr < low(ModbusData.Inputs)) or (bit_addr > high(ModbusData.Inputs)) then
+      raise Exception.Create(format('Invalid ModBus Bit address: %d',[bit_addr]));
+    result := ModbusData.Coils[bit_addr] <> 0;
+  end;
+end;
+
+function getModbusInput(bit_addr: integer): boolean;
+begin
+  with FParams do begin
+    if (bit_addr < low(ModbusData.Inputs)) or (bit_addr > high(ModbusData.Inputs)) then
+      raise Exception.Create(format('Invalid ModBus Bit address: %d',[bit_addr]));
+    result := ModbusData.Inputs[bit_addr] <> 0;
+  end;
+end;
+
+procedure setModbusCoil(bit_addr: integer; new_state: boolean);
+begin
+  with FParams do begin
+    if (bit_addr < low(ModbusData.Coils)) or (bit_addr > high(ModbusData.Coils)) then
+      raise Exception.Create(format('Invalid ModBus Bit address: %d',[bit_addr]));
+    ModbusData.Coils[bit_addr] := ord(new_state);
+  end;
+end;
+
+procedure setModbusInput(bit_addr: integer; new_state: boolean);
+begin
+  with FParams do begin
+    if (bit_addr < low(ModbusData.Inputs)) or (bit_addr > high(ModbusData.Inputs)) then
+      raise Exception.Create(format('Invalid ModBus Bit address: %d',[bit_addr]));
+    ModbusData.Inputs[bit_addr] := ord(new_state);
+  end;
+end;
+
+
+procedure TFParams.TCPModBusDisconnectAndWait;
+begin
+  if TCPModBus.Active then begin
+    with TShutdownThread.Create(False) do begin
+      try
+        WaitFor; // internally processes sync requests...
+      finally
+        Free;
+      end;
+    end;
+  end;
+end;
+
+
+{ TShutdownThread }
+
+procedure TShutdownThread.Execute;
+begin
+  FParams.TCPModBus.Active := False;
+end;
+
+
+procedure TFParams.TimerTimer(Sender: TObject);
+begin
+  if ModBusWantsToDisconnected then begin
+    try
+      TCPModBus.Active := false;
+    except
+    end;
+    ModBusWantsToDisconnected := TCPModBus.Active;
+  end;
+
 end;
 
 end.

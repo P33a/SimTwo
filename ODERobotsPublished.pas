@@ -1,8 +1,10 @@
 unit ODERobotsPublished;
 
+{$MODE Delphi}
+
 interface
 
-uses Graphics, Types, ODERobots, PathFinder, dynmatrix;
+uses Graphics, Types, ODERobots, PathFinder, dynmatrix, GLKeyboard;
 
 type
   TAxisPoint = record
@@ -44,6 +46,7 @@ type
     Imax: double;
     GearRatio: double;
     simple: boolean;
+    active: boolean;
   end;
 
   TMotorControllerPars = record
@@ -76,6 +79,8 @@ procedure StartSolidFire(R, I: integer);
 function GetSceneConstant(constantName: string; defaultValue: double): double;
 
 procedure SetRobotPos(R: integer; x, y, z, teta: double);
+
+function GetRobotIndex(ID: string): integer;
 
 function GetRobotPos2D(R: integer): TState2D;
 function GetRobotVel2D(R: integer): TState2D;
@@ -130,14 +135,22 @@ procedure SolidCanvasClear(R, i: integer);
 //function GetSolidBitmap(R, i: integer): TBitmap;
 //procedure SolidCanvasDrawText(R, i: integer; x, y: integer; txt: string);
 
+procedure SetSolidSurfaceFriction(R, i: integer; mu, mu2: double);
+
 procedure SetSolidForce(R, i: integer; Fx, Fy, Fz: double);
+function GetSolidSize(R, i: integer): TPoint3D;
+procedure SetSolidSize(R, i: integer; x, y, z: double);
 
 function GetGlobalSensorIndex(ID: string): integer;
 function GetGlobalSensorVal(i: integer): double;
+function GetGlobalSensorValues(i: integer): Matrix;
+procedure SetGlobalSensorVin(i: integer; Vin: byte);
+procedure SetSensorVin(R, i: integer; Vin: byte);
 
 function GetSensorIndex(R: integer;ID: string): integer;
 function GetSensorVal(R, i: integer): double;
 procedure SetSensorColor(R, i: integer; Red, Green, Blue: byte);
+function GetSensorValues(R, i: integer): Matrix;
 
 function GetThingIndex(ID: string): integer;
 function GetThingsCount: integer;
@@ -216,6 +229,9 @@ function GetMotorControllerPars(R, i: integer): TMotorControllerPars;
 
 procedure SetMotorControllerMode(R, i: integer; newMode: string);
 function GetMotorControllerMode(R, i: integer): string;
+procedure SetMotorControllerState(R, i: integer; newState: boolean);
+function GetMotorControllerState(R, i: integer): boolean;
+
 
 procedure SetMotorActive(R, i: integer; nState: boolean);
 function IsMotorActive(R, i: integer): boolean;
@@ -447,6 +463,12 @@ begin
   end else begin
     result := defaultValue;
   end;
+end;
+
+
+function GetRobotIndex(ID: string): integer;
+begin
+  result := WorldODE.Robots.IndexFromID(ID);
 end;
 
 
@@ -948,6 +970,17 @@ begin
   result := WorldODE.Sensors[i].measures[0].value;
 end;
 
+function GetGlobalSensorValues(i: integer): Matrix;
+var j, n: integer;
+begin
+  n := WorldODE.Sensors[i].MeasuresCount;
+  result := Mzeros(n, 1);
+  for j := 0 to n - 1 do begin
+    Msetv(result, j, 0, WorldODE.Sensors[i].measures[j].value);
+  end;
+end;
+
+
 function GetSensorIndex(R: integer;ID: string): integer;
 begin
   result := WorldODE.Robots[R].Sensors.IndexFromID(ID);
@@ -960,9 +993,30 @@ begin
     result := WorldODE.Robots[r].Sensors[i].measures[0].value;
 end;
 
+function GetSensorValues(R, i: integer): Matrix;
+var j, n: integer;
+begin
+  n := WorldODE.Robots[r].Sensors[i].MeasuresCount;
+  result := Mzeros(n, 1);
+  for j := 0 to n - 1 do begin
+    Msetv(result, j, 0, WorldODE.Robots[r].Sensors[i].measures[j].value);
+  end;
+end;
+
+
 procedure SetSensorColor(R, i: integer; Red, Green, Blue: byte);
 begin
   WorldODE.Robots[R].Sensors[i].SetColor(Red/255, Green/255, Blue/255);
+end;
+
+procedure SetGlobalSensorVin(i: integer; Vin: byte);
+begin
+  WorldODE.Sensors[i].SetVin(Vin);
+end;
+
+procedure SetSensorVin(R, i: integer; Vin: byte);
+begin
+  WorldODE.Robots[R].Sensors[i].SetVin(Vin);
 end;
 
 
@@ -1011,10 +1065,26 @@ begin
   end;
 end;
 
+procedure SetSolidSurfaceFriction(R, i: integer; mu, mu2: double);
+begin
+  WorldODE.Robots[r].Solids[i].SetSurfaceFriction(mu, mu2);
+end;
+
 procedure SetSolidForce(R, i: integer; Fx, Fy, Fz: double);
 begin
   WorldODE.Robots[r].Solids[i].SetForce(Fx, Fy, Fz);
 end;
+
+function GetSolidSize(R, i: integer): TPoint3D;
+begin
+  WorldODE.Robots[r].Solids[i].GetSize(result.x, result.y, result.z);
+end;
+
+procedure SetSolidSize(R, i: integer; x, y, z: double);
+begin
+  WorldODE.Robots[r].Solids[i].SetSize(x, y, z);
+end;
+
 
 function GetAxisOdo(R, i: integer): integer;
 begin
@@ -1195,6 +1265,7 @@ begin
     Imax := aMotorPars.Imax;
     GearRatio := aMotorPars.GearRatio;
     simple := aMotorPars.simple;
+    active := aMotorPars.active;
   end;
 end;
 
@@ -1208,6 +1279,7 @@ begin
     result.Imax := Imax;
     result.GearRatio := GearRatio;
     result.simple := simple;
+    result.active := active;
   end;
 end;
 
@@ -1244,6 +1316,20 @@ begin
     end else raise Exception.Create('Invalid SetMotorControllerMode parameter: ' + newMode);
     Sek := 0;
   end;
+end;
+
+
+procedure SetMotorControllerState(R, i: integer; newState: boolean);
+begin
+  with WorldODE.Robots[r].Axes[i].Motor.Controller do begin
+    active := newState;
+    Sek := 0;
+  end;
+end;
+
+function GetMotorControllerState(R, i: integer): boolean;
+begin
+  result := WorldODE.Robots[r].Axes[i].Motor.Controller.active;
 end;
 
 

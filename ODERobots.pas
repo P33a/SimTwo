@@ -1,16 +1,18 @@
 unit ODERobots;
 
+{$MODE Delphi}
+
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, GLScene, GLObjects, GLMisc, GLWin32Viewer, ODEImport, OpenGL1x,
-  VectorGeometry, GLGeomObjects, ExtCtrls, ComCtrls, GLTexture, GLGraphics, 
-  keyboard, math, remote, Contnrs;
+  Windows, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, GLScene, GLObjects, {GLMisc,} GLWin32Viewer, ODEImport, OpenGL1x,
+  GLVectorGeometry, GLGeomObjects, ExtCtrls, ComCtrls, GLTexture, GLGraphics,
+  keyboard, math, GLMaterial;
 
 const
   //ODE world constants
-  MAX_CONTACTS = 8;
+  MAX_CONTACTS = 7;
 
   MaxJointSamples = 256;
   MaxKeyVals = 8;
@@ -73,6 +75,8 @@ type
   TMatterPropertie = (smMetallic, smFerroMagnetic);
   TMatterProperties = set of TMatterPropertie;
 
+  { TSolid }
+
   TSolid = class
     Body: PdxBody;
     Geom : PdxGeom;
@@ -113,6 +117,7 @@ type
     procedure SetSize(sizeX, sizeY, sizeZ: double);
     procedure GetSize(out sizeX, sizeY, sizeZ: double);
     procedure SetForce(FX, FY, FZ: double);
+    procedure SetSurfaceFriction(mu, mu2: double);
     procedure SetSurfacePars(mu, mu2, softness, bounce, bounce_tresh: double);
     procedure UpdateGLCanvas;
   end;
@@ -200,7 +205,8 @@ type
     function GetPos: double;
     function GetSpeed: double;
     procedure AddTorque(Tq: Double);
-    procedure GLCreate(Parent: TGLBaseSceneObject; aRadius, aHeight: double);
+    procedure GLCreateCylinder(Parent: TGLBaseSceneObject; aRadius, aHeight: double);
+    procedure GLCreateBall(Parent: TGLBaseSceneObject; aRadius: double);
     procedure GLSetPosition;
     function isCircular: boolean;
     procedure GetLimits(out MinLimit, Maxlimit: double);
@@ -338,7 +344,7 @@ type
   end;
 
   TSensorKind = (skGeneric, skIR, skIRSharp, skSonar, skCapacitive, skInductive,
-                 skBeacon, skFloorLine, skRanger2D, skPenTip, skIMU);
+                 skBeacon, skFloorLine, skRanger2D, skPenTip, skIMU, skSolenoid);
 
   TSensor = class
     ID: string;
@@ -348,9 +354,13 @@ type
     GLObj: TGLSceneObject;
     Period, TimeFromLastMeasure: double;
     Tags: TStringlist;
+    Fmax, k1,k2: double;
+    Vin: double;
+    MaxDist, MinDist, StartAngle, EndAngle: double;
 
   private
     function InsideGLPolygonsTaged(x, y: double; GLFloor: TGLBaseSceneObject): boolean;
+    procedure FreeMeasures;
   protected
     function GetMeasureCount: integer;
     //function GetMeasure(Index: Integer): TSensorMeasure;
@@ -363,19 +373,21 @@ type
     destructor Destroy; override;
     procedure SetColor(R, G, B: single; A: single = -1);
     //property Measures[Index: Integer]: TSensorMeasure read GetMeasure write SetMeasure; default;
-    property Count: integer read GetMeasureCount;
-    procedure PreProcess;
+    property MeasuresCount: integer read GetMeasureCount;
+    procedure PreProcess(dt: double);
     procedure PostProcess;
     procedure UpdateMeasures;
     procedure NoiseModel;
     procedure SetColorRGB(RGB: TColor);
     function SwapRGB(RGB: TColor): TColor;
+    procedure SetVin(aVin: double);
+    procedure CreateMeasures(Count: integer = 1);
   end;
 
 const
   SensorKindStrings: array[TSensorKind] of string =
   ('Generic', 'IR', 'IRSharp', 'Sonar', 'Capacitive', 'Inductive',
-   'Beacon', 'FloorLine', 'Ranger2D', 'PenTip', 'IMU');
+   'Beacon', 'FloorLine', 'Ranger2D', 'PenTip', 'IMU', 'Solenoid');
 
 type
   TSensorList = class(TList)
@@ -414,7 +426,7 @@ type
     Kind: TRobotKind;
     //SamplesCount, DecPeriodSamples: integer;
     //SecondsCount, DecPeriod: double;
-    Name: string;
+    ID: string;
     ForceMoved: boolean;
   public
     constructor Create;
@@ -422,9 +434,11 @@ type
     procedure SetXYZTeta(new_x, new_y, new_z, new_teta: double);
     procedure GetXYZTeta(out x, y, z, teta: double);
     function CalcCenterOfMass: TdVector3;
+    procedure AddXY(add_x, add_y: double);
   end;
 
   TRobotList = class(TList)
+  private
   protected
     function GetItems(Index: Integer): TRobot;
     procedure SetItems(Index: Integer; ARobot: TRobot);
@@ -438,13 +452,15 @@ type
     procedure Insert(Index: Integer; ARobot: TRobot);
     property Items[Index: Integer]: TRobot read GetItems write SetItems; default;
     procedure ClearAll;
+    function IndexFromID(aID: string): integer;
   end;
 
 procedure RFromZYXRotRel(var R: TdMatrix3; angX, angY, angZ: TDreal);
+procedure RFromZYXRotRelRay(var R: TdMatrix3; angX, angY, angZ: TDreal);
 
 implementation
 
-uses Utils, params;
+uses Utils;
 
 
 procedure RFromZYXRotRel(var R: TdMatrix3; angX, angY, angZ: TDreal);
@@ -456,6 +472,20 @@ begin
 
   dMULTIPLY0_333(Ryx, Ry, Rx);
   dMULTIPLY0_333(R, Rz, Ryx);
+end;
+
+
+procedure RFromZYXRotRelRay(var R: TdMatrix3; angX, angY, angZ: TDreal);
+var Rx, Ry, Rz, Raux1, Raux2, Ry2: TdMatrix3;
+begin
+  dRFromAxisAndAngle(Rz, 0, 0, 1, angZ);
+  dRFromAxisAndAngle(Ry, 0, 1, 0, angY);
+  dRFromAxisAndAngle(Ry2, 0, 1, 0, pi/2);
+  dRFromAxisAndAngle(Rx, 1, 0, 0, angX);
+
+  dMULTIPLY0_333(Raux1, Rz, Ry2);
+  dMULTIPLY0_333(Raux2, Ry, Raux1);
+  dMULTIPLY0_333(R, Rx, Raux2);
 end;
 
 
@@ -508,7 +538,7 @@ end;
 
 
 procedure TRobot.SetXYZTeta(new_x, new_y, new_z, new_teta: double);
-var i, j: integer;
+var i, j, k, n: integer;
     Rteta, Ra: TdMatrix3;
     Pr, P0, Pd: TdVector3;
 begin
@@ -535,6 +565,19 @@ begin
     dBodySetAngularVel(Solids[i].Body, 0, 0, 0);
   end;
 
+  // Reset motor position
+  for j := 0 to Links.Count - 1 do begin
+    //for k := 0 to MaxAxis - 1 do begin
+    //  Links[j].Axis[0].Motor.teta := 0;
+    n := 0;
+    if  (dJointGetType(Links[j].joint) = ord(dJointTypeHinge)) or
+        (dJointGetType(Links[j].joint) = ord(dJointTypeSlider)) then n := 1
+    else if (dJointGetType(Links[j].joint) = ord(dJointTypeUniversal)) then n := 2;
+
+    for k := 0 to n - 1 do begin
+      Links[j].Axis[k].Motor.teta := 0;
+    end;
+  end;
 
   // deal with links to the world
   for i := 0 to Solids.Count - 1 do begin
@@ -607,7 +650,33 @@ begin
 end;
 
 
+procedure TRobot.AddXY(add_x, add_y: double);
+var i: integer;
+    Pr: TdVector3;
+begin
+
+  for i := 0 to Solids.Count - 1 do begin
+    Pr := dBodygetPosition(Solids[i].Body)^;
+    dBodySetPosition(Solids[i].Body, Pr[0] + add_x, Pr[1] + add_y, Pr[2]);
+    //dBodySetPosition(Solids[i].Body, Pr[0], Pr[1], Pr[2]);
+  end;
+end;
+
+
 { TRobotList }
+
+function TRobotList.IndexFromID(aID: string): integer;
+var i: integer;
+begin
+  result := -1;
+  for i := 0 to Count - 1 do begin
+    if Items[i].ID = aID then begin
+      result := i;
+      exit;
+    end;
+  end;
+end;
+
 
 function TRobotList.Add(ARobot: TRobot): Integer;
 begin
@@ -669,6 +738,7 @@ end;
 constructor TSolid.Create;
 begin
   BeltSpeed := 0.5;
+  PaintBitmap := nil;
 end;
 
 destructor TSolid.Destroy;
@@ -797,8 +867,9 @@ end;
 procedure TSolid.SetTexture(TextureName: string; TextureScale: double);
 var LM: TGLLibMaterial;
 begin
+  exit; //TODO
   if GLObj = nil then exit;
-  LM := GLObj.Material.MaterialLibrary.Materials.GetLibMaterialByName(TextureName);
+  //LM := GLObj.Material.MaterialLibrary.Materials.GetLibMaterialByName(TextureName);
   if LM <> nil then begin;
     GLObj.Material.LibMaterialName := TextureName;
     LM.TextureScale.x := TextureScale;
@@ -912,11 +983,12 @@ var img: TGLBitmap32;
 begin
   if assigned(CanvasGLObj) and assigned(PaintBitmap) then begin
     CanvasGLObj.Material.Texture.Image.BeginUpdate;
-    img := CanvasGLObj.Material.Texture.Image.GetBitmap32(GL_TEXTURE_2D);
+    img := CanvasGLObj.Material.Texture.Image.GetBitmap32();
     img.AssignFromBitmap24WithoutRGBSwap(PaintBitmap);
     CanvasGLObj.Material.Texture.Image.endUpdate;
   end;
 end;
+
 
 procedure TSolid.SetSurfacePars(mu, mu2, softness, bounce, bounce_tresh: double);
 begin
@@ -937,6 +1009,25 @@ begin
     kind := skDefault;
   end;
 end;
+
+
+procedure TSolid.SetSurfaceFriction(mu, mu2: double);
+begin
+  if mu >= 0 then begin
+    ParSurface.mode := $FF;
+    ParSurface.mu := mu;
+    if mu2 >= 0 then begin
+      ParSurface.mu2 := mu2;
+      kind := skOmniSurface;
+    end else begin
+      kind := skDefault;
+    end;
+  end else begin
+    ParSurface.mode := 0;
+    kind := skDefault;
+  end;
+end;
+
 
 function TSolid.GetAngularVel: TdVector3;
 begin
@@ -978,6 +1069,9 @@ begin
     result := dBodyGetPosition(dJointGetBody(ParentLink.joint,0))^;
   end else if dJointGetType(ParentLink.joint) = ord(dJointTypeFixed) then begin
     result := dBodyGetPosition(dJointGetBody(ParentLink.joint,0))^;
+  end else if dJointGetType(ParentLink.joint) = ord(dJointTypeBall) then begin
+    dJointGetBallAnchor(ParentLink.joint, result);
+    //result := dBodyGetPosition(dJointGetb Body(ParentLink.joint,0))^;
   end;
   //TODO more Joint types
 end;
@@ -995,6 +1089,8 @@ begin
     dJointSetSliderAxis(ParentLink.joint, v[0], v[1], v[2]);
   end else if dJointGetType(ParentLink.joint) = ord(dJointTypeFixed) then begin
     dJointSetFixed(ParentLink.joint);
+  end else if dJointGetType(ParentLink.joint) = ord(dJointTypeBall) then begin
+    dJointSetBallAnchor(ParentLink.joint, nAnchor[0], nAnchor[1], nAnchor[2]);
   end;
   //TODO more Joint types
 end;
@@ -1002,6 +1098,9 @@ end;
 
 procedure TAxis.GetDir(var result: TdVector3);
 begin
+  result[0] := 0;
+  result[1] := 0;
+  result[2] := 0;
   if dJointGetType(ParentLink.joint) = ord(dJointTypeHinge) then begin
     dJointGetHingeAxis(ParentLink.joint, result);
   end else if dJointGetType(ParentLink.joint) = ord(dJointTypeUniversal) then begin
@@ -1094,7 +1193,7 @@ begin
   //TODO more Joint types
 end;
 
-procedure TAxis.GLCreate(Parent: TGLBaseSceneObject; aRadius, aHeight: double);
+procedure TAxis.GLCreateCylinder(Parent: TGLBaseSceneObject; aRadius, aHeight: double);
 begin
   GLObj := TGLCylinder(Parent.AddNewChild(TGLCylinder));
   with TGLCylinder(GLObj) do begin
@@ -1107,11 +1206,23 @@ begin
 //  AxisGLSetPosition(axis);
 end;
 
+procedure TAxis.GLCreateBall(Parent: TGLBaseSceneObject; aRadius: double);
+begin
+  GLObj := TGLSphere(Parent.AddNewChild(TGLSphere));
+  with TGLSphere(GLObj) do begin
+    Radius := aRadius;
+    Material.FrontProperties.Diffuse.AsWinColor := clred;
+  end;
+
+//  AxisGLSetPosition(axis);
+end;
+
+
 procedure TAxis.GLSetPosition;
 var vtmp: TdVector3;
 begin
   if GLObj = nil then exit;
-  with TGLCylinder(GLObj) do begin
+  with TGLSceneObject(GLObj) do begin
     GetAnchor(vtmp);
     Position.x := vtmp[0];
     Position.y := vtmp[1];
@@ -1317,30 +1428,40 @@ end;
 { TSensor }
 
 constructor TSensor.Create(MeasuresCount: integer = 1);
-var i: integer;
 begin
   Tags := TStringlist.Create;
 
   Rays := TSensorRayList.Create;
 
-  SetLength(Measures, MeasuresCount);
-  for i := 0 to MeasuresCount - 1 do begin
-    Measures[i] := TSensorMeasure.Create;
-  end;
+  CreateMeasures(MeasuresCount);
 end;
 
 destructor TSensor.Destroy;
-var i: integer;
 begin
-  for i := 0 to length(Measures) - 1 do begin
-    Measures[i].Free;
-  end;
+  FreeMeasures;
 
   Rays.ClearAll;
   Rays.Free;
 
   Tags.Free;
   inherited;
+end;
+
+procedure TSensor.CreateMeasures(Count: integer = 1);
+var i: integer;
+begin
+  SetLength(Measures, Count);
+  for i := 0 to Count - 1 do begin
+    Measures[i] := TSensorMeasure.Create;
+  end;
+end;
+
+procedure TSensor.FreeMeasures;
+var i: integer;
+begin
+  for i := 0 to length(Measures) - 1 do begin
+    Measures[i].Free;
+  end;
 end;
 
 {procedure TSensor.SetMeasure(Index: Integer; AMeasure: TSensorMeasure);
@@ -1366,45 +1487,66 @@ begin
 end;
 
 
-procedure TSensor.PreProcess;
-var j: integer;
+procedure TSensor.PreProcess(dt: double);
+var i, j: integer;
+    pers: double;
+    active_rays, first_active_ray: integer;
 begin
+
+  case kind of
+
+    skRanger2D: begin
+      pers := dt / Period;
+      active_rays := round(Rays.Count * pers) + 1;
+
+      first_active_ray :=  round(Rays.Count * TimeFromLastMeasure / Period);
+      for i := 0 to Rays.Count - 1 do begin
+        if (i >= first_active_ray) and (i <= first_active_ray + active_rays) then begin
+          dGeomEnable(Rays[i].Geom);
+        end else begin
+          dGeomDisable(Rays[i].Geom);
+        end;
+      end;
+    end;
+
+  end;
+
   for j := 0 to Rays.Count - 1 do begin
+    if dGeomIsEnabled(Rays[j].Geom) = 0 then continue;
     Rays[j].Measure.dist := -1;
     Rays[j].Measure.has_measure := false;
     Rays[j].Measure.HitSolid := nil;
   end;
+
 end;
 
 
 
 procedure TSensor.PostProcess;
+var HitSolid: TSolid;
+    SensorPos, HitSolidPos: PdVector3;
+    Vec: TdVector3;
+    f, d: double;
 begin
- { case kind of
+  case kind of
 
-    skIRSharp: begin
+    skSolenoid: begin
       with Measures[0] do begin
-        dist := Rays[0].Measure.dist;
-        has_measure := Rays[0].Measure.has_measure;
-        if has_measure then
-          //value := min(value, dist);
-          value := dist;
-      end;
-    end;
-
-    skCapacitive: begin
-      with Measures[0] do begin
-        dist := Rays[0].Measure.dist;
-        has_measure := true;
-        if Rays[0].Measure.has_measure then begin
-          value := 1
-        end else begin
-          value := 0;
+        HitSolid := Rays[0].Measure.HitSolid;
+        if assigned(HitSolid) and (HitSolid.Body <> nil) then begin
+          SensorPos := dGeomGetPosition(Rays[0].Geom);
+          HitSolidPos := dBodyGetPosition(HitSolid.Body);
+          Vec := Vector3SUB(SensorPos^, HitSolidPos^);
+          f := 0.5 * Vin * Fmax /sqr(1 + Rays[0].Measure.dist * k2);
+          d := Vector3Length(Vec);
+          if d > 0 then f := f / d;
+          Vec := Vector3ScalarMul(Vec, f);
+          HitSolid.SetForce(Vec[0], Vec[1], Vec[2]);
         end;
       end;
     end;
 
-  end;}
+  end;
 end;
 
 
@@ -1446,6 +1588,7 @@ end;
 procedure TSensor.UpdateMeasures;
 var relpos, worldPos: TdVector3;
     x, y, d: double;
+    i, n: integer;
 begin
   case kind of
 
@@ -1535,11 +1678,26 @@ begin
     skIMU: begin
     end;
 
+    skRanger2D: begin
+      n := MeasuresCount;
+      for i := 0 to n - 1 do begin
+        Measures[i].value := Rays[i].Measure.dist;
+        {if assigned(Rays[i].Measure.HitSolid) then begin
+          G := 0;
+          Rays[i].Measure.HitSolid.GetColor(R, G, B, A);
+          Measures[i].value := Measures[i].value + G / (10000); // TODO
+          //Measures[i].value := G/1e6;
+        end;}
+      end;
+    end;
+
+
   end;
 end;
 
 procedure TSensor.NoiseModel;
 var v, iv, var_v, m, var_dist: double;
+    i, n: integer;
 begin
   if not Noise.active then exit;
 
@@ -1557,14 +1715,17 @@ begin
       Measures[0].value := Measures[0].value + RandG(0, sqrt(var_dist));
     end;
   end else begin
-    v := Noise.offset;
-    if Noise.std_a <> 0 then begin
-      v := v + RandG(0, Noise.std_a);
+    n := MeasuresCount;
+    for i := 0 to n - 1 do begin
+      v := Noise.offset;
+      if Noise.std_a <> 0 then begin
+        v := v + RandG(0, Noise.std_a);
+      end;
+      if Noise.std_p <> 0 then begin
+        v := v + RandG(0, Measures[i].value * Noise.std_p);
+      end;
+      Measures[i].value := Noise.gain * Measures[i].value + v;
     end;
-    if Noise.std_p <> 0 then begin
-      v := v + RandG(0, Measures[0].value * Noise.std_p);
-    end;
-    Measures[0].value := Noise.gain * Measures[0].value + v;
   end;
 end;
 
@@ -1579,6 +1740,11 @@ end;
 function TSensor.SwapRGB(RGB: TColor): TColor;
 begin
   result := ((RGB and $FF0000) shr 16)  or (RGB and $00FF00) or ((RGB and $0000FF) shl 16);
+end;
+
+procedure TSensor.SetVin(aVin: double);
+begin
+  Vin := aVin;
 end;
 
 { TSensorList }
@@ -1821,7 +1987,8 @@ procedure TSensorRay.Place(posX, posY, posZ, angX, angY, AngZ: double;  Absolute
 var R: TdMatrix3;
     body: PdxBody;
 begin
-  RFromZYXRotRel(R, angX, angY + pi/2, AngZ);
+  RFromZYXRotRelRay(R, angX, angY, AngZ);
+  //RFromZYXRotRel(R, angX, angY + pi/2, AngZ);
   body := dGeomGetBody(Geom);
   if assigned(body) then begin // if the sensor ray is attached to a body (a robot sensor)
     if AbsoluteCoords then begin
@@ -1832,11 +1999,13 @@ begin
       dGeomSetOffsetPosition(Geom, posX, posY, posZ);
     end;
   end else begin // if the sensor ray is NOT attached to a body (a world sensor)
-    RFromZYXRotRel(R, angX, angY + pi/2, AngZ);
+    //RFromZYXRotRel(R, angX, angY + pi/2, AngZ);
     dGeomSetRotation(Geom, R);
     dGeomSetPosition(Geom, posX, posY, posZ);
   end;
 end;
+
+
 
 { TSensorRayList }
 

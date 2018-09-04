@@ -1,4 +1,4 @@
-UNIT odeimport;
+UNIT ODEImport;
 {*************************************************************************
  *                                                                       *
  * Open Dynamics Engine, Copyright (C) 2001,2002 Russell L. Smith.       *
