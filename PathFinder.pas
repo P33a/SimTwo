@@ -1,5 +1,7 @@
 unit PathFinder;
 
+{$MODE Delphi}
+
 interface
 
 uses windows, extctrls, sysutils, classes, Graphics, Math, AStar;

@@ -1,8 +1,10 @@
 unit Utils;
 
+{$MODE Delphi}
+
 interface
 
-uses Classes, sysutils, Math, graphics, Grids, VectorGeometry, dynmatrix;
+uses Classes, sysutils, Math, graphics, Grids, GLVectorGeometry, dynmatrix;
 
 //function strtofloatDef(s: string; def: double): double;
 procedure ParseString(s,sep: string; sl: TStrings);
@@ -56,13 +58,14 @@ type
 
 procedure QSort(base: pointer; num_elem,size_elem: integer; func: QSortCmpFunc);
 
-function CompressString(src: string): string;
-function DecompressString(src: string): string;
+//function CompressString(src: string): string;
+//function DecompressString(src: string): string;
 
 implementation
 
 uses ZLib, StrUtils;
 
+{
 function CompressString(src: string): string;
 var outbuf: pointer;
     outbytes: integer;
@@ -82,7 +85,7 @@ begin
   Move(outbuf^,result[1],outbytes);
   FreeMem(outbuf);
 end;
-
+}
 {
 function strtofloatDef(s: string; def: double): double;
 begin
@@ -187,9 +190,9 @@ var i: integer;
 begin
   for i := 0  to SG.RowCount-1 do begin
     if SG.Cells[0, i] = vname then begin
-      SG.Cells[1, i] := format('%.5g',[wval[0]]);
-      SG.Cells[2, i] := format('%.5g',[wval[1]]);
-      SG.Cells[3, i] := format('%.5g',[wval[2]]);
+      SG.Cells[1, i] := format('%.5g',[wval.v[0]]);
+      SG.Cells[2, i] := format('%.5g',[wval.v[1]]);
+      SG.Cells[3, i] := format('%.5g',[wval.v[2]]);
       exit;
     end;
   end;
@@ -202,9 +205,9 @@ begin
   result := defval;
   for i := 0  to SG.RowCount-1 do begin
     if SG.Cells[0, i] = vname then begin
-      result[0] := strTofloatdef(SG.Cells[1, i], result[0]);
-      result[1] := strTofloatdef(SG.Cells[2, i], result[1]);
-      result[2] := strTofloatdef(SG.Cells[3, i], result[2]);
+      result.v[0] := strTofloatdef(SG.Cells[1, i], result.v[0]);
+      result.v[1] := strTofloatdef(SG.Cells[2, i], result.v[1]);
+      result.v[2] := strTofloatdef(SG.Cells[3, i], result.v[2]);
       exit;
     end;
   end;
@@ -490,8 +493,8 @@ begin
   v2:=t;
 end;
 
-function Middle(a,b,c: integer): integer;
-begin
+function Middle(a,b,c: integer): integer;
+begin
   if a>b then SwapInts(a,b);
   if b>c then SwapInts(b,c);
   if a>b then SwapInts(a,b);

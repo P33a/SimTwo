@@ -1,19 +1,29 @@
 unit Editor;
 
+{$MODE Delphi}
+
 interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, SynEdit, SynEditHighlighter, SynHighlighterPas, StdCtrls,
-  SynMemo, ExtCtrls, ComCtrls, SynEditTypes,
-  Menus, SynEditPrint, ShellAPI, IniFiles, math, uPSComponent, uPSUtils, uPSRuntime,
-  SynCompletionProposal, uPSComponent_Default, uPSComponent_StdCtrls,
-  uPSComponent_Controls, uPSComponent_Forms, rxPlacemnt, ProjConfig,
-  SynEditMiscClasses, SynEditSearch, Dynmatrix, uPSCompiler, Clipbrd;
+  Dialogs, SynEdit, SynEditHighlighter, SynHighlighterPas, StdCtrls, SynMemo,
+  ExtCtrls, ComCtrls, SynEditTypes, Menus, math,
+  uPSComponent, uPSUtils, uPSRuntime, SynCompletion, uPSComponent_Default,
+  uPSComponent_StdCtrls, uPSComponent_Controls, uPSComponent_Forms, ProjConfig,
+  SynEditMiscClasses, PrintersDlgs, Dynmatrix, uPSCompiler, Clipbrd,
+  IniPropStorage, Rlan, SynEditMarks, process, LCLIntf, Types, LCLType;
 
 
 type
+
+  { TFEditor }
+
   TFEditor = class(TForm)
+    IniPropStorage: TIniPropStorage;
+    MenuIncreaseFont: TMenuItem;
+    MenuDecreaseFont: TMenuItem;
+    MenuResetFont: TMenuItem;
+    MenuItem2: TMenuItem;
     SynPasSyn: TSynPasSyn;
     PageControl: TPageControl;
     TabProject: TTabSheet;
@@ -63,7 +73,6 @@ type
     FindDialog: TFindDialog;
     ReplaceDialog: TReplaceDialog;
     PrintDialog: TPrintDialog;
-    SynEditPrint: TSynEditPrint;
     PSScript: TPSScriptDebugger;
     MenuTest: TMenuItem;
     TabVariables: TTabSheet;
@@ -72,16 +81,14 @@ type
     N5: TMenuItem;
     MenuShowLocalVariables: TMenuItem;
     MenuShowGlobalVariables: TMenuItem;
-    SynCompletionProposal: TSynCompletionProposal;
+    SynCompletionProposal: TSynCompletion;
     PSImport_Classes: TPSImport_Classes;
     PSImport_Forms: TPSImport_Forms;
     PSImport_Controls: TPSImport_Controls;
     PSImport_StdCtrls: TPSImport_StdCtrls;
-    FormStorage: TFormStorage;
     CBSaveOnRun: TCheckBox;
     PopupMenuOutput: TPopupMenu;
     PopUpClearAll: TMenuItem;
-    SynEditSearch: TSynEditSearch;
     Label3: TLabel;
     MemoDescription: TMemo;
     LBResult: TListBox;
@@ -89,8 +96,35 @@ type
     MenuCut: TMenuItem;
     N6: TMenuItem;
     MenuPaste: TMenuItem;
+    procedure FindDialogFind(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: boolean);
+    procedure FormDestroy(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure MenuCopyClick(Sender: TObject);
+    procedure MenuCutClick(Sender: TObject);
+    procedure MenuDecreaseFontClick(Sender: TObject);
+    procedure MenuIncreaseFontClick(Sender: TObject);
+    procedure MenuPasteClick(Sender: TObject);
+    procedure MenuResetFontClick(Sender: TObject);
+    procedure MenuShowGlobalVariablesClick(Sender: TObject);
+    procedure MenuShowLocalVariablesClick(Sender: TObject);
+    procedure PopUpClearAllClick(Sender: TObject);
+    procedure PSScriptBreakpoint(Sender: TObject; const FileName: tbtstring;
+      Position, Row, Col: Cardinal);
+    function PSScriptNeedFile(Sender: TObject; const OrginFileName: tbtstring;
+      var FileName, Output: tbtstring): Boolean;
+    procedure ReplaceDialogFind(Sender: TObject);
+    procedure ReplaceDialogReplace(Sender: TObject);
+    procedure SynCompletionProposalCodeCompletion(var Value: string;
+      SourceValue: string; var SourceStart, SourceEnd: TPoint;
+      KeyChar: TUTF8Char; Shift: TShiftState);
+    procedure SynCompletionProposalSearchPosition(var APosition: integer);
+    procedure SynEditSTGutterClick(Sender: TObject; X, Y, Line: integer;
+      mark: TSynEditMark);
     procedure SynEditSTMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
+    procedure SynEditSTSpecialLineColors(Sender: TObject; Line: integer;
+      var Special: boolean; var FG, BG: TColor);
     procedure SynEditSTStatusChange(Sender: TObject;
       Changes: TSynStatusChanges);
     procedure LBErrorsDblClick(Sender: TObject);
@@ -114,24 +148,6 @@ type
     procedure PSScript_Execute(Sender: TPSScript);
     procedure MenuTestClick(Sender: TObject);
     procedure MenuSetResetInspectorClick(Sender: TObject);
-    function PSScriptNeedFile(Sender: TObject; const OrginFileName: String;
-      var FileName, Output: String): Boolean;
-    procedure PSScriptBreakpoint(Sender: TObject; const FileName: String;
-      Position, Row, Col: Cardinal);
-    procedure MenuShowLocalVariablesClick(Sender: TObject);
-    procedure MenuShowGlobalVariablesClick(Sender: TObject);
-    procedure SynEditSTSpecialLineColors(Sender: TObject; Line: Integer;
-      var Special: Boolean; var FG, BG: TColor);
-    procedure FormShow(Sender: TObject);
-    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-    procedure SynEditSTGutterClick(Sender: TObject; Button: TMouseButton;
-      X, Y, Line: Integer; Mark: TSynEditMark);
-    procedure PopUpClearAllClick(Sender: TObject);
-    procedure FindDialogFind(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure MenuCutClick(Sender: TObject);
-    procedure MenuCopyClick(Sender: TObject);
-    procedure MenuPasteClick(Sender: TObject);
   private
     FuncList, InsertList: TStringList;
     TypeList: TStringList;
@@ -187,31 +203,32 @@ implementation
 uses uPSDebugger, Sheets, Viewer, Utils, Params, uPSI_ODERobotsPublished, uPSI_PathFinder, uPSI_dynmatrix,
    IdUDPBase;
 
-{$R *.dfm}
+{$R *.lfm}
 
 procedure TFEditor.SynEditSTMouseMove(Sender: TObject; Shift: TShiftState;  X, Y: Integer);
-var ScreenCoord: TDisplayCoord;
-    BufCoord: TBufferCoord;
+var ScreenCoord: TPoint;
+    BufCoord: TPoint;
     //varname, varvalue: string;
     len: integer;
 begin
-  ScreenCoord:=SynEditST.PixelsToRowColumn(X,Y);
-  BufCoord:= SynEditST.DisplayToBufferPos(ScreenCoord);
+  //ScreenCoord:=SynEditST.PixelsToRowColumn(point(X,Y));
+  //BufCoord:= SynEditST.DisplayToBufferPos(ScreenCoord);
 
-  if (BufCoord.Line >= 1) and (BufCoord.Line <= SynEditST.Lines.Count) then  begin
-    Len := Length(SynEditST.Lines[BufCoord.Line - 1]);
-    if BufCoord.Char <= Len then begin
+  //if (BufCoord.Line >= 1) and (BufCoord.Line <= SynEditST.Lines.Count) then  begin
+  //  Len := Length(SynEditST.Lines[BufCoord.Line - 1]);
+  //  if BufCoord.Char <= Len then begin
 
      { varname:=SynEditST.GetWordAtRowCol(BufCoord);
       varvalue:= GetStringValueFromAnyVarName(varname);
 
       if varvalue<>'' then
         StatusBar.Panels[4].text:=varname+': '+varvalue;}
-    end;
-  end else begin
-      StatusBar.Panels[4].text:='';
-  end;
+   // end;
+  //end else begin
+  //    StatusBar.Panels[4].text:='';
+  // end;
 end;
+
 
 
 procedure TFEditor.SynEditSTStatusChange(Sender: TObject;
@@ -272,7 +289,7 @@ begin
   if (LinCol.x<>-1) and (LinCol.y<>-1) then begin
     SynEditST.caretX:=LinCol.x;
     SynEditST.caretY:=LinCol.y - SynMemoHeader.Lines.Count;
-    SynEditST.UpdateCaret;
+    //TODO SynEditST.UpdateCaret;
     SynEditST.setfocus;
   end;
 end;
@@ -414,7 +431,7 @@ end;
 procedure TFEditor.FormCreate(Sender: TObject);
 var Plugin, PathPlugin, MatrixPlugin: TPSPlugin;
 begin
-  FormStorage.IniFileName := GetIniFineName;
+  IniPropStorage.IniFileName := GetIniFineName;
   //TabPascal.TabVisible:=false;
   FuncList := TStringList.Create;
   InsertList := TStringList.Create;
@@ -450,12 +467,13 @@ begin
   StatusBar.Invalidate;
 end;
 
+
 procedure TFEditor.ProjectSave(FileName: string);
 begin
   Project.FileName := ExtractFileName(FileName);
 
   SynEditST.Lines.SaveToFile(FileName);
-  FormStorage.WriteString('LastProjectName', Project.FileName);
+  IniPropStorage.WriteString('LastProjectName', Project.FileName);
   MemoDescription.Lines.SaveToFile('info.txt');
 
   SynEditST.Modified:=False;
@@ -492,9 +510,9 @@ begin
   ShowMessage(SimTwoVersion + crlf + crlf+
               'Copyright (C) 2008-2009 Paulo Costa' + crlf + crlf+
               'Special thanks to:' + crlf+
-              'José Luís Lima, José Alexandre Gonçalves,' + crlf+
+              'JosÃ© LuÃ­s Lima, JosÃ© Alexandre GonÃ§alves,' + crlf+
               'Paulo Malheiros, Paulo Marques,' + crlf+
-              'Armando Sousa, António Paulo Moreira and the' + crlf+
+              'Armando Sousa, AntÃ³nio Paulo Moreira and the' + crlf+
               'ODE, GLScene, SynEdit and PascalScript Teams,' + crlf+
               crlf+
               'Compiled: ' + DateToStr(FileDateToDateTime(FileAge(Application.ExeName))));
@@ -511,9 +529,30 @@ begin
 end;
 
 procedure TFEditor.MenuCalculatorClick(Sender: TObject);
+//begin
+//   OpenDocument('Calc.exe'); { *Converted from ShellExecute* }
+//end;
+var
+  Process: TProcess;
+  i: Integer;
 begin
-  ShellExecute(Handle, 'open', 'Calc.exe', nil, nil,  SW_SHOWNORMAL);
+  Process := TProcess.Create(nil);
+  try
+    Process.InheritHandles := False;
+    Process.Options := [];
+    Process.ShowWindow := swoShow;
+
+    // Copy default environment variables including DISPLAY variable for GUI application to work
+    for i := 1 to GetEnvironmentVariableCount do
+      Process.Environment.Add(GetEnvironmentString(I));
+
+    Process.Executable := 'Calc.exe';
+    Process.Execute;
+  finally
+    Process.Free;
+  end;
 end;
+
 
 procedure TFEditor.MenuSaveClick(Sender: TObject);
 var CurDir: string;
@@ -660,7 +699,7 @@ end;
 
 procedure TFEditor.MenuLocalHelpClick(Sender: TObject);
 begin
-  ShellExecute(Handle, 'open', 'funclist.txt', nil, nil,  SW_SHOWNORMAL);
+   OpenDocument('funclist.txt'); { *Converted from ShellExecute* }
 end;
 
 procedure TFEditor.BuildRegFuncList(Sender: TPSScript);
@@ -699,11 +738,12 @@ begin
         s := s + ');';
       end;
       Funclist.AddObject(S, TObject(typ));
+
     end;
   end;
 
-  Insertlist.Sort;
-  Funclist.Sort;
+  //Insertlist.Sort;
+  //Funclist.Sort;
 
   for i := 0 to Funclist.Count -1 do begin
     if integer(Funclist.Objects[i]) = 1 then begin
@@ -721,6 +761,7 @@ begin
     SaveFunclist.Free;
   end;
 end;
+
 
 
 procedure TFEditor.BuildRegTypeList(Sender: TPSScript);
@@ -820,6 +861,7 @@ begin
 end;
 
 
+
 function FillTypes(Sender: TPSPascalCompiler): Boolean;
 begin
   FEditor.BuildRegTypeListEx(Sender);
@@ -841,6 +883,22 @@ begin
   result := WorldODE.DecPeriod;
 end;
 
+function SqrD(X: double): double;
+begin
+  result := Sqr(X);
+end;
+
+function ExpD(X: double): double;
+begin
+  result := exp(X);
+end;
+
+function LnD(X: double): double;
+begin
+  result := ln(X);
+end;
+
+
 procedure TFEditor.PSScript_Compile(Sender: TPSScript);
 var i: integer;
     s: string;
@@ -851,6 +909,16 @@ begin
   Sender.AddFunction(@ATan2, 'function ATan2(y,x: double): double');
   Sender.AddFunction(@ACos2, 'function ACos2(y,x: double): double');
   Sender.AddFunction(@ASin2, 'function ASin2(y,x: double): double');
+
+  Sender.AddFunction(@Power, 'function Power(const Base, Exponent: Extended): Extended');
+  Sender.AddFunction(@Log10, 'function Log10(const X: Extended): Extended');
+  Sender.AddFunction(@LogN, 'function LogN(const Base, X: Extended): Extended');
+  Sender.AddFunction(@SqrD, 'function Sqr(X: double): double');
+
+  Sender.AddFunction(@ExpD, 'function Exp(X: double): double');
+  Sender.AddFunction(@LnD, 'function Ln(X: double): double');
+
+
   Sender.AddFunction(@DiffAngle, 'function DiffAngle(a1,a2: double): double;');
   Sender.AddFunction(@Dist, 'function Dist(x,y: double): double');
   Sender.AddFunction(@Sign, 'function Sign(a: double): double');
@@ -864,7 +932,8 @@ begin
   Sender.AddFunction(@Randomize, 'procedure Randomize;');
   Sender.AddFunction(@BiLinInterp, 'function BiLinInterp(Surf: matrix; xmin, xmax, ymin, ymax, x,y: double): double;');
 
-
+  //Sender.AddFunction(@IntToHex, 'function IntToHex(Value: Int64; Digits: Integer): string;');
+  Sender.AddFunction(@IntToHex, 'function IntToHex(Value: integer; Digits: Integer): string;');
 
   Sender.AddMethod(Self, @TFEditor.Writeln, 'procedure WriteLn(S: string)');
 //  Sender.AddMethod(Self, @TFEditor.myformat, 'function Format(const sFormat: string; const Args: array of const): string;');
@@ -892,6 +961,38 @@ begin
   Sender.AddFunction(@CloseSimTwo, 'procedure CloseSimTwo;');
   Sender.AddFunction(@ScriptPeriod, 'function ScriptPeriod: double;');
 
+  //RLan Functions
+  Sender.AddFunction(@Test, 'procedure Test(var B: double);');
+
+  Sender.comp.AddTypeS('TUDPBuffer', 'record data: array[0..1499] of byte; MessSize: integer; ReadDisp: integer;  end').ExportName := true;
+  Sender.AddFunction(@ClearUDPBuffer, 'procedure ClearUDPBuffer(var Buf: TUDPBuffer);');
+
+  //Sender.AddFunction(@NetPutBuffer, 'procedure NetPutBuffer(var Buf: TUDPBuffer; var data; size_it: integer);');
+  Sender.AddFunction(@NetBufferSeek, 'procedure NetBufferSeek(var Buf: TUDPBuffer; disp: integer);');
+  //Sender.AddFunction(@NetGetBuffer, 'procedure NetGetBuffer(var Buf: TUDPBuffer; var data; size_it: integer);');
+  Sender.AddFunction(@NetStringBuffer, 'function NetStringBuffer(var Buf: TUDPBuffer): string;');
+
+  Sender.AddFunction(@NetPutByte, 'procedure NetPutByte(var Buf: TUDPBuffer; value: byte);');
+  Sender.AddFunction(@NetPutWord, 'procedure NetPutWord(var Buf: TUDPBuffer; value: word);');
+  Sender.AddFunction(@NetPutShort, 'procedure NetPutShort(var Buf: TUDPBuffer; value: SmallInt);');
+  Sender.AddFunction(@NetPutInt, 'procedure NetPutInt(var Buf: TUDPBuffer; value: integer);');
+  Sender.AddFunction(@NetPutFloat, 'procedure NetPutFloat(var Buf: TUDPBuffer; value: single);');
+  Sender.AddFunction(@NetPutString, 'procedure NetPutString(var Buf: TUDPBuffer; str: string);');
+  Sender.AddFunction(@NetPutAngle, 'procedure NetPutAngle(var Buf: TUDPBuffer; value: double);');
+
+  Sender.AddFunction(@NetPeekByte, 'function NetPeekByte(var Buf: TUDPBuffer): byte;');
+  Sender.AddFunction(@NetGetByte, 'function NetGetByte(var Buf: TUDPBuffer): byte;');
+  Sender.AddFunction(@NetGetWord, 'function NetGetWord(var Buf: TUDPBuffer): word;');
+  Sender.AddFunction(@NetGetShort, 'function NetGetShort(var Buf: TUDPBuffer): SmallInt;');
+  Sender.AddFunction(@NetGetInt, 'function NetGetInt(var Buf: TUDPBuffer): integer;');
+  Sender.AddFunction(@NetGetFloat, 'function NetGetFloat(var Buf: TUDPBuffer): single;');
+  Sender.AddFunction(@NetGetString, 'function NetGetString(var Buf: TUDPBuffer): string;');
+  Sender.AddFunction(@NetGetAngle, 'function NetGetAngle(var Buf: TUDPBuffer): double;');
+
+  Sender.AddFunction(@getModbusCoil, 'function getModbusCoil(bit_addr: integer): boolean;');
+  Sender.AddFunction(@getModbusInput, 'function getModbusInput(bit_addr: integer): boolean;');
+  Sender.AddFunction(@setModbusCoil, 'procedure setModbusCoil(bit_addr: integer; new_state: boolean);');
+  Sender.AddFunction(@setModbusInput, 'procedure setModbusInput(bit_addr: integer; new_state: boolean);');
 
   Sender.AddRegisteredPTRVariable('Time', 'Double');
   Sender.AddRegisteredPTRVariable('UDPDataRead', 'TMemoryStream');
@@ -918,14 +1019,14 @@ begin
   SynCompletionProposal.ItemList.BeginUpdate;
   SynCompletionProposal.ItemList.Clear;
 
-  SynCompletionProposal.InsertList.BeginUpdate;
-  SynCompletionProposal.InsertList.Clear;
+  //SynCompletionProposal.InsertList.BeginUpdate;
+  //SynCompletionProposal.InsertList.Clear;
 
   for i := 0 to PSScript.Exec.GlobalVarNames.Count - 1 do begin
     s:= PSScript.Exec.GlobalVarNames.Items[i];
     if s <> '' then begin
       SynCompletionProposal.ItemList.Add(s);
-      SynCompletionProposal.InsertList.Add(s);
+      //SynCompletionProposal.InsertList.Add(s);
     end;
   end;
 
@@ -934,10 +1035,10 @@ begin
 
   BuildRegFuncList(Sender);
   SynCompletionProposal.ItemList.AddStrings(FuncList);
-  SynCompletionProposal.InsertList.AddStrings(InsertList);
+  //SynCompletionProposal.InsertList.AddStrings(InsertList);
 
   SynCompletionProposal.ItemList.EndUpdate;
-  SynCompletionProposal.InsertList.EndUpdate;
+  //SynCompletionProposal.InsertList.EndUpdate;
 
   //sender.Comp.OnBeforeCleanup := @FillTypes;
   BuildRegTypeList(Sender);
@@ -1005,8 +1106,8 @@ begin
   SynEditST.Refresh;
 end;
 
-procedure TFEditor.SynEditSTGutterClick(Sender: TObject;
-  Button: TMouseButton; X, Y, Line: Integer; Mark: TSynEditMark);
+procedure TFEditor.SynEditSTGutterClick(Sender: TObject; X, Y, Line: integer;
+  mark: TSynEditMark);
 var RealLine: Longint;
 begin
   //PSScript.Exec.DebugEnabled := true;
@@ -1022,8 +1123,15 @@ begin
   SynEditST.Refresh;
 end;
 
+function TFEditor.PSScriptNeedFile(Sender: TObject;
+  const OrginFileName: tbtstring; var FileName, Output: tbtstring): Boolean;
+//begin
 
-function TFEditor.PSScriptNeedFile(Sender: TObject; const OrginFileName: String; var FileName, Output: String): Boolean;
+//end;
+
+
+
+//function TFEditor.PSScriptNeedFile(Sender: TObject; const OrginFileName: String; var FileName, Output: String): Boolean;
 var path: string;
     f: TFileStream;
 begin
@@ -1049,8 +1157,106 @@ begin
   Result := True;
 end;
 
+procedure TFEditor.ReplaceDialogFind(Sender: TObject);
+var k: integer;
+    opt: TSynSearchOptions;
+begin
+  with Sender as TReplaceDialog do begin
+    if frEntireScope in  Options then begin
+      opt := [ssoEntireScope];
+    end else begin
+      opt := [];//[ssoFindContinue];
+    end;
+
+    if frWholeWord in Options then
+      opt := opt + [ssoWholeWord];
+
+    k := SynEditST.SearchReplace(FindText, '', opt);
+  end;
+end;
+
+{  TSynSearchOption =
+    ( ssoMatchCase, ssoWholeWord,
+      ssoBackwards,
+      ssoEntireScope, ssoSelectedOnly,
+      ssoReplace, ssoReplaceAll,
+      ssoPrompt,
+      ssoSearchInReplacement,    // continue search-replace in replacement (with ssoReplaceAll) // replace recursive
+      ssoRegExpr, ssoRegExprMultiLine,
+      ssoFindContinue      // Assume the current selection is the last match, and start search behind selection
+                           // (before if ssoBackward) // Default is to start at caret (Only SearchReplace / SearchReplaceEx has start/end param)
+    );
+
+    TFindOption = (frDown, frFindNext, frHideMatchCase, frHideWholeWord,
+                   frHideUpDown, frMatchCase, frDisableMatchCase, frDisableUpDown,
+                   frDisableWholeWord, frReplace, frReplaceAll, frWholeWord, frShowHelp,
+                   frEntireScope, frHideEntireScope, frPromptOnReplace, frHidePromptOnReplace,
+                   frButtonsAtBottom);
+    TFindOptions = set of TFindOption;
+    }
+
+procedure TFEditor.ReplaceDialogReplace(Sender: TObject);
+var k: integer;
+    opt: TSynSearchOptions;
+    rp: TReplaceDialog;
+begin
+  rp := Sender as TReplaceDialog;
+  with rp do begin
+    if frEntireScope in  Options then begin
+      opt := [ssoEntireScope];
+    end else begin
+      opt := [];//[ssoFindContinue];
+    end;
+
+    if frWholeWord in Options then
+      opt := opt + [ssoWholeWord];
+
+    if frReplace in Options then
+      opt := opt + [ssoReplace];
+    if frReplaceAll in Options then
+      opt := opt + [ssoReplaceAll];
+    k := SynEditST.SearchReplace(FindText, ReplaceText, opt);
+    //k := SynEditST.SearchReplace('begi', 'BEGIN', opt);
+
+    //if k>=0 then
+    //  TSynEdit1.SetFocus()
+    //else
+    //  Beep();
+  end;
+end;
+
+procedure TFEditor.SynCompletionProposalCodeCompletion(var Value: string;
+  SourceValue: string; var SourceStart, SourceEnd: TPoint; KeyChar: TUTF8Char;
+  Shift: TShiftState);
+var i: integer;
+begin
+  // Find the stripped keyword
+  for i := 0 to FuncList.Count - 1 do begin
+    if pos(lowercase(value), lowercase(FuncList[i])) <> 0 then begin
+      value := InsertList[i];
+      break;
+    end;
+  end;
+end;
+
+procedure TFEditor.SynCompletionProposalSearchPosition(var APosition: integer);
+var i: integer;
+begin
+  // Rebuild the list only with matching keywords
+  SynCompletionProposal.ItemList.Clear;
+  for i := 0 to FuncList.Count - 1 do begin
+    if pos(lowercase(SynCompletionProposal.CurrentString), lowercase(FuncList[i])) <> 0 then
+      SynCompletionProposal.ItemList.Add(FuncList[i]);
+  end;
+  //APosition := 0;  //??
+end;
+
 procedure TFEditor.PSScriptBreakpoint(Sender: TObject;
-  const FileName: String; Position, Row, Col: Cardinal);
+  const FileName: tbtstring; Position, Row, Col: Cardinal);
+//begin
+//end;
+// procedure TFEditor.PSScriptBreakpoint(Sender: TObject;
+//  const FileName: String; Position, Row, Col: Cardinal);
 //  showmessage('Break Point' + format('%d,%d',[Row,col]));
 //  PSScript.Exec.Pause;
 var i: integer;
@@ -1098,7 +1304,7 @@ procedure TFEditor.FormShow(Sender: TObject);
 var //i: integer;
     s: string;
 begin
-  s := FormStorage.ReadString('LastProjectName','');
+  s := IniPropStorage.ReadString('LastProjectName','');
   if not ProjectOpen(s) then begin
     Project.FileName := 'Untitled';
     UpdateStatusLine;
@@ -1131,7 +1337,6 @@ begin
   end;
 end;
 
-
 procedure TFEditor.PopUpClearAllClick(Sender: TObject);
 begin
   if PopupMenuOutput.PopupComponent is TListBox then begin
@@ -1142,7 +1347,7 @@ end;
 procedure TFEditor.FindDialogFind(Sender: TObject);
 var SynSearchOptions: TSynSearchOptions;
 begin
-  SynEditST.SearchEngine := SynEditSearch;
+  //TODO: SynEditST.SearchEngine := SynEditSearch;
   SynSearchOptions := [];
   if not (frDown in FindDialog.Options) then
     SynSearchOptions := SynSearchOptions + [ssoBackwards];
@@ -1164,13 +1369,13 @@ end;
 
 procedure TFEditor.WriteComPort(s: string);
 begin
-  FParams.ComPort.WriteStr(s);
+  FParams.ComPort.WriteData(s);
 end;
 
 function TFEditor.ReadComPort: string;
 begin
   with FParams.ComPort do begin
-    ReadStr(result, InputCount);
+    result := ReadData;
   end;
 end;
 
@@ -1238,9 +1443,26 @@ begin
   LBResult.DeleteSelected;
 end;
 
+procedure TFEditor.MenuDecreaseFontClick(Sender: TObject);
+begin
+  if SynEditST.Font.Size >= 8 then
+    SynEditST.Font.Size := SynEditST.Font.Size - 1;
+end;
+
+procedure TFEditor.MenuIncreaseFontClick(Sender: TObject);
+begin
+  if SynEditST.Font.Size <= 24 then
+    SynEditST.Font.Size := SynEditST.Font.Size + 1;
+end;
+
 procedure TFEditor.MenuPasteClick(Sender: TObject);
 begin
   SynEditST.Refresh;
+end;
+
+procedure TFEditor.MenuResetFontClick(Sender: TObject);
+begin
+  SynEditST.Font.Size := 8;
 end;
 
 

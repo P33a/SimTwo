@@ -1,5 +1,7 @@
 unit Remote;
 
+{$MODE Delphi}
+
 interface
 
 const

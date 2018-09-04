@@ -1,156 +1,219 @@
 object FSceneEdit: TFSceneEdit
   Left = 373
+  Height = 879
   Top = 119
   Width = 909
-  Height = 879
   Caption = 'XML Scene Edit'
+  ClientHeight = 859
+  ClientWidth = 909
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'Tahoma'
-  Font.Style = []
   Menu = MainMenu
-  OldCreateOrder = False
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnShow = FormShow
-  PixelsPerInch = 96
-  TextHeight = 13
+  SessionProperties = 'PageControlXML.ActivePage;Top;Left;Width;Height'
+  LCLVersion = '1.8.2.0'
+  Visible = True
   object Splitter: TSplitter
-    Left = 0
-    Top = 713
-    Width = 901
-    Height = 3
     Cursor = crVSplit
+    Left = 0
+    Height = 3
+    Top = 736
+    Width = 909
     Align = alBottom
+    ResizeAnchor = akBottom
   end
   object StatusBar: TStatusBar
     Left = 0
-    Top = 813
-    Width = 901
-    Height = 20
-    Panels = <
+    Height = 23
+    Top = 836
+    Width = 909
+    Panels = <    
       item
         Alignment = taCenter
         Text = 'Line:Col'
         Width = 60
-      end
+      end    
       item
         Alignment = taCenter
         Text = 'Modified'
         Width = 50
-      end
+      end    
       item
         Alignment = taCenter
         Text = 'Insert'
         Width = 55
-      end
+      end    
       item
         Alignment = taCenter
         Width = 150
-      end
+      end    
       item
         Width = 50
       end>
   end
   object LBErrors: TListBox
     Left = 0
-    Top = 716
-    Width = 901
     Height = 97
+    Top = 739
+    Width = 909
     Align = alBottom
-    ItemHeight = 13
-    TabOrder = 1
+    ItemHeight = 0
     OnDblClick = LBErrorsDblClick
+    TabOrder = 1
   end
   object PageControlXML: TPageControl
     Left = 0
+    Height = 736
     Top = 0
-    Width = 901
-    Height = 713
+    Width = 909
     ActivePage = TabScene
     Align = alClient
+    TabIndex = 0
     TabOrder = 2
     OnChange = PageControlXMLChange
     object TabScene: TTabSheet
       Caption = 'Scene.xml'
-      object SynEditXML: TSynEdit
+      ClientHeight = 710
+      ClientWidth = 901
+      inline SynEditXML: TSynEdit
         Left = 0
-        Top = 4
-        Width = 893
         Height = 681
+        Top = 29
+        Width = 901
         Align = alBottom
         Enabled = False
-        Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -13
         Font.Name = 'Courier New'
-        Font.Style = []
+        Font.Pitch = fpFixed
+        Font.Quality = fqNonAntialiased
+        ParentColor = False
+        ParentFont = False
         TabOrder = 0
-        Gutter.Font.Charset = DEFAULT_CHARSET
-        Gutter.Font.Color = clWindowText
-        Gutter.Font.Height = -11
-        Gutter.Font.Name = 'Courier New'
-        Gutter.Font.Style = []
-        Gutter.Width = 20
+        Gutter.Width = 57
+        Gutter.MouseActions = <>
+        RightGutter.Width = 0
+        RightGutter.MouseActions = <>
         Highlighter = SynXMLSyn
+        Keystrokes = <>
+        MouseActions = <>
+        MouseTextActions = <>
+        MouseSelActions = <>
         Lines.Strings = (
           '<?xml version="1.0" ?>'
           '<scene>'
           ''
           '<!--'
           '  <robot>'
-          '    <ID name='#39'Classic'#39'/>'
-          '    <pos x='#39'0'#39' y='#39'-1'#39' z='#39'0'#39'/>'
-          '    <rot_deg x='#39'0'#39' y='#39'0'#39' z='#39'0'#39'/>'
+          '    <ID name=''Classic''/>'
+          '    <pos x=''0'' y=''-1'' z=''0''/>'
+          '    <rot_deg x=''0'' y=''0'' z=''0''/>'
           ''
-          '    <body file='#39'Differential4.xml'#39'/>'
+          '    <body file=''Differential4.xml''/>'
           '  </robot>-->'
           ''
           '   <robot>'
-          '    <ID name='#39'Zeppelin'#39'/>'
-          '    <pos x='#39'0'#39' y='#39'-1'#39' z='#39'0.5'#39'/>'
-          '    <rot_deg x='#39'0'#39' y='#39'0'#39' z='#39'0'#39'/>'
+          '    <ID name=''Zeppelin''/>'
+          '    <pos x=''0'' y=''-1'' z=''0.5''/>'
+          '    <rot_deg x=''0'' y=''0'' z=''0''/>'
           ''
-          '    <body file='#39'zeppelin.xml'#39'/>'
+          '    <body file=''zeppelin.xml''/>'
           '  </robot>'
           ''
           '  <robot>'
-          '    <ID name='#39'belt'#39'/>'
-          '    <pos x='#39'1.5'#39' y='#39'0'#39' z='#39'0.5'#39'/>'
-          '    <rot_deg x='#39'0'#39' y='#39'0'#39' z='#39'0'#39'/>'
+          '    <ID name=''belt''/>'
+          '    <pos x=''1.5'' y=''0'' z=''0.5''/>'
+          '    <rot_deg x=''0'' y=''0'' z=''0''/>'
           ''
-          '    <body file='#39'Belt.xml'#39'/>'
+          '    <body file=''Belt.xml''/>'
           '  </robot>'
           ''
           '  <robot>'
-          '    <ID name='#39'Omni3'#39'/>'
-          '    <pos x='#39'0'#39' y='#39'0'#39' z='#39'0'#39'/>'
-          '    <rot_deg x='#39'0'#39' y='#39'0'#39' z='#39'90'#39'/>'
+          '    <ID name=''Omni3''/>'
+          '    <pos x=''0'' y=''0'' z=''0''/>'
+          '    <rot_deg x=''0'' y=''0'' z=''90''/>'
           ''
-          '    <body file='#39'Omni3.xml'#39'/>'
+          '    <body file=''Omni3.xml''/>'
           '  </robot>'
           ''
           ''
-          '  <things file='#39'things.xml'#39'/>'
+          '  <things file=''things.xml''/>'
           ''
-          '  <obstacles file='#39'obstacles.xml'#39'/>'
+          '  <obstacles file=''obstacles.xml''/>'
           ''
-          '  <track file='#39'track.xml'#39'/>'
+          '  <track file=''track.xml''/>'
           ''
           '</scene>'
-          '')
-        Options = [eoAutoIndent, eoDragDropEditing, eoEnhanceEndKey, eoGroupUndo, eoScrollByOneLess, eoScrollPastEol, eoShowScrollHint, eoSmartTabDelete, eoSmartTabs, eoTabIndent, eoTabsToSpaces]
-        WantTabs = True
+          ''
+        )
+        Options = [eoAutoIndent, eoGroupUndo, eoScrollByOneLess, eoScrollPastEol, eoShowScrollHint, eoSmartTabs, eoTabIndent, eoTabsToSpaces, eoDragDropEditing]
+        MouseOptions = [emDragDropEditing]
+        VisibleSpecialChars = [vscSpace, vscTabAtLast]
+        SelectedColor.BackPriority = 50
+        SelectedColor.ForePriority = 50
+        SelectedColor.FramePriority = 50
+        SelectedColor.BoldPriority = 50
+        SelectedColor.ItalicPriority = 50
+        SelectedColor.UnderlinePriority = 50
+        SelectedColor.StrikeOutPriority = 50
+        BracketHighlightStyle = sbhsBoth
+        BracketMatchColor.Background = clNone
+        BracketMatchColor.Foreground = clNone
+        BracketMatchColor.Style = [fsBold]
+        FoldedCodeColor.Background = clNone
+        FoldedCodeColor.Foreground = clGray
+        FoldedCodeColor.FrameColor = clGray
+        MouseLinkColor.Background = clNone
+        MouseLinkColor.Foreground = clBlue
+        LineHighlightColor.Background = clNone
+        LineHighlightColor.Foreground = clNone
         OnStatusChange = SynEditXMLStatusChange
+        inline SynLeftGutterPartList1: TSynGutterPartList
+          object SynGutterMarks1: TSynGutterMarks
+            Width = 24
+            MouseActions = <>
+          end
+          object SynGutterLineNumber1: TSynGutterLineNumber
+            Width = 17
+            MouseActions = <>
+            MarkupInfo.Background = clBtnFace
+            MarkupInfo.Foreground = clNone
+            DigitCount = 2
+            ShowOnlyLineNumbersMultiplesOf = 1
+            ZeroStart = False
+            LeadingZeros = False
+          end
+          object SynGutterChanges1: TSynGutterChanges
+            Width = 4
+            MouseActions = <>
+            ModifiedColor = 59900
+            SavedColor = clGreen
+          end
+          object SynGutterSeparator1: TSynGutterSeparator
+            Width = 2
+            MouseActions = <>
+            MarkupInfo.Background = clWhite
+            MarkupInfo.Foreground = clGray
+          end
+          object SynGutterCodeFolding1: TSynGutterCodeFolding
+            MouseActions = <>
+            MarkupInfo.Background = clNone
+            MarkupInfo.Foreground = clGray
+            MouseActionsExpanded = <>
+            MouseActionsCollapsed = <>
+          end
+        end
       end
     end
   end
   object MainMenu: TMainMenu
-    Left = 164
-    Top = 36
+    left = 164
+    top = 36
     object MenuFile: TMenuItem
       Caption = '&File'
       object MenuNew: TMenuItem
@@ -242,48 +305,43 @@ object FSceneEdit: TFSceneEdit
     end
   end
   object SynXMLSyn: TSynXMLSyn
+    DefaultFilter = 'XML Document (*.xml,*.xsd,*.xsl,*.xslt,*.dtd)|*.xml;*.xsd;*.xsl;*.xslt;*.dtd'
+    Enabled = False
     CommentAttri.Background = clNone
     WantBracesParsed = False
-    Left = 192
-    Top = 36
+    left = 192
+    top = 36
   end
   object ReplaceDialog: TReplaceDialog
+    Options = [frDown, frReplace, frReplaceAll, frHidePromptOnReplace]
     OnFind = ReplaceDialogAction
     OnReplace = ReplaceDialogAction
-    Left = 380
-    Top = 36
+    left = 380
+    top = 36
   end
   object FindDialog: TFindDialog
     OnFind = FindDialogFind
-    Left = 352
-    Top = 36
-  end
-  object SynEditSearch: TSynEditSearch
-    Left = 352
-    Top = 64
+    left = 352
+    top = 36
   end
   object OpenDialog: TOpenDialog
+    Title = 'Load Scene File'
     Filter = 'Scene File|*.xml'
     Options = [ofHideReadOnly, ofNoChangeDir, ofFileMustExist, ofEnableSizing]
-    Title = 'Load Scene File'
-    Left = 288
-    Top = 36
+    left = 288
+    top = 36
   end
   object SaveDialog: TSaveDialog
+    Title = 'Save Scene File'
     Filter = 'Scene File|*.xml'
     Options = [ofHideReadOnly, ofNoChangeDir, ofPathMustExist, ofCreatePrompt, ofEnableSizing]
-    Title = 'Save Scene File'
-    Left = 316
-    Top = 36
+    left = 316
+    top = 36
   end
-  object FormStorage: TFormStorage
-    IniSection = 'SceneEditor'
-    UseRegistry = False
-    StoredProps.Strings = (
-      'PageControlXML.ActivePage'
-      'LBErrors.Height')
+  object IniPropStorage: TIniPropStorage
     StoredValues = <>
-    Left = 476
-    Top = 36
+    IniSection = 'SceneEditor'
+    left = 515
+    top = 92
   end
 end

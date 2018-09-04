@@ -1,0 +1,120 @@
+object FCameras: TFCameras
+  Left = 1297
+  Height = 598
+  Top = 175
+  Width = 338
+  Caption = 'Cameras'
+  ClientHeight = 598
+  ClientWidth = 338
+  Color = clBtnFace
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  OnCreate = FormCreate
+  SessionProperties = 'CBSendImage.Checked;SBQuality.Position;Top;Left'
+  LCLVersion = '1.8.2.0'
+  object PageControl: TPageControl
+    Left = 0
+    Height = 569
+    Top = 0
+    Width = 338
+    ActivePage = TabDefault
+    Align = alTop
+    TabIndex = 0
+    TabOrder = 0
+    object TabDefault: TTabSheet
+      Caption = 'Default'
+      ClientHeight = 543
+      ClientWidth = 330
+      object ImageCam: TImage
+        Left = 0
+        Height = 240
+        Top = 244
+        Width = 320
+      end
+      object Label1: TLabel
+        Left = 176
+        Height = 13
+        Top = 492
+        Width = 34
+        Caption = 'deltaT:'
+        ParentColor = False
+      end
+      object GLSceneViewer: TGLSceneViewer
+        Left = 0
+        Height = 240
+        Top = 0
+        Width = 320
+        Camera = FViewer.GLCameraMem
+        PostRender = GLSceneViewerPostRender
+        Buffer.FogEnvironment.FogColor.Color = {
+          00000000F8FEFE3E0000803F0000803F
+        }
+        Buffer.FogEnvironment.FogStart = 1
+        Buffer.FogEnvironment.FogEnd = 10
+        Buffer.BackgroundColor = clBackground
+        Buffer.AmbientColor.Color = {
+          9A99993E9A99993E9A99993E0000803F
+        }
+        Buffer.ContextOptions = [roDoubleBuffer, roStencilBuffer, roRenderToWindow]
+        Buffer.FogEnable = True
+        FieldOfView = 134.760269165039
+        TabOrder = 0
+      end
+      object SBQuality: TScrollBar
+        Left = 0
+        Height = 16
+        Top = 515
+        Width = 173
+        Min = 1
+        PageSize = 0
+        Position = 1
+        TabOrder = 1
+        OnChange = SBQualityChange
+      end
+      object EditJPGQuality: TEdit
+        Left = 176
+        Height = 21
+        Top = 512
+        Width = 65
+        TabOrder = 2
+      end
+      object EditJPGSize: TEdit
+        Left = 244
+        Height = 21
+        Top = 512
+        Width = 77
+        TabOrder = 3
+      end
+      object CBShowJpeg: TCheckBox
+        Left = 0
+        Height = 19
+        Top = 492
+        Width = 72
+        Caption = 'Show Jpeg'
+        TabOrder = 4
+      end
+      object EditDeltaT: TEdit
+        Left = 216
+        Height = 21
+        Top = 488
+        Width = 105
+        TabOrder = 5
+      end
+      object CBSendImage: TCheckBox
+        Left = 80
+        Height = 19
+        Top = 492
+        Width = 44
+        Caption = 'Send'
+        TabOrder = 6
+      end
+    end
+  end
+  object IniPropStorage: TIniPropStorage
+    StoredValues = <>
+    IniSection = 'Cameras'
+    left = 94
+    top = 163
+  end
+end

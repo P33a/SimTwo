@@ -1,40 +1,38 @@
 object FSheets: TFSheets
   Left = 370
+  Height = 640
   Top = 168
   Width = 870
-  Height = 640
   Caption = 'Sheets'
+  ClientHeight = 620
+  ClientWidth = 870
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'Tahoma'
-  Font.Style = []
   Menu = MainMenu
-  OldCreateOrder = False
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnResize = FormResize
   OnShow = FormShow
-  PixelsPerInch = 96
-  TextHeight = 13
+  SessionProperties = 'Top;Left;Width;Height'
+  LCLVersion = '1.8.2.0'
   object PanelFormula: TPanel
     Left = 0
-    Top = 0
-    Width = 862
     Height = 29
+    Top = 0
+    Width = 870
     Align = alTop
+    ClientHeight = 29
+    ClientWidth = 870
     TabOrder = 0
     OnClick = PanelFormulaClick
-    DesignSize = (
-      862
-      29)
     object SpeedButtonOK: TSpeedButton
       Left = 176
+      Height = 24
       Top = 2
       Width = 24
-      Height = 24
       Glyph.Data = {
         66010000424D6601000000000000760000002800000014000000140000000100
         040000000000F000000000000000000000001000000010000000000000000000
@@ -47,14 +45,15 @@ object FSheets: TFSheets
         48877A222488777700007A22477777A222488777000077777777777A22244877
         0000777777777777A222488700007777777777777A2224870000777777777777
         77A224480000777777777777777A224800007777777777777777A24800007777
-        7777777777777A270000}
+        7777777777777A270000
+      }
       OnClick = SpeedButtonOKClick
     end
     object SpeedButtonBackColor: TSpeedButton
-      Left = 835
+      Left = 843
+      Height = 24
       Top = 3
       Width = 24
-      Height = 24
       Anchors = [akTop, akRight]
       Glyph.Data = {
         36040000424D3604000000000000360000002800000010000000100000000100
@@ -90,97 +89,108 @@ object FSheets: TFSheets
         00000000000C211B3C8F7D6ABBF7BDA8F9FFD8C1FFFFCBCBF0FFC2F0CCFFE5FB
         E9FFB3D6BBFF4F7658D7050D074F000000000000000000000000000000000000
         0000000000000000000004040B3627223F8B534676BF5B5B7CD1446F4ECE3B53
-        40B0122015680002001400000000000000000000000000000000}
+        40B0122015680002001400000000000000000000000000000000
+      }
       OnClick = SpeedButtonBackColorClick
     end
     object SpeedButtonFont: TSpeedButton
-      Left = 808
+      Left = 816
+      Height = 24
       Top = 3
       Width = 24
-      Height = 24
       Anchors = [akTop, akRight]
       Caption = 'f'
-      Font.Charset = ANSI_CHARSET
+      Font.CharSet = ANSI_CHARSET
       Font.Color = clWindowText
       Font.Height = -16
       Font.Name = 'Tahoma'
       Font.Style = [fsBold]
-      ParentFont = False
       OnClick = SpeedButtonFontClick
+      ParentFont = False
     end
     object CBNames: TComboBox
       Left = 4
+      Height = 21
       Top = 4
       Width = 145
-      Height = 21
-      Style = csDropDownList
       ItemHeight = 13
+      Style = csDropDownList
       TabOrder = 0
     end
     object EditFormula: TEdit
       Left = 204
+      Height = 21
       Top = 4
       Width = 597
-      Height = 21
-      TabOrder = 1
       OnExit = EditFormulaExit
       OnKeyDown = EditFormulaKeyDown
       OnKeyPress = EditFormulaKeyPress
+      TabOrder = 1
     end
   end
   object StatusBar: TStatusBar
     Left = 0
-    Top = 574
-    Width = 862
-    Height = 20
-    Panels = <
+    Height = 23
+    Top = 597
+    Width = 870
+    Panels = <    
       item
         Alignment = taCenter
         Text = 'Line:Col'
         Width = 60
-      end
+      end    
       item
         Alignment = taCenter
         Width = 50
-      end
+      end    
       item
         Alignment = taCenter
         Width = 55
-      end
+      end    
       item
         Alignment = taCenter
         Width = 150
-      end
+      end    
       item
         Width = 50
       end>
   end
   object PageControl: TPageControl
     Left = 0
+    Height = 568
     Top = 29
-    Width = 862
-    Height = 545
+    Width = 870
     ActivePage = TabGlobal
     Align = alClient
+    TabIndex = 0
     TabOrder = 2
     TabPosition = tpBottom
     object TabGlobal: TTabSheet
       Caption = 'TabGlobal'
+      ClientHeight = 542
+      ClientWidth = 862
       object SGGlobal: TStringGrid
         Left = 0
+        Height = 542
         Top = 0
-        Width = 854
-        Height = 519
+        Width = 862
         Align = alClient
-        ColCount = 32
-        Ctl3D = False
+        ColCount = 128
         DefaultColWidth = 50
         DefaultRowHeight = 16
-        RowCount = 128
+        Font.CharSet = ANSI_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'Arial'
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goColSizing]
-        ParentCtl3D = False
+        ParentFont = False
         PopupMenu = PopupMenu
+        RowCount = 256
         TabOrder = 0
+        TitleFont.CharSet = ANSI_CHARSET
+        TitleFont.Color = clWindowText
+        TitleFont.Height = -11
+        TitleFont.Name = 'Tahoma'
         OnDrawCell = SGGlobalDrawCell
         OnKeyDown = SGGlobalKeyDown
         OnKeyPress = SGGlobalKeyPress
@@ -219,22 +229,110 @@ object FSheets: TFSheets
           50
           50
           50
-          50)
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+          50
+        )
       end
     end
   end
-  object FormStorage: TFormStorage
-    IniSection = 'Sheets'
-    UseRegistry = False
-    StoredProps.Strings = (
-      'PageControl.ActivePage')
-    StoredValues = <>
-    Left = 236
-    Top = 60
-  end
   object MainMenu: TMainMenu
-    Left = 272
-    Top = 61
+    left = 272
+    top = 61
     object MenuFile: TMenuItem
       Caption = '&File'
       object MenuSave: TMenuItem
@@ -250,8 +348,8 @@ object FSheets: TFSheets
     end
   end
   object PopupMenu: TPopupMenu
-    Left = 304
-    Top = 61
+    left = 304
+    top = 61
     object Edit1: TMenuItem
       Caption = '&Edit'
       Visible = False
@@ -311,16 +409,45 @@ object FSheets: TFSheets
     end
   end
   object ColorDialog: TColorDialog
-    Left = 340
-    Top = 61
+    Color = clBlack
+    CustomColors.Strings = (
+      'ColorA=000000'
+      'ColorB=000080'
+      'ColorC=008000'
+      'ColorD=008080'
+      'ColorE=800000'
+      'ColorF=800080'
+      'ColorG=808000'
+      'ColorH=808080'
+      'ColorI=C0C0C0'
+      'ColorJ=0000FF'
+      'ColorK=00FF00'
+      'ColorL=00FFFF'
+      'ColorM=FF0000'
+      'ColorN=FF00FF'
+      'ColorO=FFFF00'
+      'ColorP=FFFFFF'
+      'ColorQ=C0DCC0'
+      'ColorR=F0CAA6'
+      'ColorS=F0FBFF'
+      'ColorT=A4A0A0'
+    )
+    left = 340
+    top = 61
   end
   object FontDialog: TFontDialog
-    Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'Tahoma'
-    Font.Style = []
-    Left = 376
-    Top = 61
+    MinFontSize = 0
+    MaxFontSize = 0
+    left = 376
+    top = 61
+  end
+  object IniPropStorage: TIniPropStorage
+    StoredValues = <>
+    IniSection = 'Sheets'
+    left = 420
+    top = 61
   end
 end

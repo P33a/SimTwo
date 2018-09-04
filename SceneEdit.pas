@@ -1,15 +1,21 @@
 unit SceneEdit;
 
+{$MODE Delphi}
+
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  LCLIntf, Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ComCtrls, SynEditHighlighter, SynHighlighterXML, SynEdit, Menus,
-  ExtCtrls, StdCtrls, ShellAPI, SynEditTypes, SynEditMiscClasses, SynEditSearch,
-  rxPlacemnt, ProjConfig, StrUtils;
+  ExtCtrls, StdCtrls, IniPropStorage, ShellAPI, SynEditTypes, process,
+  SynEditMiscClasses, SynEditSearch, SynCompletion, ProjConfig, StrUtils;
 
 type
+
+  { TFSceneEdit }
+
   TFSceneEdit = class(TForm)
+    IniPropStorage: TIniPropStorage;
     StatusBar: TStatusBar;
     LBErrors: TListBox;
     Splitter: TSplitter;
@@ -40,10 +46,8 @@ type
     SynEditXML: TSynEdit;
     ReplaceDialog: TReplaceDialog;
     FindDialog: TFindDialog;
-    SynEditSearch: TSynEditSearch;
     OpenDialog: TOpenDialog;
     SaveDialog: TSaveDialog;
-    FormStorage: TFormStorage;
     MenuChange: TMenuItem;
     MenuNewScene: TMenuItem;
     procedure FormShow(Sender: TObject);
@@ -90,7 +94,32 @@ implementation
 
 uses Viewer, Editor, ChooseScene;
 
-{$R *.dfm}
+{$R *.lfm}
+
+procedure LaunchProcess(exename: string; par: string);
+var aprocess: TProcess;
+    i: Integer;
+begin
+  aprocess := TProcess.Create(nil);
+  try
+    aProcess.InheritHandles := False;
+    aProcess.Options := [];
+    aProcess.ShowWindow := swoShow;
+
+    // Copy default environment variables including DISPLAY variable for GUI application to work
+    for i := 1 to GetEnvironmentVariableCount do
+      aProcess.Environment.Add(GetEnvironmentString(i));
+
+    aProcess.CurrentDirectory := ExtractFilePath(exename);
+    aProcess.Executable := exename;
+    aProcess.Parameters.Add(par);
+    //ShowMessage(aProcess.Parameters.Text);
+    aProcess.Execute;
+  finally
+    aProcess.Free;
+  end;
+end;
+
 
 procedure TFSceneEdit.CreateXMLTabEdit(SL: TStringList; i: integer);
 var NewTabSheet: TTabSheet;
@@ -128,18 +157,18 @@ begin
         CreateXMLTabEdit(WorldODE.XMLFiles, i);
     end;
   end;
-  FormStorage.RestoreFormPlacement;
+  IniPropStorage.Restore;
 
   PageControlXML.SelectNextPage(true); // Bug workarround: without it, the selected tab and the
   PageControlXML.SelectNextPage(false);// panel become out of sync
 
   TmpSynEdit := GetSynEdit();
   if TmpSynEdit = nil then exit;
-  TmpSynEdit.CaretY := FormStorage.ReadInteger('CursorLine',TmpSynEdit.CaretY);
-  TmpSynEdit.CaretX := FormStorage.ReadInteger('CursorCol',TmpSynEdit.CaretX);
-  TmpSynEdit.UpdateCaret;
+  TmpSynEdit.CaretY := IniPropStorage.ReadInteger('CursorLine',TmpSynEdit.CaretY);
+  TmpSynEdit.CaretX := IniPropStorage.ReadInteger('CursorCol',TmpSynEdit.CaretX);
+  //TODO TmpSynEdit.UpdateCaret;
 
-  TmpSynEdit.SetFocus;
+  //TODO TmpSynEdit.SetFocus;
 end;
 
 procedure TFSceneEdit.MenuReBuildClick(Sender: TObject);
@@ -166,6 +195,8 @@ begin
   result := nil;
   i := PageControlXML.TabIndex;
   if i<0 then exit;
+  if not assigned(WorldODE) then exit;
+  if i >= WorldODE.XMLFiles.Count then exit;
   if (WorldODE.XMLFiles.Objects[i] is TSynEdit) then begin
     result := TSynEdit(WorldODE.XMLFiles.Objects[i]);
   end;
@@ -176,7 +207,7 @@ function TFSceneEdit.ActSynEdit: TSynEdit;
 var i: integer;
 begin
   i := PageControlXML.TabIndex;
-  if (WorldODE.XMLFiles.Objects[i] is TSynEdit) then begin
+  if assigned(WorldODE) and (WorldODE.XMLFiles.Objects[i] is TSynEdit) then begin
     result := TSynEdit(WorldODE.XMLFiles.Objects[i]);
   end else result := SynEditXML;
 end;
@@ -188,10 +219,10 @@ begin
   TmpSynEdit := GetSynEdit();
   if TmpSynEdit = nil then exit;
 
-  if (scCaretX in Changes) or (scCaretY in Changes) or (scAll in Changes) then
+  if (scCaretX in Changes) or (scCaretY in Changes) {or (scAll in Changes)} then
     StatusBar.Panels[0].Text := format('%6d: %3d',[TmpSynEdit.CaretY, TmpSynEdit.CaretX]);
 
-  if (scInsertMode in Changes) or (scAll in Changes)then begin
+  if (scInsertMode in Changes) {or (scAll in Changes)}then begin
     if TmpSynEdit.InsertMode then begin
       StatusBar.Panels[2].Text := 'Insert';
     end else begin
@@ -199,7 +230,7 @@ begin
     end;
   end;
 
-  if (scModified in Changes) or (scAll in Changes) then begin
+  if (scModified in Changes) {or (scAll in Changes)} then begin
     if TmpSynEdit.Modified then begin
       StatusBar.Panels[1].Text := 'Modified';
     end else begin
@@ -217,7 +248,7 @@ begin
   TmpSynEdit := GetSynEdit();
   if TmpSynEdit = nil then exit;
 
-  TmpSynEdit.OnStatusChange(self, [scAll]);
+  TmpSynEdit.OnStatusChange(self, [scModified]);
 end;
 
 procedure TFSceneEdit.MenuUndoClick(Sender: TObject);
@@ -260,7 +291,7 @@ procedure TFSceneEdit.FindReplaceDialog(TmpSynEdit: TSynEdit; Dialog: TFindDialo
 var SynSearchOptions: TSynSearchOptions;
     replace_txt: string;
 begin
-  TmpSynEdit.SearchEngine := SynEditSearch;
+  //TODO TmpSynEdit.SearchEngine := SynEditSearch;
   SynSearchOptions := [];
   if not (frDown in Dialog.Options) then
     SynSearchOptions := SynSearchOptions + [ssoBackwards];
@@ -380,7 +411,7 @@ end;
 
 procedure TFSceneEdit.FormCreate(Sender: TObject);
 begin
-  FormStorage.IniFileName := GetIniFineName;
+  IniPropStorage.IniFileName := GetIniFineName;
   MustReSpawn := false;
   ReSpawnPars := '';
 end;
@@ -390,8 +421,8 @@ var TmpSynEdit: TSynEdit;
 begin
   TmpSynEdit := GetSynEdit();
   if TmpSynEdit = nil then exit;
-  FormStorage.WriteInteger('CursorLine',TmpSynEdit.CaretY);
-  FormStorage.WriteInteger('CursorCol',TmpSynEdit.CaretX);
+  IniPropStorage.WriteInteger('CursorLine',TmpSynEdit.CaretY);
+  IniPropStorage.WriteInteger('CursorCol',TmpSynEdit.CaretX);
   //while PageControlXML.PageCount > 0 do begin
   //  PageControlXML.Pages[0].Free;
   //end;
@@ -399,12 +430,12 @@ end;
 
 procedure TFSceneEdit.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
-  if CheckModified then begin
-    if MessageDlg('Some XML Files were changed.'+crlf+
-                  'Exit anyway?',
-                  mtConfirmation , [mbOk,mbCancel], 0)
-       = mrCancel then CanClose:=false;
-  end;
+  //if CheckModified then begin
+  //  if MessageDlg('Some XML Files were changed.'+crlf+
+  //                'Exit anyway?',
+  //                mtConfirmation , [mbOk,mbCancel], 0)
+  //     = mrCancel then CanClose:=false;
+  //end;
 end;
 
 
@@ -455,7 +486,7 @@ var i, col, idx: integer;
     TmpSynEdit: TSynEdit;
     ErrLineNumber: integer;
     tok, lin: string;
-    BufferCoord: TBufferCoord;
+    BufferCoord: TPoint;
 begin
   TmpSynEdit := GetSynEdit();
   if TmpSynEdit = nil then exit;
@@ -477,28 +508,17 @@ begin
   end else begin
     idx := pos(tok, TmpSynEdit.Text);
     BufferCoord := TmpSynEdit.CharIndexToRowCol(idx);
-    TmpSynEdit.SetCaretAndSelection(BufferCoord, BufferCoord, BufferCoord);
+    //TODO TmpSynEdit.SetCaretAndSelection(BufferCoord, BufferCoord, BufferCoord);
   end;
 
-  TmpSynEdit.UpdateCaret;
+  //TODO TmpSynEdit.UpdateCaret;
   TmpSynEdit.setfocus;
 end;
 
 procedure TFSceneEdit.ReSpawn;
-var s: string;
 begin
   if not MustReSpawn then exit;
-
-  if ReSpawnPars = '' then begin
-    if ParamCount > 0 then
-      s:=ansiquotedstr(ParamStr(1),'"')
-    else
-      s:='';
-    //ShellExecute(Handle, 'open', pchar(Application.ExeName), pchar(AnsiquotedStr(AnsiDequotedStr(s,''''),'''')) , pchar(ExtractFilePath(Application.ExeName)),  SW_SHOWNORMAL);
-    ShellExecute(Handle, 'open', pchar(Application.ExeName), pchar(s) , pchar(ExtractFilePath(Application.ExeName)),  SW_SHOWNORMAL);
-  end else begin
-    ShellExecute(Handle, 'open', pchar(Application.ExeName), pchar(ReSpawnPars), pchar(ExtractFilePath(Application.ExeName)),  SW_SHOWNORMAL);
-  end;
+  LaunchProcess(Application.ExeName, ReSpawnPars);
 end;
 
 procedure TFSceneEdit.MenuChangeClick(Sender: TObject);
@@ -508,7 +528,8 @@ begin
   if FChooseScene.ModalResult = mrCancel then exit;
   if FChooseScene.SelectedDir = '' then exit;
 
-  ReSpawnPars := ansiquotedstr(FChooseScene.SelectedDir,'"');
+  //ReSpawnPars := ansiquotedstr(FChooseScene.SelectedDir,'"');
+  ReSpawnPars := FChooseScene.SelectedDir;
   MustReSpawn := true;
   FViewer.Close;
 end;
@@ -516,7 +537,7 @@ end;
 procedure TFSceneEdit.MenuNewSceneClick(Sender: TObject);
 var s, od: string;
     i: integer;
-    fo: _SHFILEOPSTRUCT;
+    fo: SHFILEOPSTRUCT;
 begin
   i := 1;
   s := 'Project' + inttostr(i);
@@ -537,7 +558,7 @@ begin
 
   od := GetCurrentDir;
 
-  fo.Wnd := handle;
+  fo.wnd := handle;
   fo.wFunc := FO_COPY;
   fo.pFrom := pchar(od + '\..\base\*.*' + #0); //Double Null Terminated
   fo.pTo := pchar(od + '\..\' + s + #0);
@@ -550,5 +571,6 @@ begin
   MustReSpawn := true;
   FViewer.Close;
 end;
+
 
 end.

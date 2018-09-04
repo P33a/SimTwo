@@ -1,5 +1,7 @@
 unit SimpleParser;
 
+{$MODE Delphi}
+
 interface
 
 uses classes,sysutils,
@@ -443,9 +445,9 @@ begin
           v1:=Pop();
           case data[1] of
             '>': Push(ord(v1>v2));
-            '»': Push(ord(v1>=v2));
+            '}': Push(ord(v1>=v2));
             '<': Push(ord(v1<v2));
-            '«': Push(ord(v1<=v2));
+            '{': Push(ord(v1<=v2));
             '#': Push(ord(v1<>v2));
             '=': Push(ord(v1=v2));
           end;
@@ -620,13 +622,13 @@ begin
      GetChar();
      if Look = '=' then begin
        //rop:=rop +look;
-       rop:='»';
+       rop:='}';
        match('=');
      end;
    end else if Look = '<' then begin
      GetChar();
      if Look ='=' then begin
-       rop:='«';
+       rop:='{';
        match('=');
      end else if Look ='>' then begin
        rop:='#';

@@ -1,9 +1,18 @@
 unit VerInfo;
 
+{$mode objfpc}{$H+}
+
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Forms;
+  SysUtils, Classes, Forms
+  // FPC 3.0 fileinfo reads exe resources as long as you register the appropriate units
+ , fileinfo
+ , winpeimagereader {need this for reading exe info}
+ //, elfreader {needed for reading ELF executables}
+ //, machoreader {needed for reading MACH-O executables}
+ ;
+
 
 const
   InfoNum = 10;
@@ -16,28 +25,23 @@ procedure GetVersionInfo;
 
 implementation
 
+
 procedure GetVersionInfo;
 var
-  S: string;
-  n, Len, i: DWORD;
-  Buf: PChar;
-  Value: PChar;
+  FileVerInfo: TFileVersionInfo;
+  i: integer;
 begin
-  S := Application.ExeName;
-  n := GetFileVersionInfoSize(PChar(S), n);
-  if n > 0 then begin
-    Buf := AllocMem(n);
-    //Memo1.Lines.Add('VersionInfoSize = ' + IntToStr(n));
-    GetFileVersionInfo(PChar(S), 0, n, Buf);
-    for i := 1 to InfoNum do begin
-      if VerQueryValue(Buf, PChar('StringFileInfo\040904E4\' + InfoKey[i]), Pointer(Value), Len) then begin
-        //Memo1.Lines.Add(InfoStr[i] + ' = ' + Value);
-        InfoData[i] := value;
-      end;
+  FileVerInfo:=TFileVersionInfo.Create(nil);
+  try
+    FileVerInfo.ReadFileInfo;
+    for i := low(InfoKey) to high(InfoKey) do begin
+      InfoData[i] := FileVerInfo.VersionStrings.Values[InfoKey[i]];
     end;
-    FreeMem(Buf, n);
-  end;// else
-    //Memo1.Lines.Add('No version information found');
+
+  finally
+    FileVerInfo.Free;
+  end;
 end;
+
 
 end.
