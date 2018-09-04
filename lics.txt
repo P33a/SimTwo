@@ -1,0 +1,6 @@
+ODE:          LGPL, BSD
+GLScene:      MPL
+SynEdit:      GPL, MPL
+PascalScript: BSD-Like
+OmniXML:      MPL 
+RXLib:        Prop
