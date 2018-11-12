@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<scene>
+
+  <robot>
+    <ID name='robot'/>
+    <pos x='0.09' y='0.07' z='0'/>
+    <rot_deg x='0' y='0' z='90'/>
+
+    <body file='robot.xml'/>
+  </robot>
+
+  <obstacles file='obstacles.xml'/>
+
+
+</scene>

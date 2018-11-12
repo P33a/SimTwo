@@ -1,0 +1,68 @@
+<?xml version="1.0" ?>
+<robot>
+  <kind value='Belt'/>
+  <defines>
+    <arg name='belt_length' value='1.5' />
+  </defines>
+
+  <solids>
+    <belt>
+      <ID value='1'/>
+      <mass value='20'/>
+      <size x='belt_length' y='0.4' z='0.05'/>
+      <pos x='0' y='0' z='0'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='255' g='255' b='255'/>
+      <texture name='ConveyorBelt256.jpg' scale='6'/>
+    </belt>
+
+<!--    <cuboid>
+      <ID value='2'/>
+      <mass value='0.8'/>
+      <size x='0.09' y='0.09' z='0.135'/>
+      <pos x='0' y='-0.4' z='0.08'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </cuboid>-->
+
+  </solids>
+
+
+  <shells>
+    <cuboid>
+      <size x='belt_length + 0.1' y='0.02' z='0.2'/>
+      <pos x='0' y='0.2' z='0'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+    </cuboid>
+    <cuboid>
+      <size x='belt_length + 0.1' y='0.02' z='0.2'/>
+      <pos x='0' y='-0.2' z='0'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+    </cuboid>
+  </shells>
+
+  <sensors>
+    <IRSharp>
+      <ID value='IRBeacon'/>
+      <beam length='0.4' initial_width='0.01' final_width='0.01'/>
+      <pos x='belt_length/2 - 0.1' y='-0.2' z='0.15'/>
+      <rot_deg x='0' y='0' z='90'/>
+      <color_rgb r='200' g='0' b='0'/>
+    </IRSharp>
+    
+    
+    <nranger2d>
+      <ID value='ranger2d'/>
+      <pos x='0' y='0' z='0.3'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <tag value='00'/>
+      <beam angle='270' rays='768'/>
+      <color_rgb r='0' g='255' b='0'/>
+    </nranger2d>
+    
+  </sensors>
+
+</robot>
+

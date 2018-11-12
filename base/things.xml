@@ -1,0 +1,50 @@
+<?xml version="1.0" ?>
+<things>
+  <sphere>
+    <ID value='Ball'/>
+    <radius value='0.1'/>
+    <mass value='0.3'/>
+    <pos x='1' y='1' z='1'/>
+    <surface mu='0.1' softness='0.1'/>
+    <drag coefficient='0' stokes='1e-4' roll='5e-4'/>
+  </sphere>
+
+  <cuboid>
+    <ID value='T1'/>
+    <mass value='0.5'/>
+    <size x='0.3' y='0.3' z='0.2'/>
+    <pos x='0' y='0.5' z='0.1'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='64' g='64' b='64'/>
+  </cuboid>
+
+  <cuboid>
+    <ID value='T2'/>
+    <mass value='0.8'/>
+    <size x='0.2' y='0.2' z='0.15'/>
+    <pos x='0' y='0.5' z='0.275'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='128' g='0' b='0'/>
+    <surface mu='1e-5'/>
+  </cuboid>
+
+  <cuboid>
+    <ID value='T3'/>
+    <mass value='0.8'/>
+    <size x='0.1' y='0.1' z='0.15'/>
+    <pos x='0' y='0.5' z='0.575'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='128' g='0' b='0'/>
+    <surface mu='100'/>
+  </cuboid> 
+
+  <cylinder>
+    <ID value='C1'/>
+    <mass value='0.5'/>
+    <size x='0.1' y='0.3' z='0.2'/>
+    <pos x='0' y='-1.5' z='0.1'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='64' g='64' b='64'/>
+  </cylinder>
+</things>
+

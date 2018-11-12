@@ -1,0 +1,61 @@
+<?xml version="1.0" ?>
+<track>
+
+  <defines>
+    <const name='circle_radius' value='0.5' />
+    <const name='target_radius' value='0.4' />
+    <const name='outer_line_width' value='0.12' />
+    <const name='inner_line_width' value='0.05' />
+  </defines>
+
+  
+  <!-- Central Circle -->
+  <arc>
+    <tag value='white'/>
+    <color rgb24='8F8F8F'/>
+    <center x='0' y='0' z='0.01'/>
+    <radius inner='circle_radius - inner_line_width' outer='circle_radius'/>
+    <angle_deg start='-90' stop='90' steps='15'/>
+  </arc>
+  <arc>
+    <tag value='white'/>
+    <color rgb24='8F8F8F'/>
+    <center x='0' y='0' z='0.01'/>
+    <radius inner='circle_radius - inner_line_width' outer='circle_radius'/>
+    <angle_deg start='90' stop='270' steps='15'/>
+  </arc>
+
+  <!-- Target 1 -->
+  <arc>
+    <tag value='white'/>
+    <color rgb24='8F8F8F'/>
+    <center x='-4' y='1.5' z='0.01'/>
+    <radius inner='target_radius - inner_line_width' outer='target_radius'/>
+    <angle_deg start='-90' stop='90' steps='15'/>
+  </arc>
+  <arc>
+    <tag value='white'/>
+    <color rgb24='8F8F8F'/>
+    <center x='-4' y='1.5' z='0.01'/>
+    <radius inner='target_radius - inner_line_width' outer='target_radius'/>
+    <angle_deg start='90' stop='270' steps='15'/>
+  </arc>
+
+  <!-- Target 2 -->
+  <arc>
+    <tag value='white'/>
+    <color rgb24='8F8F8F'/>
+    <center x='4' y='1.5' z='0.01'/>
+    <radius inner='target_radius - inner_line_width' outer='target_radius'/>
+    <angle_deg start='-90' stop='90' steps='15'/>
+  </arc>
+  <arc>
+    <tag value='white'/>
+    <color rgb24='8F8F8F'/>
+    <center x='4' y='1.5' z='0.01'/>
+    <radius inner='target_radius - inner_line_width' outer='target_radius'/>
+    <angle_deg start='90' stop='270' steps='15'/>
+  </arc>
+
+</track>
+

@@ -31,7 +31,7 @@
       <MajorVersionNr Value="2018"/>
       <MinorVersionNr Value="7"/>
       <RevisionNr Value="11"/>
-      <BuildNr Value="2"/>
+      <BuildNr Value="3"/>
       <Attributes pvaSpecialBuild="True"/>
       <StringTable ProductVersion="2018"/>
     </VersionInfo>

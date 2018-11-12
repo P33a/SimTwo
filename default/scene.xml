@@ -1,0 +1,35 @@
+<?xml version="1.0" ?>
+<scene>
+
+  <robot>
+    <ID name='Omni3'/>
+    <pos x='0' y='0' z='0'/>
+    <rot_deg z='0'/>
+
+    <body file='Omni3.xml'/>
+  </robot>
+
+  <robot>
+    <ID name='belt'/>
+    <defines>
+      <noconst name='belt_length' value='1.0' />
+    </defines>
+    <pos x='1.5' y='0' z='0.5'/>
+    <rot_deg z='0'/>
+
+    <body file='Belt.xml'/>
+  </robot>
+
+  <things file='things.xml'>
+    <defines>
+      <const name='ball_radius' value='0.1' />
+    </defines>
+  </things>
+
+  <sensors file='sensors.xml'/>
+
+  <obstacles file='obstacles.xml'/>
+
+  <track file='field.xml'/>
+
+</scene>

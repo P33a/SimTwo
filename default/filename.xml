@@ -1,0 +1,13 @@
+<data PropFormat="node">
+  <o>
+    <Name>MatConvBelt</Name>
+    <Material>
+      <Texture>
+        <TextureMode>tmModulate</TextureMode>
+        <MappingMode>tmmObjectLinear</MappingMode>
+        <Disabled>0</Disabled>
+      </Texture>
+    </Material>
+    <Tag>0</Tag>
+  </o>
+</data>
