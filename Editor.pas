@@ -201,7 +201,7 @@ implementation
 
 //uses Viewer, ProjManage, Params, FastChart, uPSDebugger;
 uses uPSDebugger, Sheets, Viewer, Utils, Params, uPSI_ODERobotsPublished, uPSI_PathFinder, uPSI_dynmatrix,
-   IdUDPBase;
+     uPSI_user_charts, IdUDPBase;
 
 {$R *.lfm}
 
@@ -429,7 +429,7 @@ begin
 end;
 
 procedure TFEditor.FormCreate(Sender: TObject);
-var Plugin, PathPlugin, MatrixPlugin: TPSPlugin;
+var Plugin, PathPlugin, MatrixPlugin, ChartPlugin: TPSPlugin;
 begin
   IniPropStorage.IniFileName := GetIniFineName;
   //TabPascal.TabVisible:=false;
@@ -447,6 +447,10 @@ begin
 
   PathPlugin := TPSImport_PathFinder.Create(Self);
   TPSPluginItem(PSScript.Plugins.add).Plugin := PathPlugin;
+
+  ChartPlugin := TPSImport_user_charts.Create(Self);
+  TPSPluginItem(PSScript.Plugins.add).Plugin := ChartPlugin;
+
 
   try
     with PrintDialog do begin
@@ -1248,15 +1252,11 @@ begin
     if pos(lowercase(SynCompletionProposal.CurrentString), lowercase(FuncList[i])) <> 0 then
       SynCompletionProposal.ItemList.Add(FuncList[i]);
   end;
-  //APosition := 0;  //??
+  APosition := 0;  //??
 end;
 
 procedure TFEditor.PSScriptBreakpoint(Sender: TObject;
   const FileName: tbtstring; Position, Row, Col: Cardinal);
-//begin
-//end;
-// procedure TFEditor.PSScriptBreakpoint(Sender: TObject;
-//  const FileName: String; Position, Row, Col: Cardinal);
 //  showmessage('Break Point' + format('%d,%d',[Row,col]));
 //  PSScript.Exec.Pause;
 var i: integer;

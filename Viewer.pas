@@ -691,6 +691,7 @@ begin
   Solid.GLObj := TGLSceneObject(ODEScene.AddNewChild(TGLCylinder));
 
   with (Solid.GLObj as TGLCylinder) do begin
+    Slices := 64;
     TagObject := Solid;
     TopRadius := c_radius;
     BottomRadius := c_radius;

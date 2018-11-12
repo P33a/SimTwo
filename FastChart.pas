@@ -32,6 +32,10 @@ type
     BSet: TButton;
     BSave: TButton;
     EditFileName: TEdit;
+    PageControl: TPageControl;
+    PanelChart: TPanel;
+    TabUserCharts: TTabSheet;
+    TabTimeChart: TTabSheet;
     TreeView: TTreeView;
     ILCheckBox: TImageList;
     BChartRefresh: TButton;
@@ -60,7 +64,8 @@ type
   public
     SeriesNameList: TStringList;
     MaxPoints : integer;
-    physTime_zero: double; 
+    physTime_zero: double;
+
 
     procedure AddSeriesValue(var Series: TLineSeries; X, Y: double);
     procedure AddPoint(x, r, y, u: double);
@@ -74,6 +79,8 @@ procedure ExpandNodePath(node: TTreeNode);
 
 var
   FChart: TFChart;
+  UserCharts: array of TChart;
+  UserChartsCount: integer;
 
 implementation
 
@@ -109,10 +116,19 @@ end;
 
 
 procedure TFChart.FormCreate(Sender: TObject);
+var i: integer;
 begin
   SeriesNameList := TStringList.Create;
   IniPropStorage.IniFileName := GetIniFineName;
   physTime_zero := 0;
+
+  UserChartsCount := 16;
+  setlength(UserCharts, UserChartsCount);
+  for i := 0 to UserChartsCount -1 do begin
+    UserCharts[i] := TChart.Create(FChart);
+    UserCharts[i].Align := alClient;
+  end;
+  UserCharts[0].Parent := PanelChart;
 end;
 
 procedure TFChart.AddSeriesValue(var Series: TLineSeries; X,Y: double);
