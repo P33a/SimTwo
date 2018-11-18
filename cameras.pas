@@ -6,7 +6,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ExtCtrls, GLWin32Viewer, StdCtrls, ComCtrls, IniPropStorage,
+  Dialogs, ExtCtrls, StdCtrls, ComCtrls, IniPropStorage,
   GLGraphics, GLLCLViewer, math, IdGlobal;
 
 type

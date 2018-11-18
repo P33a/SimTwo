@@ -6,7 +6,7 @@ interface
 
 uses
   LCLIntf, Windows, SysUtils, Variants, Classes, Graphics, Controls,
-  Forms, Dialogs, StdCtrls, ComCtrls, ExtCtrls, GLWin32Viewer, GLcontext, Math,
+  Forms, Dialogs, StdCtrls, ComCtrls, ExtCtrls, GLLCLViewer, GLcontext, Math,
   IdComponent, IdUDPBase, IdUDPServer, IdSocketHandle,
   ODERobots, OdeImport, Grids, GLCadencer, SdpoSerial, Sockets,
   GLShadowVolume, GLScene, Buttons, IniPropStorage,

@@ -6,7 +6,7 @@ interface
 
 uses
   Windows, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, GLScene, GLObjects, {GLMisc,} GLWin32Viewer, GLCadencer, ODEImport,
+  Dialogs, GLScene, GLObjects, {GLMisc,} GLCadencer, ODEImport,
   GLShadowPlane, GLVectorGeometry, GLGeomObjects, ExtCtrls, ComCtrls,
   GLWindowsFont, keyboard, GLTexture, math, GLSpaceText, Remote,
   GLShadowVolume, GLSkydome, GLGraph, OmniXML, OmniXMLUtils,  ODERobots,

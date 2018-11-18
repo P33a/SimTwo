@@ -31,7 +31,7 @@
       <MajorVersionNr Value="2018"/>
       <MinorVersionNr Value="7"/>
       <RevisionNr Value="11"/>
-      <BuildNr Value="3"/>
+      <BuildNr Value="4"/>
       <Attributes pvaSpecialBuild="True"/>
       <StringTable ProductVersion="2018"/>
     </VersionInfo>
@@ -58,7 +58,7 @@
         <PackageName Value="Printer4Lazarus"/>
       </Item3>
       <Item4>
-        <PackageName Value="GLSceneLCL_DesignTime"/>
+        <PackageName Value="GLScene_DesignTime"/>
       </Item4>
       <Item5>
         <PackageName Value="SdpoSerialLaz"/>
@@ -70,7 +70,7 @@
         <PackageName Value="SynEdit"/>
       </Item7>
       <Item8>
-        <PackageName Value="GLSceneLCL_RunTime"/>
+        <PackageName Value="GLScene_RunTime"/>
       </Item8>
       <Item9>
         <PackageName Value="LCL"/>
