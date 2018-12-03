@@ -1,89 +1,82 @@
-type
- TRobotControls = record
-    V,VR,VL: double;
-    W1,W2: double;
-    SensorFrontal,SensorDireito,SensorEsquerdo:double;
-  end;
 // Global Variables Here
 var
-RobotControls : TRobotControls;
-irobot: integer;
-
-//Procedure, functions and Routines
+  go: boolean;
 
 
-
-
-
-function DecodeJsonDouble(var StrPacket: TStringList; name: string; defval: double): double;
-var i: integer;
-//este procedimento decodifica as funções doubre para envialas
+procedure ManualControl(var V1, V2: double);
+var V, W: double;
+    Vmax, Wmax: double;
 begin
-  result := defval;
-  i := StrPacket.indexof(name);
+  Vmax := 0.6;
+  Wmax := 0.3;
 
-  if (i < 0) or (i + 1 >= StrPacket.count) then exit;
-  result := strtofloat(StrPacket[i+1]);
+  V := 0;
+  W := 0;
+
+  if KeyPressed(vk_down) then begin
+    V := -1;
+  end else if KeyPressed(vk_left) then begin
+    W := 1;
+  end else if KeyPressed(vk_right) then begin
+    W := -1
+  end else if KeyPressed(vk_up) then begin
+    V := 1;
+  end;
+
+  V1 := V * Vmax - W * Wmax;
+  V2 := V * Vmax + W * Wmax;
 end;
 
-
-procedure Communication_MicroController(var RC: TRobotControls);
-var
-StrPacket: string; //cria uma lista estruturada de strings
-ReceivePacket: TStringList;
-
-begin
-
-   ReceivePacket:=  TStringList.create;
-   
-   RC.SensorDireito:=GetSensorVal(0,2);
-   RC.SensorEsquerdo:=GetSensorVal(0,0);
-   RC.SensorFrontal:=GetSensorVal(0,1);
-
-   
-   //Inicia a String do JSON            format('%.6g',[data])
-   StrPacket := '{';
-
-   StrPacket:= StrPacket + 'W1' + ':' + format('%.6g',[RC.W1]) + ',';
-   StrPacket:= StrPacket + 'W2' + ':' + format('%.6g',[RC.W2]) + ',';
-
-   StrPacket:= StrPacket + 'SensorFrontal' + ':' + format('%.6g',[RC.SensorFrontal]) + ',';
-   StrPacket:= StrPacket + 'SensorDireito' + ':' + format('%.6g',[RC.SensorDireito]) + ',';
-   StrPacket:= StrPacket + 'SensorEsquerdo' + ':' + format('%.6g',[RC.SensorEsquerdo]) + ',';
-
-   //Finaliza a String Json
-   StrPacket := StrPacket + '}';
-
-   WriteUDPData('192.168.43.123',9810, StrPacket);
-
-
-   ReceivePacket.text:= ReadUDPData();
-
-   RC.VR := DecodeJsonDouble(ReceivePacket, 'VR', 0);    //atribui os valores
-   RC.VL := DecodeJsonDouble(ReceivePacket, 'VL', 0);    //atribui os valores
-   
-   SetRCValue(1,1,'VR');
-   SetRCValue(2,1,floattostr(RC.VR));
-   SetRCValue(1,2,'VL');
-   SetRCValue(2,2,floattostr(RC.VL));
-   ReceivePacket.free;
-   
-end;
 
 // this procedure is called periodicaly (default: 40 ms)
 procedure Control;
+var V1, V2: double;
+    Rx, Ry, Rtheta: double;
 begin
+  if RCButtonPressed(2, 3) then begin
+    Rx := GetRCValue(3, 3);
+    Ry := GetRCValue(4, 3);
+    Rtheta := Rad(GetRCValue(5, 3));
+    SetRobotPos(0, Rx, Ry, 0, RTheta);
+  end;
 
-   Communication_MicroController(RobotControls); //Remote Control
-   AddTrailNode(irobot, GetRobotX(irobot), GetRobotY(irobot), 0.01); //Add a follow line;
+  // Read the robot position
+  Rx := GetRobotX(0);
+  Ry := GetRobotY(0);
+  Rtheta := GetRobotTheta(0);
 
+  // Show the robot position
+  SetRCValue(3, 2, format('%.3g', [Rx]));
+  SetRCValue(4, 2, format('%.3g', [Ry]));
+  SetRCValue(5, 2, format('%.3g', [deg(Rtheta)]));
+
+  // Control the robot here (replace ManualControl by your procedure)
+  ManualControl(V1, V2);
+
+  // Set the desired speed
+  SetAxisSpeedRef(0, 0, V1/(0.065/2));
+  SetAxisSpeedRef(0, 1, V2/(0.065/2));
+
+  // Show the robot path in a Chart
+  if RCButtonPressed(3, 5) then go := true;
+  if RCButtonPressed(4, 5) then go := false;
+
+  if go then begin
+    ChartSeriesAddXY(0, 0, Rx, Ry);
+    //ChartSeriesAddXY(0, 1, time, RTheta);
+  end;
 end;
 
 // this procedure is called once when the script is started
 procedure Initialize;
 begin
- irobot:=0;
- SetTrailColor(0, 0, 0,0);   // Trail[0] is black
- SetRobotPos(irobot,0.09,0.09,0.01,1.57);
+  go := false;
+  ChartSeriesSetCount(0, 2);
+  ChartSeriesSetColor(0, 0, clGreen);
+  ChartSeriesSetColor(0, 1, clRed);
+  ChartSeriesClear(0, 0);
+  ChartSeriesClear(0, 1);
 
+  ChartSetAxisMinMax(0, 0, 1, 0, 2);
 end;
+

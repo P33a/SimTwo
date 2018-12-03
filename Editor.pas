@@ -965,6 +965,9 @@ begin
   Sender.AddFunction(@CloseSimTwo, 'procedure CloseSimTwo;');
   Sender.AddFunction(@ScriptPeriod, 'function ScriptPeriod: double;');
 
+  Sender.AddFunction(@Now, 'function Now: double;');
+  Sender.AddFunction(@GetTickCount, 'function GetTickCount: LongWord;');
+
   //RLan Functions
   Sender.AddFunction(@Test, 'procedure Test(var B: double);');
 

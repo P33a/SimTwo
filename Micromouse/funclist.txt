@@ -313,6 +313,8 @@
  procedure RefreshSheets();
  procedure CloseSimTwo();
  function ScriptPeriod(): Double;
+ function Now(): Double;
+ function GetTickCount(): LongWord;
  procedure Test(B: Double);
  procedure ClearUDPBuffer(Buf: TUDPBuffer);
  procedure NetBufferSeek(Buf: TUDPBuffer; disp: LongInt);

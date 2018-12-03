@@ -4,7 +4,8 @@ FSheets
 FChart
 FEditor
 FParams
-FRemoteControl
+
+
 FWayPointsEdit
 FChooseScene
 FCameras

@@ -4044,6 +4044,8 @@ var s, fl: string;
     Slist: TStringList;
 begin
   DefaultFormatSettings.DecimalSeparator := '.';
+  SetCurrentDir(ExtractFilePath(Application.ExeName));
+
   if ParamCount > 0 then begin
     s := ParamStr(1);
   end else begin
@@ -4077,8 +4079,8 @@ begin
     try
       FChooseScene.showmodal;
 
-      if FChooseScene.ModalResult = mrCancel then Close;
-      if FChooseScene.SelectedDir = '' then Close;
+      if FChooseScene.ModalResult = mrCancel then halt(1);
+      if FChooseScene.SelectedDir = '' then halt(1);
 
       SetCurrentDir('../' + FChooseScene.SelectedDir);
       CurrentProject := FChooseScene.SelectedDir;

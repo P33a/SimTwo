@@ -5,10 +5,11 @@ unit SceneEdit;
 interface
 
 uses
-  LCLIntf, Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ComCtrls, SynEditHighlighter, SynHighlighterXML, SynEdit, Menus,
-  ExtCtrls, StdCtrls, IniPropStorage, ShellAPI, SynEditTypes, process,
-  SynEditMiscClasses, SynEditSearch, SynCompletion, ProjConfig, StrUtils;
+  LCLIntf, Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
+  Forms, Dialogs, ComCtrls, SynEditHighlighter, SynHighlighterXML, SynEdit,
+  Menus, ExtCtrls, StdCtrls, IniPropStorage, ShellAPI, SynEditTypes, process,
+  SynEditMiscClasses, SynEditSearch, SynCompletion, UTF8Process, ProjConfig,
+  StrUtils;
 
 type
 
@@ -16,6 +17,7 @@ type
 
   TFSceneEdit = class(TForm)
     IniPropStorage: TIniPropStorage;
+    ProcessUTF8: TProcessUTF8;
     StatusBar: TStatusBar;
     LBErrors: TListBox;
     Splitter: TSplitter;
@@ -100,7 +102,8 @@ procedure LaunchProcess(exename: string; par: string);
 var aprocess: TProcess;
     i: Integer;
 begin
-  aprocess := TProcess.Create(nil);
+  //aprocess := TProcess.Create(nil);
+  aprocess := FSceneEdit.ProcessUTF8;
   try
     aProcess.InheritHandles := False;
     aProcess.Options := [];
@@ -116,7 +119,7 @@ begin
     //ShowMessage(aProcess.Parameters.Text);
     aProcess.Execute;
   finally
-    aProcess.Free;
+    //aProcess.Free;
   end;
 end;
 

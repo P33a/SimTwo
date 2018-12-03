@@ -2,115 +2,24 @@
 <sheet>
   <columns>
     <defaultcol width="50" />
-    <col num="1" width="171" />
-    <col num="2" width="23" />
-    <col num="3" width="24" />
-    <col num="4" width="21" />
-    <col num="5" width="26" />
-    <col num="6" width="24" />
-    <col num="7" width="26" />
-    <col num="8" width="27" />
-    <col num="9" width="22" />
-    <col num="10" width="21" />
-    <col num="11" width="27" />
-    <col num="12" width="23" />
-    <col num="13" width="20" />
-    <col num="14" width="22" />
-    <col num="15" width="22" />
-    <col num="16" width="20" />
-    <col num="17" width="20" />
-    <col num="18" width="21" />
-    <col num="19" width="24" />
-    <col num="20" width="21" />
-    <col num="21" width="21" />
-    <col num="22" width="22" />
-    <col num="23" width="21" />
-    <col num="24" width="22" />
-    <col num="25" width="20" />
-    <col num="26" width="22" />
-    <col num="27" width="22" />
-    <col num="28" width="23" />
-    <col num="29" width="19" />
-    <col num="30" width="18" />
-    <col num="31" width="22" />
   </columns>
   <cells>
-    <cell r="0" c="0" text="00" />
-    <cell r="32" c="32" text="2.000000000000" />
-    <cell r="32" c="33" text="1.000000000000" />
-    <cell r="31" c="32" text="2.000000000000" />
-    <cell r="30" c="32" text="2.000000000000" />
-    <cell r="29" c="32" text="2.000000000000" />
-    <cell r="28" c="32" text="2.000000000000" />
-    <cell r="27" c="32" text="2.000000000000" />
-    <cell r="26" c="32" text="2.000000000000" />
-    <cell r="25" c="32" text="2.000000000000" />
-    <cell r="24" c="32" text="2.000000000000" />
-    <cell r="23" c="32" text="2.000000000000" />
-    <cell r="22" c="32" text="2.000000000000" />
-    <cell r="21" c="32" text="2.000000000000" />
-    <cell r="20" c="32" text="2.000000000000" />
-    <cell r="19" c="32" text="2.000000000000" />
-    <cell r="18" c="32" text="2.000000000000" />
-    <cell r="17" c="32" text="2.000000000000" />
-    <cell r="16" c="32" text="2.000000000000" />
-    <cell r="15" c="32" text="2.000000000000" />
-    <cell r="14" c="32" text="2.000000000000" />
-    <cell r="13" c="32" text="2.000000000000" />
-    <cell r="12" c="32" text="2.000000000000" />
-    <cell r="11" c="32" text="2.000000000000" />
-    <cell r="10" c="32" text="2.000000000000" />
-    <cell r="9" c="32" text="2.000000000000" />
-    <cell r="8" c="32" text="2.000000000000" />
-    <cell r="7" c="32" text="2.000000000000" />
-    <cell r="6" c="32" text="2.000000000000" />
-    <cell r="5" c="32" text="2.000000000000" />
-    <cell r="4" c="32" text="2.000000000000" />
-    <cell r="3" c="32" text="2.000000000000" />
-    <cell r="2" c="32" text="2.000000000000" />
-    <cell r="1" c="32" text="1.000000000000" />
-    <cell r="31" c="33" text="1.000000000000" />
-    <cell r="33" c="33" text="1.000000000000" />
-    <cell r="33" c="32" text="1.000000000000" />
-    <cell r="30" c="33" text="1.000000000000" />
-    <cell r="29" c="33" text="1.000000000000" />
-    <cell r="28" c="33" text="1.000000000000" />
-    <cell r="27" c="33" text="1.000000000000" />
-    <cell r="26" c="33" text="1.000000000000" />
-    <cell r="25" c="33" text="1.000000000000" />
-    <cell r="24" c="33" text="1.000000000000" />
-    <cell r="23" c="33" text="1.000000000000" />
-    <cell r="22" c="33" text="1.000000000000" />
-    <cell r="21" c="33" text="1.000000000000" />
-    <cell r="20" c="33" text="1.000000000000" />
-    <cell r="19" c="33" text="1.000000000000" />
-    <cell r="18" c="33" text="1.000000000000" />
-    <cell r="17" c="33" text="1.000000000000" />
-    <cell r="16" c="33" text="1.000000000000" />
-    <cell r="15" c="33" text="1.000000000000" />
-    <cell r="14" c="33" text="1.000000000000" />
-    <cell r="13" c="33" text="1.000000000000" />
-    <cell r="12" c="33" text="1.000000000000" />
-    <cell r="11" c="33" text="1.000000000000" />
-    <cell r="10" c="33" text="1.000000000000" />
-    <cell r="9" c="33" text="1.000000000000" />
-    <cell r="8" c="33" text="1.000000000000" />
-    <cell r="7" c="33" text="1.000000000000" />
-    <cell r="6" c="33" text="1.000000000000" />
-    <cell r="5" c="33" text="1.000000000000" />
-    <cell r="4" c="33" text="1.000000000000" />
-    <cell r="3" c="33" text="1.000000000000" />
-    <cell r="2" c="33" text="1.000000000000" />
-    <cell r="1" c="33" text="1.000000000000" />
-    <cell r="3" c="1" text="Sensor Direita:" />
-    <cell r="1" c="1" text="Sensor Frontal:" />
-    <cell r="5" c="1" text="Sensor Esquerda:" />
-    <cell r="2" c="1" text="1.568726181984" />
-    <cell r="4" c="1" text="0.079104274511" />
-    <cell r="6" c="1" text="0.079287633300" />
-    <cell r="11" c="1" text="Dist�ncia percorrida roda esquerda" />
-    <cell r="13" c="1" text="Dist�ncia percorrida roda direita" />
-    <cell r="12" c="1" text="2347" />
-    <cell r="14" c="1" text="2223" />
+    <cell r="0" c="2" text="2" />
+    <cell r="3" c="5" text="[On]" />
+    <cell r="4" c="5" text="[Off]" />
+    <cell r="2" c="5" text="Chart" />
+    <cell r="3" c="1" text="X" />
+    <cell r="4" c="1" text="Y" />
+    <cell r="5" c="1" text="Theta" />
+    <cell r="7" c="1" text="S0" />
+    <cell r="8" c="1" text="S1" />
+    <cell r="9" c="1" text="S2" />
+    <cell r="3" c="2" text="0.0944" />
+    <cell r="3" c="3" text="0.09" />
+    <cell r="4" c="2" text="0.1" />
+    <cell r="5" c="2" text="0.0266" />
+    <cell r="2" c="3" text="[Set]" />
+    <cell r="4" c="3" text="0.09" />
+    <cell r="5" c="3" text="90" />
   </cells>
 </sheet>
