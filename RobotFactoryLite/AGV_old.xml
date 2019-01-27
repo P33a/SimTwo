@@ -1,0 +1,206 @@
+<?xml version="1.0" ?>
+ 
+<robot>
+  <defines>
+  <!-- Robot Dimensions -->
+    <const name='RobotWidth' value='0.07'/>   
+    <const name='RobotLength' value='0.10'/>  
+    <const name='RobotThickness' value='0.003'/>
+    <const name='RobotHeight' value='0.05'/>
+    <const name='RobotMass' value='3'/>
+    <const name='WheelClearance' value='0.015'/>
+
+     
+    <const name='WheelToCenter' value='RobotWidth/2 + WheelClearance'/>
+    <const name='MotorPosX' value='-0.03'/>
+    <const name='CenterMotorToFront' value='RobotLength/2 - MotorPosX'/>
+    <const name='CasterToBack' value='0.07'/>
+     
+     
+  <!-- Motor Contants --> 
+    <const name='MotorDiameter' value='0.028'/>
+    <const name='MotorLength' value='0.075'/>
+    <const name='MotorMass' value='0.027'/>
+    
+  <!-- Wheel Contants -->
+    <const name='WheelDiameter' value='0.065'/>
+    <const name='WheelThickness' value='0.004'/>
+    <const name='WheelMass' value='0.15'/>   
+
+  <!--Caster Contants -->
+    <const name='CasterWheelDiameter' value='0.05'/>  
+    <const name='CasterWheelThickness' value='0.014'/>    
+    <const name='CasterToWheel' value='0.05'/>    
+    <const name='CasterWheelMass' value='0.2'/>  
+    <const name='CasterMass' value='0.2'/>  
+    
+    <const name='LineSensorBeamWidth' value='0.002'/>
+    
+  <!--Calculated Measures  -->
+    <const name='BracketHeight' value='RobotHeight-RobotThickness-(WheelDiameter/2+MotorDiameter/2)'/>   
+    <const name='CasterPosY' value='RobotLength/2 - CasterWheelThickness/2'/>   
+    <const name='CasterToBase' value='RobotHeight-RobotThickness'/>
+ 
+    
+    
+  </defines>
+    
+  <solids>
+  
+    <cuboid>
+      <ID value='BasePlate'/>
+      <mass value='RobotMass'/>                                        
+      <size x='RobotLength' y='RobotWidth' z='RobotThickness'/>
+      <nopos x='0' y='0' z='RobotHeight-RobotThickness/2'/> 
+      <pos x='0' y='0' z='RobotHeight-RobotThickness/2'/> 
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='10' g='10' b='10'/>
+    </cuboid>
+         
+    <cylinder>
+      <ID value='WheelLeft'/>
+      <mass value='WheelMass'/>
+      <size x='WheelDiameter/2' y='WheelDiameter/2' z='WheelThickness'/>
+      <pos x='MotorPosX' y='WheelToCenter' z='WheelDiameter/2'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+    </cylinder>
+
+    <cylinder>
+      <ID value='WheelRight'/>
+      <mass value='WheelMass'/>
+      <size x='WheelDiameter/2' y='WheelDiameter/2' z='WheelThickness'/>
+      <pos x='MotorPosX' y='-WheelToCenter' z='WheelDiameter/2'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+    </cylinder>
+   
+    <cylinder>
+      <ID value='CasterPole'/>
+      <mass value='CasterMass'/>
+      <size x='CasterWheelThickness/2' y='0' z='CasterToBase'/>
+      <pos x='CasterPosY' y='0' z='CasterToBase/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <nodrag stokes='1e-4' roll='1e-4'/>
+      <color_rgb r='128' g='128' b='128'/>
+      <surface mu='0.1'/>
+    </cylinder>
+  </solids>
+
+  <shells>
+    <cuboid>
+      <ID value='servos'/>
+      <size x='0.05' y='RobotWidth + 0.02' z='0.02'/>
+      <pos x='RobotLength/2-CenterMotorToFront + 0.01' y='0' z='-RobotThickness - 0.01'/> 
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='0' g='0' b='0'/>
+    </cuboid>
+
+    <nsphere>
+      <ID value="slide pad"/>
+      <pos x="CasterPosY" y="0.0" z="-CasterToBase-RobotThickness/2"/>
+      <radius value="CasterWheelThickness/2"/>
+      <nomass value="0.2"/>
+      <surface mu='0.1' softness='0.1'/>
+    </nsphere>
+  </shells>
+ 
+  <articulations>
+    <default>
+      <ndraw radius='0.005' height='0.1' rgb24='8F8F8F'/>
+      <motor ri='7.10171308326432' li='3.4e-3' ki='0.509777972762535' vmax='15' imax='1' active='1'/>
+      <gear ratio='1'/>
+      <friction bv='0.000931862949511341' fc='0.0400169420033648'/>
+      <encoder ppr='360' mean='0' stdev='0'/>
+      <controller mode='pidspeed' kp='1' ki='0' kd='0' kf='0.05' active='1' period='10'/>
+      <spring k='0' zeropos='0'/>
+    </default>    
+    
+    <joint>
+      <ID value='LeftAxis'/>
+      <connect B1='WheelLeft' B2='BasePlate'/>
+      <pos x='MotorPosX' y='0' z='WheelDiameter/2'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+    </joint>
+
+    <joint>
+      <ID value='RightAxis'/>
+      <connect B1='WheelRight' B2='BasePlate'/>
+      <pos x='MotorPosX' y='0' z='WheelDiameter/2'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+    </joint>
+   
+    <joint>
+      <ID value='CasterPoleToBase'/>
+      <connect B1='CasterPole' B2='BasePlate'/>
+      <pos x='CasterPosY' y='0' z='0'/>
+      <axis x='0' y='0' z='1'/>
+      <type value='Hinge'/>
+      <motor active='0'/>
+      <controller active='0'/>
+    </joint>
+  </articulations>
+
+    
+  <defines>
+  <!-- Sensor "dimensions"  -->
+     <const name='LineSensorOffsetX' value='0.05'/>   
+    <const name='LineSensorYSpace' value='0.015'/>   
+  </defines>
+    
+  <sensors>
+    <floorline>
+      <beam length='0.2' initial_width='LineSensorBeamWidth' final_width='LineSensorBeamWidth'/>
+      <tag value='white'/>
+      <pos x='MotorPosX + LineSensorOffsetX' y='5/3 * LineSensorYSpace' z='0.01'/>
+      <rot_deg x='0' y='90' z='0'/> 
+      <color_rgb r='0' g='0' b='128'/>
+    </floorline>
+ 
+    <floorline>
+      <beam length='0.2' initial_width='LineSensorBeamWidth' final_width='LineSensorBeamWidth'/>
+      <tag value='white'/>
+      <pos x='MotorPosX + LineSensorOffsetX' y='3/3 * LineSensorYSpace' z='0.01'/>
+      <rot_deg x='0' y='90' z='0'/> 
+      <color_rgb r='0' g='0' b='128'/>
+    </floorline>
+
+    <floorline>
+      <beam length='0.2' initial_width='LineSensorBeamWidth' final_width='LineSensorBeamWidth'/>
+      <tag value='white'/>
+      <pos x='MotorPosX + LineSensorOffsetX' y='1/3 * LineSensorYSpace' z='0.01'/>
+      <rot_deg x='0' y='90' z='0'/> 
+      <color_rgb r='0' g='0' b='128'/>
+    </floorline>
+
+    <floorline>
+      <beam length='0.2' initial_width='LineSensorBeamWidth' final_width='LineSensorBeamWidth'/>
+      <tag value='white'/>
+      <pos x='MotorPosX + LineSensorOffsetX' y='-1/3 * LineSensorYSpace' z='0.01'/>
+      <rot_deg x='0' y='90' z='0'/> 
+      <color_rgb r='0' g='0' b='128'/>
+    </floorline>
+    
+    <floorline>
+      <beam length='0.2' initial_width='LineSensorBeamWidth' final_width='LineSensorBeamWidth'/>
+      <tag value='white'/>
+      <pos x='MotorPosX + LineSensorOffsetX' y='-3/3 * LineSensorYSpace' z='0.01'/>
+      <rot_deg x='0' y='90' z='0'/> 
+      <color_rgb r='0' g='0' b='128'/>
+    </floorline>
+     
+     <floorline>
+      <beam length='0.2' initial_width='LineSensorBeamWidth' final_width='LineSensorBeamWidth'/>
+      <tag value='white'/>
+      <pos x='MotorPosX + LineSensorOffsetX' y='-5/3 * LineSensorYSpace' z='0.01'/>
+      <rot_deg x='0' y='90' z='0'/> 
+      <color_rgb r='0' g='0' b='128'/>
+    </floorline>
+  </sensors>
+     
+</robot>
+    
+    
+    

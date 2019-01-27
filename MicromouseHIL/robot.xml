@@ -1,0 +1,222 @@
+<?xml version="1.0" ?> 
+<robot>
+  <defines>
+  
+
+  <!-- Robot Dimensions -->
+    <const name='RobotWidth' value='0.086'/>   
+    <const name='RobotLength' value='0.11'/>  
+    <const name='RobotThickness' value='0.005'/>
+    <const name='RobotHeight' value='0.022'/>
+    <const name='RobotMass' value='0.03'/>
+
+
+    <const name='WheelToCenter' value='RobotWidth/2'/>
+    <const name='MotorPosX' value='0'/>
+    <const name='CenterMotorToFront' value='RobotLength/2 - MotorPosX'/>
+    <const name='CasterToBack' value='0.01'/>
+        
+    
+  <!-- Motor Contants --> 
+    <const name='MotorDiameter' value='0.004'/>
+    <const name='MotorLength' value='0.012'/>
+    <const name='MotorMass' value='0.0027'/>
+    
+  <!-- Wheel Contants -->
+    <const name='WheelDiameter' value='0.016'/>
+    <const name='WheelThickness' value='0.008'/>
+    <const name='WheelMass' value='0.05'/>   
+
+  <!--Caster Contants -->
+    <const name='CasterWheelDiameter' value='0.00815'/>  
+    <const name='CasterWheelThickness' value='0.008'/>    
+    <const name='CasterToWheel' value='0.01'/>    
+    <const name='CasterWheelMass' value='0.025'/>  
+    <const name='CasterMass' value='0.05'/>  
+    
+    
+  <!--Calculated Measures  -->
+    <const name='BracketHeight' value='RobotHeight-RobotThickness-(WheelDiameter/2+MotorDiameter/2)'/>   
+    <const name='CasterPosY' value='-RobotLength/2-(RobotLength/2-CenterMotorToFront)+CasterToBack'/>   
+    <const name='CasterToBase' value='RobotHeight-RobotThickness-CasterWheelDiameter/2'/>
+ 
+    
+    
+  </defines>
+   
+   
+   
+  <solids>
+  
+    <cuboid>
+      <ID value='BasePlate'/>
+      <mass value='RobotMass'/>                                        
+      <size x='RobotLength' y='RobotWidth' z='RobotThickness'/>
+      <nopos x='0' y='0' z='RobotHeight-RobotThickness/2'/> 
+      <pos x='0' y='0' z='RobotHeight-RobotThickness/2'/> 
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='20' g='20' b='20'/>
+    </cuboid>
+
+    <cylinder>
+      <ID value='WheelLeft'/>
+      <mass value='WheelMass'/>
+      <size x='WheelDiameter/2' y='WheelDiameter/2' z='WheelThickness'/>
+      <pos x='MotorPosX' y='WheelToCenter' z='WheelDiameter/2'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </cylinder>
+
+    <cylinder>
+      <ID value='WheelRight'/>
+      <mass value='WheelMass'/>
+      <size x='WheelDiameter/2' y='WheelDiameter/2' z='WheelThickness'/>
+      <pos x='MotorPosX' y='-WheelToCenter' z='WheelDiameter/2'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </cylinder>
+ 
+      
+    <cylinder>
+      <ID value='CasterWheel'/>
+      <mass value='CasterWheelMass'/>
+      <size x='CasterWheelDiameter/2' y='0' z='CasterWheelThickness'/>
+      <pos x='CasterPosY-CasterToWheel' y='0' z='CasterWheelDiameter/2'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </cylinder>
+	
+   
+    <cylinder>
+      <ID value='CasterPole'/>
+      <mass value='CasterMass'/>
+      <size x='CasterWheelThickness/2' y='0' z='CasterToBase'/>
+      <pos x='CasterPosY' y='0' z='CasterToBase/2+CasterWheelDiameter/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <nodrag stokes='1e-4' roll='1e-4'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </cylinder>
+  </solids>
+
+  <shells>
+
+    <cuboid>
+      <ID value='BracketLeft'/>
+      <size x='0.012' y='0.012' z='BracketHeight'/>
+      <pos x='RobotLength/2-CenterMotorToFront' y='(WheelToCenter-WheelThickness*1.5)' z='-BracketHeight/2 - RobotThickness/2'/> 
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='250' g='140' b='0'/>
+    </cuboid>
+    <cuboid>
+      <ID value='BracketRight'/>
+      <size x='0.012' y='0.012' z='BracketHeight'/>
+      <pos x='RobotLength/2-CenterMotorToFront' y='-(WheelToCenter-WheelThickness*1.5)' z='-BracketHeight/2 - RobotThickness/2'/> 
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='250' g='140' b='0'/>
+    </cuboid>
+
+
+    <cylinder>
+      <ID value='MotorLeft'/>
+      <size x='MotorDiameter/2' y='MotorDiameter/2' z='MotorLength'/>
+      <pos x='RobotLength/2-CenterMotorToFront' y='(WheelToCenter-MotorLength/2-WheelThickness/2)' z='-RobotHeight + WheelDiameter/2'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </cylinder>
+
+    <cylinder>
+      <ID value='MotorRight'/>
+      <size x='MotorDiameter/2' y='MotorDiameter/2' z='MotorLength'/>
+      <pos x='RobotLength/2-CenterMotorToFront' y='-(WheelToCenter-MotorLength/2-WheelThickness/2)' z='-RobotHeight + WheelDiameter/2'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </cylinder>
+    
+
+
+  </shells>
+ 
+  <articulations>
+
+    <default>
+      <motor ri='3.6' li='4.88e-3' ki='0.01025' vmax='12' imax='1' active='1'/>
+      <gear ratio='0.5'/>
+      <friction bv='2.63e-5' fc='3.558e-4' />
+      <encoder ppr='400' mean='0' stdev='0'/>
+      <controller mode='pidspeed' kp='1' ki='0.01' kd='0.01' kf='0.05' active='1' period='10'/>
+    </default>
+    <joint>
+      <ID value='LeftAxis'/>
+      <connect B1='WheelLeft' B2='BasePlate'/>
+      <pos x='MotorPosX' y='0' z='WheelDiameter/2'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+    </joint>
+
+    <joint>
+      <ID value='RightAxis'/>
+      <connect B1='WheelRight' B2='BasePlate'/>
+      <pos x='MotorPosX' y='0' z='WheelDiameter/2'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+    </joint>
+
+
+
+ 
+    <joint>
+      <ID value='CasterPoleToBase'/>
+      <connect B1='CasterPole' B2='BasePlate'/>
+      <pos x='CasterPosY' y='0' z='0'/>
+      <axis x='0' y='0' z='1'/>
+      <type value='Hinge'/>
+      <motor active='0'/>
+      <controller active='0'/>
+    </joint>
+    
+    <joint>
+      <ID value='CasterWheelAxis'/>
+      <connect B1='CasterWheel' B2='CasterPole'/>
+      <pos x='(CasterPosY-CasterToWheel)' y='0' z='CasterWheelDiameter/2'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+      <motor active='0'/>
+      <controller active='0'/>
+    </joint>
+    
+    
+  </articulations>
+
+  <defines>
+    
+      <!-- Sensor Definitions -->
+      <const name='SensorPosX' value='0.015'/>
+      <const name='SensorPosY' value='0.015'/>
+      <const name='SensorPosZ' value='0.004'/> 
+  </defines>
+
+  <sensors>
+  
+      <IRSharp>
+         <ID value='LeftSensor'/>
+         <beam length='1' initial_width='0.001' final_width='0.001'/>
+         <pos x='RobotLength/2-SensorPosX' y='RobotWidth/2-SensorPosY' z='SensorPosZ'/>
+         <rot_deg x='0' y='0' z='45'/>
+         <color_rgb r='200' g='0' b='0'/>
+      </IRSharp>
+      <IRSharp>
+         <ID value='FrontSensor'/>
+         <beam length='1' initial_width='0.001' final_width='0.001'/>
+         <pos x='RobotLength/2-SensorPosX' y='0' z='SensorPosZ'/>
+         <rot_deg x='0' y='0' z='0'/>
+         <color_rgb r='200' g='0' b='0'/>
+    </IRSharp>
+      <IRSharp>
+         <ID value='RightSensor'/>
+         <beam length='1' initial_width='0.001' final_width='0.001'/>
+         <pos x='RobotLength/2-SensorPosX' y='-RobotWidth/2+SensorPosY' z='SensorPosZ'/>
+         <rot_deg x='0' y='0' z='-45'/>
+         <color_rgb r='200' g='0' b='0'/>
+      </IRSharp>
+  </sensors>
+</robot>

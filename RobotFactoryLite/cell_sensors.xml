@@ -1,0 +1,154 @@
+<?xml version="1.0" ?>
+<sensors>
+   <defines>
+    <const name='base_height' value='0.015' />
+    <const name='cell_width' value='0.180' />  
+    <const name='cell_depth' value='0.120' /> 
+    <const name='wall_height' value='0.120' />
+    <const name='sensor_pos_z' value='base_height + wall_height - 0.001' />
+  </defines>
+
+  <!-- begin machines --> 
+  <IRSharp>
+    <ID name='M4_cell'/>
+    <pos x='-central_corridor_width/2 - machine_depth/2' y='-machine_width/2' z='sensor_pos_z'/>
+    <rot_deg x='0' y='90' z='0'/>
+    <beam length='0.3' initial_width='0.005' final_width='0.005'/>
+    <color_rgb r='200' g='0' b='0'/>
+  </IRSharp>
+
+  <IRSharp>
+    <ID name='M2_cell'/>
+    <pos x='-central_corridor_width/2 - machine_depth/2' y='machine_width/2' z='sensor_pos_z'/>
+    <rot_deg x='0' y='90' z='0'/>
+    <beam length='0.3' initial_width='0.005' final_width='0.005'/>
+    <color_rgb r='200' g='0' b='0'/>
+  </IRSharp>
+
+  <IRSharp>
+    <ID name='M3_cell'/>
+    <pos x='-central_corridor_width/2 - 3*machine_depth/2' y='-machine_width/2' z='sensor_pos_z'/>
+    <rot_deg x='0' y='90' z='0'/>
+    <beam length='0.3' initial_width='0.005' final_width='0.005'/>
+    <color_rgb r='200' g='0' b='0'/>
+  </IRSharp>
+
+  <IRSharp>
+    <ID name='M1_cell'/>
+    <pos x='-central_corridor_width/2 - 3*machine_depth/2' y='machine_width/2' z='sensor_pos_z'/>
+    <rot_deg x='0' y='90' z='0'/>
+    <beam length='0.3' initial_width='0.005' final_width='0.005'/>
+    <color_rgb r='200' g='0' b='0'/>
+  </IRSharp>
+
+  <IRSharp>
+    <ID name='M5_cell'/>
+    <pos x='central_corridor_width/2 + machine_depth/2' y='machine_width/2' z='sensor_pos_z'/>
+    <rot_deg x='0' y='90' z='0'/>
+    <beam length='0.3' initial_width='0.005' final_width='0.005'/>
+    <color_rgb r='200' g='0' b='0'/>
+  </IRSharp>
+
+  <IRSharp>
+    <ID name='M7_cell'/>
+    <pos x='central_corridor_width/2 + machine_depth/2' y='-machine_width/2' z='sensor_pos_z'/>
+    <rot_deg x='0' y='90' z='0'/>
+    <beam length='0.3' initial_width='0.005' final_width='0.005'/>
+    <color_rgb r='200' g='0' b='0'/>
+  </IRSharp>
+
+  <IRSharp>
+    <ID name='M6_cell'/>
+    <pos x='central_corridor_width/2 + 3*machine_depth/2' y='machine_width/2' z='sensor_pos_z'/>
+    <rot_deg x='0' y='90' z='0'/>
+    <beam length='0.3' initial_width='0.005' final_width='0.005'/>
+    <color_rgb r='200' g='0' b='0'/>
+  </IRSharp>
+
+  <IRSharp>
+    <ID name='M8_cell'/>
+    <pos x='central_corridor_width/2 + 3*machine_depth/2' y='-machine_width/2' z='sensor_pos_z'/>
+    <rot_deg x='0' y='90' z='0'/>
+    <beam length='0.3' initial_width='0.005' final_width='0.005'/>
+    <color_rgb r='200' g='0' b='0'/>
+  </IRSharp>
+  <!-- end machines --> 
+
+  <!-- begin input whareouse --> 
+  <IRSharp>
+    <ID name='I1_cell'/>
+    <pos x='wharehouse_pos_x' y='wharehouse_pos_y' z='sensor_pos_z'/>
+    <rot_deg x='0' y='90' z='0'/>
+    <beam length='0.3' initial_width='0.005' final_width='0.005'/>
+    <color_rgb r='200' g='0' b='0'/>
+  </IRSharp>
+  <IRSharp>
+    <ID name='I2_cell'/>
+    <pos x='wharehouse_pos_x + machine_width' y='wharehouse_pos_y' z='sensor_pos_z'/>
+    <rot_deg x='0' y='90' z='0'/>
+    <beam length='0.3' initial_width='0.005' final_width='0.005'/>
+    <color_rgb r='200' g='0' b='0'/>
+  </IRSharp>
+  <IRSharp>
+    <ID name='I3_cell'/>
+    <pos x='wharehouse_pos_x + 2*machine_width' y='wharehouse_pos_y' z='sensor_pos_z'/>
+    <rot_deg x='0' y='90' z='0'/>
+    <beam length='0.3' initial_width='0.005' final_width='0.005'/>
+    <color_rgb r='200' g='0' b='0'/>
+  </IRSharp>
+  <IRSharp>
+    <ID name='I4_cell'/>
+    <pos x='wharehouse_pos_x + 3*machine_width' y='wharehouse_pos_y' z='sensor_pos_z'/>
+    <rot_deg x='0' y='90' z='0'/>
+    <beam length='0.3' initial_width='0.005' final_width='0.005'/>
+    <color_rgb r='200' g='0' b='0'/>
+  </IRSharp>
+  <IRSharp>
+    <ID name='I5_cell'/>
+    <pos x='wharehouse_pos_x + 4*machine_width' y='wharehouse_pos_y' z='sensor_pos_z'/>
+    <rot_deg x='0' y='90' z='0'/>
+    <beam length='0.3' initial_width='0.005' final_width='0.005'/>
+    <color_rgb r='200' g='0' b='0'/>
+  </IRSharp>
+  <!-- end input whareouse --> 
+
+  <!-- begin output whareouse --> 
+  <IRSharp>
+    <ID name='O1_cell'/>
+    <pos x='-wharehouse_pos_x' y='-wharehouse_pos_y' z='sensor_pos_z'/>
+    <rot_deg x='0' y='90' z='0'/>
+    <beam length='0.3' initial_width='0.005' final_width='0.005'/>
+    <color_rgb r='200' g='0' b='0'/>
+  </IRSharp>
+  <IRSharp>
+    <ID name='O2_cell'/>
+    <pos x='-wharehouse_pos_x - machine_width' y='-wharehouse_pos_y' z='sensor_pos_z'/>
+    <rot_deg x='0' y='90' z='0'/>
+    <beam length='0.3' initial_width='0.005' final_width='0.005'/>
+    <color_rgb r='200' g='0' b='0'/>
+  </IRSharp>
+  <IRSharp>
+    <ID name='O3_cell'/>
+    <pos x='-wharehouse_pos_x - 2*machine_width' y='-wharehouse_pos_y' z='sensor_pos_z'/>
+    <rot_deg x='0' y='90' z='0'/>
+    <beam length='0.3' initial_width='0.005' final_width='0.005'/>
+    <color_rgb r='200' g='0' b='0'/>
+  </IRSharp>
+  <IRSharp>
+    <ID name='O4_cell'/>
+    <pos x='-wharehouse_pos_x - 3*machine_width' y='-wharehouse_pos_y' z='sensor_pos_z'/>
+    <rot_deg x='0' y='90' z='0'/>
+    <beam length='0.3' initial_width='0.005' final_width='0.005'/>
+    <color_rgb r='200' g='0' b='0'/>
+  </IRSharp>
+  <IRSharp>
+    <ID name='O5_cell'/>
+    <pos x='-wharehouse_pos_x - 4*machine_width' y='-wharehouse_pos_y' z='sensor_pos_z'/>
+    <rot_deg x='0' y='90' z='0'/>
+    <beam length='0.3' initial_width='0.005' final_width='0.005'/>
+    <color_rgb r='200' g='0' b='0'/>
+  </IRSharp>
+  <!-- end input whareouse --> 
+
+
+</sensors>

@@ -1,11 +1,11 @@
 object FSceneEdit: TFSceneEdit
-  Left = 373
-  Height = 879
-  Top = 119
-  Width = 909
+  Left = 417
+  Height = 728
+  Top = 230
+  Width = 910
   Caption = 'XML Scene Edit'
-  ClientHeight = 859
-  ClientWidth = 909
+  ClientHeight = 708
+  ClientWidth = 910
   Color = clBtnFace
   Font.Color = clWindowText
   Font.Height = -11
@@ -22,16 +22,16 @@ object FSceneEdit: TFSceneEdit
     Cursor = crVSplit
     Left = 0
     Height = 3
-    Top = 736
-    Width = 909
+    Top = 585
+    Width = 910
     Align = alBottom
     ResizeAnchor = akBottom
   end
   object StatusBar: TStatusBar
     Left = 0
     Height = 23
-    Top = 836
-    Width = 909
+    Top = 685
+    Width = 910
     Panels = <    
       item
         Alignment = taCenter
@@ -59,8 +59,8 @@ object FSceneEdit: TFSceneEdit
   object LBErrors: TListBox
     Left = 0
     Height = 97
-    Top = 739
-    Width = 909
+    Top = 588
+    Width = 910
     Align = alBottom
     ItemHeight = 0
     OnDblClick = LBErrorsDblClick
@@ -68,9 +68,9 @@ object FSceneEdit: TFSceneEdit
   end
   object PageControlXML: TPageControl
     Left = 0
-    Height = 736
+    Height = 585
     Top = 0
-    Width = 909
+    Width = 910
     ActivePage = TabScene
     Align = alClient
     TabIndex = 0
@@ -78,13 +78,13 @@ object FSceneEdit: TFSceneEdit
     OnChange = PageControlXMLChange
     object TabScene: TTabSheet
       Caption = 'Scene.xml'
-      ClientHeight = 710
-      ClientWidth = 901
+      ClientHeight = 559
+      ClientWidth = 902
       inline SynEditXML: TSynEdit
         Left = 0
         Height = 681
-        Top = 29
-        Width = 901
+        Top = -122
+        Width = 902
         Align = alBottom
         Enabled = False
         Font.Color = clWindowText

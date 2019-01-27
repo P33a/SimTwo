@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<scene>
+  <defines>
+    <const name='ground' value='0.001' />
+    <const name='part_pos_z' value='0.015' />
+    <const name='sensor_pos_z' value='0.13' />
+  </defines>
+
+  <robot>
+    <ID name='AGV'/>
+    <pos x='0' y='0.5' z='0.0'/> 
+    <rot_deg x='0' y='0' z='0'/>
+    <body file='AGV.xml'/>
+  </robot>
+     
+  <track file='track.xml'/>
+ 
+</scene>
+

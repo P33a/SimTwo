@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<scene>
+
+  <robot>
+    <ID name='Conveyor Belt'/>
+    <pos x='1' y='-1' z='0.1'/>
+    <rot_deg z='0'/>
+
+    <body file='Belt.xml'/>
+  </robot>
+
+
+  <things file='things.xml'/>
+
+  <obstacles file='obstacles.xml'/>
+
+  <track file='track.xml'/>
+
+  <sensors file='sensors.xml'/>
+
+</scene>

@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<sheet>
+  <columns>
+    <defaultcol width="50" />
+    <col num="7" width="84" />
+  </columns>
+  <cells>
+    <cell r="2" c="2" text="Serial" />
+    <cell r="2" c="3" text="[Manual]" />
+    <cell r="2" c="1" text="Control:" />
+    <cell r="2" c="4" text="[Script]" />
+    <cell r="2" c="5" text="[Remote]" />
+    <cell r="5" c="2" text="1" />
+    <cell r="1" c="1" text="-1" />
+    <cell r="5" c="0" text="0" />
+    <cell r="6" c="2" text="1" />
+    <cell r="7" c="2" text="0" />
+    <cell r="8" c="2" text="0" />
+    <cell r="9" c="2" text="0" />
+    <cell r="4" c="1" text="Sensors" />
+    <cell r="4" c="2" text="IR" />
+    <cell r="2" c="6" text="[Serial]" />
+    <cell r="4" c="4" text="-1" />
+    <cell r="4" c="5" text="[Set]" />
+    <cell r="5" c="5" text="[Set]" />
+    <cell r="5" c="6" text="1" />
+    <cell r="4" c="6" text="0" />
+    <cell r="4" c="3" text="State" />
+    <cell r="5" c="3" text="V" />
+    <cell r="6" c="3" text="W" />
+    <cell r="5" c="4" text="0" />
+    <cell r="6" c="4" text="0" />
+  </cells>
+</sheet>

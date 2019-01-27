@@ -38,6 +38,7 @@ begin
     Ry := GetRCValue(4, 3);
     Rtheta := Rad(GetRCValue(5, 3));
     SetRobotPos(0, Rx, Ry, 0, RTheta);
+    SetRCBackColor(1, 1, RGBToColor(200, 100, 0));
   end;
 
   // Read the robot position

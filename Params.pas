@@ -8,8 +8,8 @@ uses
   LCLIntf, Windows, SysUtils, Variants, Classes, Graphics, Controls,
   Forms, Dialogs, StdCtrls, ComCtrls, ExtCtrls, GLLCLViewer, GLcontext, Math,
   IdComponent, IdUDPBase, IdUDPServer, IdSocketHandle,
-  ODERobots, OdeImport, Grids, GLCadencer, SdpoSerial, Sockets,
-  GLShadowVolume, GLScene, Buttons, IniPropStorage,
+  ODERobots, OdeImport, Grids, GLCadencer, SdpoSerial,  Sockets,
+  GLShadowVolume, GLScene, Buttons, IniPropStorage, enum_serial,
   GLVectorGeometry, GLTexture, IdUDPClient, IdTCPServer,
   modbusTCP, IdThread, IdCustomTCPServer, IdContext;
 
@@ -24,9 +24,14 @@ type
   { TFParams }
 
   TFParams = class(TForm)
+    BCloseComPort: TButton;
+    BOpenComPort: TButton;
+    CBComPort: TComboBox;
+    CBComBaudrate: TComboBox;
     IniPropStorage: TIniPropStorage;
+    Label65: TLabel;
     PageControl: TPageControl;
-    SdpoSerial1: TSdpoSerial;
+    SerialCom: TSdpoSerial;
     TabControl: TTabSheet;
     RGControlBlock: TRadioGroup;
     TabGraphics: TTabSheet;
@@ -159,15 +164,10 @@ type
     EditGridY: TEdit;
     EditGridZ: TEdit;
     BSGConfSet: TButton;
-    ComPort: TSdpoSerial;
     TabIO: TTabSheet;
     Panel1: TPanel;
     Label45: TLabel;
-    BComConf: TButton;
-    CBComOpen: TCheckBox;
     BComWrite: TButton;
-    BComRead: TButton;
-    EditComRead: TEdit;
     EditComWrite: TEdit;
     Panel2: TPanel;
     EditUDPPort: TEdit;
@@ -285,6 +285,9 @@ type
     Label63: TLabel;
     Label64: TLabel;
     EditWindSpeedZ: TEdit;
+    procedure BCloseComPortClick(Sender: TObject);
+    procedure BOpenComPortClick(Sender: TObject);
+    procedure CBComPortDropDown(Sender: TObject);
     procedure CBShadowsClick(Sender: TObject);
     procedure CBVsyncClick(Sender: TObject);
     procedure BSetFPSClick(Sender: TObject);
@@ -297,6 +300,8 @@ type
     procedure EditRemoteIPChange(Sender: TObject);
     procedure RGControlBlockClick(Sender: TObject);
     procedure BTestClick(Sender: TObject);
+    procedure SetComState(newState: boolean);
+    procedure SerialComRxData(Sender: TObject);
     procedure TCPModBusDisconnect(AContext: TIdContext);
     procedure UDPServerUDPRead(Sender: TObject; AData: TStream;
       ABinding: TIdSocketHandle);
@@ -322,8 +327,6 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure EditGridKeyPress(Sender: TObject; var Key: Char);
     procedure BComConfClick(Sender: TObject);
-    procedure CBComOpenClick(Sender: TObject);
-    procedure BComReadClick(Sender: TObject);
     procedure BComWriteClick(Sender: TObject);
     procedure CBUDPConnectClick(Sender: TObject);
     procedure UDPGenericUDPRead(Sender: TObject; AData: TStream;
@@ -380,6 +383,7 @@ type
     EditsIR: array[0..7] of TEdit;
     UDPGenData: TMemoryStream;
     UDPGenPackets: TStringList;
+    SerialData: string;
 
     ModbusData: TModbus;
     ModBusDisconnected, ModBusWantsToDisconnected: boolean;
@@ -419,6 +423,36 @@ implementation
 
 uses GLFile3DS, Viewer, Editor, FastChart, ODERobotsPublished, WayPointsEdit, ProjConfig, utils,
   cameras;
+
+
+procedure TFParams.SetComState(newState: boolean);
+var comColor: TColor;
+    i: integer;
+begin
+  try try
+  if newState then begin
+    SerialCom.Device := CBComPort.Text;
+    SerialCom.BaudRate := br115200;
+    i := CBComBaudrate.ItemIndex;
+    if i >= 0 then begin
+      SerialCom.BaudRate := TBaudRate(i);
+    end;
+    SerialCom.Open;
+  end else begin
+    SerialCom.Close;
+  end;
+  except
+    on E: Exception do
+    Showmessage(E.Message);
+  end;
+  finally
+    if SerialCom.Active then comColor := clGreen
+    else comColor := clRed;
+    CBComPort.Color := comColor;
+  end;
+end;
+
+
 
 procedure TFParams.BSetFPSClick(Sender: TObject);
 var fps: integer;
@@ -463,6 +497,21 @@ end;
 procedure TFParams.CBShadowsClick(Sender: TObject);
 begin
   FViewer.GLShadowVolume.Active := CBShadows.Checked;
+end;
+
+procedure TFParams.BOpenComPortClick(Sender: TObject);
+begin
+  SetComState(true);
+end;
+
+procedure TFParams.CBComPortDropDown(Sender: TObject);
+begin
+  ListComPorts(CBComPort.Items);
+end;
+
+procedure TFParams.BCloseComPortClick(Sender: TObject);
+begin
+  SetComState(false);
 end;
 
 procedure TFParams.CBGridClick(Sender: TObject);
@@ -520,6 +569,25 @@ begin
   end;
   FViewer.Close;
   OpenDocument(pchar(Application.ExeName)); { *Converted from ShellExecute* }
+end;
+
+
+procedure TFParams.SerialComRxData(Sender: TObject);
+var s: string;
+    ls: integer;
+begin
+  //if not SdpoSerial.Active then exit;
+
+  s := SerialCom.ReadData;
+  if s = '' then exit;
+
+  ls := Length(s);
+
+  if Length(SerialData) + ls > 65535 then begin
+    SerialData := copy(SerialData, 32768, MaxInt);
+  end;
+
+  SerialData := SerialData + s;
 end;
 
 procedure TFParams.TCPModBusDisconnect(AContext: TIdContext);
@@ -681,6 +749,8 @@ begin
   for i := 0 to FViewer.GLMaterialLibrary.Materials.Count - 1 do begin
     ComboGroundTextures.Items.Add(FViewer.GLMaterialLibrary.Materials.Items[i].Name);
   end;
+
+  ListComPorts(CBComPort.Items);
 end;
 
 procedure TFParams.FormShow(Sender: TObject);
@@ -1129,26 +1199,7 @@ procedure TFParams.BComConfClick(Sender: TObject);
 begin
   //TODO ComPort.ShowSetupDialog;
 end;
-
-procedure TFParams.CBComOpenClick(Sender: TObject);
-begin
-  if CBComOpen.Checked then begin
-    if not ComPort.Active then begin
-      try
-        ComPort.open;
-      except
-        on E: exception do begin
-          CBComOpen.Checked := false;
-          showmessage(E.Message);
-        end;
-      end;
-    end;
-  end else begin
-    ComPort.Close;
-  end;
-end;
-
-
+{
 function ReadComPort: string;
 begin
   with FParams.ComPort do begin
@@ -1175,16 +1226,11 @@ begin
     end;
   end;
 end;
-
-
-procedure TFParams.BComReadClick(Sender: TObject);
-begin
-  EditComRead.Text := ReadComPort;
-end;
+}
 
 procedure TFParams.BComWriteClick(Sender: TObject);
 begin
-  WriteComPort(EditComWrite.Text);
+  //WriteComPort(EditComWrite.Text);
 end;
 
 procedure TFParams.CBUDPConnectClick(Sender: TObject);

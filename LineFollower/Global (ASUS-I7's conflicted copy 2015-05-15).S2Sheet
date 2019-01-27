@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<sheet>
+  <columns>
+    <defaultcol width="50" />
+    <col num="1" width="68" />
+    <col num="2" width="54" />
+    <col num="7" width="52" />
+  </columns>
+  <cells>
+    <cell r="5" c="4" text="0" />
+    <cell r="5" c="3" text="1" />
+    <cell r="2" c="2" text="Manual" />
+    <cell r="2" c="3" text="[Manual]" />
+    <cell r="2" c="1" text="Control:" />
+    <cell r="2" c="4" text="[Script]" />
+    <cell r="2" c="5" text="[Remote1]" />
+    <cell r="5" c="1" text="0" />
+    <cell r="5" c="2" text="1" />
+    <cell r="7" c="3" text="[Goto]" />
+    <cell r="8" c="3" text="0.1" />
+    <cell r="8" c="2" text="x" />
+    <cell r="1" c="1" text="-1" />
+    <cell r="2" c="6" text="[Remote2]" />
+    <cell r="3" c="1" text="IP:" />
+    <cell r="3" c="2" text="127.0.0.1" />
+    <cell r="10" c="1" text="-0.00538" />
+    <cell r="5" c="5" text="0" />
+    <cell r="5" c="6" text="0" />
+    <cell r="2" c="7" text="[Remote3]" />
+    <cell r="4" c="1" text="Line Sensors" />
+    <cell r="9" c="3" text="-0.5" />
+    <cell r="9" c="2" text="y" />
+    <cell r="13" c="2" text="1" />
+    <cell r="15" c="1" text="[here]" />
+  </cells>
+</sheet>

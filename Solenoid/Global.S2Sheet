@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<sheet>
+  <columns>
+    <defaultcol width="50" />
+    <col num="1" width="84" />
+  </columns>
+  <cells>
+    <cell r="3" c="2" text="[On]" />
+    <cell r="3" c="3" text="[Off]" />
+    <cell r="3" c="1" text="Solenoid" />
+    <cell r="5" c="1" text="Input" />
+    <cell r="5" c="2" text="[On]" />
+    <cell r="5" c="3" text="[Off]" />
+    <cell r="1" c="1" text="-1.000000000000" />
+  </cells>
+</sheet>

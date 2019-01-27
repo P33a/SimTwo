@@ -1,0 +1,30 @@
+<sensors>
+
+  <ninductive>
+    <ID value='Ind0'/>
+    <beam length='0.5' initial_width='0.01' final_width='0.015'/>
+    <pos x='-1' y='-0.5' z='0.3'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <noise stdev='0' stdev_p='0' offset='0' gain='1'/>
+    <color_rgb r='0' g='0' b='128'/>
+  </ninductive>
+
+  <nIRSharp>
+    <ID value='Sharp80'/>
+    <beam length='0.8' initial_width='0.01' final_width='0.015'/>
+    <pos x='-1' y='-0.5' z='0.3'/>
+    <rot_deg x='0' y='0' z='-90'/>
+    <color_rgb r='128' g='0' b='0'/> 
+  </nIRSharp>
+  
+  <solenoid>
+    <ID value='solenoid1'/>
+    <beam length='2' initial_width='0.01' final_width='0.015'/>
+    <pos x='1' y='-0.5' z='0.1'/>
+    <rot_deg x='0' y='0' z='90'/>
+    <tag value='00'/>
+    <force fmax='10' k2='0.5'/>
+    <color_rgb r='0' g='255' b='0'/>
+  </solenoid>
+
+</sensors>

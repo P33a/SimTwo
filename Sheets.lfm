@@ -1,7 +1,7 @@
 object FSheets: TFSheets
-  Left = 370
+  Left = 259
   Height = 640
-  Top = 168
+  Top = 124
   Width = 870
   Caption = 'Sheets'
   ClientHeight = 620
@@ -197,6 +197,7 @@ object FSheets: TFSheets
         OnKeyUp = SGGlobalKeyUp
         OnMouseDown = SGGlobalMouseDown
         OnMouseUp = SGGlobalMouseUp
+        OnPrepareCanvas = SGGlobalPrepareCanvas
         ColWidths = (
           20
           50

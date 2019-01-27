@@ -968,6 +968,10 @@ begin
   Sender.AddFunction(@Now, 'function Now: double;');
   Sender.AddFunction(@GetTickCount, 'function GetTickCount: LongWord;');
 
+  Sender.AddFunction(@SetRCBackColor, 'procedure SetRCBackColor(r, c: integer; newColor: TColor);');
+  Sender.AddFunction(@RGBToColor, 'function RGBToColor(R, G, B: Byte): TColor; ');
+
+
   //RLan Functions
   Sender.AddFunction(@Test, 'procedure Test(var B: double);');
 
@@ -1372,14 +1376,14 @@ end;
 
 procedure TFEditor.WriteComPort(s: string);
 begin
-  FParams.ComPort.WriteData(s);
+  if not FParams.SerialCom.Active then exit;
+  FParams.SerialCom.WriteData(s);
 end;
 
 function TFEditor.ReadComPort: string;
 begin
-  with FParams.ComPort do begin
-    result := ReadData;
-  end;
+  result := FParams.SerialData;
+  FParams.SerialData := '';
 end;
 
 procedure TFEditor.WriteUDPData(ToIP: string; ToPort: integer; s: string);

@@ -1,7 +1,7 @@
 object FChooseScene: TFChooseScene
-  Left = 483
+  Left = 488
   Height = 336
-  Top = 185
+  Top = 188
   Width = 621
   Caption = 'Choose Scene'
   ClientHeight = 336

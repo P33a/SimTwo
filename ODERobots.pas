@@ -1533,15 +1533,18 @@ begin
     skSolenoid: begin
       with Measures[0] do begin
         HitSolid := Rays[0].Measure.HitSolid;
-        if assigned(HitSolid) and (HitSolid.Body <> nil) then begin
+        if assigned(HitSolid) and (HitSolid.Body <> nil) and (value > 0) then begin
           SensorPos := dGeomGetPosition(Rays[0].Geom);
           HitSolidPos := dBodyGetPosition(HitSolid.Body);
-          Vec := Vector3SUB(SensorPos^, HitSolidPos^);
-          f := 0.5 * Vin * Fmax /sqr(1 + Rays[0].Measure.dist * k2);
+          Vec := Vector3SUB(SensorPos^, Rays[0].Measure.pos);
+          //Vec := Vector3SUB(SensorPos^, HitSolidPos^);
+          f := 0.5 * Vin * Fmax /sqr(1 + max(0 ,Rays[0].Measure.dist) * k2);
           d := Vector3Length(Vec);
           if d > 0 then f := f / d;
           Vec := Vector3ScalarMul(Vec, f);
-          HitSolid.SetForce(Vec[0], Vec[1], Vec[2]);
+          HitSolid.SetForce(Vec[0], Vec[1], Vec[2]);                     // Action
+          if assigned(Rays[0].Geom) and assigned(Rays[0].Geom.Body) then
+            dBodySetForce(Rays[0].Geom.Body, -Vec[0], -Vec[1], -Vec[2]);   // Reaction
         end;
       end;
     end;
@@ -1629,6 +1632,21 @@ begin
         end;
       end;
     end;
+
+    skSolenoid: begin
+      with Measures[0] do begin
+        dist := Rays[0].Measure.dist;
+        has_measure := true;
+        HitSolid := Rays[0].Measure.HitSolid;
+        value := 0;
+        if (Rays[0].Measure.has_measure) and
+           (HitSolid <> nil) and
+           (smFerroMagnetic in HitSolid.MatterProperties) then begin
+          value := 1
+        end;
+      end;
+    end;
+
 
     skFloorLine: begin
       with Measures[0] do begin

@@ -1,7 +1,7 @@
 object FCameras: TFCameras
-  Left = 1297
+  Left = 1256
   Height = 598
-  Top = 175
+  Top = 178
   Width = 338
   Caption = 'Cameras'
   ClientHeight = 598
@@ -47,12 +47,20 @@ object FCameras: TFCameras
         Width = 320
         Camera = FViewer.GLCameraMem
         PostRender = GLSceneViewerPostRender
+        Buffer.FogEnvironment.FogColor.Red = 0
+        Buffer.FogEnvironment.FogColor.Green = 0.49803900718689
+        Buffer.FogEnvironment.FogColor.Blue = 1
+        Buffer.FogEnvironment.FogColor.Alpha = 1
         Buffer.FogEnvironment.FogColor.Color = {
           00000000F8FEFE3E0000803F0000803F
         }
         Buffer.FogEnvironment.FogStart = 1
         Buffer.FogEnvironment.FogEnd = 10
         Buffer.BackgroundColor = clBackground
+        Buffer.AmbientColor.Red = 0.300000011920929
+        Buffer.AmbientColor.Green = 0.300000011920929
+        Buffer.AmbientColor.Blue = 0.300000011920929
+        Buffer.AmbientColor.Alpha = 1
         Buffer.AmbientColor.Color = {
           9A99993E9A99993E9A99993E0000803F
         }

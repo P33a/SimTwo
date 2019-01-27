@@ -131,6 +131,8 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure FormDestroy(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure SGGlobalPrepareCanvas(sender: TObject; aCol, aRow: Integer;
+      aState: TGridDrawState);
     procedure SpeedButtonOKClick(Sender: TObject);
     procedure MenuSaveClick(Sender: TObject);
     procedure MenuReLoadClick(Sender: TObject);
@@ -175,6 +177,7 @@ procedure SetRCValue(r, c: integer; s: string);
 function GetRCValue(r, c: integer): double;
 function GetRCText(r, c: integer): string;
 function RCButtonPressed(r, c: integer): boolean;
+procedure SetRCBackColor(r, c: integer; newColor: TColor);
 procedure ClearButtons;
 function RangeToMatrix(r, c, rows, cols: integer): Matrix;
 procedure MatrixToRange(r, c: integer; const M: Matrix);
@@ -190,6 +193,16 @@ implementation
 {$R *.lfm}
 
 uses Viewer, ProjConfig;
+
+
+procedure SetRCBackColor(r, c: integer; newColor: TColor);
+var SheetCell: TSheetCell;
+begin
+  if not assigned(FSheets.ActSheet) then exit;
+  SheetCell := FSheets.ActSheet.EditCell(r, c);
+  SheetCell.backColor := newColor;
+end;
+
 
 // This function is regietered on the simpleparser to evaluate the RC(r,c) function
 // EVIL: a global (SourceCells) is being used to create a side effect where when
@@ -319,7 +332,8 @@ end;
 
 procedure SetRCValue(r, c: integer; s: string);
 begin
-  FSheets.ActSheet.EditCell(r, c).ParseText(s);
+  if (r > 0) and (c > 0) then
+    FSheets.ActSheet.EditCell(r, c).ParseText(s);
 end;
 
 
@@ -360,6 +374,8 @@ procedure TFSheets.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   SaveSheet('Global.S2Sheet', ActSheet);
 end;
+
+
 
 
 procedure TFSheets.FillHeaders(SGrid: TStringGrid);
@@ -442,6 +458,7 @@ begin
 
 end;
 
+
 procedure MyDrawCellText(const Canvas: TCanvas; const Rect: TRect;
   const Text: String; const textFont: TFont; const BackColor, TextColor: TColor;
   const Alignment: TAlignment);
@@ -495,6 +512,16 @@ begin
   Canvas.Brush.Style := bsclear;
   // paint the text
   Canvas.TextRect(Rect, iLeftBorder + ord(Pushed), Rect.Top + Y_BORDER_WIDTH + ord(Pushed), Text);
+end;
+
+
+procedure TFSheets.SGGlobalPrepareCanvas(sender: TObject; aCol, aRow: Integer;  aState: TGridDrawState);
+var Grid: TStringGrid;
+    SheetCell: TSheetCell;
+begin
+  Grid := TStringGrid(Sender);
+  SheetCell := ActSheet.Cell(Arow, Acol);
+  Grid.Canvas.Brush.Color :=  SheetCell.backColor;
 end;
 
 
@@ -1237,6 +1264,8 @@ begin
   if ColorDialog.Execute then
     SheetCell.backColor := ColorDialog.Color;
 end;
+
+
 
 procedure TFSheets.MenuDeleteAllClick(Sender: TObject);
 begin

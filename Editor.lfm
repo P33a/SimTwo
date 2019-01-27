@@ -1,7 +1,7 @@
 object FEditor: TFEditor
-  Left = 424
+  Left = 428
   Height = 522
-  Top = 427
+  Top = 290
   Width = 775
   Caption = 'Editor'
   ClientHeight = 502

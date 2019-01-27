@@ -1,0 +1,41 @@
+<?xml version="1.0" ?>
+<track>
+
+  <defines>
+ 
+    <const name='ground' value='0.001' />
+  </defines>
+
+  <line>  <!-- outside horizontal lines -->
+    <color rgb24='8F8F8F'/>
+    <position x='0' y='0.5' z='ground' angle='0'/>
+    <size width='0.02' length='0.5'/>
+    <tag value='white'/>
+  </line>
+  
+  <line>  <!-- outside horizontal lines -->
+    <color rgb24='8F8F8F'/>
+    <position x='0' y='-0.52' z='ground' angle='0'/>
+    <size width='0.02' length='0.5'/>
+    <tag value='white'/>
+  </line>
+ 
+  <arc>
+    <color rgb24='8F8F8F'/>
+    <center x='0.98-0.5' y='0' z='ground'/>
+    <radius inner='0.5' outer='0.52'/>
+    <angle_deg start='-90' stop='90' step='5'/>
+    <tag value='white'/>
+  </arc>
+   
+  <arc>
+    <color rgb24='8F8F8F'/>
+    <center x='-0.98+1' y='0' z='ground'/>
+    <radius inner='0.5' outer='0.52'/>
+    <angle_deg start='-90+180' stop='90+180' step='5'/>
+    <tag value='white'/>
+  </arc>
+    
+  
+</track>
+
