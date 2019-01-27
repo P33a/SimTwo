@@ -31,7 +31,7 @@
       <MajorVersionNr Value="2018"/>
       <MinorVersionNr Value="7"/>
       <RevisionNr Value="11"/>
-      <BuildNr Value="8"/>
+      <BuildNr Value="9"/>
       <Attributes pvaSpecialBuild="True"/>
       <StringTable ProductVersion="2018"/>
     </VersionInfo>
@@ -225,7 +225,7 @@
     <Version Value="11"/>
     <PathDelim Value="\"/>
     <Target>
-      <Filename Value="SimTwo2018"/>
+      <Filename Value="SimTwo2019"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir);C:\lazarus\components\GLSceneLCL\Source\;C:\lazarus\components\Indy10\Lib\Core\;C:\lazarus\components\Indy10\Lib\System\;C:\lazarus\components\PascalScript\Source\"/>
