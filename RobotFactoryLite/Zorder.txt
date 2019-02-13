@@ -1,11 +1,11 @@
 FViewer
-FChooseScene
-FEditor
-FParams
 FSheets
+FParams
 FSceneEdit
+FEditor
 FChart
 
 
 FWayPointsEdit
+FChooseScene
 FCameras

@@ -1654,12 +1654,25 @@ begin
         has_measure := true;
         HitSolid := Rays[0].Measure.HitSolid;
         value := 0;
-        if (Rays[0].Measure.has_measure) and
-           (HitSolid <> nil) and
-           (HitSolid.kind = skFloor) then begin
-          if InsideGLPolygonsTaged(Rays[0].Measure.pos[0], Rays[0].Measure.pos[1], HitSolid.AltGLObj) then
-          value := 1
+        n := Rays.Count;
+        for i := 0 to n - 1 do begin
+          if (Rays[1].Measure.has_measure) and
+             (HitSolid <> nil) and
+             (HitSolid.kind = skFloor) then begin
+            if InsideGLPolygonsTaged(Rays[i].Measure.pos[0], Rays[i].Measure.pos[1], HitSolid.AltGLObj) then begin
+              value := value + 1;
+            end;
+          end;
         end;
+        value := value / n;
+
+
+         //if (Rays[0].Measure.has_measure) and
+         //  (HitSolid <> nil) and
+         //  (HitSolid.kind = skFloor) then begin
+         // if InsideGLPolygonsTaged(Rays[0].Measure.pos[0], Rays[0].Measure.pos[1], HitSolid.AltGLObj) then
+         // value := 1
+         //end;
       end;
     end;
 

@@ -32,7 +32,7 @@
     <const name='CasterPoleThickness' value='0.016'/>
     <const name='CasterMass' value='0.2'/>
     
-    <const name='LineSensorBeamWidth' value='0.002'/> 
+    <const name='LineSensorBeamWidth' value='0.006'/>
     
   <!--Calculated Measures  -->
     <const name='BracketHeight' value='RobotHeight-RobotThickness-(WheelDiameter/2+MotorDiameter/2)'/>   
@@ -124,11 +124,11 @@
 
     <default>
       <ndraw radius='0.005' height='0.1' rgb24='8F8F8F'/>
-      <motor ri='7.10171308326432' li='3.4e-3' ki='0.509777972762535' vmax='15' imax='1' active='1'/>
+      <motor ri='1.5' li='3.4e-3' ki='0.6' vmax='12' imax='3' active='1'/>
       <gear ratio='1'/>
-      <friction bv='0.000931862949511341' fc='0.0400169420033648'/>
+      <friction bv='0.001' fc='0.02'/>
       <encoder ppr='360' mean='0' stdev='0'/>
-      <controller mode='pidspeed' kp='1' ki='0' kd='0' kf='0.05' active='1' period='10'/>
+      <controller mode='pidspeed' kp='1' ki='0' kd='0' kf='0.05' active='0' period='10'/>
       <spring k='0' zeropos='0'/>
     </default>    
     

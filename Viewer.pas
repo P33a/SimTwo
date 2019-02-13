@@ -2513,7 +2513,7 @@ var sensor, prop: IXMLNode;
     sensor_period: double;
     newRay: TSensorRay;
     BeamAngle, md: double;
-    i, NumRays: integer;
+    i, row, col, side, NumRays: integer;
     fmax, k1, k2: double;
     MaxDist, MinDist, StartAngle, EndAngle: double;
 begin
@@ -2548,7 +2548,7 @@ begin
       stags := '';
       sensor_period := 0.01;
       BeamAngle := rad(30);
-      NumRays := 3;
+      NumRays := 9;
       fmax := 1; k1 := 0; k2 := 1;
       MaxDist := 1;
       MinDist := 0;
@@ -2662,7 +2662,7 @@ begin
         MotherGLObj := ODEScene;
       end;
 
-      if newSensor.kind in [skIRSharp, skCapacitive, skInductive, skFloorLine, skPenTip, skIMU, skSolenoid] then begin
+      if newSensor.kind in [skIRSharp, skCapacitive, skInductive, skPenTip, skIMU, skSolenoid] then begin
         newRay := CreateOneRaySensor(MotherBody, newSensor, SLen);
         newRay.Place(posX, posY, posZ, angX, angY, AngZ, AbsoluteCoords);
         CreateSensorBeamGLObj(newSensor, SLen, SInitialWidth, SFinalWidth);
@@ -2671,6 +2671,16 @@ begin
         end;
       end else if newSensor.kind in [skBeacon] then begin
         CreateSensorBody(newSensor, MotherGLObj, 0.1, 0.02, posX, posY, posZ);
+      end else if newSensor.kind in [skFloorLine] then begin
+        side := round(sqrt(NumRays));
+        for col := 0 to side - 1 do begin
+          for row := 0 to side - 1 do begin
+            newRay := CreateOneRaySensor(MotherBody, newSensor, SLen); //TODO: beamangle
+            newRay.Place(posX + (row - (side - 1) /2) * SFinalWidth/2,
+                         posY + (col - (side - 1) /2) * SFinalWidth/2, posZ, angX, angY, AngZ, AbsoluteCoords);
+          end;
+        end;
+        CreateSensorBeamGLObj(newSensor, SLen, SInitialWidth, SFinalWidth);
       end else if newSensor.kind in [skRanger2D] then begin
         newSensor.MaxDist := MaxDist;
         newSensor.MinDist := MinDist;

@@ -227,9 +227,9 @@ begin
   // Read Sensor data
   data := 0;
   for i := 0 to 4 do begin
-    data := data + (sens_line[i] shl i);
+    data := data + (sens_line[i] shl (i * 6));
   end;
-  data := data + (touch_sensor shl 5);
+  data := data + (touch_sensor shl 31);
 
   if RCButtonPressed(4, 5) then begin
     SendMessage('s', round(GetRCValue(4, 6)));
@@ -260,8 +260,12 @@ var StrPacket: TStringList;
 begin
   t := t + ScriptPeriod();
 
+  if RCButtonPressed(11, 3) then begin
+    SetRobotPos(0, GetRCValue(12, 3), GetRCValue(13, 3), 0, rad(GetRCValue(14, 3)));
+  end;
+
   for i := 0 to 4 do begin
-    sens_line[i] := round(GetSensorVal(0, i));
+    sens_line[i] := round(63 * GetSensorVal(0, i));
     SetRCValue(5 + i, 2,format('%d',[sens_line[i]]));
   end;
   touch_sensor := 0;
