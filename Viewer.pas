@@ -4196,12 +4196,14 @@ end;
 
 function TFViewer.GLSceneViewerPick(X, Y: Integer): TGLCustomSceneObject;
 var pick : TGLCustomSceneObject;
+    Pos: TdVector3;
 begin
   pick:=(GLSceneViewer.Buffer.GetPickedObject(x, y) as TGLCustomSceneObject);
 
   if Assigned(pick) then begin
     if pick.TagObject is TSolid then begin
-      GLHUDTextObjName.Text := TSolid(pick.TagObject).ID;
+      Pos := dGeomGetPosition(TSolid(pick.TagObject).Geom)^;
+      GLHUDTextObjName.Text := TSolid(pick.TagObject).ID + format(' (%.3f, %.3f, %.3f)', [Pos[0], Pos[1], Pos[2]]);
       GLHUDTextObjName.TagFloat := 10;
       if Assigned(WorldODE.OldPick) then WorldODE.OldPick.Material.FrontProperties.Emission.Color:=clrBlack;
       pick.Material.FrontProperties.Emission.Color:=clrRed;
