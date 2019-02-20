@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<sheet>
+  <columns>
+    <defaultcol width="50" />
+    <col num="1" width="82" />
+    <col num="2" width="90" />
+    <col num="3" width="97" />
+    <col num="4" width="94" />
+    <col num="5" width="80" />
+    <col num="6" width="88" />
+    <col num="7" width="86" />
+    <col num="8" width="91" />
+    <col num="9" width="63" />
+  </columns>
+  <cells>
+    <cell r="2" c="2" text="Pos (deg)" />
+    <cell r="3" c="2" text="-0.000383" />
+    <cell r="4" c="2" text="30" />
+    <cell r="5" c="2" text="-60" />
+    <cell r="6" c="2" text="0.000164" />
+    <cell r="7" c="2" text="0.000301" />
+    <cell r="8" c="2" text="0.000301" />
+    <cell r="2" c="1" text="Joint" />
+    <cell r="4" c="1" text="1" />
+    <cell r="3" c="1" text="0" />
+    <cell r="5" c="1" text="2" />
+    <cell r="6" c="1" text="3" />
+    <cell r="7" c="1" text="4" />
+    <cell r="8" c="1" text="5" />
+    <cell r="13" c="2" text="0.5349898" />
+    <cell r="11" c="1" text="X:" />
+    <cell r="12" c="1" text="Y:" />
+    <cell r="13" c="1" text="Z:" />
+    <cell r="11" c="2" text="0.6668375" />
+    <cell r="12" c="2" text="-4.379975E-6" />
+    <cell r="10" c="2" text="B5" />
+  </cells>
+</sheet>
