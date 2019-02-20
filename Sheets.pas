@@ -521,7 +521,9 @@ var Grid: TStringGrid;
 begin
   Grid := TStringGrid(Sender);
   SheetCell := ActSheet.Cell(Arow, Acol);
-  Grid.Canvas.Brush.Color :=  SheetCell.backColor;
+  if (not (gdFocused in aState)) and (not (gdSelected in aState)) then begin
+    Grid.Canvas.Brush.Color :=  SheetCell.backColor;
+  end;
 end;
 
 
