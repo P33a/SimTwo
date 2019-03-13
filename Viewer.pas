@@ -577,7 +577,7 @@ begin
   if not GetNodeAttr(parentNode, attrName, attrValue) then begin
     Result := defaultValue;
   end else begin
-    s := StringReplace(attrValue, DEFAULT_DECIMALSEPARATOR, DecimalSeparator, [rfReplaceAll]);
+    s := StringReplace(attrValue, DEFAULT_DECIMALSEPARATOR, DefaultFormatSettings.DecimalSeparator, [rfReplaceAll]);
     try
       Result := Parser.Calc(s);
     except on E: Exception do begin
@@ -4053,7 +4053,12 @@ procedure TFViewer.FormCreate(Sender: TObject);
 var s, fl: string;
     Slist: TStringList;
 begin
+  // Lazarus catch WM_SETTINGCHANGE and calls Application.IntfSettingChange
+  // which calls GetFormatSettings in SysUtils
+  // It can be switched off by setting Application.UpdateFormatSettings:=False;
+  Application.UpdateFormatSettings := false;
   DefaultFormatSettings.DecimalSeparator := '.';
+
   SetCurrentDir(ExtractFilePath(Application.ExeName));
 
   if ParamCount > 0 then begin
