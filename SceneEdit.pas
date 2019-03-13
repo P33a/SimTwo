@@ -5,7 +5,7 @@ unit SceneEdit;
 interface
 
 uses
-  LCLIntf, Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
+  LCLIntf, Windows, SysUtils, Variants, Classes, Graphics, Controls,
   Forms, Dialogs, ComCtrls, SynEditHighlighter, SynHighlighterXML, SynEdit,
   Menus, ExtCtrls, StdCtrls, IniPropStorage, ShellAPI, SynEditTypes, process,
   SynEditMiscClasses, SynEditSearch, SynCompletion, UTF8Process, ProjConfig,
@@ -76,7 +76,7 @@ type
     procedure MenuNewSceneClick(Sender: TObject);
   private
     function GetSynEdit: TSynEdit;
-    function ActSynEdit: TSynEdit;
+    //function ActSynEdit: TSynEdit;
     procedure FindReplaceDialog(TmpSynEdit: TSynEdit; Dialog: TFindDialog);
     procedure CreateXMLTabEdit(SL: TStringList; i: integer);
     function CheckModified: boolean;
@@ -145,12 +145,14 @@ begin
     NewSynEdit.Lines.LoadFromFile(SL[i]);
 
     NewTabSheet.Visible := true;
+    NewTabSheet.tag := PtrUInt(NewSynEdit);
 end;
 
 
 procedure TFSceneEdit.FormShow(Sender: TObject);
 var i: integer;
     TmpSynEdit: TSynEdit;
+    P: TPoint;
 begin
   TabScene.TabVisible := false;
   SynEditXML.Lines.AddStrings(WorldODE.XMLFiles);
@@ -167,11 +169,13 @@ begin
 
   TmpSynEdit := GetSynEdit();
   if TmpSynEdit = nil then exit;
-  TmpSynEdit.CaretY := IniPropStorage.ReadInteger('CursorLine',TmpSynEdit.CaretY);
-  TmpSynEdit.CaretX := IniPropStorage.ReadInteger('CursorCol',TmpSynEdit.CaretX);
-  //TODO TmpSynEdit.UpdateCaret;
+  P.Y := IniPropStorage.ReadInteger('CursorLine',TmpSynEdit.CaretY);
+  P.X := IniPropStorage.ReadInteger('CursorCol',TmpSynEdit.CaretX);
+  TmpSynEdit.CaretXY := P;
 
-  //TODO TmpSynEdit.SetFocus;
+  TmpSynEdit.EnsureCursorPosVisible;
+
+  TmpSynEdit.SetFocus;
 end;
 
 procedure TFSceneEdit.MenuReBuildClick(Sender: TObject);
@@ -194,26 +198,32 @@ end;
 
 function TFSceneEdit.GetSynEdit: TSynEdit;
 var i: integer;
+    TheTab: TTabSheet;
 begin
   result := nil;
+  TheTab := PageControlXML.ActivePage;
+  if not assigned(TheTab) then exit;
+  result := TSynEdit(TheTab.Tag);
+
+  {result := nil;
   i := PageControlXML.TabIndex;
   if i<0 then exit;
   if not assigned(WorldODE) then exit;
   if i >= WorldODE.XMLFiles.Count then exit;
   if (WorldODE.XMLFiles.Objects[i] is TSynEdit) then begin
     result := TSynEdit(WorldODE.XMLFiles.Objects[i]);
-  end;
+  end;}
 end;
 
 // Same as GetSynEdit but returns a dummy SynEdit instead of nil
-function TFSceneEdit.ActSynEdit: TSynEdit;
+{function TFSceneEdit.ActSynEdit: TSynEdit;
 var i: integer;
 begin
   i := PageControlXML.TabIndex;
   if assigned(WorldODE) and (WorldODE.XMLFiles.Objects[i] is TSynEdit) then begin
     result := TSynEdit(WorldODE.XMLFiles.Objects[i]);
   end else result := SynEditXML;
-end;
+end;}
 
 
 procedure TFSceneEdit.SynEditXMLStatusChange(Sender: TObject; Changes: TSynStatusChanges);
@@ -249,19 +259,21 @@ procedure TFSceneEdit.PageControlXMLChange(Sender: TObject);
 var TmpSynEdit: TSynEdit;
 begin
   TmpSynEdit := GetSynEdit();
-  if TmpSynEdit = nil then exit;
-
-  TmpSynEdit.OnStatusChange(self, [scModified]);
+  if assigned(TmpSynEdit) then TmpSynEdit.OnStatusChange(self, [scModified]);
 end;
 
 procedure TFSceneEdit.MenuUndoClick(Sender: TObject);
+var TmpSynEdit: TSynEdit;
 begin
-  ActSynEdit.Undo;
+  TmpSynEdit := GetSynEdit();
+  if assigned(TmpSynEdit) then TmpSynEdit.Undo;
 end;
 
 procedure TFSceneEdit.MenuRedoClick(Sender: TObject);
+var TmpSynEdit: TSynEdit;
 begin
-  ActSynEdit.Redo;
+  TmpSynEdit := GetSynEdit();
+  if assigned(TmpSynEdit) then TmpSynEdit.Redo;
 end;
 
 procedure TFSceneEdit.MenuFindClick(Sender: TObject);
@@ -271,6 +283,7 @@ end;
 
 procedure TFSceneEdit.FindDialogFind(Sender: TObject);
 var TmpSynEdit: TSynEdit;
+    SynSearchOptions: TSynSearchOptions;
 begin
   TmpSynEdit := GetSynEdit();
   if TmpSynEdit = nil then exit;
@@ -491,6 +504,7 @@ var i, col, idx: integer;
     tok, lin: string;
     BufferCoord: TPoint;
 begin
+  // TODO: got correct tab
   TmpSynEdit := GetSynEdit();
   if TmpSynEdit = nil then exit;
 

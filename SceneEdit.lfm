@@ -313,13 +313,14 @@ object FSceneEdit: TFSceneEdit
     top = 36
   end
   object ReplaceDialog: TReplaceDialog
-    Options = [frDown, frReplace, frReplaceAll, frHidePromptOnReplace]
+    Options = [frDown, frHideMatchCase, frReplace, frReplaceAll, frHidePromptOnReplace]
     OnFind = ReplaceDialogAction
     OnReplace = ReplaceDialogAction
     left = 380
     top = 36
   end
   object FindDialog: TFindDialog
+    Options = [frDown, frHidePromptOnReplace]
     OnFind = FindDialogFind
     left = 352
     top = 36
