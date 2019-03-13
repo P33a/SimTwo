@@ -5,12 +5,12 @@ unit Editor;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, SynEdit, SynEditHighlighter, SynHighlighterPas, StdCtrls, SynMemo,
   ExtCtrls, ComCtrls, SynEditTypes, Menus, math,
   uPSComponent, uPSUtils, uPSRuntime, SynCompletion, uPSComponent_Default,
   uPSComponent_StdCtrls, uPSComponent_Controls, uPSComponent_Forms, ProjConfig,
-  SynEditMiscClasses, PrintersDlgs, Dynmatrix, uPSCompiler, Clipbrd,
+  SynEditMiscClasses, PrintersDlgs, uPSCompiler, Clipbrd,
   IniPropStorage, Rlan, SynEditMarks, process, LCLIntf, Types, LCLType;
 
 
@@ -308,10 +308,11 @@ end;
 
 procedure TFEditor.RunOnce;
 var i64_start, i64_end, i64_freq: int64;
-    Saved8087CW: Word;
+    //Saved8087CW: Word;
     i: integer;
     var_name, txt: string;
     tp: TPSVariantIFC;
+    //FPUExceptionMask: TFPUExceptionMask;
 begin
   if PSScript.Exec.Status <> isLoaded then exit;
 
@@ -319,10 +320,12 @@ begin
   queryperformancecounter(i64_start);
 
   ClearExceptions(false);
-  Saved8087CW := Get8087CW;
+  //Saved8087CW := Get8087CW;
   //Set8087CW(Default8087CW);
   //SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow, exPrecision]);
-  SetExceptionMask([exInvalidOp, exDenormalized, exOverflow, exUnderflow, exPrecision]);
+
+  //FPUExceptionMask := GetExceptionMask;
+  ////SetExceptionMask([exInvalidOp, exDenormalized, exOverflow, exUnderflow, exPrecision]);
 
   ProgTime := ProgCyclesCount * WorldODE.Ode_dt;
   LocalInspector := false;
@@ -334,35 +337,50 @@ begin
       FParams.RGControlBlock.itemindex := 0;
       LBErrors.Items.Add('Error while executing script: ' + E.Message);
       ClearExceptions(false);
-      Set8087CW(Saved8087CW);
+      //SetExceptionMask(FPUExceptionMask);
+      //Set8087CW(Saved8087CW);
       exit;
     end;
   end;
 
-  if PSScript.Execute then begin
 
-    if MenuShowGlobalVariables.Checked then begin
-      LBVariables.Items.BeginUpdate;
-      if (not MenuShowLocalVariables.Checked) or (not LocalInspector) then LBVariables.Clear;
-      for i := 0 to PSScript.Exec.GlobalVarNames.Count -1 do begin
-        tp := NewTPSVariantIFC(PSScript.Exec.GetGlobalVar(i), false);
-        var_name := PSScript.Exec.GlobalVarNames[i];
-        txt := format('%s: %s',[ var_name , PSVariantToString(tp,'')]);
-        LBVariables.Items.Add(txt);
+  try
+    if PSScript.Execute then begin
+
+      if MenuShowGlobalVariables.Checked then begin
+        LBVariables.Items.BeginUpdate;
+        if (not MenuShowLocalVariables.Checked) or (not LocalInspector) then LBVariables.Clear;
+        for i := 0 to PSScript.Exec.GlobalVarNames.Count -1 do begin
+          tp := NewTPSVariantIFC(PSScript.Exec.GetGlobalVar(i), false);
+          var_name := PSScript.Exec.GlobalVarNames[i];
+          txt := format('%s: %s',[ var_name , PSVariantToString(tp,'')]);
+          LBVariables.Items.Add(txt);
+        end;
+        LBVariables.Items.EndUpdate;
       end;
-      LBVariables.Items.EndUpdate;
-    end;
-    //EditDebug.Text := txt;
+      //EditDebug.Text := txt;
 
-  end else begin
-    FParams.RGControlBlock.itemindex := 0;
-  //  LBErrors.Items.clear;
-    LBErrors.Items.Add('Error while executing script: '+
-                  PSScript.ExecErrorToString);
-    //PSScript.Exec.Clear;
+    end else begin
+      FParams.RGControlBlock.itemindex := 0;
+    //  LBErrors.Items.clear;
+      LBErrors.Items.Add('Error while executing script: ' + PSScript.ExecErrorToString);
+      //PSScript.Exec.Clear;
+    end;
+  except
+    on E: Exception do begin //ErrorDialog(E.Message, E.HelpContext);
+      FParams.RGControlBlock.itemindex := 0;
+      LBErrors.Items.Add('Error while executing script: ' + E.Message);
+      ClearExceptions(false);
+      //SetExceptionMask(FPUExceptionMask);
+      //Set8087CW(Saved8087CW);
+      exit;
+    end;
   end;
+
   ClearExceptions(false);
-  Set8087CW(Saved8087CW);
+  //SetExceptionMask(FPUExceptionMask);
+  //Set8087CW(Saved8087CW);
+
 
   //PSScript.Exec.RaiseCurrentException;
   //StatusBar.Panels[4].Text := inttostr(PSScript.Exec.ExceptionPos);
@@ -958,6 +976,8 @@ begin
   Sender.AddFunction(@RCButtonPressed, 'function RCButtonPressed(r, c: integer): boolean;');
   Sender.AddFunction(@RangeToMatrix, 'function RangeToMatrix(r, c, rows, cols: integer): Matrix;');
   Sender.AddFunction(@MatrixToRange, 'procedure MatrixToRange(r, c: integer; const M: Matrix);');
+  Sender.AddFunction(@MatrixToRangeF, 'procedure MatrixToRangeF(r, c: integer; const M: Matrix; FormatString: string);');
+
   Sender.AddFunction(@ClearButtons, 'procedure ClearButtons;');
 
   Sender.AddFunction(@RefreshSheets, 'procedure RefreshSheets;');

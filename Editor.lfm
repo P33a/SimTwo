@@ -537,7 +537,7 @@ object FEditor: TFEditor
           'end;'
           ''
         )
-        Options = [eoAutoIndent, eoBracketHighlight, eoGroupUndo, eoKeepCaretX, eoScrollByOneLess, eoScrollPastEol, eoShowScrollHint, eoTabsToSpaces, eoTrimTrailingSpaces, eoDragDropEditing]
+        Options = [eoAutoIndent, eoBracketHighlight, eoGroupUndo, eoKeepCaretX, eoScrollByOneLess, eoScrollPastEol, eoShowScrollHint, eoTabIndent, eoTabsToSpaces, eoTrimTrailingSpaces, eoDragDropEditing]
         MouseOptions = [emDragDropEditing]
         VisibleSpecialChars = [vscSpace, vscTabAtLast]
         ScrollBars = ssVertical

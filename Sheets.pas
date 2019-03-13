@@ -181,6 +181,8 @@ procedure SetRCBackColor(r, c: integer; newColor: TColor);
 procedure ClearButtons;
 function RangeToMatrix(r, c, rows, cols: integer): Matrix;
 procedure MatrixToRange(r, c: integer; const M: Matrix);
+procedure MatrixToRangeF(r, c: integer; const M: Matrix; FormatString: string);
+
 procedure RefreshSheets;
 
 function ColFromPack(v: TObject): integer;
@@ -1092,11 +1094,17 @@ begin
 end;
 
 procedure MatrixToRange(r, c: integer; const M: Matrix);
+begin
+  MatrixToRangeF(r, c, M, '%.7g');
+end;
+
+
+procedure MatrixToRangeF(r, c: integer; const M: Matrix; FormatString: string);
 var ir, ic: integer;
 begin
   for ir := 0 to M.rows - 1 do begin
     for ic := 0 to M.cols - 1 do begin
-      FSheets.ActSheet.EditCell(r + ir, c + ic).ParseText(format('%.7g',[MGetv(M, ir ,ic)]));
+      FSheets.ActSheet.EditCell(r + ir, c + ic).ParseText(format(FormatString, [MGetv(M, ir ,ic)]));
     end;
   end;
 end;
