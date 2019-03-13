@@ -4,7 +4,7 @@
 
   <!-- Robot Dimensions -->
     <const name='RobotWidth' value='0.105'/>
-    <const name='RobotLength' value='0.22'/>
+    <const name='RobotLength' value='0.14'/>
     <const name='RobotThickness' value='0.003'/>
     <const name='RobotHeight' value='0.018'/>
     <const name='RobotMass' value='1'/>
@@ -28,7 +28,6 @@
     <const name='WheelMass' value='0.05'/>
 
   <!-- Caster Contants -->
-    <const name='CasterPosY' value='-0.0775'/>
     <const name='CasterPoleThickness' value='0.016'/>
     <const name='CasterMass' value='0.2'/>
     
@@ -75,7 +74,7 @@
       <ID value='CasterPole'/>
       <mass value='CasterMass'/>
       <size x='CasterPoleThickness/2' y='0' z='CasterToBase'/>
-      <pos x='CasterPosY' y='0' z='CasterToBase/2'/>
+      <pos x='-RobotLength/2 + 0.01' y='0' z='CasterToBase/2'/>
       <rot_deg x='0' y='0' z='0'/>
       <nodrag stokes='1e-4' roll='1e-4'/>
       <color_rgb r='128' g='128' b='128'/>
@@ -88,7 +87,7 @@
     <cuboid>
       <ID value='motors'/>
       <size x='0.05' y='RobotWidth - 0.02' z='0.02'/>
-      <pos x='RobotLength/2-CenterMotorToFront + 0.01' y='0' z='+ 0.01'/>
+      <pos x='-0.01' y='0' z='+ 0.01'/>
       <rot_deg x='0' y='0' z='0'/>
       <color_rgb r='200' g='200' b='0'/>
     </cuboid>
@@ -96,7 +95,7 @@
     <cylinder>
       <ID value='Solenoid'/>
       <size x='0.015' y='0' z='0.01'/>
-      <pos x='0.12' y='0' z='0'/>
+      <pos x='RobotLength/2 + 0.01' y='0' z='0'/>
       <rot_deg x='0' y='90' z='0'/>
       <color_rgb r='128' g='128' b='128'/>
     </cylinder>
@@ -112,7 +111,7 @@
 
     <nsphere>
       <ID value="slide pad"/>
-      <pos x="CasterPosY" y="0.0" z="-CasterToBase-RobotThickness/2"/>
+      <pos x="RobotLength/2 + 0.015" y="0.0" z="-CasterToBase-RobotThickness/2"/>
       <radius value="CasterWheelThickness/2"/>
       <nomass value="0.2"/>
       <surface mu='0.1' softness='0.1'/>
@@ -153,7 +152,7 @@
      <joint>
       <ID value='CasterPoleToBase'/>
       <connect B1='CasterPole' B2='BasePlate'/>
-      <pos x='CasterPosY' y='0' z='0'/>
+      <pos x='RobotLength/2 + 0.015' y='0' z='0'/>
       <axis x='0' y='0' z='1'/>
       <type value='Hinge'/>
       <motor active='0'/>
@@ -165,7 +164,7 @@
     
   <defines>
     <!-- Sensor "dimensions"  -->
-    <const name='LineSensorOffsetX' value='0.11'/>
+    <const name='LineSensorOffsetX' value='RobotLength/2'/>
     <const name='LineSensorYSpace' value='0.016'/>
   </defines>
 
@@ -221,7 +220,7 @@
     <solenoid>
       <ID value='solenoid1'/>
       <beam length='0.02' initial_width='0.011' final_width='0.011'/>
-      <pos x='0.12' y='0' z='0.0'/>
+      <pos x='RobotLength/2 + 0.01' y='0' z='0.0'/>
       <rot_deg x='0' y='0' z='0'/>
       <tag value='00'/>
       <force fmax='10' k2='0.5'/>

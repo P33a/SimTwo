@@ -10,12 +10,12 @@
     <cell r="2" c="1" text="Control:" />
     <cell r="2" c="4" text="[Script]" />
     <cell r="2" c="5" text="[Remote]" />
-    <cell r="5" c="2" text="63" />
+    <cell r="5" c="2" text="0" />
     <cell r="1" c="1" text="-1" />
     <cell r="5" c="0" text="0" />
-    <cell r="6" c="2" text="63" />
-    <cell r="7" c="2" text="0" />
-    <cell r="8" c="2" text="0" />
+    <cell r="6" c="2" text="21" />
+    <cell r="7" c="2" text="63" />
+    <cell r="8" c="2" text="42" />
     <cell r="9" c="2" text="0" />
     <cell r="4" c="1" text="Sensors" />
     <cell r="4" c="2" text="IR" />
@@ -34,9 +34,14 @@
     <cell r="12" c="1" text="X" />
     <cell r="13" c="1" text="Y" />
     <cell r="14" c="1" text="Theta" />
-    <cell r="11" c="3" text="[set]" />
+    <cell r="11" c="3" text="[Set]" />
     <cell r="13" c="3" text="-0.4" />
     <cell r="14" c="3" text="90" />
     <cell r="12" c="3" text="-0.725" />
+    <cell r="16" c="3" text="10" />
+    <cell r="11" c="4" text="[Part1]" />
+    <cell r="12" c="4" text="-0.720" />
+    <cell r="13" c="4" text="0.595" />
+    <cell r="14" c="4" text="0" />
   </cells>
 </sheet>

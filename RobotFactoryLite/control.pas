@@ -45,6 +45,8 @@ begin
     RobotControls.SolenoidActive := value;
   end else if channel = 'S' then begin
     ArduinoState := value;
+  end else if channel = 'X' then begin
+    SetRCValue(16, 3, inttostr(value));
   end else if channel in ['s', 't'] then begin
     i := 1 + ord(channel) - ord('r');
 
@@ -262,6 +264,10 @@ begin
 
   if RCButtonPressed(11, 3) then begin
     SetRobotPos(0, GetRCValue(12, 3), GetRCValue(13, 3), 0, rad(GetRCValue(14, 3)));
+  end;
+
+  if RCButtonPressed(11, 4) then begin
+    SetRobotPos(1, GetRCValue(12, 4), GetRCValue(13, 4), 0, rad(GetRCValue(14, 4)));
   end;
 
   for i := 0 to 4 do begin

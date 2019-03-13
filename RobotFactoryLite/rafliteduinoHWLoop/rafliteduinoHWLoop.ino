@@ -1,6 +1,7 @@
 #include <SPI.h>
 #include "src/MFRC522.h"
 #include "channels.h"
+#include "IRLine.h"
 #include "proj_types.h"
 
 byte UsingSimulator;
@@ -19,7 +20,7 @@ MFRC522::MIFARE_Key key;
 // Init array that will store new NUID 
 byte nuidPICC[4];
 
-
+IRLine_t IRLine;
 
 // Motor Pins
 #define MOTOR_AIN1 6
@@ -170,68 +171,21 @@ void readRFID(void)
 }  
 
 
-float IR_pos, IR_total;
-int IR_values[5];
-int IR_WaterLevel = 100;
-int IR_tresh = 512;
 
 void readIRSensors(void)
 {
   byte c;
   for (c = 0; c < 5; c++) {
-    IR_values[c] = 1023 - analogRead(A0 + c);
+    IRLine.IR_values[c] = 1023 - analogRead(A0 + c);
   }      
 }
-
-
-void calcIRLinePos(void)
-{
-  byte c;
-  int v, last_v;
-
-  IR_pos = 2 * 16.0;
-  IR_total = 0;
-  last_v = 0;
-  for (c = 0; c < 5; c++) {
-    v = IR_values[c] - IR_WaterLevel;
-    if (v < 0) v = 0;
-    IR_total = IR_total + v;
-
-    if (last_v < IR_tresh && v > IR_tresh) {
-      IR_pos = 8 + 16.0 * (c - 2) + 16.0 * (IR_tresh - last_v) / (v - last_v);
-      IR_total += 1023 * (5 - c);     
-      break;
-    }
-    last_v = v;
-  }
-}
-
-
-void calcIRLineCenter(void)
-{
-  byte c;
-  int v;
-
-  IR_pos = 0;
-  IR_total = 0;
-  for (c = 0; c < 5; c++) {
-    v = IR_values[c] - IR_WaterLevel;
-    if (v < 0) v = 0;
- 
-    IR_total = IR_total + v;
-    IR_pos = IR_pos + v * (c - 2) * 16.0;
-  }
-  if (IR_total > 0) IR_pos = IR_pos / IR_total;
-}
-
-
 
 uint32_t tis;
 uint32_t current, previous, interval = 40000UL;
 
-byte state;
-float v, w;
-byte solenoid_state;  
+
+robot_t robot;
+
 byte TouchSwitch;
 
 
@@ -247,7 +201,7 @@ void process_serial_packet(char channel, uint32_t value, channels_t& obj)
    
  } else if (channel == 'i')  {   // IR Sensors + Touch
    for (c = 0; c < 5; c++) {
-    IR_values[c] = 16 * ((value >> (c * 6)) & 0x3F);
+    IRLine.IR_values[c] = 16 * ((value >> (c * 6)) & 0x3F);
    } 
    TouchSwitch = ((value >> 31) & 1);  
  
@@ -255,7 +209,7 @@ void process_serial_packet(char channel, uint32_t value, channels_t& obj)
   // Calc control
   go = 1;
  } else if (channel == 's')  {  // Set new state
-  state = value;
+  robot.state = value;
 
  } else if (channel == 'p')  { // Ping
    obj.send(channel, value + 1);
@@ -263,66 +217,94 @@ void process_serial_packet(char channel, uint32_t value, channels_t& obj)
  }
 }
 
+void followLineRight(float Vnom, float K)
+{
+  robot.v = Vnom;
+  robot.w = K * IRLine.pos_right;
+}
+
+
+void followLineLeft(float Vnom, float K)
+{
+  robot.v = Vnom;
+  robot.w = K * IRLine.pos_left;
+}
+
+
+void move_robot(float Vnom, float Wnom)
+{
+  robot.v = Vnom;
+  robot.w = Wnom;
+}
 
 
 void setState(byte new_state)
 {
   tis = 0;
-  state = new_state;
+  robot.state = new_state;
 }
 
 void control(void)
 {
-    if (state == 1 && TouchSwitch) {
+    if (robot.state == 1 && TouchSwitch) {
       setState(2);
-    } else if(state == 2 && tis > 400) {
+    } else if(robot.state == 2 && tis > 400) {
       setState(3);
-    } else if(state == 3 && tis > 1600) {
+    } else if(robot.state == 3 && tis > 1600) {
       setState(4);
-    } else if(state == 4 && tis > 1600 && IR_total > 1500) {
+    } else if(robot.state == 4 && tis > 1600 && IRLine.total > 1500) {
       setState(5);
-    } else if(state == 5 && tis > 1600) {
+      IRLine.crosses = 0;
+    } else if(robot.state == 5 && IRLine.crosses >= 5) {
       setState(6);
-    } else if(state == 6 && tis > 2400) {
-      setState(0);
+    } else if(robot.state == 6 && tis > 1600) {
+      setState(7);
+    } else if(robot.state == 7 && tis > 2000 && IRLine.total > 1500) {
+      IRLine.crosses = 0;
+      setState(8);
     }
 
 
-    if (state == 0) {
-      solenoid_state = 0;
-      v = 0;
-      w = 0;
+    if (robot.state == 0) {
+      robot.solenoid_state = 0;
+      move_robot(0, 0);
     
-    } else if (state == 1) {
-      solenoid_state = 0;
-      v = 40;
-      w = -2.0 * IR_pos;
+    } else if (robot.state == 1) {
+      robot.solenoid_state = 0;
+      followLineLeft(100, -2.0);
 
-    } else if (state == 2) {
-      solenoid_state = 1;
-      v = 40;
-      w = -2.0 * IR_pos;
+    } else if (robot.state == 2) {
+      robot.solenoid_state = 1;
+      followLineLeft(40, -2.0);
     
-    } else if (state == 3) {
-      solenoid_state = 1;
-      v = -40;
-      w = 0;
+    } else if (robot.state == 3) {
+      robot.solenoid_state = 1;
+      move_robot(-60, 0);
       
-    } else if (state == 4) {
-      solenoid_state = 1;
-      v = 0;
-      w = 50;
+    } else if (robot.state == 4) {
+      robot.solenoid_state = 1;
+      move_robot(0, 50);
       
-    } else if (state == 5) {
-      solenoid_state = 1;
-      v = 40;
-      w = -2.0 * IR_pos;
+    } else if (robot.state == 5) {
+      robot.solenoid_state = 1;
+      //followLineRight(80 - 40 * (IRLine.crosses >= 5), -2.0);
+      followLineRight(100, -2.0);
       
-    } else if (state == 6) {
-      solenoid_state = 0;
-      v = -40;
-      w = 0;
-    } 
+    } else if (robot.state == 6) {
+      robot.solenoid_state = 1;
+      followLineRight(40, -3.0);
+      
+    } else if (robot.state == 7) {
+      robot.solenoid_state = 0;
+      if (tis < 1000) move_robot(-80, -2);
+      else move_robot(0, -50);
+
+    } else if (robot.state == 8) {
+      robot.solenoid_state = 0;
+      if (IRLine.crosses < 3)  followLineRight(80, -2.0);
+      else if (IRLine.crosses == 3) move_robot(40, 0.5); 
+      else followLineLeft(40, -2.0);
+    }  
   
 }
 
@@ -346,14 +328,19 @@ void sim_loop(void)
 
   if (go) {
     tis = tis + interval / 1000;
-    calcIRLinePos();
+    IRLine.calcIRLineEdgeLeft();
+    IRLine.calcIRLineEdgeRight();
+    IRLine.calcCrosses();
     control();
     go = 0;
 
-    serial_channels.send('S',  state);
-    serial_channels.send('V',  round(v * 1000));
-    serial_channels.send('W',  round(w * 1000));
-    serial_channels.send('M',  solenoid_state);
+    serial_channels.send('S',  robot.state);
+    serial_channels.send('V',  round(robot.v * 1000));
+    serial_channels.send('W',  round(robot.w * 1000));
+    serial_channels.send('M',  robot.solenoid_state);
+    serial_channels.send('X',  IRLine.crosses);
+
+    
 
   }
 }
@@ -372,8 +359,8 @@ void real_loop(void)
     if (b == '=') setMotorsVoltage(200, -200) ;
     if (b == ')') setMotorsVoltage(-200, -200) ;
     if (b == '?') setMotorsVoltage(0, 0) ;
-    if (b == '\\') state = 0;
-    if (b == '*') state = 1;
+    if (b == '\\') robot.state = 0;
+    if (b == '*') robot.state = 1;
   }
 
   current = micros();
@@ -391,23 +378,24 @@ void real_loop(void)
 
     TouchSwitch = readTouchSwicth();
 
-    calcIRLinePos();
+    IRLine.calcIRLineEdgeLeft();
+    IRLine.calcCrosses();
 
     control();
     
-    setSolenoidState(solenoid_state);
-    setMotorsVoltage(v + w, v - w);
+    setSolenoidState(robot.solenoid_state);
+    setMotorsVoltage(robot.v + robot.w, robot.v - robot.w);
     
     byte c;
     for (c = 0; c < 5; c++) {
-       Serial.print(IR_values[c]);
+       Serial.print(IRLine.IR_values[c]);
        Serial.print(" ");
     }
     Serial.print("Pos: ");
-    Serial.print(IR_pos);
+    Serial.print(IRLine.pos_right);
     
     Serial.print(" state: ");
-    Serial.print(state);
+    Serial.print(robot.state);
 
 
     Serial.print(" tis: ");
