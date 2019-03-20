@@ -312,7 +312,7 @@ var i64_start, i64_end, i64_freq: int64;
     i: integer;
     var_name, txt: string;
     tp: TPSVariantIFC;
-    //FPUExceptionMask: TFPUExceptionMask;
+    FPUExceptionMask: TFPUExceptionMask;
 begin
   if PSScript.Exec.Status <> isLoaded then exit;
 
@@ -322,9 +322,10 @@ begin
   ClearExceptions(false);
   //Saved8087CW := Get8087CW;
   //Set8087CW(Default8087CW);
-  //SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow, exPrecision]);
 
-  //FPUExceptionMask := GetExceptionMask;
+  FPUExceptionMask := GetExceptionMask;
+  //FPUExceptionMask := [];
+  SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow, exPrecision]);
   ////SetExceptionMask([exInvalidOp, exDenormalized, exOverflow, exUnderflow, exPrecision]);
 
   ProgTime := ProgCyclesCount * WorldODE.Ode_dt;
@@ -337,7 +338,7 @@ begin
       FParams.RGControlBlock.itemindex := 0;
       LBErrors.Items.Add('Error while executing script: ' + E.Message);
       ClearExceptions(false);
-      //SetExceptionMask(FPUExceptionMask);
+      SetExceptionMask(FPUExceptionMask);
       //Set8087CW(Saved8087CW);
       exit;
     end;
@@ -367,22 +368,22 @@ begin
       //PSScript.Exec.Clear;
     end;
   except
-    on E: Exception do begin //ErrorDialog(E.Message, E.HelpContext);
+    on E: Exception do begin //ShowMessage(E.Message);
       FParams.RGControlBlock.itemindex := 0;
       LBErrors.Items.Add('Error while executing script: ' + E.Message);
       ClearExceptions(false);
-      //SetExceptionMask(FPUExceptionMask);
+      SetExceptionMask(FPUExceptionMask);
       //Set8087CW(Saved8087CW);
       exit;
     end;
   end;
 
   ClearExceptions(false);
-  //SetExceptionMask(FPUExceptionMask);
+  SetExceptionMask(FPUExceptionMask);
   //Set8087CW(Saved8087CW);
 
 
-  //PSScript.Exec.RaiseCurrentException;
+  PSScript.Exec.RaiseCurrentException;
   //StatusBar.Panels[4].Text := inttostr(PSScript.Exec.ExceptionPos);
 
   queryperformancecounter(i64_end);

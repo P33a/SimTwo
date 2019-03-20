@@ -28,12 +28,12 @@
     <VersionInfo>
       <UseVersionInfo Value="True"/>
       <AutoIncrementBuild Value="True"/>
-      <MajorVersionNr Value="2018"/>
-      <MinorVersionNr Value="7"/>
-      <RevisionNr Value="11"/>
+      <MajorVersionNr Value="2019"/>
+      <MinorVersionNr Value="3"/>
+      <RevisionNr Value="13"/>
       <BuildNr Value="9"/>
       <Attributes pvaSpecialBuild="True"/>
-      <StringTable ProductVersion="2018"/>
+      <StringTable ProductVersion="2019"/>
     </VersionInfo>
     <BuildModes Count="1">
       <Item1 Name="Default" Default="True"/>

@@ -152,7 +152,7 @@
      <joint>
       <ID value='CasterPoleToBase'/>
       <connect B1='CasterPole' B2='BasePlate'/>
-      <pos x='RobotLength/2 + 0.015' y='0' z='0'/>
+      <pos x='-RobotLength/2 + 0.01' y='0' z='0'/>
       <axis x='0' y='0' z='1'/>
       <type value='Hinge'/>
       <motor active='0'/>

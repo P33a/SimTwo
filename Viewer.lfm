@@ -1,7 +1,7 @@
 object FViewer: TFViewer
   Left = 366
   Height = 524
-  Top = 141
+  Top = 150
   Width = 757
   Caption = 'SimTwo View'
   ClientHeight = 524

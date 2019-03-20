@@ -47,6 +47,10 @@ begin
     ArduinoState := value;
   end else if channel = 'X' then begin
     SetRCValue(16, 3, inttostr(value));
+  end else if channel = 'Y' then begin
+    SetRCValue(17, 3, inttostr(value));
+  end else if channel = 'Z' then begin
+    SetRCValue(18, 3, inttostr(value));
   end else if channel in ['s', 't'] then begin
     i := 1 + ord(channel) - ord('r');
 

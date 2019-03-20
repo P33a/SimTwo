@@ -1,4 +1,4 @@
-/* Copyright (c) 2019  Paulo Costa
+/* Copyright (c) 2016  Paulo Costa
    All rights reserved.
 
    Redistribution and use in source and binary forms, with or without
@@ -26,37 +26,40 @@
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE. */
 
-#ifndef IRLINE_H
-#define IRLINE_H
+#ifndef CHANNELS_H
+#define CHANNELS_H
 
 #include "Arduino.h"
 
-#define IRSENSORS_COUNT 5
-
-class IRLine_t
-{
-  public:
-    float pos_left, pos_right, total;
-    int IR_values[IRSENSORS_COUNT];
-    int IR_WaterLevel;
-    int IR_tresh, IR_max;
-
-    byte crosses;
-    byte cross_count, last_cross_count;
-    byte cross_tresh;
-
-    float blacks;
-
-    IRLine_t();
-    
-    void calibrate(void);
-    
-    void calcIRLineEdgeLeft(void);
-    void calcIRLineEdgeRight(void);
-    //void calcIRLineCenter(void);
-
-    void calcCrosses(void);
-
+union channels_u{
+  uint32_t u;
+  float f;
 };
 
-#endif // IRLINE_H
+class channels_t
+{
+    int8_t frameState;
+    char curChannel;
+    char frameHexData[8];
+  public:
+
+    void (*process_frame)(char channel, uint32_t value, channels_t& obj);
+    void (*serial_write)(uint8_t b);
+
+    channels_t();
+
+    void init(void (*process_frame_function)(char channel, uint32_t value, channels_t& obj),
+              void (*serial_write_function)(uint8_t b)
+              );
+    void StateMachine(byte b);
+    void sendFloat(char c, float v);
+    void send(char c, uint32_t v);
+    void send(char c, byte addr, uint16_t high_word, uint16_t low_word);
+    void send(char c, byte addr, byte b3, byte b2, byte b1, byte b0);
+    
+    void sendHexNibble(byte b);
+    void sendHexByte(byte b);
+    void sendByte(byte b);
+};
+
+#endif // CHANNELS_H

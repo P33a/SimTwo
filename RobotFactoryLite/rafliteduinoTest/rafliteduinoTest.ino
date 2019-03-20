@@ -124,7 +124,7 @@ void setup()
   SPI.begin(); // Init SPI bus
   rfid.PCD_Init(); // Init MFRC522 
 
-  UsingSimulator = 1;
+  UsingSimulator = 0;
 
 }
 
@@ -176,7 +176,7 @@ void readIRSensors(void)
 {
   byte c;
   for (c = 0; c < 5; c++) {
-    IRLine.IR_values[c] = 1023 - analogRead(A0 + 4 - c);
+    IRLine.IR_values[c] = 1023 - analogRead(A0 + c);
   }      
 }
 
@@ -186,7 +186,7 @@ uint32_t current, previous, interval = 40000UL;
 
 robot_t robot;
 
-byte TouchSwitch, LastTouchSwitch;
+byte TouchSwitch;
 
 
 void process_serial_packet(char channel, uint32_t value, channels_t& obj)
@@ -271,9 +271,9 @@ void control(void)
       IRLine.crosses = 0;
     } else if(robot.state == 5 && IRLine.crosses >= 5) {
       setState(6);
-    } else if(robot.state == 6 && tis > 1500 && IRLine.total > 1500) {
+    } else if(robot.state == 6 && tis > 3000) {
       setState(7);
-    } else if(robot.state == 7 && tis > 2000) {
+    } else if(robot.state == 7 && tis > 2000 && IRLine.total > 1500) {
       IRLine.crosses = 0;
       setState(8);
     }
@@ -285,7 +285,7 @@ void control(void)
     
     } else if (robot.state == 1) {  // Go: Get first box
       robot.solenoid_state = 0;
-      followLineLeft(80, -2.0);
+      followLineLeft(100, -2.0);
 
     } else if (robot.state == 2) { // Turn Solenoid On and Get the Box
       robot.solenoid_state = 1;
@@ -304,19 +304,21 @@ void control(void)
       //followLineRight(80 - 40 * (IRLine.crosses >= 5), -2.0);
       followLineRight(80, -2.0);
       
-    } else if (robot.state == 6) {  // Advance a little then turn to place the box
+    } else if (robot.state == 6) {  // Slow last turn to place the box
       robot.solenoid_state = 1;
-      if (tis < 800) moveRobot(40, 0);
-      else moveRobot(0, -50);
+      followLineRight(30, -5.0);
       
-    } else if (robot.state == 7) {  
-      robot.solenoid_state = 1;
-      followLineRight(40, -2.0); 
-
-    } else if (robot.state == 8) { // Drop the box and go back
+    } else if (robot.state == 7) {  // Drop the box and go back
       robot.solenoid_state = 0;
-      if (tis < 2000) moveRobot(-40, 0);
-      else moveRobot(0, 0);
+      if (tis < 1000) moveRobot(-80, -2);
+      else moveRobot(0, -50);
+
+    } else if (robot.state == 8) {
+      robot.solenoid_state = 0;
+      if (IRLine.crosses < 2)  followLineRight(80, -2.0);
+      else if (IRLine.crosses == 3) moveRobot(40, 0.5); 
+      else followLineLeft(40, -2.0);
+      //else followLine(40, -2.0);
     }  
   
 }
@@ -376,9 +378,6 @@ void real_loop(void)
     if (b == '?') {robot.v =  0; robot.w = 0;} //setMotorsVoltage(0, 0) ;
     if (b == '\\') robot.state = 0;
     if (b == '*') robot.state = 1;
-    if (b == '!') UsingSimulator = 0;
-    if (b == '#') UsingSimulator = 1;
-    serial_channels.StateMachine(b);
   }
 
   current = micros();
@@ -394,15 +393,13 @@ void real_loop(void)
     readIRSensors();
     t = micros() - t;
 
-    LastTouchSwitch = TouchSwitch;
     TouchSwitch = readTouchSwicth();
-    if (robot.state == 0 && LastTouchSwitch && !TouchSwitch) robot.state = 1;
 
     IRLine.calcIRLineEdgeLeft();
     IRLine.calcIRLineEdgeRight();
     IRLine.calcCrosses();
 
-    control();
+    //control();
     
     setSolenoidState(robot.solenoid_state);
     setMotorsVoltage(robot.v + robot.w, robot.v - robot.w);
@@ -420,12 +417,12 @@ void real_loop(void)
 
     Serial.print(" Touch: ");
     Serial.print(TouchSwitch);
-    
-    Serial.print(" state: ");
-    Serial.print(robot.state);
+   
+    //Serial.print(" state: ");
+    //Serial.print(robot.state);
 
-    Serial.print(" tis: ");
-    Serial.print(tis);
+    //Serial.print(" tis: ");
+    //Serial.print(tis);
      
     Serial.println();
   }
