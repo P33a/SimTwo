@@ -29,7 +29,7 @@
 
   <!-- Caster Contants -->
     <const name='CasterPoleThickness' value='0.016'/>
-    <const name='CasterMass' value='0.2'/>
+    <const name='CasterMass' value='0.02'/>
     
     <const name='LineSensorBeamWidth' value='0.006'/>
     
@@ -70,20 +70,11 @@
       <color_rgb r='200' g='200' b='0'/>
     </cylinder>
 
-    <cylinder>
-      <ID value='CasterPole'/>
-      <mass value='CasterMass'/>
-      <size x='CasterPoleThickness/2' y='0' z='CasterToBase'/>
-      <pos x='-RobotLength/2 + 0.01' y='0' z='CasterToBase/2'/>
-      <rot_deg x='0' y='0' z='0'/>
-      <nodrag stokes='1e-4' roll='1e-4'/>
-      <color_rgb r='128' g='128' b='128'/>
-      <surface mu='0.1'/>
-    </cylinder>
+
   </solids>
 
   <shells>
-   
+
     <cuboid>
       <ID value='motors'/>
       <size x='0.05' y='RobotWidth - 0.02' z='0.02'/>
@@ -98,6 +89,7 @@
       <pos x='RobotLength/2 + 0.01' y='0' z='0'/>
       <rot_deg x='0' y='90' z='0'/>
       <color_rgb r='128' g='128' b='128'/>
+      <surface mu='0.1'/>
     </cylinder>
 
 
@@ -109,13 +101,13 @@
       <color_rgb r='100' g='100' b='100'/>
     </cuboid>
 
-    <nsphere>
+    <sphere>
       <ID value="slide pad"/>
-      <pos x="RobotLength/2 + 0.015" y="0.0" z="-CasterToBase-RobotThickness/2"/>
-      <radius value="CasterWheelThickness/2"/>
-      <nomass value="0.2"/>
+      <mass value='CasterMass'/>
+      <pos x="-RobotLength/2 + 0.015" y="0.0" z="-CasterPoleThickness/2"/>
+      <radius value="CasterPoleThickness/2"/>
       <surface mu='0.1' softness='0.1'/>
-    </nsphere>
+    </sphere>
 
   </shells>
  
@@ -149,15 +141,6 @@
       <controller active='0'/>
     </joint>
 
-     <joint>
-      <ID value='CasterPoleToBase'/>
-      <connect B1='CasterPole' B2='BasePlate'/>
-      <pos x='-RobotLength/2 + 0.01' y='0' z='0'/>
-      <axis x='0' y='0' z='1'/>
-      <type value='Hinge'/>
-      <motor active='0'/>
-      <controller active='0'/>
-    </joint>
     
   </articulations>
 

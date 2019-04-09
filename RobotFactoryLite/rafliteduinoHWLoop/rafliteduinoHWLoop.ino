@@ -3,6 +3,7 @@
 #include "channels.h"
 #include "IRLine.h"
 #include "proj_types.h"
+#include "rfidtypes.h"
 
 byte UsingSimulator;
 
@@ -124,20 +125,20 @@ void setup()
   SPI.begin(); // Init SPI bus
   rfid.PCD_Init(); // Init MFRC522 
 
-  UsingSimulator = 1;
+  UsingSimulator = 0;
 
 }
 
 void printHex(byte *buffer, byte bufferSize) {
   for (byte i = 0; i < bufferSize; i++) {
-    Serial.print(buffer[i] < 0x10 ? " 0" : " ");
+    Serial.print(buffer[i] < 0x10 ? ",0x0" : ",0x");
     Serial.print(buffer[i], HEX);
   }
 }
 
 
 
-void readRFID(void) 
+uint8_t readRFID(uint8_t verbose) 
 {
   byte bufferATQA[2];
   byte bufferSize = sizeof(bufferATQA);
@@ -148,26 +149,28 @@ void readRFID(void)
   if (rfid.PICC_WakeupA(bufferATQA, &bufferSize) == 0) {
     // Verify if the NUID has been readed
     if (rfid.PICC_ReadCardSerial()) {
-      Serial.print(F("PICC type: "));
+      if (verbose) Serial.print(F("PICC type: "));
       MFRC522::PICC_Type piccType = rfid.PICC_GetType(rfid.uid.sak);
-      Serial.print(rfid.PICC_GetTypeName(piccType));
+      if (verbose) Serial.print(rfid.PICC_GetTypeName(piccType));
 
       // Store NUID into nuidPICC array
       for (byte i = 0; i < 4; i++) {
         nuidPICC[i] = rfid.uid.uidByte[i];
       }
       
-      Serial.println(F("The NUID tag is:"));
-      Serial.print(F("In hex: "));
-      printHex(rfid.uid.uidByte, rfid.uid.size);
+      if (verbose) Serial.println(F("The NUID tag is:"));
+      if (verbose) Serial.print(F("In hex: "));
+      if (verbose) printHex(rfid.uid.uidByte, rfid.uid.size);
       
       // Halt PICC
       rfid.PICC_HaltA();
       
       // Stop encryption on PCD
       rfid.PCD_StopCrypto1();
+      return tag_color(rfid.uid.uidByte);
     }
   } 
+  return TAG_MISSING;
 }  
 
 
@@ -363,6 +366,7 @@ void sim_loop(void)
 
 void real_loop(void) 
 {  
+  uint8_t RFID_result;
   uint32_t t;
   byte b;
   if (Serial.available()) {
@@ -387,7 +391,7 @@ void real_loop(void)
     tis = tis + interval / 1000;
     
     t = micros();
-    readRFID();
+    RFID_result = readRFID(0);
     t = micros() - t;
 
     t = micros();
@@ -406,7 +410,8 @@ void real_loop(void)
     
     setSolenoidState(robot.solenoid_state);
     setMotorsVoltage(robot.v + robot.w, robot.v - robot.w);
-    
+
+    //return;
     byte c;
     for (c = 0; c < 5; c++) {
        Serial.print(IRLine.IR_values[c]);
@@ -420,6 +425,9 @@ void real_loop(void)
 
     Serial.print(" Touch: ");
     Serial.print(TouchSwitch);
+
+    Serial.print(" Color: ");
+    Serial.print(RFID_result);
     
     Serial.print(" state: ");
     Serial.print(robot.state);
