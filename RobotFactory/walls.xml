@@ -1,0 +1,68 @@
+<?xml version="1.0" ?>
+
+<obstacles> 
+  <defines>
+    <const name='wall_height' value='0.2'/>
+    <const name='wall_width' value='0.02'/>
+  </defines>
+
+  <!-- Walls --> 
+    <!-- Horizontal-->  
+    <!-- top -->  
+    <defines>
+      <const name='top_wall_xi' value='-max_field_x + wharehouse_slack + 5*machine_width'/>
+      <const name='top_wall_xf' value='max_field_x'/>
+    </defines>
+    <cuboid>
+      <ID value='Top_wall'/>
+      <size x='top_wall_xf - top_wall_xi + wall_width' y='wall_width' z='wall_height' />
+      <pos x='top_wall_xi + (top_wall_xf - top_wall_xi)/2 + wall_width/2' y='max_field_y + wall_width/2' z='wall_height/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='250' g='140' b='0'/>
+    </cuboid>
+    <cuboid>
+      <ID value='Top_wall_slack'/>
+      <size x='wharehouse_slack + wall_width' y='wall_width' z='wall_height' />
+      <pos x='-max_field_x - wall_width/2 + wharehouse_slack/2' y='max_field_y + wall_width/2' z='wall_height/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='250' g='140' b='0'/>
+    </cuboid>
+    <!-- bottom -->  
+    <cuboid>
+      <ID value='Bottom_wall'/>
+      <size x='top_wall_xf - top_wall_xi + wall_width' y='wall_width' z='wall_height' />
+      <pos x='-(top_wall_xi + (top_wall_xf - top_wall_xi)/2 + wall_width/2)' y='-(max_field_y + wall_width/2)' z='wall_height/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='250' g='140' b='0'/>
+    </cuboid>
+    <cuboid>
+      <ID value='Bottom_wall_slack'/>
+      <size x='wharehouse_slack + wall_width' y='wall_width' z='wall_height' />
+      <pos x='-(-max_field_x - wall_width/2 + wharehouse_slack/2)' y='-(max_field_y + wall_width/2)' z='wall_height/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='250' g='140' b='0'/>
+    </cuboid>
+    
+  <!-- Vertical-->  
+    <cuboid>
+      <ID value='Right_wall'/>
+      <size x='wall_width' y='2*max_field_y' z='wall_height' />
+      <pos x='max_field_x + wall_width/2' y='0' z='wall_height/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='250' g='140' b='0'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='Left_wall'/>
+      <size x='wall_width' y='2*max_field_y' z='wall_height' />
+      <pos x='-max_field_x - wall_width/2' y='0' z='wall_height/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='250' g='140' b='0'/>
+    </cuboid>
+
+</obstacles>
+   
+
+
+
+

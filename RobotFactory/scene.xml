@@ -1,0 +1,100 @@
+<?xml version="1.0" ?>
+<scene>
+  <defines>
+    <const name='corridor_width' value='0.76' />
+    <const name='central_corridor_width' value='1' />
+    <const name='machine_width' value='0.180' />  
+    <const name='machine_depth' value='0.120' />
+    <const name='max_field_y' value='corridor_width + machine_width' />
+    <const name='max_field_x' value='central_corridor_width/2 + corridor_width + 2*machine_depth' />
+    <const name='wharehouse_slack' value='0.28' />
+    <const name='wharehouse_pos_y' value='corridor_width + machine_width + machine_depth/2' />
+    <const name='wharehouse_pos_x' value='-central_corridor_width/2 - corridor_width - 2*machine_depth + wharehouse_slack + machine_width/2' />
+    <const name='ground' value='0.001' />
+    <const name='part_pos_z' value='0.015' />
+    <const name='sensor_pos_z' value='0.13' />
+  </defines>
+
+  <robot>
+    <ID name='AGV'/>
+    <pos x='0' y='0.5' z='0.0'/> 
+    <rot_deg x='0' y='0' z='0'/>
+    <body file='AGV.xml'/>
+  </robot>
+
+  <robot>
+    <ID name='Part1'/>
+    <pos x='wharehouse_pos_x' y='wharehouse_pos_y' z='part_pos_z'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <body file='Parts.xml'/>
+  </robot>
+  <robot>
+    <ID name='Part2'/>
+    <pos x='wharehouse_pos_x + machine_width' y='wharehouse_pos_y' z='part_pos_z'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <body file='Parts.xml'/>
+  </robot>
+  <robot>
+    <ID name='Part3'/>
+    <pos x='wharehouse_pos_x + 2 * machine_width' y='wharehouse_pos_y' z='part_pos_z'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <body file='Parts.xml'/>
+  </robot>
+  <robot>
+    <ID name='Part4'/>
+    <pos x='wharehouse_pos_x + 3 * machine_width' y='wharehouse_pos_y' z='part_pos_z'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <body file='Parts.xml'/>
+  </robot>
+  <robot>
+    <ID name='Part5'/>
+    <pos x='wharehouse_pos_x + 4 * machine_width' y='wharehouse_pos_y' z='part_pos_z'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <body file='Parts.xml'/>
+  </robot>
+
+
+  <things file='things.xml'/>
+
+  <obstacles file='walls.xml'/>
+
+  <!-- begin machines --> 
+  <obstacle>
+    <ID name='Machines_A'/>
+    <pos x='-central_corridor_width/2 - machine_depth' y='0' z='0'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <body file='machines.xml'/>
+  </obstacle>
+
+  <obstacle>
+    <ID name='Machines_B'/>
+    <pos x='central_corridor_width/2 + machine_depth' y='0' z='0'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <body file='machines.xml'/>
+  </obstacle>
+  <!-- end machines --> 
+
+  <!-- begin input whareouse --> 
+  <obstacle>
+    <ID name='input_whareouse'/>
+    <pos x='wharehouse_pos_x + 2*machine_width' y='wharehouse_pos_y' z='0'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <body file='wharehouse.xml'/>
+  </obstacle>
+  <!-- end input whareouse --> 
+
+  <!-- begin output whareouse --> 
+  <obstacle>
+    <ID name='output_whareouse'/>
+    <pos x='-wharehouse_pos_x - 2*machine_width' y='-wharehouse_pos_y' z='0'/>
+    <rot_deg x='0' y='0' z='180'/>
+    <body file='wharehouse.xml'/>
+  </obstacle>
+  <!-- end input whareouse --> 
+
+  <track file='track.xml'/>
+
+  <nosensors file='cell_sensors.xml'/>
+
+</scene>
+

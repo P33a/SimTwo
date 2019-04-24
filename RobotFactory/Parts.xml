@@ -1,0 +1,75 @@
+<?xml version="1.0" ?>
+
+<robot>
+  <defines>
+    <const name='part_height' value='0.06' />
+    <const name='part_width' value='0.12' />  
+    <const name='part_depth' value='0.08' /> 
+    <const name='leg_height' value='0.015' />
+    <const name='leg_width'  value='0.01' />
+    <const name='leg_radius'  value='0.003' />
+    <const name='leg_depth'  value='0.01' />
+    <const name='leg_mass'  value='0.01' />
+    <const name='leg_x'  value='part_width/2 - leg_width/2' />
+    <const name='leg_y'  value='part_depth/2 - leg_depth/2' />
+  </defines>
+   
+  <solids>
+    <cuboid>
+      <ID value='part_body'/>
+      <mass value='0.4'/>
+      <size x='part_width' y='part_depth' z='part_height'/>
+      <pos x='0' y='0' z='leg_height + part_height/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <!--<color_rgb r='250' g='140' b='0'/>-->
+      <color_rgb r='40' g='40' b='40'/>
+    </cuboid>
+  </solids> 
+   
+  <shells>        
+    <cuboid>
+      <ID value='leg1'/>
+      <mass value='leg_mass'/>
+      <size x='leg_width' y='leg_depth' z='leg_height'/>
+      <pos x='leg_x' y='-leg_y' z='-part_height/2 - leg_height/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='200' g='200' b='200'/>
+    </cuboid>
+     
+    <cuboid>
+      <ID value='leg2'/>
+      <mass value='leg_mass'/>
+      <size x='leg_width' y='leg_depth' z='leg_height'/>
+      <pos x='leg_x' y='leg_y' z='-part_height/2 - leg_height/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='140' g='140' b='140'/>
+    </cuboid>
+     
+    <cuboid>
+      <ID value='leg3'/>
+      <mass value='leg_mass'/>
+      <size x='leg_width' y='leg_depth' z='leg_height'/>
+      <pos x='-leg_x' y='leg_y' z='-part_height/2 - leg_height/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='140' g='140' b='140'/>
+    </cuboid>
+     
+    <cuboid>
+      <ID value='leg4'/>
+      <mass value='leg_mass'/>
+      <size x='leg_width' y='leg_depth' z='leg_height'/>
+      <pos x='-leg_x' y='-leg_y' z='-part_height/2 - leg_height/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='200' g='200' b='200'/>
+    </cuboid>
+
+    <sphere>
+      <ID value='LED'/>
+      <radius value='0.005'/>
+      <pos x='0' y='-part_depth/2' z='0'/>
+      <color_rgb r='0' g='100' b='255'/>
+    </sphere>
+
+  </shells>   
+  
+</robot>
