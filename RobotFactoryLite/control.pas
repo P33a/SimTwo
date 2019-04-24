@@ -13,11 +13,12 @@ var
   t: double;
   sens_line: array[0..4] of integer;
   touch_sensor: integer;
+  rfid_tag: integer;
 
   ControlMode: TControlMode;
   RobotControls: TRobotControls;
 
-  iSolenoid, iMicroSwitch: integer;
+  iSolenoid, iMicroSwitch, iRFID: integer;
   ArduinoState: integer;
 
 
@@ -245,7 +246,7 @@ begin
   end;
 
   // SendData
-  SendMessage('r', 0);
+  SendMessage('t', rfid_tag);
   SendMessage('i', data);
   SendMessage('g', 0);
 
@@ -276,10 +277,14 @@ begin
 
   for i := 0 to 4 do begin
     sens_line[i] := round(63 * GetSensorVal(0, i));
-    SetRCValue(5 + i, 2,format('%d',[sens_line[i]]));
+    SetRCValue(5 + i, 2, format('%d',[sens_line[i]]));
   end;
+
   touch_sensor := 0;
   if GetSensorVal(0, iMicroSwitch) > 0 then touch_sensor := 1;
+
+  rfid_tag := round(GetSensorVal(0, iRFID));
+  SetRCValue(10, 2, format('%d', [rfid_tag]));
 
   if RCButtonPressed(2, 3) then begin
     ControlMode := cmManual;
@@ -302,13 +307,15 @@ begin
     cmSerial: SerialControl(RobotControls);
   end;
 
-  SetAxisVoltageRef(irobot, 0, (RobotControls.V - RobotControls.W)/255 * 7.2);
-  SetAxisVoltageRef(irobot, 1, (RobotControls.V + RobotControls.W)/255 * 7.2);
+  SetAxisVoltageRef(irobot, 0, (RobotControls.V - RobotControls.W)/255 * 7.4);
+  SetAxisVoltageRef(irobot, 1, (RobotControls.V + RobotControls.W)/255 * 7.4);
   SetSensorVin(irobot, iSolenoid, RobotControls.SolenoidActive);
 
   SetRCValue(4, 4, format('%d',[ArduinoState]));
   SetRCValue(5, 4, format('%d',[round(RobotControls.V)]));
   SetRCValue(6, 4, format('%d',[round(RobotControls.W)]));
+
+  SetRCValue(8, 4, format('%.1g',[sqrt(sqr(GetRobotVx(0)) + sqr(GetRobotVy(0)))]));
 end;
 
 procedure Initialize;
@@ -319,6 +326,7 @@ begin
   ClearButtons();
   iSolenoid := GetSensorIndex(0, 'solenoid1');
   iMicroSwitch := GetSensorIndex(0, 'MicroSwitch');
+  iRFID := GetSensorIndex(0, 'RFID');
 
   ArduinoState := -1;
   t := 0;

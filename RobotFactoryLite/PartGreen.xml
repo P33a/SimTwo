@@ -19,7 +19,7 @@
       <size x='part_width' y='part_depth' z='part_height'/>
       <pos x='0' y='0' z='leg_height + part_height/2'/>
       <rot_deg x='0' y='0' z='0'/>
-      <color_rgb r='0' g='0' b='0'/>
+      <color_rgb r='0' g='80' b='0'/>
     </cuboid>
   </solids> 
    
@@ -63,8 +63,8 @@
     </cuboid>
 
     <cuboid>
-      <ID value='03'/>
-      <size x='0.080' y='leg_height' z='0.023'/>
+      <ID value='02'/>
+      <size x='0.060' y='leg_height' z='0.023'/>
       <pos x='0' y='-part_depth/2' z='0.015'/>
       <rot_deg x='0' y='0' z='0'/>
       <color_rgb r='92' g='92' b='92'/>

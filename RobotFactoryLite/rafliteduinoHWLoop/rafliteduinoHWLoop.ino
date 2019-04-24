@@ -20,6 +20,7 @@ MFRC522::MIFARE_Key key;
 
 // Init array that will store new NUID 
 byte nuidPICC[4];
+uint8_t RFID_result;
 
 IRLine_t IRLine;
 
@@ -125,7 +126,7 @@ void setup()
   SPI.begin(); // Init SPI bus
   rfid.PCD_Init(); // Init MFRC522 
 
-  UsingSimulator = 0;
+  UsingSimulator = 1;
 
 }
 
@@ -201,7 +202,9 @@ void process_serial_packet(char channel, uint32_t value, channels_t& obj)
    for (c = 0; c < 4; c++) {
      nuidPICC[c] = (value >> (c * 8)) & 0xFF;
    }
-   
+ } else if (channel == 't')  {  // RFIT Tag translated to Part color 
+   RFID_result = value;
+     
  } else if (channel == 'i')  {   // IR Sensors + Touch
    for (c = 0; c < 5; c++) {
     IRLine.IR_values[c] = 16 * ((value >> (c * 6)) & 0x3F);
@@ -267,14 +270,14 @@ void control(void)
       setState(2);
     } else if(robot.state == 2 && tis > 400) {
       setState(3);
-    } else if(robot.state == 3 && tis > 1600) {
+    } else if(robot.state == 3 && tis > 1200) {
       setState(4);
-    } else if(robot.state == 4 && tis > 1600 && IRLine.total > 1500) {
+    } else if(robot.state == 4 && tis > 1200 && IRLine.total > 1500) {
       setState(5);
       IRLine.crosses = 0;
     } else if(robot.state == 5 && IRLine.crosses >= 5) {
       setState(6);
-    } else if(robot.state == 6 && tis > 1500 && IRLine.total > 1500) {
+    } else if(robot.state == 6 && tis > 1200 && IRLine.total > 1500) {
       setState(7);
     } else if(robot.state == 7 && tis > 2000) {
       IRLine.crosses = 0;
@@ -288,7 +291,7 @@ void control(void)
     
     } else if (robot.state == 1) {  // Go: Get first box
       robot.solenoid_state = 0;
-      followLineLeft(80, -2.0);
+      followLineLeft(60, -2.0);
 
     } else if (robot.state == 2) { // Turn Solenoid On and Get the Box
       robot.solenoid_state = 1;
@@ -305,12 +308,12 @@ void control(void)
     } else if (robot.state == 5) {  // long travel to the box final destination
       robot.solenoid_state = 1;
       //followLineRight(80 - 40 * (IRLine.crosses >= 5), -2.0);
-      followLineRight(80, -2.0);
+      followLineRight(60, -2.0);
       
     } else if (robot.state == 6) {  // Advance a little then turn to place the box
       robot.solenoid_state = 1;
-      if (tis < 800) moveRobot(40, 0);
-      else moveRobot(0, -50);
+      if (tis < 400) moveRobot(40, 0);
+      else moveRobot(0, -40);
       
     } else if (robot.state == 7) {  
       robot.solenoid_state = 1;
@@ -340,6 +343,8 @@ void sim_loop(void)
   if (Serial.available()) {
     b = Serial.read();
     serial_channels.StateMachine(b);
+    if (b == '!') UsingSimulator = 0;
+    if (b == '#') UsingSimulator = 1;    
   }
 
   if (go) {
@@ -366,7 +371,6 @@ void sim_loop(void)
 
 void real_loop(void) 
 {  
-  uint8_t RFID_result;
   uint32_t t;
   byte b;
   if (Serial.available()) {

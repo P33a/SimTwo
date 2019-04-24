@@ -74,21 +74,21 @@
     <ID name='Part1'/>
     <pos x='-part_pos_x-0.150-0.075+0.005' y='part_pos_y-0.005' z='part_pos_z'/>
     <rot_deg x='0' y='0' z='0'/>
-    <body file='Parts.xml'/>
+    <body file='PartBlue.xml'/>
   </robot>
   
   <robot>
     <ID name='Part2'/>
     <pos x='-part_pos_x-0.075+0.005' y='part_pos_y-0.005' z='part_pos_z'/>
     <rot_deg x='0' y='0' z='0'/>
-    <body file='Parts.xml'/>
+    <body file='PartBlue.xml'/>
   </robot>
   
   <robot>
     <ID name='Part3'/>
     <pos x='-part_pos_x+0.07' y='part_pos_y-0.005' z='part_pos_z'/>
     <rot_deg x='0' y='0' z='0'/>
-    <body file='Parts.xml'/>
+    <body file='PartBlue.xml'/>
   </robot>
   
   <robot>
@@ -96,7 +96,7 @@
     <!--pos x='-part_pos_x+0.150+0.07' y='part_pos_y-0.005' z='part_pos_z'/-->
     <pos x='0.18' y='0.35' z='part_pos_z'/>
     <rot_deg x='0' y='0' z='-90'/>
-    <body file='Parts.xml'/>
+    <body file='PartGreen.xml'/>
   </robot>
 
   <robot>
@@ -104,7 +104,7 @@
     <!--pos x='-part_pos_x+0.150+0.07' y='part_pos_y-0.005' z='part_pos_z'/-->
     <pos x='-machine_pos_x + 0.045' y='0.0' z='part_pos_z'/>
     <rot_deg x='0' y='0' z='90'/>
-    <body file='Parts.xml'/>
+    <body file='PartRed.xml'/>
   </robot>
 
 

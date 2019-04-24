@@ -115,9 +115,9 @@
 
     <default>
       <ndraw radius='0.005' height='0.1' rgb24='8F8F8F'/>
-      <motor ri='1.5' li='3.4e-3' ki='0.6' vmax='12' imax='3' active='1'/>
+      <motor ri='6.1' li='3.4e-3' ki='0.2585' vmax='8.2' imax='3' active='1'/>
       <gear ratio='1'/>
-      <friction bv='0.001' fc='0.02'/>
+      <friction bv='0.0012' fc='0.0169'/>
       <encoder ppr='360' mean='0' stdev='0'/>
       <controller mode='pidspeed' kp='1' ki='0' kd='0' kf='0.05' active='0' period='10'/>
       <spring k='0' zeropos='0'/>
@@ -219,7 +219,15 @@
       <rot_deg x='0' y='0' z='0'/>
       <color_rgb r='0' g='0' b='200'/>
     </IRSharp>
-     
+
+    <RFID>
+      <ID value='RFID'/>
+      <beam length='0.05' initial_width='0.004' final_width='0.004'/>
+      <pos x='RobotLength/2 + 0.01' y='0' z='0.04'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='0' g='200' b='0'/>
+    </RFID>
+
   </sensors>
   
      
