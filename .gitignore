@@ -94,3 +94,9 @@ OmniXML/dpk/OmniXML_R2009.dproj
 OmniXML/dpk/OmniXML_R2009.dpk
 OmniXML/dpk/OmniXML_R2007.dpk
 OmniXML/dpk/OmniXML_R2006.dpk
+
+
+#SimTwo SubFolders
+*.bug/
+*.test/
+*.zip
