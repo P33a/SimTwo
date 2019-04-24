@@ -1,4 +1,5 @@
 FViewer
+FChooseScene
 FEditor
 FParams
 FSheets
@@ -7,5 +8,4 @@ FChart
 
 
 FWayPointsEdit
-FChooseScene
 FCameras

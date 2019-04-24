@@ -12,5 +12,7 @@
     <cell r="5" c="2" text="[On]" />
     <cell r="5" c="3" text="[Off]" />
     <cell r="1" c="1" text="-1.000000000000" />
+    <cell r="7" c="2" text="[Test]" />
+    <cell r="7" c="3" text="1" />
   </cells>
 </sheet>

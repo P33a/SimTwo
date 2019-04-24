@@ -14,10 +14,10 @@
     <cell r="7" c="1" text="S0" />
     <cell r="8" c="1" text="S1" />
     <cell r="9" c="1" text="S2" />
-    <cell r="3" c="2" text="0.0698" />
+    <cell r="3" c="2" text="0.0555" />
     <cell r="3" c="3" text="0.09" />
-    <cell r="4" c="2" text="0.0986" />
-    <cell r="5" c="2" text="0.759" />
+    <cell r="4" c="2" text="0.0971" />
+    <cell r="5" c="2" text="1.77" />
     <cell r="2" c="3" text="[Set]" />
     <cell r="4" c="3" text="0.09" />
     <cell r="5" c="3" text="90" />

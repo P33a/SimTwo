@@ -309,6 +309,7 @@
  function RCButtonPressed(r: LongInt; c: LongInt): Boolean;
  function RangeToMatrix(r: LongInt; c: LongInt; rows: LongInt; cols: LongInt): Matrix;
  procedure MatrixToRange(r: LongInt; c: LongInt; M: Matrix);
+ procedure MatrixToRangeF(r: LongInt; c: LongInt; M: Matrix; FormatString: string);
  procedure ClearButtons();
  procedure RefreshSheets();
  procedure CloseSimTwo();

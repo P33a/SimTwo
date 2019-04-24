@@ -16,6 +16,10 @@
     <const name='B5_height' value='0.04' />
     <const name='B6_length' value='0.03' />
     <const name='B6_height' value='0.03' />
+
+    <const name='claw_width' value='0.01' />
+    <const name='claw_length' value='0.08' />
+    <const name='claw_gap' value='0.054' />
   </defines>
   
   <solids>
@@ -116,6 +120,33 @@
       <color_rgb r='64' g='64' b='64'/>
     </cylinder>
 
+    <cuboid>
+      <ID value='B6_claw_base'/>
+      <solid id='B6'/>
+      <size x='claw_width' y='0.06' z='B6_height'/>
+      <pos x='B6_length/2 + claw_width/2' y='0' z='0'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='B6_claw_finger_left'/>
+      <solid id='B6'/>
+      <size x='claw_length' y='claw_width' z='B6_height'/>
+      <pos x='B6_length/2 + claw_length/2' y='-claw_gap/2 - claw_width/2' z='0'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='B6_claw_finger_right'/>
+      <solid id='B6'/>
+      <size x='claw_length' y='claw_width' z='B6_height'/>
+      <pos x='B6_length/2 + claw_length/2' y='claw_gap/2 + claw_width/2' z='0'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+    </cuboid>
+
   </shells>
 
   <articulations>
@@ -135,11 +166,12 @@
     <joint>
       <ID value='J1'/>
       <pos x='0' y='0' z='B1_height'/>
-      <axis x='0' y='0' z='1' wrap='0'/>
+      <axis x='0' y='0' z='1' wrap='1'/>
       <connect B1='B1' B2='world'/>
-      <!--<limits Min='-90' Max='90'/>-->
+      <!--<limits Min='-360' Max='360'/>  -->
       <!--<type value='Slider'/>-->
       <type value='Hinge'/>
+
     </joint>
 
     <joint>

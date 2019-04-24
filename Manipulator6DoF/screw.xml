@@ -1,0 +1,125 @@
+<?xml version="1.0" ?>
+<robot>
+  <kind value='Screw'/>
+
+  <defines>
+    <const name='eps' value='0.0001' />
+    <const name='base_height' value='0.3' />
+    <const name='base_length' value='0.3' />
+    <const name='base_widtht' value='0.3' />
+
+    <const name='screw_height' value='0.1' />
+    <const name='screw_length' value='0.2' />
+    <const name='screw_width' value='0.03' />
+
+    <const name='head_height' value='0.03' />
+
+  </defines>
+
+  <solids>
+    <cuboid>
+      <ID value='base'/>
+      <mass value='1'/>
+      <size x='base_length' y='base_widtht' z='base_height'/>
+      <pos x='0' y='0' z='base_height/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='32' g='32' b='32'/>
+    </cuboid>
+
+    <cylinder>
+      <ID value='screw'/>
+      <mass value='0.1'/>
+      <size radius='screw_width/2' z='screw_length'/>
+      <pos x='0' y='0' z='base_height'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+      <drag stokes='1e-2' roll='1e-1'/>
+    </cylinder>
+
+
+    <cylinder>
+      <ID value='screw_head'/>
+      <mass value='0.1'/>
+      <size radius='screw_width' z='0.01'/>
+      <pos x='0' y='0' z='base_height + screw_length/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+      <drag stokes='1e-2' roll='1e-1'/>
+    </cylinder>
+
+  </solids>
+
+
+  <shells>
+    <cuboid>
+      <ID value='head_0'/>
+      <solid id='screw_head'/>
+      <size x='2 * screw_width * sqrt(3)/2' y='screw_width' z='head_height'/>
+      <pos x='0' y='0' z='head_height/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='head_1'/>
+      <solid id='screw_head'/>
+      <size x='2 * screw_width * sqrt(3)/2' y='screw_width' z='head_height'/>
+      <pos x='0' y='0' z='head_height/2'/>
+      <rot_deg x='0' y='0' z='60'/>
+      <color_rgb r='128' g='128' b='128'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='head_3'/>
+      <solid id='screw_head'/>
+      <size x='2 * screw_width  * sqrt(3)/2' y='screw_width' z='head_height'/>
+      <pos x='0' y='0' z='head_height/2'/>
+      <rot_deg x='0' y='0' z='120'/>
+      <color_rgb r='128' g='128' b='128'/>
+    </cuboid>
+
+  </shells>
+
+  <articulations>
+    <default>
+      <draw radius='0.015' height='0.25' rgb24='8F0000'/>
+      <motor ri='0.5' li='0.1' ki='0.03' vmax='24' imax='5' active='1'/>
+      <gear ratio='500' bv='1e-5' ke='1'/>
+      <friction bv='0.4' fc='0.1'/>
+      <controller mode='pidposition' kp='100' ki='0.1' kd='10' kf='0.0' active='1' period='10'/>
+      <spring k='0' zeropos='0'/>
+    </default>
+
+
+    <!--<joint>
+      <ID value='Fix'/>
+      <pos x='0' y='0' z='0'/>
+      <axis x='0' y='0' z='1' wrap='1'/>
+      <connect B1='base' B2='world'/>
+      <type value='Hinge'/>
+
+    </joint> -->
+
+    <joint>
+      <ID value='screw_base'/>
+      <pos x='0' y='0' z='base_height'/>
+      <axis x='0' y='0' z='1'/>
+      <connect B1='base' B2='screw'/>
+      <type value='Slider'/>
+    </joint>
+
+    <joint>
+      <ID value='screw_head'/>
+      <pos x='0' y='0' z='base_height'/>
+      <axis x='0' y='0' z='1'/>
+      <connect B1='screw' B2='screw_head'/>
+      <type value='Hinge'/>
+      <motor active='0'/>
+      <controller active='0'/>
+    </joint>
+
+
+  </articulations>
+
+</robot>
+

@@ -9,6 +9,13 @@
     <body file='Arm6d.xml'/>
   </robot>
 
+  <robot>
+    <ID name='screw'/>
+    <pos x='0.5' y='-0.1' z='0'/>
+    <rot_deg x='0' y='0' z='0'/>
+
+    <body file='screw.xml'/>
+  </robot>
 
   <things file='things.xml'/>
 

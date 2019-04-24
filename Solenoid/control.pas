@@ -3,11 +3,19 @@ var is1, iball: integer;
 
 // this procedure is called periodicaly (default: 40 ms)
 procedure Control;
+var t: double;
 begin
   if RCButtonPressed(3, 2)  then begin
     SetGlobalSensorVin(is1, 1);
   end else if RCButtonPressed(3, 3) then begin
     SetGlobalSensorVin(is1, 0);
+  end;
+
+  if RCButtonPressed(7, 2) then begin
+    t := GetRCValue(7, 3);
+    t := arccos(t/0);
+    t := t/t;
+    WriteLn(FloatToStr(t));
   end;
 
   {SetRCValue(1,1, floattostr(GetSensorVal(0,0)));
