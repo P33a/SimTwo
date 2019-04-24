@@ -29,9 +29,9 @@
       <UseVersionInfo Value="True"/>
       <AutoIncrementBuild Value="True"/>
       <MajorVersionNr Value="2019"/>
-      <MinorVersionNr Value="3"/>
-      <RevisionNr Value="13"/>
-      <BuildNr Value="9"/>
+      <MinorVersionNr Value="4"/>
+      <RevisionNr Value="23"/>
+      <BuildNr Value="10"/>
       <Attributes pvaSpecialBuild="True"/>
       <StringTable ProductVersion="2019"/>
     </VersionInfo>
