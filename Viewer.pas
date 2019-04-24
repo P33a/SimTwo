@@ -1579,6 +1579,9 @@ begin
         if prop.NodeName = 'ferromagnetic' then begin
           MatterProps := MatterProps + [smFerromagnetic];
         end;
+        if prop.NodeName = 'rfidtag' then begin
+          MatterProps := MatterProps + [smRFIDTag];
+        end;
         if prop.NodeName = 'surface' then begin
           Surf.mu := GetNodeAttrRealParse(prop, 'mu', Surf.mu, Parser);
           Surf.mu2 := GetNodeAttrRealParse(prop, 'mu2', Surf.mu2, Parser);
@@ -2532,6 +2535,7 @@ begin
        (sensor.NodeName = 'pentip') or
        (sensor.NodeName = 'imu') or
        (sensor.NodeName = 'solenoid') or
+       (sensor.NodeName = 'RFID') or
        (sensor.NodeName = 'beacon') then begin
       // default values
       IDValue := '';
@@ -2631,7 +2635,8 @@ begin
       else if sensor.NodeName = 'pentip' then newSensor.kind := skPenTip
       else if sensor.NodeName = 'ranger2d' then newSensor.kind := skRanger2D
       else if sensor.NodeName = 'imu' then newSensor.kind := skIMU
-      else if sensor.NodeName = 'solenoid' then newSensor.kind := skSolenoid;
+      else if sensor.NodeName = 'solenoid' then newSensor.kind := skSolenoid
+      else if sensor.NodeName = 'RFID' then newSensor.kind := skRFID;
 
       //newSensor.Tags.Delimiter := ';';
       //newSensor.Tags.DelimitedText := stags;
@@ -2662,11 +2667,11 @@ begin
         MotherGLObj := ODEScene;
       end;
 
-      if newSensor.kind in [skIRSharp, skCapacitive, skInductive, skPenTip, skIMU, skSolenoid] then begin
+      if newSensor.kind in [skIRSharp, skCapacitive, skInductive, skPenTip, skIMU, skSolenoid, skRFID] then begin
         newRay := CreateOneRaySensor(MotherBody, newSensor, SLen);
         newRay.Place(posX, posY, posZ, angX, angY, AngZ, AbsoluteCoords);
         CreateSensorBeamGLObj(newSensor, SLen, SInitialWidth, SFinalWidth);
-        if newSensor.kind = skIMU then begin // No collisions for the IMU
+        if newSensor.kind = skIMU then begin // No collisions for the IMU  (???)
           dGeomDisable(newRay.Geom);
         end;
       end else if newSensor.kind in [skBeacon] then begin
@@ -3056,6 +3061,9 @@ begin
         end;
         if prop.NodeName = 'ferromagnetic' then begin
           MatterProps := MatterProps + [smFerromagnetic];
+        end;
+        if prop.NodeName = 'rfidtag' then begin
+          MatterProps := MatterProps + [smRFIDTag];
         end;
         if prop.NodeName = 'surface' then begin
           Surf.mu := GetNodeAttrRealParse(prop, 'mu', Surf.mu, Parser);
@@ -3966,6 +3974,9 @@ begin
   //dWorldSetAngularDamping(world, 0.8);
   //dWorldSetLinearDamping(world, 0.8);
 
+  if FileExists('ground.jpg') then begin
+    FViewer.GLMaterialLibrary.AddTextureMaterial('Ground', 'ground.jpg');
+  end;
 
   LoadSceneFromXML('scene.xml');
 

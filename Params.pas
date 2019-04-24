@@ -11,7 +11,7 @@ uses
   ODERobots, OdeImport, Grids, GLCadencer, SdpoSerial,  Sockets,
   GLShadowVolume, GLScene, Buttons, IniPropStorage, enum_serial,
   GLVectorGeometry, GLTexture, IdUDPClient, IdTCPServer,
-  modbusTCP, IdThread, IdCustomTCPServer, IdContext;
+  modbusTCP, IdThread, IdCustomTCPServer, IdContext, IdGlobal;
 
 type
 
@@ -303,6 +303,8 @@ type
     procedure SetComState(newState: boolean);
     procedure SerialComRxData(Sender: TObject);
     procedure TCPModBusDisconnect(AContext: TIdContext);
+    procedure UDPGenericUDPRead(AThread: TIdUDPListenerThread;
+      const AData: TIdBytes; ABinding: TIdSocketHandle);
     procedure UDPServerUDPRead(Sender: TObject; AData: TStream;
       ABinding: TIdSocketHandle);
     procedure CBPIDsActiveClick(Sender: TObject);
@@ -329,8 +331,6 @@ type
     procedure BComConfClick(Sender: TObject);
     procedure BComWriteClick(Sender: TObject);
     procedure CBUDPConnectClick(Sender: TObject);
-    procedure UDPGenericUDPRead(Sender: TObject; AData: TStream;
-      ABinding: TIdSocketHandle);
     procedure BGlobalSetClick(Sender: TObject);
     procedure BSetCamParsClick(Sender: TObject);
     procedure BGetCamPosClick(Sender: TObject);
@@ -943,7 +943,7 @@ begin
   WorldODE.SetCameraTarget(r);
 
   // Fill the Joints names and IDs
-  for i := 0 to SGJoints.RowCount -1 do begin
+  for i := 0 to SGJoints.RowCount - 2 do begin
     for c := 0 to SGJoints.ColCount -1 do begin
       SGJoints.Cells[c,i+1] := '';
     end;
@@ -1246,21 +1246,17 @@ begin
   end;
 end;
 
-procedure TFParams.UDPGenericUDPRead(Sender: TObject; AData: TStream;
-  ABinding: TIdSocketHandle);
+procedure TFParams.UDPGenericUDPRead(AThread: TIdUDPListenerThread;
+  const AData: TIdBytes; ABinding: TIdSocketHandle);
 var str: string;
 begin
-  //UDPGenData.Clear;
-  UDPGenData.CopyFrom(AData, 0);
+  str := BytesToString(Adata);
 
-  str := '';
-  AData.Position := 0;
-  SetLength(str, AData.Size);
-  AData.ReadBuffer(Pointer(str)^, AData.Size);
-  //AData.Clear;
+  UDPGenData.WriteBuffer(Pointer(str)^, Length(str));
 
   UDPGenPackets.Add(str);
 end;
+
 
 
 procedure TFParams.BGlobalSetClick(Sender: TObject);

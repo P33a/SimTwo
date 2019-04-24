@@ -23,9 +23,9 @@ object FParams: TFParams
     Height = 621
     Top = 0
     Width = 273
-    ActivePage = TabIO
+    ActivePage = TabGraphics
     Anchors = [akTop, akLeft, akBottom]
-    TabIndex = 4
+    TabIndex = 1
     TabOrder = 0
     object TabControl: TTabSheet
       Caption = 'Control'
@@ -168,9 +168,9 @@ object FParams: TFParams
         Height = 425
         Top = 168
         Width = 261
-        ActivePage = TabGlobal
+        ActivePage = TabAxis
         Anchors = [akTop, akLeft, akBottom]
-        TabIndex = 0
+        TabIndex = 2
         TabOrder = 4
         object TabGlobal: TTabSheet
           Caption = 'Global'
@@ -1128,8 +1128,8 @@ object FParams: TFParams
       end
       object RGCamera: TRadioGroup
         Left = 0
-        Height = 93
-        Top = 192
+        Height = 104
+        Top = 188
         Width = 109
         AutoFill = True
         Caption = 'Camera'
@@ -1140,7 +1140,7 @@ object FParams: TFParams
         ChildSizing.ShrinkVertical = crsScaleChilds
         ChildSizing.Layout = cclLeftToRightThenTopToBottom
         ChildSizing.ControlsPerLine = 1
-        ClientHeight = 75
+        ClientHeight = 86
         ClientWidth = 105
         ItemIndex = 0
         Items.Strings = (

@@ -72,8 +72,8 @@ type
     active, simple: boolean;
   end;
 
-  TMatterPropertie = (smMetallic, smFerroMagnetic);
-  TMatterProperties = set of TMatterPropertie;
+  TMatterProperty = (smMetallic, smFerroMagnetic, smRFIDTag);
+  TMatterProperties = set of TMatterProperty;
 
   { TSolid }
 
@@ -344,7 +344,7 @@ type
   end;
 
   TSensorKind = (skGeneric, skIR, skIRSharp, skSonar, skCapacitive, skInductive,
-                 skBeacon, skFloorLine, skRanger2D, skPenTip, skIMU, skSolenoid);
+                 skBeacon, skFloorLine, skRanger2D, skPenTip, skIMU, skSolenoid, skRFID);
 
   TSensor = class
     ID: string;
@@ -387,7 +387,7 @@ type
 const
   SensorKindStrings: array[TSensorKind] of string =
   ('Generic', 'IR', 'IRSharp', 'Sonar', 'Capacitive', 'Inductive',
-   'Beacon', 'FloorLine', 'Ranger2D', 'PenTip', 'IMU', 'Solenoid');
+   'Beacon', 'FloorLine', 'Ranger2D', 'PenTip', 'IMU', 'Solenoid', 'RFID');
 
 type
   TSensorList = class(TList)
@@ -1722,7 +1722,19 @@ begin
       end;
     end;
 
-
+    skRFID: begin
+      with Measures[0] do begin
+        dist := Rays[0].Measure.dist;
+        has_measure := true;
+        HitSolid := Rays[0].Measure.HitSolid;
+        value := 0;
+        if (Rays[0].Measure.has_measure) and
+           (HitSolid <> nil) and
+           (smRFIDTag in HitSolid.MatterProperties) then begin
+          value := StrToIntDef(HitSolid.ID, 0);
+        end;
+      end;
+    end;
   end;
 end;
 
