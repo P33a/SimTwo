@@ -110,9 +110,10 @@ begin
           sz := min(RemoteImage.size - (i * MTU), MTU);
           Stream.readBuffer(RemoteImage.data[0], sz);
           //Fparams.UDPServer.SendBuffer(Fparams.EditRemoteIP.Text, 9898, RemoteImage, sizeof(RemoteImage) - 512 + sz);
-          SetLength(netbuf, sizeof(RemoteImage) - 512 + sz);
-          move(RemoteImage, netbuf[0], sizeof(RemoteImage) - 512 + sz);
-          Fparams.UDPServer.SendBuffer(Fparams.EditRemoteIP.Text, 9898, netbuf);
+          //SetLength(netbuf, sizeof(RemoteImage) - 512 + sz);
+          //move(RemoteImage, netbuf[0], sizeof(RemoteImage) - 512 + sz);
+          //Fparams.UDPServer.SendBuffer(Fparams.EditRemoteIP.Text, 9898, netbuf);
+          Fparams.UDPServer_alt.Send(RemoteImage, sizeof(RemoteImage) - 512 + sz, Fparams.EditRemoteIP.Text + ':9898');
         end;
       end;
     end;

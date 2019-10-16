@@ -23,9 +23,9 @@ object FParams: TFParams
     Height = 621
     Top = 0
     Width = 273
-    ActivePage = TabGraphics
+    ActivePage = TabIO
     Anchors = [akTop, akLeft, akBottom]
-    TabIndex = 1
+    TabIndex = 4
     TabOrder = 0
     object TabControl: TTabSheet
       Caption = 'Control'
@@ -133,7 +133,6 @@ object FParams: TFParams
           'Script'
           'Remote'
         )
-        OnClick = RGControlBlockClick
         TabOrder = 0
       end
       object BEditScript: TButton
@@ -2377,13 +2376,6 @@ object FParams: TFParams
     TabOrder = 1
     Text = 'EditDebug'
   end
-  object UDPServer: TIdUDPServer
-    Bindings = <>
-    DefaultPort = 9800
-    OnUDPRead = UDPServerUDPRead
-    left = 172
-    top = 400
-  end
   object SerialCom: TSdpoSerial
     Active = False
     BaudRate = br115200
@@ -2396,14 +2388,6 @@ object FParams: TFParams
     OnRxData = SerialComRxData
     left = 224
     top = 60
-  end
-  object UDPGeneric: TIdUDPServer
-    BroadcastEnabled = True
-    Bindings = <>
-    DefaultPort = 9808
-    OnUDPRead = UDPGenericUDPRead
-    left = 172
-    top = 456
   end
   object ColorDialog: TColorDialog
     Color = clBlack
@@ -2432,19 +2416,6 @@ object FParams: TFParams
     left = 156
     top = 160
   end
-  object TCPModBus: TIdTCPServer
-    OnStatus = TCPModBusStatus
-    Bindings = <>
-    DefaultPort = 0
-    MaxConnections = 1
-    OnConnect = TCPModBusConnect
-    OnDisconnect = TCPModBusDisconnect
-    OnException = TCPModBusException
-    TerminateWaitTime = 100
-    OnExecute = TCPModBusExecute
-    left = 204
-    top = 300
-  end
   object Timer: TTimer
     Interval = 100
     OnTimer = TimerTimer
@@ -2456,5 +2427,32 @@ object FParams: TFParams
     IniSection = 'Config'
     left = 73
     top = 342
+  end
+  object UDPServer_alt: TLUDPComponent
+    Port = 9800
+    OnReceive = UDPServer_altReceive
+    Timeout = 0
+    left = 104
+    top = 512
+  end
+  object UDPGeneric: TLUDPComponent
+    Host = '127.0.0.1'
+    Port = 9808
+    OnReceive = UDPGenericReceive
+    OnError = UDPGenericError
+    Timeout = 0
+    left = 116
+    top = 576
+  end
+  object TCPModBus_alt: TLTCPComponent
+    Port = 0
+    OnReceive = TCPModBus_altReceive
+    OnError = TCPModBus_altError
+    OnDisconnect = TCPModBus_altDisconnect
+    OnConnect = TCPModBus_altConnect
+    Timeout = 0
+    ReuseAddress = False
+    left = 136
+    top = 300
   end
 end

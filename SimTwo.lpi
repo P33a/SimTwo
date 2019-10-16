@@ -31,7 +31,7 @@
       <MajorVersionNr Value="2019"/>
       <MinorVersionNr Value="4"/>
       <RevisionNr Value="23"/>
-      <BuildNr Value="10"/>
+      <BuildNr Value="12"/>
       <Attributes pvaSpecialBuild="True"/>
       <StringTable ProductVersion="2019"/>
     </VersionInfo>
@@ -48,25 +48,25 @@
     </RunParams>
     <RequiredPackages Count="10">
       <Item1>
-        <PackageName Value="LazUtils"/>
+        <PackageName Value="lnetvisual"/>
       </Item1>
       <Item2>
-        <PackageName Value="TAChartLazarusPkg"/>
+        <PackageName Value="LazUtils"/>
       </Item2>
       <Item3>
-        <PackageName Value="pascalscript"/>
+        <PackageName Value="TAChartLazarusPkg"/>
       </Item3>
       <Item4>
-        <PackageName Value="Printer4Lazarus"/>
+        <PackageName Value="pascalscript"/>
       </Item4>
       <Item5>
-        <PackageName Value="GLScene_DesignTime"/>
+        <PackageName Value="Printer4Lazarus"/>
       </Item5>
       <Item6>
-        <PackageName Value="SdpoSerialLaz"/>
+        <PackageName Value="GLScene_DesignTime"/>
       </Item6>
       <Item7>
-        <PackageName Value="indylaz"/>
+        <PackageName Value="SdpoSerialLaz"/>
       </Item7>
       <Item8>
         <PackageName Value="SynEdit"/>

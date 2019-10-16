@@ -126,7 +126,7 @@ void setup()
   SPI.begin(); // Init SPI bus
   rfid.PCD_Init(); // Init MFRC522 
 
-  UsingSimulator = 1;
+  UsingSimulator = 0;
 
 }
 

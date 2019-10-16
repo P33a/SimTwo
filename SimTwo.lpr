@@ -31,7 +31,8 @@ uses
   rlan in 'rlan.pas',
   modbusTCP in 'modbusTCP.pas',
   sdposeriallaz,
-  tachartlazaruspkg;
+  tachartlazaruspkg,
+  lnetvisual;
 
 {$R *.res}
 

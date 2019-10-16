@@ -273,6 +273,9 @@ begin
 
   if RCButtonPressed(11, 4) then begin
     SetRobotPos(1, GetRCValue(12, 4), GetRCValue(13, 4), 0, rad(GetRCValue(14, 4)));
+    SetRobotPos(2, GetRCValue(12, 5), GetRCValue(13, 5), 0, rad(GetRCValue(14, 5)));
+    SetRobotPos(3, GetRCValue(12, 6), GetRCValue(13, 6), 0, rad(GetRCValue(14, 6)));
+    SetRobotPos(4, GetRCValue(12, 7), GetRCValue(13, 7), 0, rad(GetRCValue(14, 7)));
   end;
 
   for i := 0 to 4 do begin

@@ -7,19 +7,17 @@ interface
 uses
   LCLIntf, Windows, SysUtils, Variants, Classes, Graphics, Controls,
   Forms, Dialogs, StdCtrls, ComCtrls, ExtCtrls, GLLCLViewer, GLcontext, Math,
-  IdComponent, IdUDPBase, IdUDPServer, IdSocketHandle,
   ODERobots, OdeImport, Grids, GLCadencer, SdpoSerial,  Sockets,
   GLShadowVolume, GLScene, Buttons, IniPropStorage, enum_serial,
-  GLVectorGeometry, GLTexture, IdUDPClient, IdTCPServer,
-  modbusTCP, IdThread, IdCustomTCPServer, IdContext, IdGlobal;
+  GLVectorGeometry, GLTexture, modbusTCP, lNetComponents, lNet;
 
 type
-
+{
   TShutdownThread = class(TThread)
   protected
   procedure Execute; override;
   end;
-
+}
 
   { TFParams }
 
@@ -30,6 +28,9 @@ type
     CBComBaudrate: TComboBox;
     IniPropStorage: TIniPropStorage;
     Label65: TLabel;
+    TCPModBus_alt: TLTCPComponent;
+    UDPGeneric: TLUDPComponent;
+    UDPServer_alt: TLUDPComponent;
     PageControl: TPageControl;
     SerialCom: TSdpoSerial;
     TabControl: TTabSheet;
@@ -48,7 +49,6 @@ type
     Label24: TLabel;
     EditTargetFPS: TEdit;
     BSetFPS: TButton;
-    UDPServer: TIdUDPServer;
     BEditScript: TButton;
     BTest: TButton;
     RGCamera: TRadioGroup;
@@ -173,7 +173,6 @@ type
     EditUDPPort: TEdit;
     Label46: TLabel;
     CBUDPConnect: TCheckBox;
-    UDPGeneric: TIdUDPServer;
     Label47: TLabel;
     EditODE_CFM: TEdit;
     Label48: TLabel;
@@ -231,7 +230,6 @@ type
     BModBusConnect: TButton;
     BModBusDisconnect: TButton;
     ShapeModBusState: TShape;
-    TCPModBus: TIdTCPServer;
     MemoModBus: TMemo;
     BModbusTest: TButton;
     Label57: TLabel;
@@ -298,15 +296,13 @@ type
     procedure CBSkyDomeClick(Sender: TObject);
     procedure BEditScriptClick(Sender: TObject);
     procedure EditRemoteIPChange(Sender: TObject);
-    procedure RGControlBlockClick(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: boolean);
+    procedure TCPModBus_altConnect(aSocket: TLSocket);
+    procedure TCPModBus_altDisconnect(aSocket: TLSocket);
+    procedure TCPModBus_altError(const msg: string; aSocket: TLSocket);
     procedure BTestClick(Sender: TObject);
     procedure SetComState(newState: boolean);
     procedure SerialComRxData(Sender: TObject);
-    procedure TCPModBusDisconnect(AContext: TIdContext);
-    procedure UDPGenericUDPRead(AThread: TIdUDPListenerThread;
-      const AData: TIdBytes; ABinding: TIdSocketHandle);
-    procedure UDPServerUDPRead(Sender: TObject; AData: TStream;
-      ABinding: TIdSocketHandle);
     procedure CBPIDsActiveClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -349,15 +345,6 @@ type
     procedure ComboGroundTexturesClick(Sender: TObject);
     procedure BModBusConnectClick(Sender: TObject);
     procedure BModBusDisconnectClick(Sender: TObject);
-    procedure TCPModBusConnect(AThread: TIdContext);
-    procedure TCPModBusStatus(ASender: TObject; const AStatus: TIdStatus;
-      const AStatusText: String);
-    procedure TCPModBusNoCommandHandler(ASender: TIdTCPServer;
-      const AData: String; AThread: TIdContext);
-    procedure TCPModBusExecute(AThread: TIdContext);
-    procedure TCPModBusException(AThread: TIdContext;
-      AException: Exception);
-    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure BModbusTestClick(Sender: TObject);
     procedure BModbusOffsetSetClick(Sender: TObject);
@@ -366,7 +353,11 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure ShapeInputMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure TCPModBus_altReceive(aSocket: TLSocket);
     procedure TimerTimer(Sender: TObject);
+    procedure UDPGenericError(const msg: string; aSocket: TLSocket);
+    procedure UDPGenericReceive(aSocket: TLSocket);
+    procedure UDPServer_altReceive(aSocket: TLSocket);
   private
     procedure FillEditArray(ProtoName: string;
       var EditArray: array of TEdit);
@@ -376,7 +367,7 @@ type
     procedure FillSGConfRow(varname: string);
     procedure FillLabelArray(ParentControl: TTabSheet; ProtoName: string; var LabelArray: array of TLabel);
     procedure FillLEDArray(ParentControl: TTabSheet; ProtoName: string; var LEDArray: array of TShape);
-    procedure TCPModBusDisconnectAndWait;
+    //procedure TCPModBusDisconnectAndWait;
     { Private declarations }
   public
     EditsU, EditsI, EditsOdo : array[0..3] of TEdit;
@@ -546,13 +537,25 @@ begin
   RGControlBlock.ItemIndex := 0;
 end;
 
-procedure TFParams.RGControlBlockClick(Sender: TObject);
+procedure TFParams.FormCloseQuery(Sender: TObject; var CanClose: boolean);
 begin
-  if RGControlBlock.ItemIndex = 2 then begin
-    UDPServer.Active := true;
-  end else begin
-    UDPServer.Active := false;
-  end;
+  TCPModBus_alt.Disconnect(true);
+end;
+
+procedure TFParams.TCPModBus_altConnect(aSocket: TLSocket);
+begin
+  ShapeModBusState.Brush.Color := clGreen;
+end;
+
+procedure TFParams.TCPModBus_altDisconnect(aSocket: TLSocket);
+begin
+  ModBusDisconnected := true;
+  ShapeModBusState.Brush.Color := clRed;
+end;
+
+procedure TFParams.TCPModBus_altError(const msg: string; aSocket: TLSocket);
+begin
+  MemoModBus.Lines.Add('Error:' + msg);
 end;
 
 procedure TFParams.BTestClick(Sender: TObject);
@@ -590,12 +593,6 @@ begin
   SerialData := SerialData + s;
 end;
 
-procedure TFParams.TCPModBusDisconnect(AContext: TIdContext);
-begin
-  ModBusDisconnected := true;
-  ShapeModBusState.Brush.Color := clRed;
-end;
-
 function GetListValue(L: TStrings; QName: string): string;
 var i: integer;
     trim_name: string;
@@ -611,16 +608,12 @@ begin
   end;
 end;
 
-procedure TFParams.UDPServerUDPRead(Sender: TObject; AData: TStream;  ABinding: TIdSocketHandle);
-var cnt: integer;
+procedure TFParams.UDPServer_altReceive(aSocket: TLSocket);
+var str: string;
 begin
-  //FViewer.rem
-  AData.Seek(0, soFromBeginning);
-  cnt := AData.Read(RemControl, sizeof(RemControl));
-  if cnt <> sizeof(RemControl) then begin
-    MemoDebug.Lines.Add(format('Bad packet: size should be %d but is %d',[sizeof(RemControl), cnt]));
-  end;
+  UDPServer_alt.GetMessage(str);
 end;
+
 
 
 procedure TFParams.ShowRobotState;
@@ -778,6 +771,7 @@ begin
   CBFogClick(Sender);
   FViewer.GLSceneViewer.Buffer.FogEnvironment.FogColor.AsWinColor := ShapeSelColor.Brush.Color;
   FCameras.GLSceneViewer.Buffer.FogEnvironment.FogColor.AsWinColor := ShapeSelColor.Brush.Color;
+  CBUDPConnectClick(Sender);
 
   try
     if FileExists('params.cfg') then begin
@@ -1236,28 +1230,31 @@ end;
 procedure TFParams.CBUDPConnectClick(Sender: TObject);
 begin
   try
-    UDPGeneric.DefaultPort := strtoint(EditUDPPort.Text);
-    UDPGeneric.Active := CBUDPConnect.Checked;
+    //UDPGeneric.DefaultPort := strtoint(EditUDPPort.Text);
+    //UDPGeneric.Active := CBUDPConnect.Checked;
+    if CBUDPConnect.Checked then begin
+      UDPGeneric.Listen(strtoint(EditUDPPort.Text));
+    end else begin
+      UDPGeneric.Disconnect();
+    end;
   except
     on E: exception do begin
-      CBUDPConnect.Checked := UDPGeneric.Active;
+      CBUDPConnect.Checked := UDPGeneric.Connected;
       showmessage(E.Message);
     end;
   end;
 end;
 
-procedure TFParams.UDPGenericUDPRead(AThread: TIdUDPListenerThread;
-  const AData: TIdBytes; ABinding: TIdSocketHandle);
+procedure TFParams.UDPGenericReceive(aSocket: TLSocket);
 var str: string;
 begin
-  str := BytesToString(Adata);
+  UDPGeneric.GetMessage(str);
+  if str = '' then exit;
 
   UDPGenData.WriteBuffer(Pointer(str)^, Length(str));
 
   UDPGenPackets.Add(str);
 end;
-
-
 
 procedure TFParams.BGlobalSetClick(Sender: TObject);
 begin
@@ -1474,98 +1471,20 @@ end;
 
 procedure TFParams.BModBusConnectClick(Sender: TObject);
 begin
-  if TCPModBus.Active then exit;
+  if TCPModBus_alt.Connected then exit;
   ShapeModBusState.Brush.Color := clYellow;
-  TCPModBus.Active := false;
-  TCPModBus.DefaultPort := StrToInt(EditModBusPort.Text);
-  TCPModBus.Active := true;
+  TCPModBus_alt.Listen(StrToInt(EditModBusPort.Text));
 end;
 
 procedure TFParams.BModBusDisconnectClick(Sender: TObject);
 begin
-  ModBusWantsToDisconnected := true;
-
-  try
-    TCPModBus.Active := false;
-  except
-  end;
-
-  //TCPModBusDisconnectAndWait;
-end;
-
-procedure TFParams.TCPModBusConnect(AThread: TIdContext);
-begin
-  ShapeModBusState.Brush.Color := clGreen;
-end;
-
-procedure TFParams.TCPModBusStatus(ASender: TObject;
-  const AStatus: TIdStatus; const AStatusText: String);
-begin
-  MemoModBus.Lines.Add('Status:' + AStatusText);
-end;
-
-procedure TFParams.TCPModBusNoCommandHandler(ASender: TIdTCPServer;
-  const AData: String; AThread: TIdContext);
-begin
-  MemoModBus.Lines.Add('data:' + AData);
-end;
-
-procedure TFParams.TCPModBusExecute(AThread: TIdContext);
-var msg, s: string;
-    i: integer;
-begin
-  //AThread.Connection.CheckForDisconnect(false, true);
-  try
-  //TODO msg := AThread.Connection.CurrentReadBuffer;
-  except on E: Exception do
-    MemoModBus.Lines.Add('Exception(in):' + E.Message);
-  end;
-  if msg ='' then exit;
-
-  ProgressBarModBus.Position := ProgressBarModBus.Position + 1;
-  if ProgressBarModBus.Position >= ProgressBarModBus.Max then
-    ProgressBarModBus.Position := 0;
-
-  ModBusData.ProcessModBusMessage(msg);
-
-  if ModBusData.response <> '' then begin
-    //TODO AThread.Connection.Write(ModBusData.response);
-    ModBusData.response := '';
-    //ModbusRefreshLEDs;
-  end;
-  if ModBusData.Header.FunctionCode = 15 then
-    ModbusRefreshLEDs;
-
-  exit;
-
-  s := '';
-  for i := 1 to length(ModBusData.response) do begin
-    s := s + IntToHex(ord(ModBusData.response[i]), 2) + ' ';
-  end;
-  MemoModBus.Lines.Add('MSG:' + s);
-  //MemoModBus.Lines.Add(format('Header: Len = %d Code = %d',[ModBusData.Header.LengthField, ModBusData.Header.FunctionCode]));
-  ModBusData.response := '';
-end;
-
-procedure TFParams.TCPModBusException(AThread: TIdContext;
-  AException: Exception);
-begin
-  MemoModBus.Lines.Add('Exception signal:' + AException.Message);
-end;
-
-procedure TFParams.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-begin
-  ModBusDisconnected := not TCPModBus.Active;
-  try
-    TCPModBus.Active := false;
-  except
-  end;
+  TCPModBus_alt.Disconnect(true);
 end;
 
 procedure TFParams.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  while not ModBusDisconnected do
-    Application.ProcessMessages;
+  //while not ModBusDisconnected do
+  //  Application.ProcessMessages;
 end;
 
 
@@ -1654,6 +1573,43 @@ begin
   ModbusRefreshLEDs;
 end;
 
+procedure TFParams.TCPModBus_altReceive(aSocket: TLSocket);
+var msg, s: string;
+    i: integer;
+begin
+  //AThread.Connection.CheckForDisconnect(false, true);
+  try
+  //TODO msg := AThread.Connection.CurrentReadBuffer;
+  except on E: Exception do
+    MemoModBus.Lines.Add('Exception(in):' + E.Message);
+  end;
+  if msg ='' then exit;
+
+  ProgressBarModBus.Position := ProgressBarModBus.Position + 1;
+  if ProgressBarModBus.Position >= ProgressBarModBus.Max then
+    ProgressBarModBus.Position := 0;
+
+  ModBusData.ProcessModBusMessage(msg);
+
+  if ModBusData.response <> '' then begin
+    //TODO AThread.Connection.Write(ModBusData.response);
+    ModBusData.response := '';
+    //ModbusRefreshLEDs;
+  end;
+  if ModBusData.Header.FunctionCode = 15 then
+    ModbusRefreshLEDs;
+
+  exit;
+
+  s := '';
+  for i := 1 to length(ModBusData.response) do begin
+    s := s + IntToHex(ord(ModBusData.response[i]), 2) + ' ';
+  end;
+  MemoModBus.Lines.Add('MSG:' + s);
+  //MemoModBus.Lines.Add(format('Header: Len = %d Code = %d',[ModBusData.Header.LengthField, ModBusData.Header.FunctionCode]));
+  ModBusData.response := '';
+end;
+
 function getModbusCoil(bit_addr: integer): boolean;
 begin
   with FParams do begin
@@ -1690,10 +1646,10 @@ begin
   end;
 end;
 
-
+{
 procedure TFParams.TCPModBusDisconnectAndWait;
 begin
-  if TCPModBus.Active then begin
+  if TCPModBus_alt.Connected then begin
     with TShutdownThread.Create(False) do begin
       try
         WaitFor; // internally processes sync requests...
@@ -1703,26 +1659,34 @@ begin
     end;
   end;
 end;
-
+}
 
 { TShutdownThread }
-
+{
 procedure TShutdownThread.Execute;
 begin
-  FParams.TCPModBus.Active := False;
+  FParams.TCPModBus_alt.Disconnect();
 end;
 
-
+}
 procedure TFParams.TimerTimer(Sender: TObject);
 begin
-  if ModBusWantsToDisconnected then begin
+  {if ModBusWantsToDisconnected then begin
     try
-      TCPModBus.Active := false;
+      TCPModBus_alt.Disconnect();
     except
     end;
-    ModBusWantsToDisconnected := TCPModBus.Active;
+    ModBusWantsToDisconnected := TCPModBus_alt.Connected;
   end;
+  }
+end;
 
+procedure TFParams.UDPGenericError(const msg: string; aSocket: TLSocket);
+begin
+  //MemoModBus.Lines.Add('Error:' + msg);
+  UDPGeneric.Disconnect();
+  if CBUDPConnect.Checked then
+    UDPGeneric.Listen(strtoint(EditUDPPort.Text));
 end;
 
 end.

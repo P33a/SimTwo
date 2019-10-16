@@ -10,8 +10,8 @@ uses
   ExtCtrls, ComCtrls, SynEditTypes, Menus, math,
   uPSComponent, uPSUtils, uPSRuntime, SynCompletion, uPSComponent_Default,
   uPSComponent_StdCtrls, uPSComponent_Controls, uPSComponent_Forms, ProjConfig,
-  SynEditMiscClasses, PrintersDlgs, uPSCompiler, Clipbrd,
-  IniPropStorage, Rlan, SynEditMarks, process, LCLIntf, Types, LCLType;
+  SynEditMiscClasses, PrintersDlgs, uPSCompiler, Clipbrd, lNetComponents,
+  IniPropStorage, Rlan, SynEditMarks, process, LCLIntf, Types, LCLType, lnet;
 
 
 type
@@ -201,7 +201,7 @@ implementation
 
 //uses Viewer, ProjManage, Params, FastChart, uPSDebugger;
 uses uPSDebugger, Sheets, Viewer, Utils, Params, uPSI_ODERobotsPublished, uPSI_PathFinder, uPSI_dynmatrix,
-     uPSI_user_charts, IdUDPBase;
+     uPSI_user_charts;
 
 {$R *.lfm}
 
@@ -443,6 +443,7 @@ end;
 
 procedure TFEditor.MenuCompileClick(Sender: TObject);
 begin
+  FParams.RGControlBlock.ItemIndex := 0; // none
   if not compile then exit;
   SynEditST.Refresh;
 end;
@@ -1409,7 +1410,8 @@ end;
 
 procedure TFEditor.WriteUDPData(ToIP: string; ToPort: integer; s: string);
 begin
-  Fparams.UDPGeneric.Send(ToIP, ToPort, s);
+  //if not (Fparams.UDPGeneric.Connected and Fparams.UDPGeneric.Active)then exit;
+  Fparams.UDPGeneric.SendMessage(s, ToIP + ':' + IntToStr(ToPort));
 end;
 
 function TFEditor.ReadUDPData: string;

@@ -135,8 +135,13 @@ end;
 
 // Zeros matrix
 function Mzeros(numrows, numcols: LongWord): Matrix;
+var r,c: Longword;
 begin
   MSetSize(result, numrows, numcols);
+  for c := 0 to numcols - 1 do
+    for r := 0 to numrows - 1 do begin
+      result.data[r + c * numrows] := 0;
+    end;
 end;
 
 // Identity matrix
