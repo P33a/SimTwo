@@ -18,8 +18,8 @@ TRobotControl RC; //Variavel para controlar o MCR
 
 float kappa;            //multiplicador do controle de distancia das paredes
 float V, W;             //V - velocidade linear     W - velocidade angular
-double eixoY;  //posicao Y
-double theta;
+float eixoY;  //posicao Y
+float theta;
 long int posicao;             //armazena a posicao em X ou Y conforme o eixo
 int eixo;                //eixo de movimentação
 bool measureonce = false;         //confere apenas uma vez os sensores para virar e aciona as rotações
@@ -30,7 +30,7 @@ bool parede;
 int VAWR, VAWL;
 
 // ****RobotSize*******
-double WheelSize = 0.1251545;
+const float WheelSize = 0.1251545;
 
 
 // **** Comunication Variables ******
@@ -40,7 +40,8 @@ String inputString = "";         // a String to hold incoming data
 bool stringComplete = false;  // whether the string is complete
 int flagComunica = 0;
 
-void setup() {
+void setup(void) 
+{
   // put your setup code here, to run once:
   Serial.begin(115200);
   inputString.reserve(200); 
@@ -63,19 +64,17 @@ void setup() {
   kappa=100;
   distance=0;
 }
-void SpeedControlFoward(){
-  int VelR, VelL;
-
+void SpeedControlFoward()
+{
   //BorderControl(kappa);
   RC.Vr=V-W;
   RC.Vl=V+W;
 }
 
-void BorderControl(float kappa){
-  unsigned int sub; //arrumar o controle de borda
-  double temp;
-  double wa;
-  wa = W;
+void BorderControl(float kappa)
+{
+  float temp = 0;
+
   if((RC.SensorL<RC.SensorR))
         temp = RC.SensorL - 0.0791;
   else
@@ -89,11 +88,15 @@ void BorderControl(float kappa){
 
 }
 
-void Odometria(){
+void Odometria(void)
+{
   eixoY=eixoY+((RC.Wr*WheelSize+RC.Wl*WheelSize)/2);
   posicao=(int)(eixoY);
 }
-void RotateOdometria(){
+
+
+void RotateOdometria(void)
+{
   if(turn_right==true){
     theta=theta+(atan2(RC.Wr*0.1251545,39.5)*57.295);
     RC.Wr=0;
@@ -106,6 +109,7 @@ void RotateOdometria(){
       RC.Wr=0;
     }
 }
+
 
 void TurnRight(){
   if((int) theta<115){
@@ -169,7 +173,7 @@ void Rotate(){
 
 
 
-void loop() 
+void loop(void) 
 {
   while (Serial.available()) {
     // get the new byte:
@@ -182,7 +186,7 @@ void loop()
       stringComplete = true;
     }
   }
-
+  
   
   unsigned long currentMillis = millis();
   if (currentMillis - previousMillis >= interval){  
@@ -335,4 +339,8 @@ void ResetData()
   kappa=150;  
 
   flagComunica = 0;
+}
+
+void serialEvent() {
+
 }

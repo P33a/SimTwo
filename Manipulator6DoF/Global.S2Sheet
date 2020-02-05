@@ -14,12 +14,12 @@
   </columns>
   <cells>
     <cell r="2" c="2" text="Pos (deg)" />
-    <cell r="3" c="2" text="-0.00111" />
-    <cell r="4" c="2" text="0.148" />
-    <cell r="5" c="2" text="0.0616" />
-    <cell r="6" c="2" text="-0.0046" />
-    <cell r="7" c="2" text="0.00921" />
-    <cell r="8" c="2" text="0.00117" />
+    <cell r="3" c="2" text="-0.014" />
+    <cell r="4" c="2" text="0.00197" />
+    <cell r="5" c="2" text="0.000464" />
+    <cell r="6" c="2" text="-0.00349" />
+    <cell r="7" c="2" text="-0.00605" />
+    <cell r="8" c="2" text="0.00325" />
     <cell r="2" c="1" text="Joint" />
     <cell r="4" c="1" text="1" />
     <cell r="3" c="1" text="0" />
@@ -27,24 +27,24 @@
     <cell r="6" c="1" text="3" />
     <cell r="7" c="1" text="4" />
     <cell r="8" c="1" text="5" />
-    <cell r="13" c="2" text="0.547606" />
+    <cell r="13" c="2" text="0.54994" />
     <cell r="11" c="1" text="X:" />
     <cell r="12" c="1" text="Y:" />
     <cell r="13" c="1" text="Z:" />
-    <cell r="11" c="2" text="0.7700157" />
-    <cell r="12" c="2" text="-0.00002281475" />
+    <cell r="11" c="2" text="0.7700274" />
+    <cell r="12" c="2" text="-0.0001652233" />
     <cell r="10" c="2" text="B5" />
     <cell r="15" c="2" text="B6" />
-    <cell r="16" c="2" text="0.8050159" />
-    <cell r="17" c="2" text="-0.00002363693" />
-    <cell r="18" c="2" text="0.5474676" />
+    <cell r="16" c="2" text="0.8050277" />
+    <cell r="17" c="2" text="-0.0001727075" />
+    <cell r="18" c="2" text="0.5499279" />
     <cell r="16" c="4" text="1.000" />
     <cell r="16" c="5" text="0.000" />
-    <cell r="16" c="6" text="0.004" />
+    <cell r="16" c="6" text="0.000" />
     <cell r="17" c="4" text="0.000" />
     <cell r="17" c="5" text="1.000" />
     <cell r="17" c="6" text="0.000" />
-    <cell r="18" c="4" text="-0.004" />
+    <cell r="18" c="4" text="0.000" />
     <cell r="18" c="5" text="0.000" />
     <cell r="18" c="6" text="1.000" />
     <cell r="21" c="2" text="30" />
@@ -58,7 +58,7 @@
     <cell r="30" c="2" text="0.5" />
     <cell r="15" c="4" text="B6 Rot" />
     <cell r="2" c="4" text="[Place]" />
-    <cell r="3" c="4" text="-0.00027" />
+    <cell r="3" c="4" text="-0.00002" />
     <cell r="3" c="7" text="idle" />
   </cells>
 </sheet>

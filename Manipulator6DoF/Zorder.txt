@@ -1,8 +1,8 @@
 FViewer
 FChooseScene
 FEditor
-FParams
 FSheets
+FParams
 FSceneEdit
 FChart
 
