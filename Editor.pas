@@ -324,9 +324,7 @@ begin
   //Set8087CW(Default8087CW);
 
   FPUExceptionMask := GetExceptionMask;
-  //FPUExceptionMask := [];
   SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow, exPrecision]);
-  ////SetExceptionMask([exInvalidOp, exDenormalized, exOverflow, exUnderflow, exPrecision]);
 
   ProgTime := ProgCyclesCount * WorldODE.Ode_dt;
   LocalInspector := false;
@@ -335,10 +333,11 @@ begin
       PSScript.ExecuteFunction([],'Initialize');
   except
     on E: Exception do begin //ErrorDialog(E.Message, E.HelpContext);
-      FParams.RGControlBlock.itemindex := 0;
-      LBErrors.Items.Add('Error while executing script: ' + E.Message);
       ClearExceptions(false);
       SetExceptionMask(FPUExceptionMask);
+
+      FParams.RGControlBlock.itemindex := 0;
+      LBErrors.Items.Add('Error while executing script: ' + E.Message);
       //Set8087CW(Saved8087CW);
       exit;
     end;
@@ -369,10 +368,11 @@ begin
     end;
   except
     on E: Exception do begin //ShowMessage(E.Message);
-      FParams.RGControlBlock.itemindex := 0;
-      LBErrors.Items.Add('Error while executing script: ' + E.Message);
       ClearExceptions(false);
       SetExceptionMask(FPUExceptionMask);
+
+      FParams.RGControlBlock.itemindex := 0;
+      LBErrors.Items.Add('Exception while executing script: ' + E.Message);
       //Set8087CW(Saved8087CW);
       exit;
     end;

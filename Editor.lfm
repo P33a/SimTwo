@@ -16,7 +16,7 @@ object FEditor: TFEditor
   OnDestroy = FormDestroy
   OnShow = FormShow
   PopupMenu = PopupMenuOutput
-  SessionProperties = 'Height;Left;Top;Width;SynEditST.Font'
+  SessionProperties = 'Height;Left;SynEditST.Font;Top;Width;PageControlBottom.ActivePage'
   LCLVersion = '1.8.2.0'
   object PageControl: TPageControl
     Left = 0
@@ -603,9 +603,9 @@ object FEditor: TFEditor
         Height = 108
         Top = 338
         Width = 765
-        ActivePage = TabOutput
+        ActivePage = TabErrors
         Align = alBottom
-        TabIndex = 0
+        TabIndex = 1
         TabOrder = 1
         TabPosition = tpBottom
         object TabOutput: TTabSheet
@@ -627,13 +627,13 @@ object FEditor: TFEditor
         object TabErrors: TTabSheet
           Caption = 'Errors'
           ClientHeight = 82
-          ClientWidth = 753
+          ClientWidth = 757
           ImageIndex = 1
           object LBErrors: TListBox
             Left = 0
             Height = 80
             Top = 0
-            Width = 744
+            Width = 748
             Anchors = [akTop, akLeft, akRight, akBottom]
             ItemHeight = 0
             OnDblClick = LBErrorsDblClick
