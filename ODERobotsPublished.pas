@@ -4,7 +4,7 @@ unit ODERobotsPublished;
 
 interface
 
-uses Graphics, Types, ODERobots, PathFinder, dynmatrix, GLKeyboard;
+uses Graphics, Types, ODERobots, PathFinder, dynmatrix, GLKeyboard, ODEGL;
 
 type
   TAxisPoint = record
@@ -198,6 +198,14 @@ function GetObstacleIndex(ID: string): integer;
 procedure SetObstacleColor(I: integer; Red, Green, Blue: byte);
 function GetObstacleColor(I: integer): TRGBAColor;
 
+function GetObstaclePos(T: integer): TPoint3D;
+procedure SetObstaclePos(T: integer; x, y, z: double);
+
+function GetObstacleRotMat(T: integer): Matrix;
+procedure SetObstacleRotationMat(T: integer; Rot: Matrix);
+
+function AddOBstacleBox(ID: string; posx, posY, posZ, sizeX, sizeY, sizeZ: double; rgb24: integer): integer;
+procedure ClearObstacles;
 
 function GetAxisOdo(R, i: integer): integer;
 
@@ -995,11 +1003,13 @@ end;
 
 function GetSensorValues(R, i: integer): Matrix;
 var j, n: integer;
+    Sensor: TSensor;
 begin
   n := WorldODE.Robots[r].Sensors[i].MeasuresCount;
   result := Mzeros(n, 1);
+  Sensor := WorldODE.Robots[r].Sensors[i];
   for j := 0 to n - 1 do begin
-    Msetv(result, j, 0, WorldODE.Robots[r].Sensors[i].measures[j].value);
+    Msetv(result, j, 0, Sensor.measures[j].value);
   end;
 end;
 
@@ -1771,6 +1781,96 @@ end;
 function GetObstacleColor(I: integer): TRGBAColor;
 begin
   with result do WorldODE.Obstacles[I].GetColor(Red, Green, Blue, Alpha);
+end;
+
+function GetObstaclePos(T: integer): TPoint3D;
+var v1: TdVector3;
+begin
+  result.x := 0;
+  result.y := 0;
+  result.z := 0;
+
+  with WorldODE.Obstacles[T] do begin
+    if Geom = nil then exit;
+    v1 := dGeomGetPosition(Geom)^;
+    Result.x := v1[0];
+    Result.y := v1[1];
+    Result.z := v1[2];
+  end;
+end;
+
+procedure SetObstaclePos(T: integer; x, y, z: double);
+begin
+  with WorldODE.Obstacles[T] do begin
+    if not Assigned(Geom) then exit;
+    dGeomSetPosition(Geom, x, y, z);
+    PositionSceneObject(GLObj, Geom);
+  end;
+end;
+
+function GetObstacleRotMat(T: integer): Matrix;
+var pR: PdMatrix3;
+    row, col: integer;
+begin
+  result := Mzeros(3,3);
+
+  with WorldODE.Obstacles[T] do begin
+    if Geom = nil then exit;
+    pR := dGeomGetRotation(Geom);
+    for row := 0 to 2 do begin
+      for col := 0 to 2 do begin
+        Msetv(Result, row, col, pR^[4 * row + col]);
+      end;
+    end;
+  end;
+end;
+
+procedure SetObstacleRotationMat(T: integer; Rot: Matrix);
+var RM: TdMatrix3;
+    row, col: integer;
+begin
+  with WorldODE.Obstacles[T] do begin
+    if Geom = nil then exit;
+
+    for row := 0 to 2 do begin
+      for col := 0 to 2 do begin
+        RM[4*row+col] := MGetv(Rot, row, col);
+      end;
+    end;
+
+    dGeomSetRotation(Geom, RM);
+    PositionSceneObject(GLObj, Geom);
+  end;
+end;
+
+
+function AddOBstacleBox(ID: string; posx, posY, posZ, sizeX, sizeY, sizeZ: double; rgb24: integer): integer;
+var newObstacle: TSolid;
+begin
+  with WorldODE do begin
+    if Obstacles.IndexFromID(ID) >= 0 then
+      raise Exception.Create('AddObstacle Error - Dulpicate ID: ' + ID);
+    newObstacle := TSolid.Create;
+    result := Obstacles.Add(newObstacle);
+    newObstacle.ID := ID;
+
+    newObstacle.Drag := 0;
+    newObstacle.StokesDrag := 1e-5;
+    newObstacle.RollDrag := 1e-3;
+
+    CreateObstacleBox(newObstacle, sizeX, sizeY, sizeZ, posX, posY, posZ);
+
+    newObstacle.SetColorRGB(rgb24);
+  end;
+end;
+
+procedure ClearObstacles;
+var i: integer;
+begin
+  for i := 0 to WorldODE.Obstacles.Count - 1 do begin
+    WorldODE.DeleteSolid(WorldODE.Obstacles[i]);
+  end;
+  WorldODE.Obstacles.ClearAll;
 end;
 
 

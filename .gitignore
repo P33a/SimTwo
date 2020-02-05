@@ -26,6 +26,8 @@ backup/
 lib/
 backup/
 
+*.iip
+
 # Application bundle for Mac OS
 *.app/
 /.project

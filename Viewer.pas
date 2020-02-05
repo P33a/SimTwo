@@ -13,7 +13,7 @@ uses
   ProjConfig, GLHUDObjects, Menus, IniPropStorage, GLVectorFileObjects,
   GLFireFX, GlGraphics, OpenGL1x, SimpleParser, GLBitmapFont,
   GLMesh, GLWaterPlane, glzbuffer, GLLCLViewer, GLMaterial, GLColor,
-  GLKeyboard;
+  GLKeyboard, GLFileOBJ;
 
 type
   TRemoteImage = packed record
@@ -59,6 +59,9 @@ end;
 
 //Physic World ODE
 type
+
+  { TWorld_ODE }
+
   TWorld_ODE = class
     //SampleCount: integer;
     Ode_dt, TimeFactor: double;
@@ -106,14 +109,14 @@ type
     constructor create;
     procedure WorldUpdate;
   private
+    procedure CreateCylinderObstacle(var Obstacle: TSolid; radius, sizeZ, posX,
+      posY, posZ: double);
     //procedure CreateSubGeomBox(var body: PdxBody; var geom: PdxGeom; xsize, ysize, zsize, x, y, z: double);
     //procedure CreateGlBox(var GLCube: TGLCube; var geom: PdxGeom);
 
     procedure CreateHingeJoint(var Link: TSolidLink; Solid1, Solid2: TSolid;
       anchor_x, anchor_y, anchor_z, axis_x, axis_y, axis_z: double);
     procedure SetHingeLimits(var Link: TSolidLink; LimitMin, LimitMax: double);
-
-    procedure CreateBoxObstacle(var Obstacle: TSolid; sizeX, sizeY, sizeZ, posX, posY, posZ: double);
 
     procedure CreateShellBox(var Solid: TSolid; motherbody: PdxBody; posX, posY, posZ, L, W, H: double);
     procedure CreateShellCylinder(var Solid: TSolid; motherbody: PdxBody; posX, posY, posZ, R, H: double);
@@ -176,6 +179,8 @@ type
 //    procedure AxisGLCreate(axis: Taxis; aRadius, aHeight: double);
 //    procedure AxisGLSetPosition(axis: Taxis);
   public
+    procedure CreateObstacleBox(var Obstacle: TSolid; sizeX, sizeY, sizeZ, posX, posY, posZ: double);
+
     procedure CreateSolidBox(var Solid: TSolid; bmass, posX, posY, posZ, L, W, H: double);
     procedure CreateSolidCylinder(var Solid: TSolid; cmass, posX, posY, posZ: double; c_radius, c_length: double);
     procedure CreateSolidSphere(var Solid: TSolid; bmass, posX, posY, posZ: double; c_radius: double);
@@ -887,7 +892,7 @@ begin
   end;
 end;
 
-procedure TWorld_ODE.CreateBoxObstacle(var Obstacle: TSolid; sizeX, sizeY, sizeZ, posX, posY, posZ: double);
+procedure TWorld_ODE.CreateObstacleBox(var Obstacle: TSolid; sizeX, sizeY, sizeZ, posX, posY, posZ: double);
 //var R: TdMatrix3;
 begin
   Obstacle.kind := skDefault;
@@ -906,14 +911,35 @@ begin
   CopyCubeSizeFromBox(TGLCube(Obstacle.GLObj), Obstacle.Geom);
   TGLCube(Obstacle.GLObj).Material.MaterialLibrary := FViewer.GLMaterialLibrary;
   PositionSceneObject(Obstacle.GLObj, Obstacle.Geom);
-//  PositionSceneObject(TGLBaseSceneObject(PdxGeom(ground_box).data), ground_box);
   (OdeScene as TGLShadowVolume).Occluders.AddCaster(Obstacle.GLObj);
 end;
+
+
+procedure TWorld_ODE.CreateCylinderObstacle(var Obstacle: TSolid; radius, sizeZ, posX, posY, posZ: double);
+begin
+  Obstacle.kind := skDefault;
+  Obstacle.Geom := dCreateCylinder(space, radius, sizeZ);
+  dGeomSetPosition(Obstacle.Geom, posX, posY, posZ);
+  Obstacle.GLObj := TGLSceneObject(ODEScene.AddNewChild(TGLCylinder));
+  Obstacle.GLObj.TagObject := Obstacle;
+  Obstacle.Geom.data := Obstacle;
+
+  dGeomSetCategoryBits(Obstacle.Geom, $00000001);
+  dGeomSetCollideBits(Obstacle.Geom, $FFFFFFFE);
+
+  TGLCylinder(Obstacle.GLObj).TopRadius := radius;
+  TGLCylinder(Obstacle.GLObj).BottomRadius := radius;
+  TGLCylinder(Obstacle.GLObj).Height := sizeZ;
+  TGLCylinder(Obstacle.GLObj).slices := 64;
+  TGLCylinder(Obstacle.GLObj).Material.MaterialLibrary := FViewer.GLMaterialLibrary;
+  PositionSceneObject(Obstacle.GLObj, Obstacle.Geom);
+  (OdeScene as TGLShadowVolume).Occluders.AddCaster(Obstacle.GLObj);
+end;
+
 
 procedure TWorld_ODE.CreateSphereObstacle(var Obstacle: TSolid; radius, posX, posY, posZ: double);
 begin
   Obstacle.kind := skDefault;
-  // Create 1 GLSCube and a box space.
   Obstacle.Geom := dCreateSphere(space, radius);
   dGeomSetPosition(Obstacle.Geom, posX, posY, posZ);
   Obstacle.GLObj := TGLSphere(ODEScene.AddNewChild(TGLSphere));
@@ -2411,7 +2437,7 @@ begin
     if obstacle.NodeName = 'defines' then begin
       LoadDefinesFromXML(Parser, obstacle);
     end;
-    if pos(obstacle.NodeName, 'cuboid<>sphere') <> 0 then begin
+    if pos(obstacle.NodeName, 'cuboid<>sphere<>cylinder') <> 0 then begin
     //if obstacle.NodeName = 'cuboid' then begin
       prop := obstacle.FirstChild;
       // default values
@@ -2458,7 +2484,9 @@ begin
           NewObstacle.ID := OffsetDef.ID + ID;
         end;
         if obstacle.NodeName = 'cuboid' then begin
-          CreateBoxObstacle(NewObstacle, sizeX, sizeY, sizeZ, posX, posY, posZ);
+          CreateObstacleBox(NewObstacle, sizeX, sizeY, sizeZ, posX, posY, posZ);
+        end else if obstacle.NodeName = 'cylinder' then begin
+          CreateCylinderObstacle(NewObstacle, max(radius, sizeX), sizeZ, posX, posY, posZ);
         end else if obstacle.NodeName = 'sphere' then begin
           CreateSphereObstacle(NewObstacle, radius, posX, posY, posZ);
         end;
@@ -3111,9 +3139,10 @@ begin
         if mass > 0 then dMassSetBoxTotal(NewMass, mass, sizeX, sizeY, sizeZ);
         MemCameraSolid := newShell;
         //actRemGLCamera := TGLCamera(OdeScene.Scene.cameras.FindChild('GLCameraMem', true));
-        actRemGLCamera := TGLCamera(OdeScene.FindChild('GLCameraMem', true));
+        actRemGLCamera := TGLCamera(OdeScene.Parent.Parent.FindChild('GLCameraMem', false));
         if assigned(actRemGLCamera) then begin
           actRemGLCamera.FocalLength := focalLength;
+          //actRemGLCamera.SceneScale := 1;
           actRemGLCamera.tag := decimation; // Latter a propper storage for the cameras
         end;
       end;
@@ -5360,8 +5389,8 @@ begin
   Solid.ShadowGlObj.Free;
   Solid.AltGLObj.Free;
   Solid.GLObj.Free;
-  dGeomDestroy(Solid.Geom);
-  dBodyDestroy(Solid.Body);
+  if Assigned(Solid.Geom) then dGeomDestroy(Solid.Geom);
+  if Assigned(Solid.Body) then dBodyDestroy(Solid.Body);
 end;
 
 procedure TFViewer.MenuCamerasClick(Sender: TObject);
