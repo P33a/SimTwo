@@ -101,3 +101,10 @@ OmniXML/dpk/OmniXML_R2006.dpk
 *.test/
 *.zip
 */Zorder.txt
+MobileRobot*
+MSL*
+GASData
+meArm
+EKF_Beacon_Laser_Sol
+MotorModel_Bio
+
