@@ -13,7 +13,7 @@ uses
   ProjConfig, GLHUDObjects, Menus, IniPropStorage, GLVectorFileObjects,
   GLFireFX, GlGraphics, OpenGL1x, SimpleParser, GLBitmapFont,
   GLMesh, GLWaterPlane, glzbuffer, GLLCLViewer, GLMaterial, GLColor,
-  GLKeyboard, GLFileOBJ;
+  GLKeyboard, GLFileOBJ, GLFileSTL, GLFilePLY;
 
 type
   TRemoteImage = packed record
@@ -348,7 +348,7 @@ var
   contact : array[0..MAX_CONTACTS-1] of TdContact;
   n_mode: cardinal;
   n_mu, n_mu2, n_soft_cfm, tmp: double;
-  n_fdir1 : TdVector3;
+  n_fdir1, aux_v1, aux_v2 : TdVector3;
   n_motion1: double;
 begin
   //exit;
@@ -367,7 +367,6 @@ begin
   n := dCollide(o1, o2, MAX_CONTACTS, contact[0].geom, sizeof(TdContact));
   if (n > 0) then  begin
     //FParams.EditDEbug2.Text := '';
-    //if((dGeomGetClass(o1) = dRayClass) or (dGeomGetClass(o2) = dRayClass)) then begin
 
     if dGeomGetClass(o1) = dRayClass then begin
       if (o1.data <> nil) then begin
@@ -442,17 +441,27 @@ begin
     end else}
 
     //FParams.EditDebug.Text := format('%d- %.2f %.2f %.2f',[n, n_fdir1[0], n_fdir1[1], n_fdir1[2]]);
-    if (o1.data <> nil) and (TSolid(o1.data).kind in [skOmniWheel, skOmniSurface]) then begin
+    if (o1.data <> nil) and (TSolid(o1.data).kind in [skOmniWheel, skOmniSurface, skMecanumWheel_L, skMecanumWheel_R]) then begin
         n_mode := n_mode or cardinal(dContactMu2 or dContactFDir1);
         if TSolid(o1.data).kind = skOmniWheel then begin
           dBodyVectorToWorld(b1, 0, 0, 1, n_fdir1);
           tmp := n_mu2;
           n_mu2 := n_mu;
-          n_mu := tmp; //0.001;
+          n_mu := tmp;
+        end else if TSolid(o1.data).kind = skMecanumWheel_L then begin
+          //dBodyVectorToWorld(b1, 0, 0, 1, n_fdir1);
+          dBodyVectorToWorld(b1, 0, 0, 0.707106781186547, aux_v1); // 1/sqrt(2)
+          aux_v2 := Vector3Cross(contact[0].geom.normal, aux_v1);
+          n_fdir1 := Vector3ADD(aux_v1, aux_v2);
+        end else if TSolid(o1.data).kind = skMecanumWheel_R then begin
+          //dBodyVectorToWorld(b1, 0, 0, 1, n_fdir1);
+          dBodyVectorToWorld(b1, 0, 0, 0.707106781186547, aux_v1); // 1/sqrt(2)
+          aux_v2 := Vector3Cross(contact[0].geom.normal, aux_v1);
+          n_fdir1 := Vector3SUB(aux_v1, aux_v2);
         end else begin
           dBodyVectorToWorld(b1, 0, 1, 0, n_fdir1);
         end;
-    end else if (o2.data <> nil) and (TSolid(o2.data).kind in [skOmniWheel, skOmniSurface]) then begin
+    end else if (o2.data <> nil) and (TSolid(o2.data).kind in [skOmniWheel, skOmniSurface, skMecanumWheel_L, skMecanumWheel_R]) then begin
         n_mode := n_mode or cardinal(dContactMu2 or dContactFDir1);
         //dBodyVectorToWorld(b2, 0, 0, 1, n_fdir1);
         if TSolid(o2.data).kind = skOmniWheel then begin
@@ -460,6 +469,16 @@ begin
           tmp := n_mu2;
           n_mu2 := n_mu;
           n_mu := tmp; //0.001;
+        end else if TSolid(o2.data).kind = skMecanumWheel_L then begin
+          //dBodyVectorToWorld(b2, 0, 0, 1, n_fdir1);
+          dBodyVectorToWorld(b2, 0, 0, 0.707106781186547, aux_v1); // 1/sqrt(2)
+          aux_v2 := Vector3Cross(contact[0].geom.normal, aux_v1);
+          n_fdir1 := Vector3ADD(aux_v1, aux_v2);
+        end else if TSolid(o2.data).kind = skMecanumWheel_R then begin
+          //dBodyVectorToWorld(b2, 0, 0, 1, n_fdir1);
+          dBodyVectorToWorld(b2, 0, 0, 0.707106781186547, aux_v1); // 1/sqrt(2)
+          aux_v2 := Vector3Cross(contact[0].geom.normal, aux_v1);
+          n_fdir1 := Vector3SUB(aux_v1, aux_v2);
         end else begin
           dBodyVectorToWorld(b2, 0, 1, 0, n_fdir1);
         end;
@@ -1543,6 +1562,7 @@ var XMLSolid, prop: IXMLNode;
     GravityMode: integer;
     transparency: double;
     thrust: double;
+    SolidKind: string;
 begin
   if root = nil then exit;
 
@@ -1581,6 +1601,7 @@ begin
       CanvasWidth := 128; CanvasHeigth := 128;
       MotherSolidId := '';
       thrust := 0.1;    // 0.01 ???
+      SolidKind := 'generic';
 
       while prop <> nil do begin
         if prop.NodeName = 'solid' then begin
@@ -1674,6 +1695,7 @@ begin
         end;
         if prop.NodeName = 'ID' then begin
           ID := GetNodeAttrStr(prop, 'value', ID);
+          SolidKind := GetNodeAttrStr(prop, 'kind', SolidKind);
         end;
         if prop.NodeName = 'texture' then begin
           TextureName := GetNodeAttrStr(prop, 'name', TextureName);
@@ -1769,11 +1791,28 @@ begin
         if (GravityMode = 0) then begin
           dBodySetGravityMode(newSolid.Body, 0);
         end;
+
         if XMLSolid.NodeName = 'belt' then newSolid.kind := skMotorBelt;
         if XMLSolid.NodeName = 'propeller' then begin
           newSolid.kind := skPropeller;
           newSolid.Thrust := thrust;
         end;
+
+        if SolidKind = 'omni' then newSolid.kind := skOmniWheel;
+        if SolidKind = 'mecanumleft' then newSolid.kind := skMecanumWheel_L;
+        if SolidKind = 'mecanumright' then newSolid.kind := skMecanumWheel_R;
+
+        if newSolid.kind in [skOmniWheel, skMecanumWheel_L, skMecanumWheel_R] then begin
+          Surf.mu := 1;
+          Surf.mu2 := 0.001;
+        end;
+
+        // newTyre.ParSurface.mode := $FF;
+        // newTyre.ParSurface.mu := Pars.Mu;
+        // newTyre.ParSurface.mu2 := Pars.Mu2;
+        //newTyre.ParSurface.soft_cfm := Pars.soft_cfm;
+        //Mu := 1;
+        //Mu2:= 0.001;
 
         newSolid.MatterProperties := MatterProps;
 
@@ -2790,12 +2829,12 @@ begin
     end else if prop.NodeName = 'gear' + sufix then begin
       GearRatio := GetNodeAttrRealParse(prop, 'ratio', GearRatio, Parser);
       KGearBox  := GetNodeAttrRealParse(prop, 'ke', KGearBox, Parser);
-      BGearBox  := GetNodeAttrRealParse(prop, 'bv', BGearBox, Parser);
+      BGearBox  := GetNodeAttrRealParse(prop, 'be', BGearBox, Parser);
       KGearBox2 := GetNodeAttrRealParse(prop, 'ke2', KGearBox, Parser);
       BGearBox2 := GetNodeAttrRealParse(prop, 'kv2', BGearBox, Parser);
 
     end else if prop.NodeName = 'encoder' + sufix then begin
-      Encoder.PPR := GetNodeAttrInt(prop, 'ppr', Encoder.PPR);
+      Encoder.PPR := round(GetNodeAttrRealParse(prop, 'ppr', Encoder.PPR, Parser));
       Encoder.NoiseMean := GetNodeAttrRealParse(prop, 'mean', Encoder.NoiseMean, Parser);
       Encoder.NoiseStDev := GetNodeAttrRealParse(prop, 'stdev', Encoder.NoiseStDev, Parser);
 
@@ -4300,13 +4339,13 @@ begin
               end;
 
               cmPIDSpeed: begin
-                //ref.volts := CalcPID(Motor.Controller, ref.w, w);
-                ref.volts := CalcPID(Motor.Controller, ref.w, ref.w - filt_speed);
+                //ref.volts := CalcPID(Motor.Controller, ref.w, ref.w - filt_speed);
+                ref.volts := CalcPID(Motor.Controller, ref.w, ref.w - w);
               end;
 
               cmState: begin
-                //ref.volts := CalcPD(Motor.Controller, ref.theta, ref.w, theta, w);
-                ref.volts := CalcPD(Motor.Controller, ref.theta, ref.w, theta, filt_speed);
+                //ref.volts := CalcPD(Motor.Controller, ref.theta, ref.w, theta, filt_speed);
+                ref.volts := CalcPD(Motor.Controller, ref.theta, ref.w, theta, w);
               end;
             end;
           end;
@@ -4393,16 +4432,17 @@ begin
       tau :=  Motor.JRotor / WorldODE.Ode_dt;
       dtheta := diffangle(Motor.teta, Theta);
 
-      TB := Motor.BGearBox  * (Motor.w - filt_speed *  Motor.GearRatio);
+      //TB := Motor.BGearBox  * (Motor.w - filt_speed *  Motor.GearRatio);
+      TB := Motor.BGearBox  * (Motor.w / Motor.GearRatio - w);
       // TB limit: it avoids some crashes when BGearBox is to high
       if 0.2 * abs(Motor.JRotor / TB) < WorldODE.Ode_dt then begin
         if TB > 0 then TB := 0.2 * tau
         else TB := -0.2 * tau
       end;
 
-      TK := (Motor.KGearBox + Motor.KGearBox2 * sign(dtheta) * dtheta ) * dtheta;
+      TK := (Motor.KGearBox + sqrt(Motor.KGearBox) * abs(dtheta)) * dtheta;
 
-      Td := TK + TB;
+      Td := TK - TB;
 
       {if abs(Motor.JRotor / Td) < WorldODE.Ode_dt then begin
         if Td > 0 then Td := 0.5 *Motor.JRotor / WorldODE.Ode_dt
@@ -4411,13 +4451,14 @@ begin
   //  ebt := exp(-dt*Motor.Ri / Motor.Li);
   //  Motor.Im := ebt * Motor.Im + (1 - ebt) * (Motor.voltage - ev) / Motor.Ri;
 
-      Motor.w := Motor.w + (Motor.Im * Motor.Ki - Motor.BRotor * Motor.w - Td) * WorldODE.Ode_dt / Motor.JRotor;
+      Motor.w := Motor.w + (Motor.Im * Motor.Ki - Motor.BRotor * Motor.w - Td / Motor.GearRatio) * WorldODE.Ode_dt / Motor.JRotor;
       Motor.teta := Motor.teta  + Motor.w * WorldODE.Ode_dt / Motor.GearRatio;
 
-      T := Td * Motor.GearRatio - Friction.Bv * filt_speed - Spring.K * (Theta - Spring.ZeroPos);;
+      //T := Td * Motor.GearRatio - Friction.Bv * filt_speed - Spring.K * (Theta - Spring.ZeroPos);;
+      T := Td - Friction.Bv * w - Spring.K * (Theta - Spring.ZeroPos);;
     end else begin
       //T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Spring.K * diffangle(Theta, Spring.ZeroPos);
-      T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * filt_speed - Spring.K * (Theta - Spring.ZeroPos);
+      T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Spring.K * (Theta - Spring.ZeroPos);
       //T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Spring.K * (Theta - Spring.ZeroPos);
     end;
   end;

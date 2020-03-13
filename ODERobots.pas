@@ -25,7 +25,7 @@ const MaxDim = 8;
   skOmniWheel = 1;
   skMotorBelt = 2;}
 type
-  TSolidKind = (skDefault, skOmniWheel, skOmniSurface, skMotorBelt, skPropeller, skFloor, skWall);
+  TSolidKind = (skDefault, skOmniWheel, skOmniSurface, skMotorBelt, skPropeller, skFloor, skWall, skMecanumWheel_R, skMecanumWheel_L);
 
 type
   TControlMode = (cmPIDPosition, cmPIDSpeed, cmState);
