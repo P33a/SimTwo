@@ -225,7 +225,7 @@
     <Version Value="11"/>
     <PathDelim Value="\"/>
     <Target>
-      <Filename Value="SimTwo2019"/>
+      <Filename Value="SimTwo2020"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir);C:\lazarus\components\GLSceneLCL\Source\;C:\lazarus\components\Indy10\Lib\Core\;C:\lazarus\components\Indy10\Lib\System\;C:\lazarus\components\PascalScript\Source\"/>
