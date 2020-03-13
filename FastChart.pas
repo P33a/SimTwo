@@ -26,6 +26,7 @@ type
   TFChart = class(TForm)
     Chart: TChart;
     CBFreeze: TCheckBox;
+    CBZeroCross: TCheckBox;
     IniPropStorage: TIniPropStorage;
     Label1: TLabel;
     EditMaxPoints: TEdit;
@@ -41,6 +42,7 @@ type
     BChartRefresh: TButton;
     BSaveLog: TButton;
     BClear: TButton;
+    procedure CBZeroCrossChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure BSetClick(Sender: TObject);
     procedure CBFreezeClick(Sender: TObject);
@@ -129,6 +131,12 @@ begin
     UserCharts[i].Align := alClient;
   end;
   UserCharts[0].Parent := PanelChart;
+end;
+
+procedure TFChart.CBZeroCrossChange(Sender: TObject);
+begin
+  Chart.LeftAxis.Range.UseMax := CBZeroCross.Checked;
+  Chart.LeftAxis.Range.UseMin := CBZeroCross.Checked;
 end;
 
 procedure TFChart.AddSeriesValue(var Series: TLineSeries; X,Y: double);
@@ -240,7 +248,7 @@ begin
       sub_nonde.Data:=nil;
       //FillRobotLinksStateTreeView(num, i,sub_nonde,tree);
       FillTreeViewItem(r, i, 'Pos', @GetAxisPosDeg, sub_nonde, tree);
-      FillTreeViewItem(r, i, 'Speed', @GetAxisSpeedDeg, sub_nonde, tree);
+      FillTreeViewItem(r, i, 'Speed', @GetAxisSpeed, sub_nonde, tree);
       FillTreeViewItem(r, i, 'T', @GetAxisTorque, sub_nonde, tree);
 
       FillTreeViewItem(r, i, 'I', @GetAxisI, sub_nonde, tree);
@@ -386,8 +394,7 @@ procedure TFChart.RefreshChart(tree: TTreeView);
 var i{, cnt}: integer;
     cs: TLineSeries;
     df: TSeriesDef;
-//    node: TTreeNode;
-//    derivative: boolean;
+    rcs: TBasicChartSeries;
 begin
   SeriesNameList.Clear;
 
@@ -396,8 +403,9 @@ begin
     // clear chart series
     with Chart do begin
       While Series.Count>0 do begin
+        rcs := Series[0];
         RemoveSeries(Series[0]);
-        cs.Free;
+        rcs.Free;
       end;
     end;
 
