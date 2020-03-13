@@ -7,7 +7,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ExtCtrls, StdCtrls, ComCtrls, IniPropStorage,
-  GLGraphics, GLLCLViewer, math, IdGlobal;
+  GLGraphics, GLLCLViewer, math;
 
 type
 
@@ -69,7 +69,6 @@ var GLBmp32: TGLBitmap32;
     Stream: TMemoryStream;
     i, sz, MTU: integer;
     t_start, t_end: int64;
-    netbuf: TIdBytes;
 begin
   if Visible then begin
     with WorldODE do begin
