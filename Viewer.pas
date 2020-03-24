@@ -220,7 +220,6 @@ type
     Timer: TTimer;
     GLShadowVolume: TGLShadowVolume;
     GLPlaneFloor: TGLPlane;
-    GLMaterialLibrary: TGLMaterialLibrary;
     GLCylinder1: TGLCylinder;
     GLEarthSkyDome: TGLEarthSkyDome;
     GLXYZGrid: TGLXYZGrid;
@@ -678,7 +677,7 @@ begin
     CubeDepth := H;
     CubeHeight := W;
     CubeWidth := L;
-    Material.MaterialLibrary := FViewer.GLMaterialLibrary;
+    //Material.MaterialLibrary := FViewer.GLMaterialLibrary;
     //Material.FrontProperties.Diffuse.AsWinColor := clyellow;
   end;
   (OdeScene as TGLShadowVolume).Occluders.AddCaster(Solid.GLObj);
@@ -721,7 +720,7 @@ begin
     BottomRadius := c_radius;
     Height := c_length;
     //Material.FrontProperties.Diffuse.AsWinColor := clyellow;
-    Material.MaterialLibrary := FViewer.GLMaterialLibrary;
+    //Material.MaterialLibrary := FViewer.GLMaterialLibrary;
     //Material.LibMaterialName := 'LibMaterialBumps';
     //Material.LibMaterialName := 'LibMaterialFeup';
   end;
@@ -758,7 +757,7 @@ begin
     TagObject := Solid;
     Radius := c_radius;
     //Material.FrontProperties.Diffuse.AsWinColor := clyellow;
-    Material.MaterialLibrary := FViewer.GLMaterialLibrary;
+    //Material.MaterialLibrary := FViewer.GLMaterialLibrary;
     //Material.LibMaterialName := 'LibMaterialBumps';
     //Material.LibMaterialName := 'LibMaterialFeup';
     slices := 64;
@@ -928,7 +927,7 @@ begin
   dGeomSetCollideBits(Obstacle.Geom, $FFFFFFFE);
 
   CopyCubeSizeFromBox(TGLCube(Obstacle.GLObj), Obstacle.Geom);
-  TGLCube(Obstacle.GLObj).Material.MaterialLibrary := FViewer.GLMaterialLibrary;
+  //TGLCube(Obstacle.GLObj).Material.MaterialLibrary := FViewer.GLMaterialLibrary;
   PositionSceneObject(Obstacle.GLObj, Obstacle.Geom);
   (OdeScene as TGLShadowVolume).Occluders.AddCaster(Obstacle.GLObj);
 end;
@@ -950,7 +949,7 @@ begin
   TGLCylinder(Obstacle.GLObj).BottomRadius := radius;
   TGLCylinder(Obstacle.GLObj).Height := sizeZ;
   TGLCylinder(Obstacle.GLObj).slices := 64;
-  TGLCylinder(Obstacle.GLObj).Material.MaterialLibrary := FViewer.GLMaterialLibrary;
+  //TGLCylinder(Obstacle.GLObj).Material.MaterialLibrary := FViewer.GLMaterialLibrary;
   PositionSceneObject(Obstacle.GLObj, Obstacle.Geom);
   (OdeScene as TGLShadowVolume).Occluders.AddCaster(Obstacle.GLObj);
 end;
@@ -966,7 +965,7 @@ begin
   Obstacle.Geom.data := Obstacle;
 
   TGLSphere(Obstacle.GLObj).radius := radius;
-  TGLSphere(Obstacle.GLObj).Material.MaterialLibrary := FViewer.GLMaterialLibrary;
+  //TGLSphere(Obstacle.GLObj).Material.MaterialLibrary := FViewer.GLMaterialLibrary;
   TGLSphere(Obstacle.GLObj).slices := 64;
 
 
@@ -1359,7 +1358,7 @@ begin
     Surf.bounce := 0; Surf.bounce_vel := 0;
     hasCanvas := false;
     isLiquid := false;
-    CanvasWidth := 128; CanvasHeigth := 128;
+    CanvasWidth := 256; CanvasHeigth := 256;
     MotherSolidId := '';
   end;
 end;
@@ -1598,7 +1597,7 @@ begin
       Surf.bounce := 0; Surf.bounce_vel := 0;
       hasCanvas := false;
       isLiquid := false;
-      CanvasWidth := 128; CanvasHeigth := 128;
+      CanvasWidth := 256; CanvasHeigth := 256;
       MotherSolidId := '';
       thrust := 0.1;    // 0.01 ???
       SolidKind := 'generic';
@@ -1719,27 +1718,31 @@ begin
 
         if (XMLSolid.NodeName = 'cuboid') or (XMLSolid.NodeName = 'belt') or (XMLSolid.NodeName = 'propeller')then begin
           CreateSolidBox(newSolid, mass, posX, posY, posZ, sizeX, sizeY, sizeZ);
-          //if TextureName <> '' then begin
-          //  newSolid.SetTexture(TextureName, TextureScale); //'LibMaterialFeup'
-          //end;
+          if TextureName <> '' then begin
+            newSolid.SetTexture(TextureName, TextureScale); //'LibMaterialFeup'
+          end;
           if (XMLSolid.NodeName = 'cuboid') and HasCanvas then begin
             (newSolid.GLObj as TGLCube).Parts := (newSolid.GLObj as TGLCube).Parts - [cpfront];  // remove the side where the canvas will be placed
             newSolid.CanvasGLObj := TGLSceneObject(newSolid.GLObj.AddNewChild(TGLPlane));
-            with (newSolid.CanvasGLObj as TGLPlane) do begin
-             position.Z := sizeZ/2;
-             width := sizeX;
-             Height := sizeY;
-             Material.Texture.Disabled := false;
-             Material.Texture.TextureMode := tmModulate;
-            end;
+
             newSolid.PaintBitmap := TBitmap.Create;
             newSolid.PaintBitmap.Width := CanvasWidth;
             newSolid.PaintBitmap.Height := CanvasHeigth;
             newSolid.PaintBitmap.PixelFormat := pf24bit;
-            newSolid.PaintBitmap.Canvas.Brush.Color := clblack;
+            newSolid.PaintBitmap.Canvas.Brush.Color := clWhite;
             newSolid.PaintBitmap.Canvas.pen.Color := clblack;
-            //newSolid.PaintBitmap.Canvas.TextOut(0,0,'Hello World!');
+            newSolid.PaintBitmap.Canvas.FillRect(0, 0, CanvasWidth, CanvasHeigth);
+            newSolid.PaintBitmap.Canvas.TextOut(0,0,'Hello World!');
             //newSolid.PaintBitmap.Canvas.Ellipse(0,0,127,127);
+            with (newSolid.CanvasGLObj as TGLPlane) do begin
+             position.Z := sizeZ/2;
+             width := sizeX;
+             Height := sizeY;
+             //Material.Texture.Image.LoadFromFile('gy_logo.jpg');
+             Material.Texture.Image.Assign(newSolid.PaintBitmap);
+             Material.Texture.Disabled := false;
+             Material.Texture.TextureMode := tmModulate;
+            end;
 
             with newSolid do begin
               PaintBitmapCorner[0] := sizeX/2;
@@ -1770,9 +1773,9 @@ begin
           end else begin
             CreateSolidCylinder(newSolid, mass, posX, posY, posZ, sizeX, sizeZ);
           end;
-          //if TextureName <> '' then begin
-          //  newSolid.SetTexture(TextureName, TextureScale); //'LibMaterialFeup'
-          //end;
+          if TextureName <> '' then begin
+            newSolid.SetTexture(TextureName, TextureScale); //'LibMaterialFeup'
+          end;
         end;
         if (I11 > 0) and (I22 > 0) and (I33 > 0)  then begin
           dMass := newSolid.Body.mass;
@@ -1928,8 +1931,8 @@ begin
     JRotor := 0;
     BRotor := 1e-3;
 
-    KGearBox := 5e-1 / Motor.GearRatio;
-    BGearBox := 1e-1 / Motor.GearRatio;
+    KGearBox := 5e-1 / GearRatio;
+    BGearBox := 1e-1 / GearRatio;
 
     KGearBox2 := 0;
     BGearBox2 := 0;
@@ -3018,7 +3021,7 @@ begin
         newWheel := TWheel.Create;
         Robot.Wheels.Add(newWheel);
         CreateWheel(Robot, newWheel, Pars, Friction, Motor);
-        newWheel.Tyre.SetTexture('MatBumps', 4); //TODO
+        newWheel.Tyre.SetTexture('MatBumps.bmp', 4); //TODO
         if ID = 'W' then begin
           newWheel.Axle.ID := ID + inttostr(Robot.Wheels.Count);
         end else begin
@@ -4042,9 +4045,9 @@ begin
   //dWorldSetAngularDamping(world, 0.8);
   //dWorldSetLinearDamping(world, 0.8);
 
-  if FileExists('ground.jpg') then begin
-    FViewer.GLMaterialLibrary.AddTextureMaterial('Ground', 'ground.jpg');
-  end;
+  //if FileExists('ground.jpg') then begin
+  //  FViewer.GLMaterialLibrary.AddTextureMaterial('Ground', 'ground.jpg');
+  //end;
 
   LoadSceneFromXML('scene.xml');
 
@@ -4556,7 +4559,7 @@ begin
           if Shells[i].GLObj = nil then continue;
           PositionSceneObject(Shells[i].GLObj, Shells[i].Geom);
           if Shells[i].GLObj is TGLCylinder then Shells[i].GLObj.pitch(90);
-          //Shells[i].UpdateGLCanvas;
+          Shells[i].UpdateGLCanvas;
         end;
 
         // Solids
@@ -4581,7 +4584,7 @@ begin
           if Solids[i].ShadowGlObj <> nil then begin
             PositionSceneObject(Solids[i].ShadowGlObj, Solids[i].Geom);
           end;
-          //TODO:Crash Solids[i].UpdateGLCanvas;
+          Solids[i].UpdateGLCanvas;
 
           {if Solids[i].CanvasGLObj <> nil then begin
             //Solids[i].PaintBitmap.Canvas.TextOut(0,0,floattostr(WorldODE.physTime));
@@ -4753,12 +4756,6 @@ begin
                   Wheels[i].Axle.Axis[0].ref.w := Keyvals[i]*30; //TODO: angular speed constant
                 end;
               end;
-            {end else if Fparams.RGControlBlock.ItemIndex = 1 then begin  // Script controller
-              if r = 0 then FEditor.RunOnce; // One call to the script, in the begining, for all robots
-              if FEditor.SimTwoCloseRequested then begin
-                close;
-                exit;
-              end;}
             end else if Fparams.RGControlBlock.ItemIndex = 2 then begin  // LAN controller
               {TODO Fparams.UDPServer.SendBuffer(Fparams.EditRemoteIP.Text, 9801, RemState, sizeof(RemState));
               // Test if A new position was requested

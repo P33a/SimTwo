@@ -88,7 +88,6 @@ type
     BeltSpeed: double;
     ParSurface{, MaxParSurface} : TdSurfaceParameters;
     ID: string;
-    //description: string;
     BuoyantMass, Volume, Drag, StokesDrag, RollDrag: double;
     BuoyanceCenter: TdVector3;
     Thrust: double;
@@ -867,9 +866,11 @@ end;
 procedure TSolid.SetTexture(TextureName: string; TextureScale: double);
 var LM: TGLLibMaterial;
 begin
-  exit; //TODO
+  //exit; //TODO
   if GLObj = nil then exit;
   //LM := GLObj.Material.MaterialLibrary.Materials.GetLibMaterialByName(TextureName);
+  LM := nil;//GLObj.Material.MaterialLibrary. GetLibMaterialByName(TextureName);
+
   if LM <> nil then begin;
     GLObj.Material.LibMaterialName := TextureName;
     LM.TextureScale.x := TextureScale;
@@ -984,7 +985,8 @@ begin
   if assigned(CanvasGLObj) and assigned(PaintBitmap) then begin
     CanvasGLObj.Material.Texture.Image.BeginUpdate;
     img := CanvasGLObj.Material.Texture.Image.GetBitmap32();
-    img.AssignFromBitmap24WithoutRGBSwap(PaintBitmap);
+    //img.AssignFromBitmap24WithoutRGBSwap(PaintBitmap);
+    img.Assign(PaintBitmap);
     CanvasGLObj.Material.Texture.Image.endUpdate;
   end;
 end;
@@ -1694,8 +1696,10 @@ begin
             y := (HitSolid.PaintBitmapCorner[1] - relpos[1])/(2*HitSolid.PaintBitmapCorner[1]) * HitSolid.PaintBitmap.Height;
             d := 1;
             if assigned(GLObj) then begin // Get the color and size from the GLObject
-              HitSolid.PaintBitmap.Canvas.Brush.Color := swapRGB(GLObj.Material.FrontProperties.Diffuse.AsWinColor);
-              HitSolid.PaintBitmap.Canvas.pen.Color := swapRGB(GLObj.Material.FrontProperties.Diffuse.AsWinColor);
+              //HitSolid.PaintBitmap.Canvas.Brush.Color := swapRGB(GLObj.Material.FrontProperties.Diffuse.AsWinColor);
+              //HitSolid.PaintBitmap.Canvas.pen.Color := swapRGB(GLObj.Material.FrontProperties.Diffuse.AsWinColor);
+              HitSolid.PaintBitmap.Canvas.Brush.Color := GLObj.Material.FrontProperties.Diffuse.AsWinColor;
+              HitSolid.PaintBitmap.Canvas.pen.Color := GLObj.Material.FrontProperties.Diffuse.AsWinColor;
               if GLObj is TGLCylinder then
                 d :=  0.5 * TGLCylinder(GLObj).BottomRadius / HitSolid.PaintBitmapCorner[0] * HitSolid.PaintBitmap.Width;
             end;
