@@ -102,6 +102,8 @@ OmniXML/dpk/OmniXML_R2006.dpk
 *.bug/
 *.test/
 *.zip
+*.7z
+*.scene
 */Zorder.txt
 MobileRobot*
 MSL*

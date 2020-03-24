@@ -299,7 +299,7 @@ begin
   //A := GetGlobalSensorValues(3);
   if iLaser >= 0 then begin
     //LaserValues := GetSensorValues(0, iLaser);
-    LaserValues := LaserModel(0, iLaser, 0, 1, 0, 0.001523985, 1.3102842636);
+//    LaserValues := LaserModel(0, iLaser, 0, 1, 0, 0.001523985, 1.3102842636);
 
     //SendLaserMessage(LaserValues, '127.0.0.1');
   end;

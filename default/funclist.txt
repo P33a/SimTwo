@@ -118,6 +118,7 @@
  procedure StartSolidFire(R: LongInt; I: LongInt);
  function GetSceneConstant(constantName: string; defaultValue: Double): Double;
  procedure SetRobotPos(R: LongInt; x: Double; y: Double; z: Double; teta: Double);
+ function GetRobotIndex(ID: string): LongInt;
  function GetRobotPos2D(R: LongInt): TState2D;
  function GetRobotVel2D(R: LongInt): TState2D;
  function GetRobotCenterOfMass(R: LongInt): TPoint3D;
@@ -151,7 +152,10 @@
  procedure SetSolidColor(R: LongInt; I: LongInt; Red: Byte; Green: Byte; Blue: Byte);
  function GetSolidCanvas(R: LongInt; i: LongInt): TCanvas;
  procedure SolidCanvasClear(R: LongInt; i: LongInt);
+ procedure SetSolidSurfaceFriction(R: LongInt; i: LongInt; mu: Double; mu2: Double);
  procedure SetSolidForce(R: LongInt; i: LongInt; Fx: Double; Fy: Double; Fz: Double);
+ function GetSolidSize(R: LongInt; i: LongInt): TPoint3D;
+ procedure SetSolidSize(R: LongInt; i: LongInt; x: Double; y: Double; z: Double);
  function GetGlobalSensorIndex(ID: string): LongInt;
  function GetGlobalSensorVal(i: LongInt): Double;
  function GetGlobalSensorValues(i: LongInt): Matrix;
@@ -181,7 +185,6 @@
  procedure SetThingForceAtRelPos(T: LongInt; Fx: Double; Fy: Double; Fz: Double; Px: Double; Py: Double; Pz: Double);
  procedure SetThingRelForce(T: LongInt; Fx: Double; Fy: Double; Fz: Double);
  procedure SetThingRelForceAtRelPos(T: LongInt; Fx: Double; Fy: Double; Fz: Double; Px: Double; Py: Double; Pz: Double);
- procedure SetSolidSurfaceFriction(R: LongInt; i: LongInt; mu: Double; mu2: Double);
  procedure SetThingSurfaceMu(T: LongInt; mu: Double; mu2: Double);
  function GetThingSpeed(T: LongInt): TPoint3D;
  procedure SetThingSpeed(T: LongInt; vx: Double; vy: Double; vz: Double);
@@ -193,6 +196,12 @@
  function GetObstacleIndex(ID: string): LongInt;
  procedure SetObstacleColor(I: LongInt; Red: Byte; Green: Byte; Blue: Byte);
  function GetObstacleColor(I: LongInt): TRGBAColor;
+ function GetObstaclePos(T: LongInt): TPoint3D;
+ procedure SetObstaclePos(T: LongInt; x: Double; y: Double; z: Double);
+ function GetObstacleRotMat(T: LongInt): Matrix;
+ procedure SetObstacleRotationMat(T: LongInt; Rot: Matrix);
+ function AddOBstacleBox(ID: string; posx: Double; posY: Double; posZ: Double; sizeX: Double; sizeY: Double; sizeZ: Double; rgb24: LongInt): LongInt;
+ procedure ClearObstacles();
  function GetAxisOdo(R: LongInt; i: LongInt): LongInt;
  function GetAxisState(R: LongInt; i: LongInt): TAxisState;
  function GetAxisPos(R: LongInt; i: LongInt): Double;
@@ -216,11 +225,9 @@
  function GetMotorControllerPars(R: LongInt; i: LongInt): TMotorControllerPars;
  procedure SetMotorControllerMode(R: LongInt; i: LongInt; newMode: string);
  function GetMotorControllerMode(R: LongInt; i: LongInt): string;
- procedure SetMotorActive(R: LongInt; i: LongInt; nState: Boolean);
  procedure SetMotorControllerState(R: LongInt; i: LongInt; newState: Boolean);
  function GetMotorControllerState(R: LongInt; i: LongInt): Boolean;
- function GetSolidSize(R: LongInt; i: LongInt): TPoint3D;
- procedure SetSolidSize(R: LongInt; i: LongInt; x: Double; y: Double; z: Double);
+ procedure SetMotorActive(R: LongInt; i: LongInt; nState: Boolean);
  function IsMotorActive(R: LongInt; i: LongInt): Boolean;
  procedure SetFrictionDef(R: LongInt; i: LongInt; nBv: Double; nFc: Double; nCoulombLimit: Double);
  function GetFrictionDef(R: LongInt; i: LongInt): TFrictionDef;
@@ -309,12 +316,15 @@
  function RCButtonPressed(r: LongInt; c: LongInt): Boolean;
  function RangeToMatrix(r: LongInt; c: LongInt; rows: LongInt; cols: LongInt): Matrix;
  procedure MatrixToRange(r: LongInt; c: LongInt; M: Matrix);
+ procedure MatrixToRangeF(r: LongInt; c: LongInt; M: Matrix; FormatString: string);
  procedure ClearButtons();
  procedure RefreshSheets();
  procedure CloseSimTwo();
  function ScriptPeriod(): Double;
  function Now(): Double;
  function GetTickCount(): LongWord;
+ procedure SetRCBackColor(r: LongInt; c: LongInt; newColor: LongInt);
+ function RGBToColor(R: Byte; G: Byte; B: Byte): LongInt;
  procedure Test(B: Double);
  procedure ClearUDPBuffer(Buf: TUDPBuffer);
  procedure NetBufferSeek(Buf: TUDPBuffer; disp: LongInt);
