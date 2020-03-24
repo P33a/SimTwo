@@ -28,7 +28,7 @@ type
     CBComBaudrate: TComboBox;
     IniPropStorage: TIniPropStorage;
     Label65: TLabel;
-    TCPModBus_alt: TLTCPComponent;
+    TCPModBus: TLTCPComponent;
     UDPGeneric: TLUDPComponent;
     UDPServer_alt: TLUDPComponent;
     PageControl: TPageControl;
@@ -297,9 +297,9 @@ type
     procedure BEditScriptClick(Sender: TObject);
     procedure EditRemoteIPChange(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: boolean);
-    procedure TCPModBus_altConnect(aSocket: TLSocket);
-    procedure TCPModBus_altDisconnect(aSocket: TLSocket);
-    procedure TCPModBus_altError(const msg: string; aSocket: TLSocket);
+    procedure TCPModBusAccept(aSocket: TLSocket);
+    procedure TCPModBusDisconnect(aSocket: TLSocket);
+    procedure TCPModBusError(const msg: string; aSocket: TLSocket);
     procedure BTestClick(Sender: TObject);
     procedure SetComState(newState: boolean);
     procedure SerialComRxData(Sender: TObject);
@@ -345,15 +345,13 @@ type
     procedure ComboGroundTexturesClick(Sender: TObject);
     procedure BModBusConnectClick(Sender: TObject);
     procedure BModBusDisconnectClick(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure BModbusTestClick(Sender: TObject);
     procedure BModbusOffsetSetClick(Sender: TObject);
     procedure ModbusRefreshLEDs;
     procedure ShapeOutputMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure ShapeInputMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure TCPModBus_altReceive(aSocket: TLSocket);
+    procedure TCPModBusReceive(aSocket: TLSocket);
     procedure TimerTimer(Sender: TObject);
     procedure UDPGenericError(const msg: string; aSocket: TLSocket);
     procedure UDPGenericReceive(aSocket: TLSocket);
@@ -376,14 +374,14 @@ type
     UDPGenPackets: TStringList;
     SerialData: string;
 
-    ModbusData: TModbus;
+    ModbusData: TModbusData;
+    ModbusServer: TModbusServer;
     ModBusDisconnected, ModBusWantsToDisconnected: boolean;
     ModBusInLEDs, ModBusOutLEDs: array[0..7] of TShape;
     ModBusInLabels, ModBusOutLabels: array[0..7] of TLabel;
     ModBusInputsOffset, ModBusOutputsOffset: integer;
 
-
-    function ModBusClientsCount: integer;
+    procedure ModBusEvent(command: byte);
     procedure FillLBRobots(LB: TListBox);
     procedure FillLBLinks(LB: TListBox; r: integer);
     procedure ShowRobotState;
@@ -539,23 +537,25 @@ end;
 
 procedure TFParams.FormCloseQuery(Sender: TObject; var CanClose: boolean);
 begin
-  TCPModBus_alt.Disconnect(true);
+  TCPModBus.Disconnect(true);
 end;
 
-procedure TFParams.TCPModBus_altConnect(aSocket: TLSocket);
+procedure TFParams.TCPModBusAccept(aSocket: TLSocket);
 begin
   ShapeModBusState.Brush.Color := clGreen;
 end;
 
-procedure TFParams.TCPModBus_altDisconnect(aSocket: TLSocket);
+procedure TFParams.TCPModBusDisconnect(aSocket: TLSocket);
 begin
   ModBusDisconnected := true;
   ShapeModBusState.Brush.Color := clRed;
 end;
 
-procedure TFParams.TCPModBus_altError(const msg: string; aSocket: TLSocket);
+procedure TFParams.TCPModBusError(const msg: string; aSocket: TLSocket);
 begin
   MemoModBus.Lines.Add('Error:' + msg);
+  TCPModBus.Disconnect(true);
+  ShapeModBusState.Brush.Color := clRed;
 end;
 
 procedure TFParams.BTestClick(Sender: TObject);
@@ -724,7 +724,8 @@ var i: integer;
 begin
   IniPropStorage.IniFileName := GetIniFineName;
 
-  ModbusData := TModbus.Create;
+  ModbusData := TModbusData.Create;
+  ModbusServer := TModbusServer.Create(ModbusData, ModBusEvent);
 
   SGJoints.Cells[0,0] := 'ID';
   SGJoints.Cells[1,0] := 'Pos';
@@ -739,9 +740,9 @@ begin
   UDPGenData := TMemoryStream.Create;
   UDPGenPackets:= TStringList.Create;
 
-  for i := 0 to FViewer.GLMaterialLibrary.Materials.Count - 1 do begin
-    ComboGroundTextures.Items.Add(FViewer.GLMaterialLibrary.Materials.Items[i].Name);
-  end;
+  //for i := 0 to FViewer.GLMaterialLibrary.Materials.Count - 1 do begin
+  //  ComboGroundTextures.Items.Add(FViewer.GLMaterialLibrary.Materials.Items[i].Name);
+  //end;
 
   ListComPorts(CBComPort.Items);
 end;
@@ -845,6 +846,11 @@ begin
       inc(cnt);
     end;
   end;
+end;
+
+procedure TFParams.ModBusEvent(command: byte);
+begin
+  //MemoModBus.Lines.Add(IntToStr(command));
 end;
 
 
@@ -1174,7 +1180,8 @@ begin
   UDPGenPackets.Free;
   UDPGenData.Free;
   ModbusData.Free;
-  
+  ModbusServer.Free;
+
   try
      SaveGridTofile(SGConf, 'params.cfg');
   except
@@ -1471,37 +1478,14 @@ end;
 
 procedure TFParams.BModBusConnectClick(Sender: TObject);
 begin
-  if TCPModBus_alt.Connected then exit;
+  if TCPModBus.Connected then exit;
   ShapeModBusState.Brush.Color := clYellow;
-  TCPModBus_alt.Listen(StrToInt(EditModBusPort.Text));
+  TCPModBus.Listen(StrToInt(EditModBusPort.Text));
 end;
 
 procedure TFParams.BModBusDisconnectClick(Sender: TObject);
 begin
-  TCPModBus_alt.Disconnect(true);
-end;
-
-procedure TFParams.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-  //while not ModBusDisconnected do
-  //  Application.ProcessMessages;
-end;
-
-
-function TFParams.ModBusClientsCount: integer;
-begin
-  {TODO
-  with TCPModBus.Threads.LockList do try
-    result := Count;
-  finally
-    TCPModBus.Threads.UnlockList;
-  end;}
-end;
-
-
-procedure TFParams.BModbusTestClick(Sender: TObject);
-begin
-  MemoModBus.Lines.Add(inttostr(ModBusClientsCount));
+  TCPModBus.Disconnect(false);
 end;
 
 procedure TFParams.BModbusOffsetSetClick(Sender: TObject);
@@ -1527,11 +1511,12 @@ var i: integer;
 begin
   OnOffColors[true] := clred;
   OnOffColors[false] := $000030;
+
   for i := low(ModBusInLEDs) to high(ModBusInLEDs) do begin
-    ModBusInLEDs[i].Brush.Color := OnOffColors[ModbusData.Inputs[i + ModBusInputsOffset] <> 0];
+    ModBusInLEDs[i].Brush.Color := OnOffColors[ModbusData.getInput(i + ModBusInputsOffset)];
   end;
   for i := low(ModBusOutLEDs) to high(ModBusOutLEDs) do begin
-    ModBusOutLEDs[i].Brush.Color := OnOffColors[ModbusData.Coils[i + ModBusOutputsOffset] <> 0];
+    ModBusOutLEDs[i].Brush.Color := OnOffColors[ModbusData.getCoil(i + ModBusInputsOffset)];
   end;
 end;
 
@@ -1545,11 +1530,7 @@ begin
   LED := Sender as TShape;
   index := LED.Tag;
 
-  if ModbusData.Coils[index + ModBusOutputsOffset] <> 0 then begin
-    ModbusData.Coils[index + ModBusOutputsOffset] := 0;
-  end else begin
-    ModbusData.Coils[index + ModBusOutputsOffset] := 1;
-  end;
+  ModbusData.SetCoil(index + ModBusOutputsOffset, not ModbusData.getCoil(index + ModBusOutputsOffset));
 
   ModbusRefreshLEDs;
 end;
@@ -1564,92 +1545,82 @@ begin
   LED := Sender as TShape;
   index := LED.Tag;
 
-  if ModbusData.Inputs[index + ModBusInputsOffset] <> 0 then begin
-    ModbusData.Inputs[index + ModBusInputsOffset] := 0;
-  end else begin
-    ModbusData.Inputs[index + ModBusInputsOffset] := 1;
-  end;
+  ModbusData.SetInput(index + ModBusInputsOffset, not ModbusData.getInput(index + ModBusInputsOffset));
 
   ModbusRefreshLEDs;
 end;
 
-procedure TFParams.TCPModBus_altReceive(aSocket: TLSocket);
-var msg, s: string;
+procedure TFParams.TCPModBusReceive(aSocket: TLSocket);
+var msg, s: String;
     i: integer;
 begin
-  //AThread.Connection.CheckForDisconnect(false, true);
-  try
-  //TODO msg := AThread.Connection.CurrentReadBuffer;
-  except on E: Exception do
-    MemoModBus.Lines.Add('Exception(in):' + E.Message);
-  end;
+  TCPModBus.GetMessage(msg);
   if msg ='' then exit;
 
   ProgressBarModBus.Position := ProgressBarModBus.Position + 1;
   if ProgressBarModBus.Position >= ProgressBarModBus.Max then
     ProgressBarModBus.Position := 0;
 
-  ModBusData.ProcessModBusMessage(msg);
+  ModBusServer.MessageStateMachine(msg);
 
-  if ModBusData.response <> '' then begin
-    //TODO AThread.Connection.Write(ModBusData.response);
-    ModBusData.response := '';
-    //ModbusRefreshLEDs;
+  if ModBusServer.response <> '' then begin
+    TCPModBus.SendMessage(ModBusServer.response);
+    ModBusServer.response := '';
+    ModbusRefreshLEDs();
   end;
-  if ModBusData.Header.FunctionCode = 15 then
-    ModbusRefreshLEDs;
+  if ModBusServer.Frame.FunctionCode = $0F then begin
+      ModbusRefreshLEDs();
+  end;
 
-  exit;
-
-  s := '';
-  for i := 1 to length(ModBusData.response) do begin
-    s := s + IntToHex(ord(ModBusData.response[i]), 2) + ' ';
+  {s := '';
+  for i := 1 to length(ModBusServer.response) do begin
+    s := s + IntToHex(ord(ModBusServer.response[i]), 2) + ' ';
   end;
   MemoModBus.Lines.Add('MSG:' + s);
   //MemoModBus.Lines.Add(format('Header: Len = %d Code = %d',[ModBusData.Header.LengthField, ModBusData.Header.FunctionCode]));
-  ModBusData.response := '';
+  ModBusServer.response := '';}
 end;
 
 function getModbusCoil(bit_addr: integer): boolean;
 begin
   with FParams do begin
-    if (bit_addr < low(ModbusData.Inputs)) or (bit_addr > high(ModbusData.Inputs)) then
+    if (bit_addr div 8 < low(ModbusData.Inputs)) or (bit_addr div 8 > high(ModbusData.Inputs)) then
       raise Exception.Create(format('Invalid ModBus Bit address: %d',[bit_addr]));
-    result := ModbusData.Coils[bit_addr] <> 0;
+    result := ModbusData.getCoil(bit_addr);
   end;
 end;
 
 function getModbusInput(bit_addr: integer): boolean;
 begin
   with FParams do begin
-    if (bit_addr < low(ModbusData.Inputs)) or (bit_addr > high(ModbusData.Inputs)) then
+    if (bit_addr div 8 < low(ModbusData.Inputs)) or (bit_addr div 8 > high(ModbusData.Inputs)) then
       raise Exception.Create(format('Invalid ModBus Bit address: %d',[bit_addr]));
-    result := ModbusData.Inputs[bit_addr] <> 0;
+    result := ModbusData.getInput(bit_addr);
   end;
 end;
 
 procedure setModbusCoil(bit_addr: integer; new_state: boolean);
 begin
   with FParams do begin
-    if (bit_addr < low(ModbusData.Coils)) or (bit_addr > high(ModbusData.Coils)) then
+    if (bit_addr div 8 < low(ModbusData.Coils)) or (bit_addr div 8 > high(ModbusData.Coils)) then
       raise Exception.Create(format('Invalid ModBus Bit address: %d',[bit_addr]));
-    ModbusData.Coils[bit_addr] := ord(new_state);
+    ModbusData.setCoil(bit_addr, new_state);
   end;
 end;
 
 procedure setModbusInput(bit_addr: integer; new_state: boolean);
 begin
   with FParams do begin
-    if (bit_addr < low(ModbusData.Inputs)) or (bit_addr > high(ModbusData.Inputs)) then
+    if (bit_addr div 8 < low(ModbusData.Inputs)) or (bit_addr div 8 > high(ModbusData.Inputs)) then
       raise Exception.Create(format('Invalid ModBus Bit address: %d',[bit_addr]));
-    ModbusData.Inputs[bit_addr] := ord(new_state);
+    ModbusData.setInput(bit_addr, new_state);
   end;
 end;
 
 {
 procedure TFParams.TCPModBusDisconnectAndWait;
 begin
-  if TCPModBus_alt.Connected then begin
+  if TCPModBus.Connected then begin
     with TShutdownThread.Create(False) do begin
       try
         WaitFor; // internally processes sync requests...
@@ -1673,10 +1644,10 @@ procedure TFParams.TimerTimer(Sender: TObject);
 begin
   {if ModBusWantsToDisconnected then begin
     try
-      TCPModBus_alt.Disconnect();
+      TCPModBus.Disconnect();
     except
     end;
-    ModBusWantsToDisconnected := TCPModBus_alt.Connected;
+    ModBusWantsToDisconnected := TCPModBus.Connected;
   end;
   }
 end;

@@ -1,7 +1,7 @@
 object FParams: TFParams
-  Left = 1188
+  Left = 1253
   Height = 679
-  Top = 150
+  Top = 159
   Width = 281
   Caption = 'Config'
   ClientHeight = 679
@@ -10,7 +10,6 @@ object FParams: TFParams
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'Tahoma'
-  OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -23,9 +22,9 @@ object FParams: TFParams
     Height = 621
     Top = 0
     Width = 273
-    ActivePage = TabIO
+    ActivePage = TabControl
     Anchors = [akTop, akLeft, akBottom]
-    TabIndex = 4
+    TabIndex = 0
     TabOrder = 0
     object TabControl: TTabSheet
       Caption = 'Control'
@@ -167,9 +166,9 @@ object FParams: TFParams
         Height = 425
         Top = 168
         Width = 261
-        ActivePage = TabAxis
+        ActivePage = TabGlobal
         Anchors = [akTop, akLeft, akBottom]
-        TabIndex = 2
+        TabIndex = 0
         TabOrder = 4
         object TabGlobal: TTabSheet
           Caption = 'Global'
@@ -206,7 +205,7 @@ object FParams: TFParams
             Left = 0
             Height = 313
             Top = 56
-            Width = 157
+            Width = 253
             Anchors = [akTop, akLeft, akBottom]
             ColCount = 3
             DefaultColWidth = 61
@@ -219,9 +218,9 @@ object FParams: TFParams
             TitleFont.Height = -11
             TitleFont.Name = 'Tahoma'
             ColWidths = (
-              53
-              31
-              49
+              77
+              32
+              121
             )
           end
         end
@@ -2309,7 +2308,6 @@ object FParams: TFParams
         Top = 568
         Width = 75
         Caption = 'Modbus Test'
-        OnClick = BModbusTestClick
         TabOrder = 7
       end
       object EditModBusInputOffset: TEdit
@@ -2360,7 +2358,6 @@ object FParams: TFParams
         Height = 13
         Top = 260
         Width = 69
-        Max = 10
         Smooth = True
         TabOrder = 13
       end
@@ -2444,12 +2441,12 @@ object FParams: TFParams
     left = 116
     top = 576
   end
-  object TCPModBus_alt: TLTCPComponent
-    Port = 0
-    OnReceive = TCPModBus_altReceive
-    OnError = TCPModBus_altError
-    OnDisconnect = TCPModBus_altDisconnect
-    OnConnect = TCPModBus_altConnect
+  object TCPModBus: TLTCPComponent
+    Port = 5502
+    OnReceive = TCPModBusReceive
+    OnError = TCPModBusError
+    OnDisconnect = TCPModBusDisconnect
+    OnAccept = TCPModBusAccept
     Timeout = 0
     ReuseAddress = False
     left = 136
