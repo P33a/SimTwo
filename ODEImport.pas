@@ -163,7 +163,7 @@ uses
   Classes;
 
 const
-  {$IFDEF WIN32}
+  {$IFDEF WINDOWS}
   ODEDLL = 'ode.dll';
   {$ENDIF}
   {$IFDEF UNIX}

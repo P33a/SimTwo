@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="10"/>
+    <Version Value="11"/>
     <PathDelim Value="\"/>
     <General>
       <Flags>
@@ -31,7 +31,7 @@
       <MajorVersionNr Value="2019"/>
       <MinorVersionNr Value="4"/>
       <RevisionNr Value="23"/>
-      <BuildNr Value="15"/>
+      <BuildNr Value="16"/>
       <Attributes pvaSpecialBuild="True"/>
       <StringTable ProductVersion="2019"/>
     </VersionInfo>
@@ -42,9 +42,10 @@
       <Version Value="2"/>
     </PublishOptions>
     <RunParams>
-      <local>
-        <FormatVersion Value="1"/>
-      </local>
+      <FormatVersion Value="2"/>
+      <Modes Count="1">
+        <Mode0 Name="default"/>
+      </Modes>
     </RunParams>
     <RequiredPackages Count="10">
       <Item1>
@@ -228,9 +229,9 @@
       <Filename Value="SimTwo2020"/>
     </Target>
     <SearchPaths>
-      <IncludeFiles Value="$(ProjOutDir);C:\lazarus\components\GLSceneLCL\Source\;C:\lazarus\components\Indy10\Lib\Core\;C:\lazarus\components\Indy10\Lib\System\;C:\lazarus\components\PascalScript\Source\"/>
+      <IncludeFiles Value="$(ProjOutDir);C:\lazarus\components\PascalScript\Source\;C:\lazarus\fpc\3.2.0\source\packages\winunits-jedi\src\;..\..\SimTwo\jm_extra_packages\glscene_newer_version\glscene-code-r7163-branches-GLSceneLCL\Packages\lib\i386-win32"/>
       <Libraries Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="C:\lazarus\components\GLSceneLCL\Source\;C:\lazarus\components\Indy10\Lib\Core\;C:\lazarus\components\Indy10\Lib\System\;C:\lazarus\components\PascalScript\Source\;OmniXML;C:\lazarus\fpc\3.0.4\source\packages\winunits-jedi\src\"/>
+      <OtherUnitFiles Value="C:\lazarus\components\PascalScript\Source\;OmniXML;C:\lazarus\fpc\3.2.0\source\packages\winunits-jedi\src\;..\..\SimTwo\jm_extra_packages\glscene_newer_version\glscene-code-r7163-branches-GLSceneLCL\Packages\lib\i386-win32"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Parsing>
@@ -247,11 +248,6 @@
       <Debugging>
         <UseExternalDbgSyms Value="True"/>
       </Debugging>
-      <Options>
-        <Win32>
-          <GraphicApplication Value="True"/>
-        </Win32>
-      </Options>
     </Linking>
   </CompilerOptions>
   <Debugging>

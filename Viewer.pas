@@ -8,7 +8,7 @@ uses
   Windows, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, GLScene, GLObjects, {GLMisc,} GLCadencer, ODEImport,
   GLShadowPlane, GLVectorGeometry, GLGeomObjects, ExtCtrls, ComCtrls,
-  GLWindowsFont, keyboard, GLTexture, math, GLSpaceText, Remote,
+  GLWindowsFont, keyboard, GLTexture, math, Remote, //GLSpaceText,
   GLShadowVolume, GLSkydome, GLGraph, OmniXML, OmniXMLUtils,  ODERobots,
   ProjConfig, GLHUDObjects, Menus, IniPropStorage, GLVectorFileObjects,
   GLFireFX, GlGraphics, OpenGL1x, SimpleParser, GLBitmapFont,
