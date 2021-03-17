@@ -14,12 +14,12 @@
   </columns>
   <cells>
     <cell r="2" c="2" text="Pos (deg)" />
-    <cell r="3" c="2" text="-0.014" />
-    <cell r="4" c="2" text="0.00197" />
-    <cell r="5" c="2" text="0.000464" />
-    <cell r="6" c="2" text="-0.00349" />
-    <cell r="7" c="2" text="-0.00605" />
-    <cell r="8" c="2" text="0.00325" />
+    <cell r="3" c="2" text="0.0104" />
+    <cell r="4" c="2" text="-0.000441" />
+    <cell r="5" c="2" text="0.00115" />
+    <cell r="6" c="2" text="-0.00361" />
+    <cell r="7" c="2" text="0.00869" />
+    <cell r="8" c="2" text="0.00385" />
     <cell r="2" c="1" text="Joint" />
     <cell r="4" c="1" text="1" />
     <cell r="3" c="1" text="0" />
@@ -27,17 +27,17 @@
     <cell r="6" c="1" text="3" />
     <cell r="7" c="1" text="4" />
     <cell r="8" c="1" text="5" />
-    <cell r="13" c="2" text="0.54994" />
+    <cell r="13" c="2" text="0.5499732" />
     <cell r="11" c="1" text="X:" />
     <cell r="12" c="1" text="Y:" />
     <cell r="13" c="1" text="Z:" />
-    <cell r="11" c="2" text="0.7700274" />
-    <cell r="12" c="2" text="-0.0001652233" />
+    <cell r="11" c="2" text="0.770029" />
+    <cell r="12" c="2" text="0.0001500499" />
     <cell r="10" c="2" text="B5" />
     <cell r="15" c="2" text="B6" />
-    <cell r="16" c="2" text="0.8050277" />
-    <cell r="17" c="2" text="-0.0001727075" />
-    <cell r="18" c="2" text="0.5499279" />
+    <cell r="16" c="2" text="0.80503" />
+    <cell r="17" c="2" text="0.0001569444" />
+    <cell r="18" c="2" text="0.5499625" />
     <cell r="16" c="4" text="1.000" />
     <cell r="16" c="5" text="0.000" />
     <cell r="16" c="6" text="0.000" />
@@ -48,17 +48,27 @@
     <cell r="18" c="5" text="0.000" />
     <cell r="18" c="6" text="1.000" />
     <cell r="21" c="2" text="30" />
-    <cell r="24" c="1" text="LT:" />
+    <cell r="24" c="1" text="LTool:" />
     <cell r="24" c="2" text="0.035" />
     <cell r="25" c="2" text="0" />
     <cell r="26" c="2" text="0" />
-    <cell r="28" c="1" text="XT:" />
+    <cell r="28" c="1" text="PosT:" />
     <cell r="28" c="2" text="0.4" />
     <cell r="29" c="2" text="0.6" />
     <cell r="30" c="2" text="0.5" />
     <cell r="15" c="4" text="B6 Rot" />
     <cell r="2" c="4" text="[Place]" />
-    <cell r="3" c="4" text="-0.00002" />
+    <cell r="3" c="4" text="-0.0003" />
     <cell r="3" c="7" text="idle" />
+    <cell r="27" c="4" text="RotT" />
+    <cell r="28" c="4" text="1" />
+    <cell r="29" c="4" text="0" />
+    <cell r="28" c="5" text="0" />
+    <cell r="28" c="6" text="0" />
+    <cell r="29" c="6" text="0" />
+    <cell r="30" c="5" text="0" />
+    <cell r="30" c="4" text="0" />
+    <cell r="29" c="5" text="1" />
+    <cell r="30" c="6" text="1" />
   </cells>
 </sheet>
