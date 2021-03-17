@@ -14,5 +14,7 @@
     <cell r="1" c="1" text="-1.000000000000" />
     <cell r="7" c="2" text="[Test]" />
     <cell r="7" c="3" text="1" />
+    <cell r="9" c="1" text="IRsensor" />
+    <cell r="9" c="2" text="-1.00" />
   </cells>
 </sheet>

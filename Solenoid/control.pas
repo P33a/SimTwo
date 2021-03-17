@@ -4,8 +4,14 @@ var is1, iball: integer;
 // this procedure is called periodicaly (default: 40 ms)
 procedure Control;
 var t: double;
+    ir: double;
 begin
-  if RCButtonPressed(3, 2)  then begin
+  ir := GetSensorVal(0, 0);
+  SetRCValue(9, 2, format('%f', [ir]));
+
+  SetBeltSpeed(0, 0, 0.1);
+
+  if RCButtonPressed(3, 2) then begin
     SetGlobalSensorVin(is1, 1);
   end else if RCButtonPressed(3, 3) then begin
     SetGlobalSensorVin(is1, 0);
