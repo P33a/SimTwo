@@ -886,12 +886,12 @@ end;
 
 function RowFromPack(v: TObject): integer;
 begin
-  result := (integer(v) shr 16) and $FFFF;
+  result := (PtrUInt(v) shr 16) and $FFFF;
 end;
 
 function ColFromPack(v: TObject): integer;
 begin
-  result := integer(v) and $FFFF;
+  result := PtrUInt(v) and $FFFF;
 end;
 
 function TSheetCell.CalcSourceLevel: integer;
