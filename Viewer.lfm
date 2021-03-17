@@ -1,7 +1,7 @@
 object FViewer: TFViewer
-  Left = 370
+  Left = 392
   Height = 524
-  Top = 170
+  Top = 132
   Width = 757
   Caption = 'SimTwo View'
   ClientHeight = 524
@@ -1149,10 +1149,13 @@ object FViewer: TFViewer
       Material.FrontProperties.Specular.Green = 0
       Material.FrontProperties.Specular.Blue = 0
       Material.FrontProperties.Specular.Alpha = 1
-      Material.Texture.EnvColor.Red = 0
+      Material.Texture.EnvColor.Red = 200
       Material.Texture.EnvColor.Green = 0
       Material.Texture.EnvColor.Blue = 0
-      Material.Texture.EnvColor.Alpha = 0
+      Material.Texture.EnvColor.Alpha = 200
+      Material.Texture.EnvColor.Color = {
+        00004843000000000000000000004843
+      }
       Material.Texture.BorderColor.Red = 0
       Material.Texture.BorderColor.Green = 0
       Material.Texture.BorderColor.Blue = 0
@@ -1813,7 +1816,6 @@ object FViewer: TFViewer
     MaxDeltaTime = 0
     MinDeltaTime = 0
     FixedDeltaTime = 0.0166666666666667
-    Mode = cmApplicationIdle
     SleepLength = 1
     OnProgress = GLCadencerProgress
     left = 196
@@ -1924,7 +1926,7 @@ object FViewer: TFViewer
     top = 164
   end
   object TimerCadencer: TTimer
-    Interval = 10
+    Interval = 5
     OnTimer = TimerCadencerTimer
     left = 76
     top = 132
@@ -1939,10 +1941,22 @@ object FViewer: TFViewer
     Font.CharSet = ANSI_CHARSET
     Font.Color = clWhite
     Font.Height = -27
-    Font.Name = 'Liberation Sans'
-    Font.Pitch = fpVariable
+    Font.Name = 'Liberation Mono'
+    Font.Pitch = fpFixed
     Font.Quality = fqDraft
     left = 308
     top = 36
+  end
+  object GLBitmapFont: TGLBitmapFont
+    GlyphsIntervalX = 0
+    GlyphsIntervalY = 0
+    Ranges = <    
+      item
+        StartASCII = #0
+        StopASCII = #0
+        StartGlyphIdx = 0
+      end>
+    left = 295
+    top = 124
   end
 end
