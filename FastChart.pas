@@ -419,7 +419,7 @@ begin
         cs.SeriesColor:=RandColor(i);
         cs.Title := GetNodePathText(tree, tree.Items[i]);
         df := TSeriesDef(tree.Items[i].Data);
-        cs.Tag := integer(df);
+        cs.Tag := PtrUInt(df);
 
         Chart.AddSeries(cs);
         SeriesNameList.Add(cs.Title);
