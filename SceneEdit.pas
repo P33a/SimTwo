@@ -344,15 +344,13 @@ begin
 end;
 
 procedure TFSceneEdit.MenuSaveClick(Sender: TObject);
-var i: integer;
-    TmpSynEdit: TSynEdit;
+var TmpSynEdit: TSynEdit;
+    TheTab: TTabSheet;
 begin
-  i := PageControlXML.TabIndex;
-  if (WorldODE.XMLFiles.Objects[i] is TSynEdit) then begin
-    TmpSynEdit := TSynEdit(WorldODE.XMLFiles.Objects[i]);
-  end else exit;
-
-  TmpSynEdit.Lines.SaveToFile(WorldODE.XMLFiles[i]);
+  TheTab := PageControlXML.ActivePage;
+  if not assigned(TheTab) then exit;
+  TmpSynEdit := TSynEdit(TheTab.Tag);
+  TmpSynEdit.Lines.SaveToFile(TheTab.Caption);
   TmpSynEdit.Modified := false;
 end;
 
@@ -360,7 +358,7 @@ procedure TFSceneEdit.MenuSaveAsClick(Sender: TObject);
 var i: integer;
     TmpSynEdit: TSynEdit;
 begin
-  i := PageControlXML.TabIndex;
+  i := PageControlXML.TabIndex - 1;
   if (WorldODE.XMLFiles.Objects[i] is TSynEdit) then begin
     TmpSynEdit := TSynEdit(WorldODE.XMLFiles.Objects[i]);
   end else exit;
