@@ -11,7 +11,8 @@ uses
   uPSComponent, uPSUtils, uPSRuntime, SynCompletion, uPSComponent_Default,
   uPSComponent_StdCtrls, uPSComponent_Controls, uPSComponent_Forms, ProjConfig,
   SynEditMiscClasses, PrintersDlgs, uPSCompiler, Clipbrd, lNetComponents,
-  IniPropStorage, Rlan, SynEditMarks, process, LCLIntf, Types, LCLType, lnet;
+  IniPropStorage, Rlan, SynEditMarks, process, LCLIntf, Types, LCLType, lnet,
+  GLGraphics;
 
 
 type
@@ -201,7 +202,7 @@ implementation
 
 //uses Viewer, ProjManage, Params, FastChart, uPSDebugger;
 uses uPSDebugger, Sheets, Viewer, Utils, Params, uPSI_ODERobotsPublished, uPSI_PathFinder, uPSI_dynmatrix,
-     uPSI_user_charts;
+     uPSI_user_charts, cameras;
 
 {$R *.lfm}
 
@@ -770,7 +771,7 @@ begin
   //Funclist.Sort;
 
   for i := 0 to Funclist.Count -1 do begin
-    if integer(Funclist.Objects[i]) = 1 then begin
+    if PtrUInt(Funclist.Objects[i]) = 1 then begin
       Funclist.Strings[i] := ' procedure ' + Funclist.Strings[i];
     end else begin
       Funclist.Strings[i] := ' function ' + Funclist.Strings[i];
@@ -868,7 +869,7 @@ begin
   TypeList.Sort;
 
 {  for i := 0 to Funclist.Count -1 do begin
-    if integer(Funclist.Objects[i]) = 1 then begin
+    if ptruint(Funclist.Objects[i]) = 1 then begin
       Funclist.Strings[i] := ' procedure ' + Funclist.Strings[i];
     end else begin
       Funclist.Strings[i] := ' function ' + Funclist.Strings[i];
@@ -1027,9 +1028,14 @@ begin
   Sender.AddFunction(@setModbusCoil, 'procedure setModbusCoil(bit_addr: integer; new_state: boolean);');
   Sender.AddFunction(@setModbusInput, 'procedure setModbusInput(bit_addr: integer; new_state: boolean);');
 
+
+  Sender.comp.AddTypeS('TGLPixel32', 'record r, g, b, a: byte; end;').ExportName := true;
+  Sender.AddFunction(@GetCameraPixel, 'function GetCameraPixel(X, Y: integer): TRGBAColor;');
+
   Sender.AddRegisteredPTRVariable('Time', 'Double');
   Sender.AddRegisteredPTRVariable('UDPDataRead', 'TMemoryStream');
   Sender.AddRegisteredPTRVariable('HUDStrings', 'TStringList');
+  Sender.AddRegisteredPTRVariable('CamBitmap', 'TBitmap');
 
   Sender.AddRegisteredPTRVariable('RandSeed', 'LongInt');
 
@@ -1098,6 +1104,7 @@ begin
   PSScript.SetPointerToData('UDPDataRead', @(FParams.UDPGenData), PSScript.FindNamedType('TMemoryStream'));
   PSScript.SetPointerToData('HUDStrings', @(FViewer.HUDStrings), PSScript.FindNamedType('TStringList'));
   PSScript.SetPointerToData('RandSeed', @RandSeed, PSScript.FindBaseType(btS32));
+  PSScript.SetPointerToData('CamBitmap', @(FCameras.Bmp32), PSScript.FindNamedType('TBitmap'));
 
 //  PSScript.SetPointerToData('ScannerAngle', @(RemState.Robot.ScannerAngle), PSScript.FindBaseType(btDouble));
 
