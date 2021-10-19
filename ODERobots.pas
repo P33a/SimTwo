@@ -12,7 +12,7 @@ uses
 
 const
   //ODE world constants
-  MAX_CONTACTS = 7;
+  MAX_CONTACTS = 3;
 
   MaxJointSamples = 256;
   MaxKeyVals = 8;
@@ -87,7 +87,7 @@ type
     MatterProperties: TMatterProperties;
     BeltSpeed: double;
     ParSurface{, MaxParSurface} : TdSurfaceParameters;
-    ID: string;
+    ID, Tag: string;
     BuoyantMass, Volume, Drag, StokesDrag, RollDrag: double;
     BuoyanceCenter: TdVector3;
     Thrust: double;
@@ -108,6 +108,8 @@ type
     procedure GetColor(out R, G, B, A: integer);
     procedure SetColorRGB(RGB: TColor);
     procedure SetTexture(TextureName: string; TextureScale: double);
+    procedure SetTag(newTag: string);
+    function GetTag: string;
     function GetPosition: TdVector3;
     function GetRotation: TdMatrix3;
     function GetLinSpeed: TdVector3;
@@ -190,8 +192,8 @@ type
     TrajectPoints, WayPoints: TAxisTrajList;
     Odo: TOdoState;
     ref: TAxisInputs;
-    torque: double;
-    speed_lambda, filt_speed: double;
+    TotalTorque: double;
+    cur_pos, last_pos, filt_speed: double;
     canWrap: boolean;
   private
   public
@@ -202,7 +204,7 @@ type
     procedure GetDir(var result: TdVector3);
     procedure SetDir(const nDir: TdVector3);
     function GetPos: double;
-    function GetSpeed: double;
+    function GetSpeed(dt: double): double;
     procedure AddTorque(Tq: Double);
     procedure GLCreateCylinder(Parent: TGLBaseSceneObject; aRadius, aHeight: double);
     procedure GLCreateBall(Parent: TGLBaseSceneObject; aRadius: double);
@@ -459,7 +461,7 @@ procedure RFromZYXRotRelRay(var R: TdMatrix3; angX, angY, angZ: TDreal);
 
 implementation
 
-uses Utils;
+uses Utils, Viewer;
 
 
 procedure RFromZYXRotRel(var R: TdMatrix3; angX, angY, angZ: TDreal);
@@ -835,6 +837,19 @@ begin
   GLObj.Material.FrontProperties.Diffuse.AsWinColor := RGB;
 end;
 
+
+procedure TSolid.SetTag(newTag: string);
+begin
+  Tag := newTag;
+end;
+
+
+function TSolid.GetTag: string;
+begin
+  result := Tag;
+end;
+
+
 procedure TSolid.GetColor(out R, G, B, A: integer);
 begin
   if GLObj = nil then exit;
@@ -1043,7 +1058,7 @@ constructor TAxis.Create;
 begin
   TrajectPoints := TAxisTrajList.Create;
   WayPoints := TAxisTrajList.Create;
-  speed_lambda := 0.95;
+  //speed_lambda := 0.95;
   canWrap := true;
 end;
 
@@ -1159,7 +1174,7 @@ begin
   //TODO more Joint types
 end;
 
-function TAxis.GetSpeed: double;
+function TAxis.GetSpeed(dt: double): double;
 begin
   result := 0;
   if dJointGetType(ParentLink.joint) = ord(dJointTypeHinge) then begin
@@ -1174,13 +1189,18 @@ begin
     result := dJointGetSliderPositionRate(ParentLink.joint);
   end;
   //lambda := 0.9;
-  filt_speed := (1 - speed_lambda)* result + speed_lambda * filt_speed;
+  //filt_speed := (1 - speed_lambda)* result + speed_lambda * filt_speed;
+  last_pos := cur_pos;
+  cur_pos := GetPos();
+  filt_speed := DiffAngle(cur_pos, last_pos) / dt;
+  result := filt_speed;
+  //filt_speed := result;
   //TODO more Joint types
 end;
 
 procedure TAxis.AddTorque(Tq: Double);
 begin
-  torque := Tq;
+  TotalTorque := TotalTorque + Tq;
   if dJointGetType(ParentLink.joint) = ord(dJointTypeHinge) then begin
     dJointAddHingeTorque(ParentLink.joint, Tq);
   end else if dJointGetType(ParentLink.joint) = ord(dJointTypeUniversal) then begin
@@ -1594,7 +1614,10 @@ procedure TSensor.UpdateMeasures;
 var relpos, worldPos: TdVector3;
     x, y, d: double;
     i, n: integer;
+    tmpBody: PdxBody;
+    tmpVect: PdVector3;
 begin
+
   case kind of
 
     skIRSharp: begin
@@ -1690,20 +1713,44 @@ begin
            (HitSolid <> nil) and
            (assigned(HitSolid.CanvasGLObj)) then begin
           worldPos := Rays[0].Measure.pos;
-          dBodyGetPosRelPoint(HitSolid.Body, worldPos[0], worldPos[1], worldPos[2], relpos);
+          if not assigned(HitSolid.Body) then begin
+            tmpBody := dBodyCreate(WorldODE.world);
+            dBodySetRotation(tmpBody, dGeomGetRotation(HitSolid.Geom)^);
+            tmpVect := dGeomGetPosition(HitSolid.Geom);
+            dBodySetPosition(tmpBody, tmpVect^[0], tmpVect^[1], tmpVect^[2]);
+          end else begin
+            tmpBody := HitSolid.Body;
+          end;
+          dBodyGetPosRelPoint(tmpBody, worldPos[0], worldPos[1], worldPos[2], relpos);
           if abs(relpos[2] - HitSolid.PaintBitmapCorner[2]) < 1e-4 then begin //Test if is the right face
             x := (HitSolid.PaintBitmapCorner[0] + relpos[0])/(2*HitSolid.PaintBitmapCorner[0]) * HitSolid.PaintBitmap.Width;
             y := (HitSolid.PaintBitmapCorner[1] - relpos[1])/(2*HitSolid.PaintBitmapCorner[1]) * HitSolid.PaintBitmap.Height;
             d := 1;
             if assigned(GLObj) then begin // Get the color and size from the GLObject
-              //HitSolid.PaintBitmap.Canvas.Brush.Color := swapRGB(GLObj.Material.FrontProperties.Diffuse.AsWinColor);
-              //HitSolid.PaintBitmap.Canvas.pen.Color := swapRGB(GLObj.Material.FrontProperties.Diffuse.AsWinColor);
               HitSolid.PaintBitmap.Canvas.Brush.Color := GLObj.Material.FrontProperties.Diffuse.AsWinColor;
               HitSolid.PaintBitmap.Canvas.pen.Color := GLObj.Material.FrontProperties.Diffuse.AsWinColor;
               if GLObj is TGLCylinder then
-                d :=  0.5 * TGLCylinder(GLObj).BottomRadius / HitSolid.PaintBitmapCorner[0] * HitSolid.PaintBitmap.Width;
+                d := 0.5 * TGLCylinder(GLObj).BottomRadius / HitSolid.PaintBitmapCorner[0] * HitSolid.PaintBitmap.Width;
             end;
-            HitSolid.PaintBitmap.Canvas.Ellipse(rect(round(x-d), round(y-d), round(x+d), round(y+d)));
+            HitSolid.PaintBitmap.Canvas.Ellipse(rect(round(x - d), round(y - d), round(x + d), round(y + d)));
+          end;
+          {if assigned(HitSolid.Body) then begin
+            dBodyGetPosRelPoint(HitSolid.Body, worldPos[0], worldPos[1], worldPos[2], relpos);
+            if abs(relpos[2] - HitSolid.PaintBitmapCorner[2]) < 1e-4 then begin //Test if is the right face
+              x := (HitSolid.PaintBitmapCorner[0] + relpos[0])/(2*HitSolid.PaintBitmapCorner[0]) * HitSolid.PaintBitmap.Width;
+              y := (HitSolid.PaintBitmapCorner[1] - relpos[1])/(2*HitSolid.PaintBitmapCorner[1]) * HitSolid.PaintBitmap.Height;
+              d := 1;
+              if assigned(GLObj) then begin // Get the color and size from the GLObject
+                HitSolid.PaintBitmap.Canvas.Brush.Color := GLObj.Material.FrontProperties.Diffuse.AsWinColor;
+                HitSolid.PaintBitmap.Canvas.pen.Color := GLObj.Material.FrontProperties.Diffuse.AsWinColor;
+                if GLObj is TGLCylinder then
+                  d :=  0.5 * TGLCylinder(GLObj).BottomRadius / HitSolid.PaintBitmapCorner[0] * HitSolid.PaintBitmap.Width;
+              end;
+              HitSolid.PaintBitmap.Canvas.Ellipse(rect(round(x-d), round(y-d), round(x+d), round(y+d)));
+            end;
+          end;}
+          if not assigned(HitSolid.Body) then begin
+            dBodyDestroy(tmpBody);
           end;
           value := 1; // Can be used as an on/off presure sensor
         end;
@@ -1717,12 +1764,6 @@ begin
       n := MeasuresCount;
       for i := 0 to n - 1 do begin
         Measures[i].value := Rays[i].Measure.dist;
-        {if assigned(Rays[i].Measure.HitSolid) then begin
-          G := 0;
-          Rays[i].Measure.HitSolid.GetColor(R, G, B, A);
-          Measures[i].value := Measures[i].value + G / (10000); // TODO
-          //Measures[i].value := G/1e6;
-        end;}
       end;
     end;
 
@@ -1735,7 +1776,7 @@ begin
         if (Rays[0].Measure.has_measure) and
            (HitSolid <> nil) and
            (smRFIDTag in HitSolid.MatterProperties) then begin
-          value := StrToIntDef(HitSolid.ID, 0);
+          value := StrToIntDef(HitSolid.Tag, 0);
         end;
       end;
     end;

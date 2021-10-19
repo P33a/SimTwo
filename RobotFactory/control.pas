@@ -265,6 +265,8 @@ var StrPacket: TStringList;
     B, Noise, Filter: Matrix;
 
     posx, posy, posang: double;
+    pix: TRGBAColor;
+    //pix: integer;
 begin
   t := t + ScriptPeriod();
   posx := getRobotX(0);
@@ -272,13 +274,13 @@ begin
   posy := GetRobotY(0);
   posang := GetRobotTheta(0);
 
+  pix := GetCameraPixel(120, 100);
+  SetRCValue(11, 1 ,format('%d',[pix.red]));
+  SetRCValue(12, 1 ,format('%d',[pix.green]));
+  SetRCValue(13, 1 ,format('%d',[pix.blue]));
 
   SetRCValue(1, 1, inttostr(GetObstacleIndex('Machines_B_LED1')));
-  if getModbusCoil(0) then begin
-    SetObstacleColor(GetObstacleIndex('Machines_B_LED1'),0, 255, 0);
-  end else begin
-    SetObstacleColor(GetObstacleIndex('Machines_B_LED1'),0, 0, 0);
-  end;
+
   rgbacolor := GetObstacleColor(GetObstacleIndex('Machines_B_LED1'));
 
   {sens_esq_fr:=GetSensorVal(0,0);

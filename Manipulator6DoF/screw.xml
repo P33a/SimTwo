@@ -83,15 +83,21 @@
   <articulations>
     <default>
       <draw radius='0.015' height='0.25' rgb24='8F0000'/>
-      <motor ri='0.5' li='0.1' ki='0.03' vmax='24' imax='5' active='1'/>
-      <gear ratio='500' bv='1e-5' ke='1'/>
-      <friction bv='0.4' fc='0.1'/>
-      <controller mode='pidposition' kp='100' ki='0.1' kd='10' kf='0.0' active='1' period='10'/>
+      <motor ri='5' li='0.1' ki='0.3' vmax='24' imax='5' active='1'/>
+      <gear ratio='10' be='0.02' ke='30'/>
+      <friction bv='0.004' fc='0.01'/>
+      <controller mode='pidposition' kp='100' ki='0.1' kd='1' kf='0.0' active='1' period='10'/>
       <spring k='0' zeropos='0'/>
     </default>
 
 
     <!--<joint>
+    <default>
+      <motor ri='9.955' li='0*3.4e-3' ki='0.9038' vmax='15' imax='10' active='1' simple='0'/>
+      <rotor j='0' bv='0.002'/>
+      <gear ratio='N' ke='20' be='2e-2'/>
+      <friction bv='0.0041966' fc='0.0627'/>
+    </default>
       <ID value='Fix'/>
       <pos x='0' y='0' z='0'/>
       <axis x='0' y='0' z='1' wrap='1'/>

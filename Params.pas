@@ -7,7 +7,7 @@ interface
 uses
   LCLIntf, Windows, SysUtils, Variants, Classes, Graphics, Controls,
   Forms, Dialogs, StdCtrls, ComCtrls, ExtCtrls, GLLCLViewer, GLcontext, Math,
-  ODERobots, OdeImport, Grids, GLCadencer, SdpoSerial,  Sockets,
+  ODERobots, OdeImport, Grids, GLCadencer, SdpofpSerial,  Sockets,
   GLShadowVolume, GLScene, Buttons, IniPropStorage, enum_serial,
   GLVectorGeometry, GLTexture, modbusTCP, lNetComponents, lNet;
 
@@ -32,7 +32,7 @@ type
     UDPGeneric: TLUDPComponent;
     UDPServer_alt: TLUDPComponent;
     PageControl: TPageControl;
-    SerialCom: TSdpoSerial;
+    SerialCom: TSdpofpSerial;
     TabControl: TTabSheet;
     RGControlBlock: TRadioGroup;
     TabGraphics: TTabSheet;
@@ -355,6 +355,7 @@ type
     procedure TimerTimer(Sender: TObject);
     procedure UDPGenericError(const msg: string; aSocket: TLSocket);
     procedure UDPGenericReceive(aSocket: TLSocket);
+    procedure UDPServer_altError(const msg: string; aSocket: TLSocket);
     procedure UDPServer_altReceive(aSocket: TLSocket);
   private
     procedure FillEditArray(ProtoName: string;
@@ -1261,6 +1262,11 @@ begin
   UDPGenData.WriteBuffer(Pointer(str)^, Length(str));
 
   UDPGenPackets.Add(str);
+end;
+
+procedure TFParams.UDPServer_altError(const msg: string; aSocket: TLSocket);
+begin
+  UDPServer_alt.Disconnect();
 end;
 
 procedure TFParams.BGlobalSetClick(Sender: TObject);

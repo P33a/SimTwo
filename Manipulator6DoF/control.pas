@@ -10,7 +10,6 @@ var
   R01, R12, R23: Matrix;
   R03: Matrix;
 
-  JointVoltages: array[0..NumJoints - 1] of double;
   JointPos: array[0..NumJoints - 1] of double;
   ScrewH: array[0..NumScrews - 1] of double;
 
@@ -178,10 +177,8 @@ begin
   tis := tis + 0.04;
 
   SetRCValue(3, 7, state);
-
-
-
 end;
+
 
 procedure Initialize;
 var i: integer;

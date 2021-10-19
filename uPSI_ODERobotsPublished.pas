@@ -44,6 +44,7 @@ uses
   ,PathFinder
   ,dynmatrix
   ,GLKeyboard
+  ,ODEGL
   ,ODERobotsPublished
   ;
  
@@ -98,6 +99,10 @@ begin
  CL.AddDelphiFunction('Function GetSolidLinearVelMat( R, i : integer) : Matrix');
  CL.AddDelphiFunction('Function GetSolidRotMat( R, i : integer) : Matrix');
  CL.AddDelphiFunction('Function GetSolidAgularVelMat( R, i : integer) : Matrix');
+ CL.AddDelphiFunction('function GetSolidTag(R, i: integer): string');
+ CL.AddDelphiFunction('procedure SetSolidTag(R, i: integer; newTag: string)');
+ CL.AddDelphiFunction('function GetShellTag(R, i: integer): string');
+ CL.AddDelphiFunction('procedure SetShellTag(R, i: integer; newTag: string)');
  CL.AddDelphiFunction('Function GetRobotX( R : integer) : double');
  CL.AddDelphiFunction('Function GetRobotY( R : integer) : double');
  CL.AddDelphiFunction('Function GetRobotTheta( R : integer) : double');
@@ -114,6 +119,7 @@ begin
  CL.AddDelphiFunction('Function GetSolidColor( R, i : integer) : TRGBAColor');
  CL.AddDelphiFunction('Procedure SetSolidColor( R, I : integer; Red, Green, Blue : byte)');
  CL.AddDelphiFunction('Function GetSolidCanvas( R, i : integer) : TCanvas');
+ CL.AddDelphiFunction('function GetObstacleCanvas(i: integer): TCanvas;');
  CL.AddDelphiFunction('Procedure SolidCanvasClear( R, i : integer)');
  CL.AddDelphiFunction('Procedure SetSolidSurfaceFriction( R, i : integer; mu, mu2 : double)');
  CL.AddDelphiFunction('Procedure SetSolidForce( R, i : integer; Fx, Fy, Fz : double)');
@@ -164,6 +170,7 @@ begin
  CL.AddDelphiFunction('Function GetObstacleRotMat( T : integer) : Matrix');
  CL.AddDelphiFunction('Procedure SetObstacleRotationMat( T : integer; Rot : Matrix)');
  CL.AddDelphiFunction('Function AddOBstacleBox( ID : string; posx, posY, posZ, sizeX, sizeY, sizeZ : double; rgb24 : integer) : integer');
+ CL.AddDelphiFunction('Function DeleteObstacle( ID : string) : integer');
  CL.AddDelphiFunction('Procedure ClearObstacles');
  CL.AddDelphiFunction('Function GetAxisOdo( R, i : integer) : integer');
  CL.AddDelphiFunction('Function GetAxisState( R, i : integer) : TAxisState');
@@ -357,6 +364,10 @@ begin
  S.RegisterDelphiFunction(@GetSolidLinearVelMat, 'GetSolidLinearVelMat', cdRegister);
  S.RegisterDelphiFunction(@GetSolidRotMat, 'GetSolidRotMat', cdRegister);
  S.RegisterDelphiFunction(@GetSolidAgularVelMat, 'GetSolidAgularVelMat', cdRegister);
+ S.RegisterDelphiFunction(@GetSolidTag, 'GetSolidTag', cdRegister);
+ S.RegisterDelphiFunction(@SetSolidTag, 'SetSolidTag', cdRegister);
+ S.RegisterDelphiFunction(@GetShellTag, 'GetShellTag', cdRegister);
+ S.RegisterDelphiFunction(@SetShellTag, 'SetShellTag', cdRegister);
  S.RegisterDelphiFunction(@GetRobotX, 'GetRobotX', cdRegister);
  S.RegisterDelphiFunction(@GetRobotY, 'GetRobotY', cdRegister);
  S.RegisterDelphiFunction(@GetRobotTheta, 'GetRobotTheta', cdRegister);
@@ -372,6 +383,7 @@ begin
  S.RegisterDelphiFunction(@GetSolidVz, 'GetSolidVz', cdRegister);
  S.RegisterDelphiFunction(@GetSolidColor, 'GetSolidColor', cdRegister);
  S.RegisterDelphiFunction(@SetSolidColor, 'SetSolidColor', cdRegister);
+ S.RegisterDelphiFunction(@GetObstacleCanvas, 'GetObstacleCanvas', cdRegister);
  S.RegisterDelphiFunction(@GetSolidCanvas, 'GetSolidCanvas', cdRegister);
  S.RegisterDelphiFunction(@SolidCanvasClear, 'SolidCanvasClear', cdRegister);
  S.RegisterDelphiFunction(@SetSolidSurfaceFriction, 'SetSolidSurfaceFriction', cdRegister);
@@ -423,6 +435,7 @@ begin
  S.RegisterDelphiFunction(@GetObstacleRotMat, 'GetObstacleRotMat', cdRegister);
  S.RegisterDelphiFunction(@SetObstacleRotationMat, 'SetObstacleRotationMat', cdRegister);
  S.RegisterDelphiFunction(@AddOBstacleBox, 'AddOBstacleBox', cdRegister);
+ S.RegisterDelphiFunction(@DeleteObstacle, 'DeleteObstacle', cdRegister);
  S.RegisterDelphiFunction(@ClearObstacles, 'ClearObstacles', cdRegister);
  S.RegisterDelphiFunction(@GetAxisOdo, 'GetAxisOdo', cdRegister);
  S.RegisterDelphiFunction(@GetAxisState, 'GetAxisState', cdRegister);

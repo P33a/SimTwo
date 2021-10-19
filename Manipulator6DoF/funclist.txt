@@ -151,6 +151,7 @@
  function GetSolidColor(R: LongInt; i: LongInt): TRGBAColor;
  procedure SetSolidColor(R: LongInt; I: LongInt; Red: Byte; Green: Byte; Blue: Byte);
  function GetSolidCanvas(R: LongInt; i: LongInt): TCanvas;
+ function GetObstacleCanvas(i: LongInt): TCanvas;
  procedure SolidCanvasClear(R: LongInt; i: LongInt);
  procedure SetSolidSurfaceFriction(R: LongInt; i: LongInt; mu: Double; mu2: Double);
  procedure SetSolidForce(R: LongInt; i: LongInt; Fx: Double; Fy: Double; Fz: Double);
@@ -201,6 +202,7 @@
  function GetObstacleRotMat(T: LongInt): Matrix;
  procedure SetObstacleRotationMat(T: LongInt; Rot: Matrix);
  function AddOBstacleBox(ID: string; posx: Double; posY: Double; posZ: Double; sizeX: Double; sizeY: Double; sizeZ: Double; rgb24: LongInt): LongInt;
+ function DeleteObstacle(ID: string): LongInt;
  procedure ClearObstacles();
  function GetAxisOdo(R: LongInt; i: LongInt): LongInt;
  function GetAxisState(R: LongInt; i: LongInt): TAxisState;
@@ -348,3 +350,4 @@
  function getModbusInput(bit_addr: LongInt): Boolean;
  procedure setModbusCoil(bit_addr: LongInt; new_state: Boolean);
  procedure setModbusInput(bit_addr: LongInt; new_state: Boolean);
+ function GetCameraPixel(X: LongInt; Y: LongInt): TRGBAColor;

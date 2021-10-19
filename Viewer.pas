@@ -208,6 +208,7 @@ type
   { TFViewer }
 
   TFViewer = class(TForm)
+    GLBitmapFont: TGLBitmapFont;
     GLScene: TGLScene;
     GLCadencer: TGLCadencer;
     GLSceneViewer: TGLSceneViewer;
@@ -443,10 +444,12 @@ begin
     if (o1.data <> nil) and (TSolid(o1.data).kind in [skOmniWheel, skOmniSurface, skMecanumWheel_L, skMecanumWheel_R]) then begin
         n_mode := n_mode or cardinal(dContactMu2 or dContactFDir1);
         if TSolid(o1.data).kind = skOmniWheel then begin
-          dBodyVectorToWorld(b1, 0, 0, 1, n_fdir1);
-          tmp := n_mu2;
-          n_mu2 := n_mu;
-          n_mu := tmp;
+          //dBodyVectorToWorld(b1, 0, 0, 1, n_fdir1);
+          //tmp := n_mu2;
+          //n_mu2 := n_mu;
+          //n_mu := tmp;
+          dBodyVectorToWorld(b1, 0, 0, 1, aux_v1);
+          n_fdir1 := Vector3Cross(contact[0].geom.normal, aux_v1);
         end else if TSolid(o1.data).kind = skMecanumWheel_L then begin
           //dBodyVectorToWorld(b1, 0, 0, 1, n_fdir1);
           dBodyVectorToWorld(b1, 0, 0, 0.707106781186547, aux_v1); // 1/sqrt(2)
@@ -464,10 +467,12 @@ begin
         n_mode := n_mode or cardinal(dContactMu2 or dContactFDir1);
         //dBodyVectorToWorld(b2, 0, 0, 1, n_fdir1);
         if TSolid(o2.data).kind = skOmniWheel then begin
-          dBodyVectorToWorld(b2, 0, 0, 1, n_fdir1);
-          tmp := n_mu2;
-          n_mu2 := n_mu;
-          n_mu := tmp; //0.001;
+          //dBodyVectorToWorld(b2, 0, 0, 1, n_fdir1);
+          //tmp := n_mu2;
+          //n_mu2 := n_mu;
+          //n_mu := tmp; //0.001;
+          dBodyVectorToWorld(b2, 0, 0, 1, aux_v1);
+          n_fdir1 := Vector3Cross(contact[0].geom.normal, aux_v1);
         end else if TSolid(o2.data).kind = skMecanumWheel_L then begin
           //dBodyVectorToWorld(b2, 0, 0, 1, n_fdir1);
           dBodyVectorToWorld(b2, 0, 0, 0.707106781186547, aux_v1); // 1/sqrt(2)
@@ -2466,8 +2471,14 @@ var XML: IXMLDocument;
     Vec: TDVector3;
     NewObstacle: TSolid;
 
+    hasCanvas: boolean;
+    CanvasWidth, CanvasHeigth: integer;
+
     Surf: TdSurfaceParameters; //TOD=: unify with solids
 begin
+  hasCanvas := false;
+  CanvasWidth := 256; CanvasHeigth := 256;
+
   XML := LoadXML(XMLFile, XMLErrors);
   if XML = nil then exit;
 
@@ -2514,6 +2525,11 @@ begin
           Surf.bounce := GetNodeAttrRealParse(prop, 'bounce', Surf.bounce, Parser);
           Surf.bounce_vel := GetNodeAttrRealParse(prop, 'bounce_tresh', Surf.bounce_vel, Parser);
         end;
+        if prop.NodeName = 'canvas' then begin
+          hasCanvas := true;
+          CanvasWidth := round(GetNodeAttrRealParse(prop, 'width', CanvasWidth, Parser));
+          CanvasHeigth := round(GetNodeAttrRealParse(prop, 'heigth', CanvasHeigth, Parser));
+        end;
         prop := prop.NextSibling;
       end;
       // Create and position the obstacle
@@ -2527,6 +2543,37 @@ begin
         end;
         if obstacle.NodeName = 'cuboid' then begin
           CreateObstacleBox(NewObstacle, sizeX, sizeY, sizeZ, posX, posY, posZ);
+          if HasCanvas then begin
+            (NewObstacle.GLObj as TGLCube).Parts := (NewObstacle.GLObj as TGLCube).Parts - [cpfront];  // remove the side where the canvas will be placed
+            NewObstacle.CanvasGLObj := TGLSceneObject(NewObstacle.GLObj.AddNewChild(TGLPlane));
+
+            NewObstacle.PaintBitmap := TBitmap.Create;
+            NewObstacle.PaintBitmap.Width := CanvasWidth;
+            NewObstacle.PaintBitmap.Height := CanvasHeigth;
+            NewObstacle.PaintBitmap.PixelFormat := pf24bit;
+            NewObstacle.PaintBitmap.Canvas.Brush.Color := clWhite;
+            NewObstacle.PaintBitmap.Canvas.pen.Color := clblack;
+            NewObstacle.PaintBitmap.Canvas.FillRect(0, 0, CanvasWidth, CanvasHeigth);
+            //NewObstacle.PaintBitmap.Canvas.TextOut(0,0,'Hello World!');
+            //newSolid.PaintBitmap.Canvas.Ellipse(0,0,127,127);
+            with (NewObstacle.CanvasGLObj as TGLPlane) do begin
+             position.Z := sizeZ/2;
+             width := sizeX;
+             Height := sizeY;
+             //Material.Texture.Image.LoadFromFile('gy_logo.jpg');
+             Material.Texture.Image.Assign(NewObstacle.PaintBitmap);
+             Material.Texture.Disabled := false;
+             Material.Texture.TextureMode := tmModulate;
+            end;
+
+            with NewObstacle do begin
+              PaintBitmapCorner[0] := sizeX/2;
+              PaintBitmapCorner[1] := sizeY/2;
+              PaintBitmapCorner[2] := sizeZ/2;
+            end;
+            HasCanvas := false;
+          end;
+
         end else if obstacle.NodeName = 'cylinder' then begin
           CreateCylinderObstacle(NewObstacle, max(radius, sizeX), sizeZ, posX, posY, posZ);
         end else if obstacle.NodeName = 'sphere' then begin
@@ -4021,7 +4068,7 @@ begin
   //Create physic
   world := dWorldCreate();
 //  dWorldSetQuickStepNumIterations(world, 10);
-  Ode_QuickStepIters := 10;
+  Ode_QuickStepIters := 20;
   dWorldSetQuickStepNumIterations(world, Ode_QuickStepIters);
   space := dSimpleSpaceCreate(nil);
   //space := dHashSpaceCreate(nil);
@@ -4042,12 +4089,17 @@ begin
   dWorldSetCFM(world, Ode_CFM);
   dWorldSetERP(world, Ode_ERP);
 
-  //dWorldSetAngularDamping(world, 0.8);
-  //dWorldSetLinearDamping(world, 0.8);
+  //dWorldSetAngularDamping(world, 0);
+  //dWorldSetLinearDamping(world, 0);
+  //dWorldSetMaxAngularSpeed(world, Infinity);
 
   //if FileExists('ground.jpg') then begin
   //  FViewer.GLMaterialLibrary.AddTextureMaterial('Ground', 'ground.jpg');
   //end;
+
+  //dWorldSetAutoDisableFlag(world, 1);
+  //dWorldSetAngularDampingThreshold(world, 0.01);
+  //dWorldSetAngularDamping(world, 0.1);
 
   LoadSceneFromXML('scene.xml');
 
@@ -4141,6 +4193,8 @@ begin
   Application.UpdateFormatSettings := false;
   DefaultFormatSettings.DecimalSeparator := '.';
 
+  //Bmp32 := nil;
+
   SetCurrentDir(ExtractFilePath(Application.ExeName));
 
   if ParamCount > 0 then begin
@@ -4188,8 +4242,9 @@ begin
   end;
 
   IniPropStorage.IniFileName := GetIniFineName;
+  SetProcessAffinityMask(GetCurrentProcess(), 1);
 //  GetProcessAffinityMask(
-//  SetThreadAffinityMask(GetCurrentThreadId(), 1);
+  SetThreadAffinityMask(GetCurrentThread(), 1);
 //  SetThreadAffinityMask(GetCurrentProcessId(), 1);
   QueryPerformanceFrequency(t_delta);
   t_delta := t_delta div 1000;
@@ -4285,6 +4340,7 @@ function TFViewer.GLSceneViewerPick(X, Y: Integer): TGLCustomSceneObject;
 var pick : TGLCustomSceneObject;
     Pos: TdVector3;
 begin
+
   pick:=(GLSceneViewer.Buffer.GetPickedObject(x, y) as TGLCustomSceneObject);
 
   if Assigned(pick) then begin
@@ -4316,7 +4372,7 @@ var old_Im, dI, err: double;
     ev, ebt: double;
     Td, dtheta, TB, TK, tau: double;
 begin
-  max_delta_Im := 0.15; // A/ms
+  max_delta_Im := 0.5; // A/ms
   with Axis do begin
     // If active use PID controller
     if Motor.active then begin
@@ -4406,9 +4462,9 @@ begin
       Motor.Im := 0;
     end;
 
-    Motor.PowerDrain := Motor.Im * Motor.voltage * WorldODE.Ode_dt;
+    Motor.PowerDrain := Motor.Im * Motor.voltage;
     if Motor.PowerDrain > 0 then begin
-      Motor.EnergyDrain := Motor.EnergyDrain + Motor.PowerDrain;
+      Motor.EnergyDrain := Motor.EnergyDrain + Motor.PowerDrain * WorldODE.Ode_dt;
     end;
 
     // coulomb friction
@@ -4445,7 +4501,7 @@ begin
 
       TK := (Motor.KGearBox + sqrt(Motor.KGearBox) * abs(dtheta)) * dtheta;
 
-      Td := TK - TB;
+      Td := TK + TB;
 
       {if abs(Motor.JRotor / Td) < WorldODE.Ode_dt then begin
         if Td > 0 then Td := 0.5 *Motor.JRotor / WorldODE.Ode_dt
@@ -4462,7 +4518,7 @@ begin
     end else begin
       //T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Spring.K * diffangle(Theta, Spring.ZeroPos);
       T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Spring.K * (Theta - Spring.ZeroPos);
-      //T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Spring.K * (Theta - Spring.ZeroPos);
+      //if (abs(w) < 0.05) and (abs(T) < abs(Friction.Fc)) then T := 0;
     end;
   end;
 end;
@@ -4645,6 +4701,11 @@ begin
       end;
 
     end;
+
+    for r := 0 to WorldODE.Obstacles.Count-1 do begin
+      WorldODE.Obstacles[r].UpdateGLCanvas;
+    end;
+
 end;
 
 
@@ -4664,7 +4725,7 @@ var theta, w, Tq: double;
 begin
   //GLScene.CurrentGLCamera.Position := GLDummyCamPos.Position;
   GLCamera.Position := GLDummyCamPos.Position;
-  if WorldODE.ODEEnable <> False then begin
+  if WorldODE.ODEEnable then begin
     QueryPerformanceCounter(t_start);
     t_itot := 0;
 
@@ -4794,11 +4855,12 @@ begin
           with WorldODE.Robots[r] do begin
             //if not active then continue; //TODO
             theta := Axes[i].GetPos();
-            w := Axes[i].GetSpeed();
+            w := Axes[i].GetSpeed(WorldODE.Ode_dt);
             //if not Axes[i].Motor.active then continue; //TODO
 
+            Axes[i].TotalTorque := 0;
             //AxisTorqueModel(Axes[i], Theta, Axes[i].filt_speed, Tq);
-            AxisTorqueModel(Axes[i], Theta, w, WorldODE.Ode_dt ,Tq);
+            AxisTorqueModel(Axes[i], Theta, w, WorldODE.Ode_dt, Tq);
             // Apply it to the axis
             Axes[i].AddTorque(Tq);
             // Apply Extra torque
@@ -4904,6 +4966,7 @@ begin
       t_itot := t_itot + t_i2 - t_i1;
 
       // Post Process Sensors
+
       for i := 0 to WorldODE.Sensors.Count - 1 do begin
         with WorldODE.Sensors[i] do begin
           PostProcess;
@@ -5158,6 +5221,7 @@ begin
   FParams.BSetTrailParsClick(Sender);
 
   FParams.ShowParsedScene;
+  FParams.BSetFPSClick(Sender);
 
   MakeFullyVisible();
   UpdateGLScene;

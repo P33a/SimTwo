@@ -749,7 +749,7 @@ begin
     //if rpnList[i]='' then break;
 
 //    EmitAction(rpnOps[i+1],rpnList[i]);
-    EmitAction(chr(integer(rpnList.objects[i])), rpnList[i]);
+    EmitAction(chr(PtrUInt(rpnList.objects[i])), rpnList[i]);
 
     //EmitAction(rpnOps[i][1],copy(rpnOps[i],2,10000));
   end;
