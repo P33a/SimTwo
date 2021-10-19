@@ -22,9 +22,9 @@ object FParams: TFParams
     Height = 621
     Top = 0
     Width = 273
-    ActivePage = TabControl
+    ActivePage = TabGraphics
     Anchors = [akTop, akLeft, akBottom]
-    TabIndex = 0
+    TabIndex = 1
     TabOrder = 0
     object TabControl: TTabSheet
       Caption = 'Control'
@@ -1116,7 +1116,7 @@ object FParams: TFParams
         Text = '60'
       end
       object BSetFPS: TButton
-        Left = 125
+        Left = 124
         Height = 25
         Top = 2
         Width = 32
@@ -2373,14 +2373,15 @@ object FParams: TFParams
     TabOrder = 1
     Text = 'EditDebug'
   end
-  object SerialCom: TSdpoSerial
+  object SerialCom: TSdpofpSerial
     Active = False
     BaudRate = br115200
     AltBaudRate = 0
     DataBits = db8bits
-    Parity = pNone
-    FlowControl = fcNone
+    Parity = NoneParity
+    FlowControl = []
     StopBits = sbOne
+    SerialHandle = 0
     Device = 'COM1'
     OnRxData = SerialComRxData
     left = 224
@@ -2426,8 +2427,10 @@ object FParams: TFParams
     top = 342
   end
   object UDPServer_alt: TLUDPComponent
+    Host = '127.0.0.1'
     Port = 9800
     OnReceive = UDPServer_altReceive
+    OnError = UDPServer_altError
     Timeout = 0
     left = 104
     top = 512

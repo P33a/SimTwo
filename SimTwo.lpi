@@ -28,10 +28,9 @@
     <VersionInfo>
       <UseVersionInfo Value="True"/>
       <AutoIncrementBuild Value="True"/>
-      <MajorVersionNr Value="2019"/>
-      <MinorVersionNr Value="4"/>
-      <RevisionNr Value="23"/>
-      <BuildNr Value="16"/>
+      <MajorVersionNr Value="2020"/>
+      <MinorVersionNr Value="10"/>
+      <BuildNr Value="1"/>
       <Attributes pvaSpecialBuild="True"/>
       <StringTable ProductVersion="2019"/>
     </VersionInfo>
@@ -47,39 +46,45 @@
         <Mode0 Name="default"/>
       </Modes>
     </RunParams>
-    <RequiredPackages Count="10">
+    <RequiredPackages Count="12">
       <Item1>
-        <PackageName Value="lnetvisual"/>
+        <PackageName Value="sdpofpseriallaz"/>
       </Item1>
       <Item2>
-        <PackageName Value="LazUtils"/>
+        <PackageName Value="GLScene_WinOnly"/>
       </Item2>
       <Item3>
-        <PackageName Value="TAChartLazarusPkg"/>
+        <PackageName Value="lnetvisual"/>
       </Item3>
       <Item4>
-        <PackageName Value="pascalscript"/>
+        <PackageName Value="LazUtils"/>
       </Item4>
       <Item5>
-        <PackageName Value="Printer4Lazarus"/>
+        <PackageName Value="TAChartLazarusPkg"/>
       </Item5>
       <Item6>
-        <PackageName Value="GLScene_DesignTime"/>
+        <PackageName Value="pascalscript"/>
       </Item6>
       <Item7>
-        <PackageName Value="SdpoSerialLaz"/>
+        <PackageName Value="Printer4Lazarus"/>
       </Item7>
       <Item8>
-        <PackageName Value="SynEdit"/>
+        <PackageName Value="GLScene_DesignTime"/>
       </Item8>
       <Item9>
-        <PackageName Value="GLScene_RunTime"/>
+        <PackageName Value="SdpoSerialLaz"/>
       </Item9>
       <Item10>
-        <PackageName Value="LCL"/>
+        <PackageName Value="SynEdit"/>
       </Item10>
+      <Item11>
+        <PackageName Value="GLScene_RunTime"/>
+      </Item11>
+      <Item12>
+        <PackageName Value="LCL"/>
+      </Item12>
     </RequiredPackages>
-    <Units Count="28">
+    <Units Count="29">
       <Unit0>
         <Filename Value="SimTwo.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -220,6 +225,10 @@
         <Filename Value="user_charts.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit27>
+      <Unit28>
+        <Filename Value="octree.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit28>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -229,9 +238,9 @@
       <Filename Value="SimTwo2020"/>
     </Target>
     <SearchPaths>
-      <IncludeFiles Value="$(ProjOutDir);C:\lazarus\components\PascalScript\Source\;C:\lazarus\fpc\3.2.0\source\packages\winunits-jedi\src\;..\..\SimTwo\jm_extra_packages\glscene_newer_version\glscene-code-r7163-branches-GLSceneLCL\Packages\lib\i386-win32"/>
+      <IncludeFiles Value="$(ProjOutDir);C:\lazarus\components\GLSceneLCL\Source\;C:\lazarus\components\PascalScript\Source\"/>
       <Libraries Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="C:\lazarus\components\PascalScript\Source\;OmniXML;C:\lazarus\fpc\3.2.0\source\packages\winunits-jedi\src\;..\..\SimTwo\jm_extra_packages\glscene_newer_version\glscene-code-r7163-branches-GLSceneLCL\Packages\lib\i386-win32"/>
+      <OtherUnitFiles Value="C:\lazarus\components\GLSceneLCL\Source\;C:\lazarus\components\PascalScript\Source\;OmniXML;C:\lazarus\fpc\3.0.4\source\packages\winunits-jedi\src\"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Parsing>

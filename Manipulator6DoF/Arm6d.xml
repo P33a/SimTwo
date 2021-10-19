@@ -153,10 +153,10 @@
     <default>
       <draw radius='0.015' height='0.25' rgb24='8F0000'/>
       <ndraw radius='0.005' height='0.3' rgb24='8F0000'/>
-      <motor ri='0.5' li='0.001'  ki='0.03' vmax='24' imax='10' active='1'/>
-      <rotor J='1e-4' bv='1e-3' fc='0'/>
-      <gear ratio='500' bv='1e-5' ke='1'/>
-      <friction bv='0.2' fc='0.1'/>
+      <motor ri='1.5' li='0.001'  ki='0.3' vmax='24' imax='10' active='1'/>
+      <rotor J='1e-2' bv='1e-3' fc='0'/>
+      <gear ratio='200' be='1e-1' ke='800'/>
+      <friction bv='0.02' fc='0.01'/>
       <encoder ppr='1000' mean='0' stdev='0'/>
       <controller mode='pidposition' kp='100' ki='0.1' kd='50' kf='0.0' active='1' period='10'/>
       <spring k='0' zeropos='0'/>

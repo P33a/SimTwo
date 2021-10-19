@@ -116,6 +116,7 @@ TFormBorderStyle
 TFormStyle
 TFrictionDef
 TGetStrProc
+TGLPixel32
 TGraphic
 TGraphicControl
 TGraphicsObject

@@ -2,22 +2,25 @@ object FCameras: TFCameras
   Left = 1256
   Height = 598
   Top = 178
-  Width = 338
+  Width = 328
   Caption = 'Cameras'
   ClientHeight = 598
-  ClientWidth = 338
+  ClientWidth = 328
   Color = clBtnFace
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'Tahoma'
+  OnClose = FormClose
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  OnShow = FormShow
   SessionProperties = 'CBSendImage.Checked;SBQuality.Position;Top;Left'
   LCLVersion = '1.8.2.0'
   object PageControl: TPageControl
     Left = 0
     Height = 569
     Top = 0
-    Width = 338
+    Width = 328
     ActivePage = TabDefault
     Align = alTop
     TabIndex = 0
@@ -25,7 +28,7 @@ object FCameras: TFCameras
     object TabDefault: TTabSheet
       Caption = 'Default'
       ClientHeight = 543
-      ClientWidth = 330
+      ClientWidth = 320
       object ImageCam: TImage
         Left = 0
         Height = 240

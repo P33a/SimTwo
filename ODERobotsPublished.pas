@@ -100,6 +100,9 @@ procedure SetSolidRotationMat(R, i: integer; Rot: Matrix);
 function GetSolidPos(R, i: integer): TPoint3D;
 function GetSolidLinearVel(R, i: integer): TPoint3D;
 
+function GetSolidTag(R, i: integer): string;
+procedure SetSolidTag(R, i: integer; newTag: string);
+
 
 //Matrix versions
 function GetSolidPosMat(R, i: integer): Matrix;
@@ -190,6 +193,9 @@ function GetThingAngularVel(T: integer): TPoint3D;
 procedure ClearThings;
 
 
+procedure SetShellTag(R, i: integer; NewTag: string);
+function GetShellTag(R, i: integer): string;
+
 function GetShellPos(R, i: integer): TPoint3D;
 procedure SetShellColor(R, i: integer; Red, Green, Blue: byte);
 function GetShellColor(R, i: integer): TRGBAColor;
@@ -205,7 +211,10 @@ function GetObstacleRotMat(T: integer): Matrix;
 procedure SetObstacleRotationMat(T: integer; Rot: Matrix);
 
 function AddOBstacleBox(ID: string; posx, posY, posZ, sizeX, sizeY, sizeZ: double; rgb24: integer): integer;
+function DeleteObstacle(ID: string): integer;
 procedure ClearObstacles;
+
+function GetObstacleCanvas(i: integer): TCanvas;
 
 function GetAxisOdo(R, i: integer): integer;
 
@@ -810,6 +819,16 @@ begin
 end;
 
 
+procedure SetSolidTag(R, i: integer; NewTag: string);
+begin
+  WorldODE.Robots[R].Solids[i].Tag := NewTag;
+end;
+
+
+function GetSolidTag(R, i: integer): string;
+begin
+  result := WorldODE.Robots[R].Solids[i].Tag;
+end;
 
 function GetRobotX(R: integer): double;
 var v1: TdVector3;
@@ -1110,7 +1129,7 @@ begin
     result.vel := filt_speed;
     result.Im := Motor.Im;
     result.Vm := Motor.voltage;
-    result.Torque := torque;
+    result.Torque := TotalTorque;
   end;
 end;
 
@@ -1163,21 +1182,33 @@ end;
 function GetAxisMotorSpeed(R, i: integer): double;
 begin
   with WorldODE.Robots[r].Axes[i].Motor do begin
-    result := w;
+    if JRotor > 0 then begin
+      result := w;
+    end else begin
+      result := GetAxisSpeed(R, i);
+    end;
   end;
 end;
 
 function GetAxisMotorPos(R, i: integer): double;
 begin
   with WorldODE.Robots[r].Axes[i].Motor do begin
-    result := teta;
+    if JRotor > 0 then begin
+      result := teta;
+    end else begin
+      result := GetAxisPos(R, i);
+    end;
   end;
 end;
 
 function GetAxisMotorPosDeg(R, i: integer): double;
 begin
   with WorldODE.Robots[r].Axes[i].Motor do begin
-    result := deg(teta);
+    if JRotor > 0 then begin
+      result := deg(teta);
+    end else begin
+      result := deg(GetAxisPos(R, i));
+    end;
   end;
 end;
 
@@ -1737,6 +1768,17 @@ begin
   WorldODE.Things.ClearAll;
 end;
 
+procedure SetShellTag(R, i: integer; NewTag: string);
+begin
+  WorldODE.Robots[R].Shells[i].Tag := NewTag;
+end;
+
+
+function GetShellTag(R, i: integer): string;
+begin
+  result := WorldODE.Robots[R].Shells[i].Tag;
+end;
+
 
 function GetShellPos(R, i: integer): TPoint3D;
 var v1: TdVector3;
@@ -1864,6 +1906,21 @@ begin
   end;
 end;
 
+function DeleteObstacle(ID: string): integer;
+var killObstacle: TSolid;
+begin
+  with WorldODE do begin
+    result := Obstacles.IndexFromID(ID);
+    if result < 0 then exit;
+    killObstacle := Obstacles[result];
+    result := Obstacles.remove(killObstacle);
+    if result >= 0 then begin
+      DeleteSolid(killObstacle);
+      killObstacle.Free;
+    end;
+  end;
+end;
+
 procedure ClearObstacles;
 var i: integer;
 begin
@@ -1871,6 +1928,11 @@ begin
     WorldODE.DeleteSolid(WorldODE.Obstacles[i]);
   end;
   WorldODE.Obstacles.ClearAll;
+end;
+
+function GetObstacleCanvas(i: integer): TCanvas;
+begin
+  result := WorldODE.Obstacles[i].PaintBitmap.Canvas;
 end;
 
 

@@ -13,9 +13,9 @@
     <cell r="5" c="2" text="0" />
     <cell r="1" c="1" text="-1" />
     <cell r="5" c="0" text="5" />
-    <cell r="6" c="2" text="0" />
+    <cell r="6" c="2" text="21" />
     <cell r="7" c="2" text="63" />
-    <cell r="8" c="2" text="42" />
+    <cell r="8" c="2" text="21" />
     <cell r="9" c="2" text="0" />
     <cell r="4" c="1" text="Sensors" />
     <cell r="4" c="2" text="IR" />
@@ -46,7 +46,7 @@
     <cell r="17" c="3" text="1816" />
     <cell r="18" c="3" text="0" />
     <cell r="8" c="3" text="Vrobot" />
-    <cell r="8" c="4" text="0.00046" />
+    <cell r="8" c="4" text="0.0029" />
     <cell r="10" c="2" text="0" />
     <cell r="16" c="1" text="Crosses" />
     <cell r="12" c="5" text="-0.57" />
