@@ -452,7 +452,7 @@ end;
 procedure TFEditor.FormCreate(Sender: TObject);
 var Plugin, PathPlugin, MatrixPlugin, ChartPlugin: TPSPlugin;
 begin
-  IniPropStorage.IniFileName := GetIniFineName;
+  IniPropStorage.IniFileName := GetIniFineName(copy(name, 2, MaxInt));
   //TabPascal.TabVisible:=false;
   FuncList := TStringList.Create;
   InsertList := TStringList.Create;
@@ -923,6 +923,16 @@ begin
   result := ln(X);
 end;
 
+function FloatAsInteger(X: single): integer;
+begin
+  result := PInteger(@X)^;
+end;
+
+function IntegerAsFloat(X: integer): single;
+begin
+  result := PSingle(@X)^;
+end;
+
 
 procedure TFEditor.PSScript_Compile(Sender: TPSScript);
 var i: integer;
@@ -943,6 +953,8 @@ begin
   Sender.AddFunction(@ExpD, 'function Exp(X: double): double');
   Sender.AddFunction(@LnD, 'function Ln(X: double): double');
 
+  Sender.AddFunction(@FloatAsInteger, 'function FloatAsInteger(X: single): integer');
+  Sender.AddFunction(@IntegerAsFloat, 'function IntegerAsFloat(X: integer): single');
 
   Sender.AddFunction(@DiffAngle, 'function DiffAngle(a1,a2: double): double;');
   Sender.AddFunction(@Dist, 'function Dist(x,y: double): double');

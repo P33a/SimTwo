@@ -425,7 +425,7 @@ end;
 
 procedure TFSceneEdit.FormCreate(Sender: TObject);
 begin
-  IniPropStorage.IniFileName := GetIniFineName;
+  IniPropStorage.IniFileName := GetIniFineName(copy(name, 2, MaxInt));
   MustReSpawn := false;
   ReSpawnPars := '';
 end;
@@ -538,7 +538,12 @@ end;
 
 procedure TFSceneEdit.MenuChangeClick(Sender: TObject);
 begin
-  FChooseScene.showmodal;
+  FViewer.GLCadencer.Enabled := false;
+  try
+    FChooseScene.showmodal;
+  finally
+    FViewer.GLCadencer.Enabled := true;
+  end;
 
   if FChooseScene.ModalResult = mrCancel then exit;
   if FChooseScene.SelectedDir = '' then exit;

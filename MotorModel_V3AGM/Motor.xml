@@ -1,0 +1,77 @@
+ 
+<?xml version="1.0" ?>
+
+<robot>
+  <kind value='MotorBoard'/>
+  
+  <defines>
+    <const name='N' value='1' />
+    <const name='axis_height' value='0.8' />
+    <const name='axis_height' value='0.8' />
+    <const name='motor_radius' value='0.02' />
+    <const name='motor_length' value='0.1' />
+  </defines>
+  
+  <solids>
+
+    <cuboid>
+      <ID value='Base'/>
+      <mass value='50'/>
+      <size x='0.4' y='0.4' z='axis_height - motor_radius'/>
+      <pos x='0' y='0.3' z='(axis_height - motor_radius)/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='64' g='64' b='0'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='InertialBoard'/>
+      <mass value='2.5'/>
+      <size x='0.25' y='0.02' z='0.02'/>
+      <pos x='0' y='0' z='axis_height + motor_radius'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='64' g='64' b='64'/>
+    </cuboid>
+
+
+
+    <cylinder>
+      <ID value='Motor'/>
+      <mass value='0.15'/>
+      <size x='2 * motor_radius' y='0.5' z='motor_length'/>
+      <pos x='0' y='0.05 + motor_length/2' z='axis_height + motor_radius'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='10' g='10' b='10'/>
+    </cylinder>
+  </solids>
+
+
+  <articulations>
+
+    <default>
+      <draw radius='0.005' height='0.1' rgb24='8F8F8F'/>
+      <motor ri='7.1' li='3.4e-3' ki='0.187' vmax='15' imax='10' active='1'/>
+      <gear ratio='1'/>
+      <friction bv='0.000931' fc='0.026'/>
+      <encoder ppr='10044' mean='0' stdev='0'/>
+      <controller mode='pidspeed' kp='100' ki='0' kd='0.02' kf='0.05' active='0' period='10'/>
+      <spring k='0' zeropos='0'/>
+    </default>
+
+    <joint>
+      <ID value='InertialBoard'/>
+      <pos x='0' y='0' z='axis_height + motor_radius'/>
+      <axis x='0' y='1' z='0'/>
+      <connect B1='Base' B2='InertialBoard'/>
+      <type value='Hinge'/>
+    </joint>
+
+    <joint>
+      <ID value='Glue'/>
+      <connect B1='Base' B2='Motor'/>
+      <type value='Fixed'/>
+    </joint>
+
+  </articulations>
+
+</robot>
+

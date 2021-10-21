@@ -1,0 +1,157 @@
+<?xml version="1.0"?>
+<sheet>
+  <columns>
+    <defaultcol width="50" />
+    <col num="1" width="57" />
+    <col num="2" width="54" />
+    <col num="7" width="52" />
+  </columns>
+  <cells>
+    <cell r="5" c="3" text="1.00598478317261" />
+    <cell r="2" c="2" text="-65.7362062704931" />
+    <cell r="2" c="3" text="122.687928664514" />
+    <cell r="2" c="1" text="theta_abs" />
+    <cell r="2" c="4" text="-65.687069889604" />
+    <cell r="5" c="2" text="-1.0192928314209" />
+    <cell r="1" c="1" text="JOINT" />
+    <cell r="1" c="2" text="1" />
+    <cell r="1" c="3" text="3" />
+    <cell r="1" c="4" text="8" />
+    <cell r="3" c="1" text="theta_rel" />
+    <cell r="3" c="2" text="-66.3298043508806" />
+    <cell r="3" c="3" text="110.163274179679" />
+    <cell r="3" c="4" text="-67.6237290476261" />
+    <cell r="4" c="1" text="w_abs" />
+    <cell r="4" c="2" text="-0.280064702033997" />
+    <cell r="4" c="3" text="0.266740143299103" />
+    <cell r="4" c="4" text="-0.266157746315002" />
+    <cell r="5" c="1" text="w_rel" />
+    <cell r="5" c="4" text="-0.993781089782715" />
+    <cell r="1" c="5" text="10" />
+    <cell r="1" c="6" text="15" />
+    <cell r="1" c="7" text="17" />
+    <cell r="1" c="8" text="22" />
+    <cell r="1" c="9" text="24" />
+    <cell r="2" c="5" text="122.641483378158" />
+    <cell r="3" c="5" text="110.025468282984" />
+    <cell r="4" c="5" text="0.243870317935944" />
+    <cell r="5" c="5" text="1.04625880718231" />
+    <cell r="2" c="6" text="-65.2856596720824" />
+    <cell r="3" c="6" text="-65.7819412171755" />
+    <cell r="4" c="6" text="-0.315228462219238" />
+    <cell r="5" c="6" text="-1.03931260108948" />
+    <cell r="2" c="7" text="122.240742519175" />
+    <cell r="3" c="7" text="110.714880257049" />
+    <cell r="4" c="7" text="0.304371058940887" />
+    <cell r="5" c="7" text="1.07912302017212" />
+    <cell r="2" c="8" text="-65.3371661286134" />
+    <cell r="3" c="8" text="-66.7311804174564" />
+    <cell r="4" c="8" text="-0.324019581079483" />
+    <cell r="5" c="8" text="0.437962263822556" />
+    <cell r="2" c="9" text="122.291094673737" />
+    <cell r="3" c="9" text="111.045707299688" />
+    <cell r="4" c="9" text="0.323154032230377" />
+    <cell r="5" c="9" text="1.0119366645813" />
+    <cell r="6" c="1" text="voltage" />
+    <cell r="6" c="2" text="0.422177627256387" />
+    <cell r="6" c="3" text="-2.21221268430948" />
+    <cell r="6" c="4" text="0.0553311680083031" />
+    <cell r="6" c="5" text="-2.19526099530458" />
+    <cell r="6" c="6" text="-0.537850690672435" />
+    <cell r="6" c="7" text="-2.35150924047232" />
+    <cell r="6" c="8" text="-0.63427475121556" />
+    <cell r="6" c="9" text="-2.38901429048776" />
+    <cell r="9" c="1" text="LEG" />
+    <cell r="10" c="1" text="v_x" />
+    <cell r="11" c="1" text="v_y" />
+    <cell r="12" c="1" text="w_wheel" />
+    <cell r="9" c="2" text="0" />
+    <cell r="9" c="3" text="1" />
+    <cell r="9" c="4" text="2" />
+    <cell r="9" c="5" text="3" />
+    <cell r="7" c="1" text="ref" />
+    <cell r="7" c="2" text="-65" />
+    <cell r="7" c="3" text="130" />
+    <cell r="7" c="4" text="-65" />
+    <cell r="7" c="5" text="130" />
+    <cell r="7" c="6" text="-65" />
+    <cell r="7" c="7" text="130" />
+    <cell r="7" c="8" text="-65" />
+    <cell r="7" c="9" text="130" />
+    <cell r="13" c="1" text="theta_wheel" />
+    <cell r="10" c="2" text="0" />
+    <cell r="11" c="2" text="0" />
+    <cell r="12" c="2" text="0" />
+    <cell r="13" c="2" text="0" />
+    <cell r="10" c="3" text="0" />
+    <cell r="11" c="3" text="0" />
+    <cell r="12" c="3" text="0" />
+    <cell r="13" c="3" text="0" />
+    <cell r="10" c="4" text="0" />
+    <cell r="11" c="4" text="0" />
+    <cell r="12" c="4" text="0" />
+    <cell r="13" c="4" text="0" />
+    <cell r="10" c="5" text="0" />
+    <cell r="11" c="5" text="0" />
+    <cell r="12" c="5" text="0" />
+    <cell r="13" c="5" text="0" />
+    <cell r="16" c="1" text="JOINT refs" />
+    <cell r="15" c="2" text="joint 1" />
+    <cell r="15" c="3" text="joint 0" />
+    <cell r="16" c="2" text="-65" />
+    <cell r="16" c="3" text="130" />
+    <cell r="18" c="2" text="v" />
+    <cell r="18" c="3" text="vn" />
+    <cell r="18" c="4" text="w" />
+    <cell r="19" c="1" text="Speed" />
+    <cell r="19" c="2" text="0" />
+    <cell r="19" c="3" text="0" />
+    <cell r="19" c="4" text="0" />
+    <cell r="21" c="1" text="CHARTS" />
+    <cell r="21" c="2" text="[Clear]" />
+    <cell r="21" c="3" text="[Save]" />
+    <cell r="23" c="1" text="[Manual]" />
+    <cell r="23" c="2" text="[Script]" />
+    <cell r="23" c="3" text="Manual" />
+    <cell r="26" c="3" text="x_r" />
+    <cell r="27" c="3" text="y_r" />
+    <cell r="28" c="3" text="theta_r" />
+    <cell r="29" c="3" text="e_t" />
+    <cell r="26" c="4" text="-0.946246564388275" />
+    <cell r="27" c="4" text="-0.602572858333588" />
+    <cell r="28" c="4" text="67.8989731370981" />
+    <cell r="29" c="4" text="-0.681563371773274" />
+    <cell r="18" c="6" text="v_r" />
+    <cell r="18" c="7" text="vn_r" />
+    <cell r="18" c="8" text="w_r" />
+    <cell r="19" c="6" text="0" />
+    <cell r="19" c="7" text="0" />
+    <cell r="19" c="8" text="0" />
+    <cell r="32" c="3" text="dist2line" />
+    <cell r="32" c="4" text="0" />
+    <cell r="23" c="6" text="[Line]" />
+    <cell r="23" c="7" text="[Curve]" />
+    <cell r="23" c="8" text="[GO]" />
+    <cell r="23" c="9" text="Curve" />
+    <cell r="26" c="1" text="State" />
+    <cell r="26" c="2" text="1" />
+    <cell r="31" c="3" text="e_dist" />
+    <cell r="31" c="4" text="0.401045838743152" />
+    <cell r="33" c="3" text="S_e_t" />
+    <cell r="33" c="4" text="1.35632609062811" />
+    <cell r="34" c="4" text="-0.0263190992813827" />
+    <cell r="34" c="3" text="dist2curve" />
+    <cell r="26" c="6" text="6.7099999999999" />
+    <cell r="27" c="6" text="12.0699999999998" />
+    <cell r="28" c="6" text="7.03999999999989" />
+    <cell r="29" c="6" text="4.12999999999996" />
+    <cell r="26" c="10" text="-1" />
+    <cell r="28" c="9" text="-0.7" />
+    <cell r="29" c="9" text="0.590486228062259" />
+    <cell r="20" c="6" text="0.645606487492391" />
+    <cell r="20" c="7" text="-0.0569075377721286" />
+    <cell r="20" c="8" text="-0.627178617006326" />
+    <cell r="30" c="9" text="-90.2471611544742" />
+    <cell r="23" c="4" text="2.38999999999999" />
+  </cells>
+</sheet>

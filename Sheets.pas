@@ -354,7 +354,7 @@ begin
   Sel.Bottom := 1;
   SGGlobal.Selection := sel;
 
-  IniPropStorage.IniFileName := GetIniFineName;
+  IniPropStorage.IniFileName := GetIniFineName(copy(name, 2, MaxInt));
   Last_r := 1;
   Last_c := 1;
 end;

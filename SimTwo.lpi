@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="10"/>
+    <Version Value="12"/>
     <PathDelim Value="\"/>
     <General>
       <Flags>
         <MainUnitHasUsesSectionForAllUnits Value="False"/>
         <MainUnitHasCreateFormStatements Value="False"/>
         <MainUnitHasTitleStatement Value="False"/>
+        <CompatibilityMode Value="True"/>
       </Flags>
       <SessionStorage Value="InProjectDir"/>
-      <MainUnit Value="0"/>
       <Title Value="SimTwo"/>
       <Scaled Value="True"/>
       <UseAppBundle Value="False"/>
@@ -28,9 +28,10 @@
     <VersionInfo>
       <UseVersionInfo Value="True"/>
       <AutoIncrementBuild Value="True"/>
-      <MajorVersionNr Value="2020"/>
-      <MinorVersionNr Value="10"/>
-      <BuildNr Value="1"/>
+      <MajorVersionNr Value="2021"/>
+      <MinorVersionNr Value="4"/>
+      <RevisionNr Value="12"/>
+      <BuildNr Value="2"/>
       <Attributes pvaSpecialBuild="True"/>
       <StringTable ProductVersion="2019"/>
     </VersionInfo>
@@ -41,47 +42,42 @@
       <Version Value="2"/>
     </PublishOptions>
     <RunParams>
-      <local>
-        <FormatVersion Value="1"/>
-      </local>
+      <FormatVersion Value="2"/>
+      <Modes Count="1">
+        <Mode0 Name="default"/>
+      </Modes>
     </RunParams>
-    <RequiredPackages Count="12">
+    <RequiredPackages Count="10">
       <Item1>
-        <PackageName Value="sdpofpseriallaz"/>
+        <PackageName Value="GLScene_DesignTime"/>
       </Item1>
       <Item2>
-        <PackageName Value="GLScene_WinOnly"/>
+        <PackageName Value="pascalscript"/>
       </Item2>
       <Item3>
-        <PackageName Value="lnetvisual"/>
+        <PackageName Value="sdpofpseriallaz"/>
       </Item3>
       <Item4>
-        <PackageName Value="LazUtils"/>
+        <PackageName Value="GLScene_RunTime"/>
       </Item4>
       <Item5>
-        <PackageName Value="TAChartLazarusPkg"/>
+        <PackageName Value="lnetvisual"/>
       </Item5>
       <Item6>
-        <PackageName Value="pascalscript"/>
+        <PackageName Value="LazUtils"/>
       </Item6>
       <Item7>
-        <PackageName Value="Printer4Lazarus"/>
+        <PackageName Value="TAChartLazarusPkg"/>
       </Item7>
       <Item8>
-        <PackageName Value="GLScene_DesignTime"/>
+        <PackageName Value="Printer4Lazarus"/>
       </Item8>
       <Item9>
-        <PackageName Value="SdpoSerialLaz"/>
+        <PackageName Value="SynEdit"/>
       </Item9>
       <Item10>
-        <PackageName Value="SynEdit"/>
-      </Item10>
-      <Item11>
-        <PackageName Value="GLScene_RunTime"/>
-      </Item11>
-      <Item12>
         <PackageName Value="LCL"/>
-      </Item12>
+      </Item10>
     </RequiredPackages>
     <Units Count="29">
       <Unit0>
@@ -237,9 +233,9 @@
       <Filename Value="SimTwo2020"/>
     </Target>
     <SearchPaths>
-      <IncludeFiles Value="$(ProjOutDir);C:\lazarus\components\GLSceneLCL\Source\;C:\lazarus\components\PascalScript\Source\"/>
+      <IncludeFiles Value="$(ProjOutDir)"/>
       <Libraries Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="C:\lazarus\components\GLSceneLCL\Source\;C:\lazarus\components\PascalScript\Source\;OmniXML;C:\lazarus\fpc\3.0.4\source\packages\winunits-jedi\src\"/>
+      <OtherUnitFiles Value="OmniXML"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Parsing>

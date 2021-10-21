@@ -6,6 +6,7 @@
 !OPENARRAYOFVARIANT
 ___Pointer
 AnsiString
+AnyMethod
 AnyString
 Boolean
 Byte
@@ -38,8 +39,6 @@ SmallInt
 string
 TAlign
 TAlignment
-TAnchorKind
-TAnchors
 TApplication
 TAxisPoint
 TAxisState

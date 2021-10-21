@@ -1,0 +1,30 @@
+object FMain: TFMain
+  Left = 462
+  Height = 433
+  Top = 142
+  Width = 550
+  Caption = 'FMain'
+  ClientHeight = 433
+  ClientWidth = 550
+  OnClose = FormClose
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  OnPaint = FormPaint
+  OnShow = FormShow
+  LCLVersion = '2.1.0.0'
+  object EditPacketCount: TEdit
+    Left = 456
+    Height = 23
+    Top = 4
+    Width = 80
+    TabOrder = 0
+  end
+  object EditDebug: TEdit
+    Left = 456
+    Height = 23
+    Top = 32
+    Width = 80
+    TabOrder = 1
+    Text = 'EditDebug'
+  end
+end

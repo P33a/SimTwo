@@ -17,7 +17,7 @@ object FEditor: TFEditor
   OnShow = FormShow
   PopupMenu = PopupMenuOutput
   SessionProperties = 'Height;Left;SynEditST.Font;Top;Width;PageControlBottom.ActivePage'
-  LCLVersion = '1.8.2.0'
+  LCLVersion = '2.1.0.0'
   object PageControl: TPageControl
     Left = 0
     Height = 472
@@ -853,12 +853,13 @@ object FEditor: TFEditor
     DirectiveAttri.Foreground = clNavy
     CompilerMode = pcmDelphi
     NestedComments = False
-    left = 192
-    top = 36
+    TypeHelpers = True
+    Left = 192
+    Top = 36
   end
   object MainMenu: TMainMenu
-    left = 164
-    top = 36
+    Left = 164
+    Top = 36
     object MenuFile: TMenuItem
       Caption = '&File'
       object MenuNew: TMenuItem
@@ -1026,32 +1027,32 @@ object FEditor: TFEditor
     DefaultExt = '.pas'
     Filter = 'Pascal Script File|*.*pas|Any File|*.*'
     Options = [ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
-    left = 288
-    top = 36
+    Left = 288
+    Top = 36
   end
   object SaveDialog: TSaveDialog
     Title = 'Save Control Pascal Script'
     DefaultExt = '.pas'
     Filter = 'Pascal Script File|*.*pas|Any File|*.*'
     Options = [ofHideReadOnly, ofNoChangeDir, ofPathMustExist, ofCreatePrompt, ofEnableSizing]
-    left = 316
-    top = 36
+    Left = 316
+    Top = 36
   end
   object FindDialog: TFindDialog
     OnFind = FindDialogFind
-    left = 352
-    top = 36
+    Left = 352
+    Top = 36
   end
   object ReplaceDialog: TReplaceDialog
     Options = [frDown, frHideMatchCase, frHideUpDown, frDisableMatchCase, frDisableUpDown, frReplaceAll, frEntireScope, frHidePromptOnReplace, frButtonsAtBottom]
     OnFind = ReplaceDialogFind
     OnReplace = ReplaceDialogReplace
-    left = 380
-    top = 36
+    Left = 380
+    Top = 36
   end
   object PrintDialog: TPrintDialog
-    left = 416
-    top = 36
+    Left = 416
+    Top = 36
   end
   object PSScript: TPSScriptDebugger
     CompilerOptions = [icBooleanShortCircuit]
@@ -1074,8 +1075,8 @@ object FEditor: TFEditor
     UsePreProcessor = True
     OnNeedFile = PSScriptNeedFile
     OnBreakpoint = PSScriptBreakpoint
-    left = 256
-    top = 36
+    Left = 256
+    Top = 36
   end
   object SynCompletionProposal: TSynCompletion
     ItemList.Strings = (
@@ -1099,37 +1100,37 @@ object FEditor: TFEditor
     ExecCommandID = ecSynCompletionExecute
     Editor = SynEditST
     ToggleReplaceWhole = False
-    left = 192
-    top = 64
+    Left = 192
+    Top = 64
   end
   object PSImport_Classes: TPSImport_Classes
     EnableStreams = True
     EnableClasses = True
-    left = 256
-    top = 68
+    Left = 256
+    Top = 68
   end
   object PSImport_Forms: TPSImport_Forms
     EnableForms = True
     EnableMenus = True
-    left = 256
-    top = 96
+    Left = 256
+    Top = 96
   end
   object PSImport_Controls: TPSImport_Controls
     EnableStreams = True
     EnableGraphics = True
     EnableControls = True
-    left = 256
-    top = 124
+    Left = 256
+    Top = 124
   end
   object PSImport_StdCtrls: TPSImport_StdCtrls
     EnableExtCtrls = True
     EnableButtons = True
-    left = 256
-    top = 152
+    Left = 256
+    Top = 152
   end
   object PopupMenuOutput: TPopupMenu
-    left = 180
-    top = 164
+    Left = 180
+    Top = 164
     object MenuCut: TMenuItem
       Caption = 'Cu&t'
       ShortCut = 16472
@@ -1157,7 +1158,7 @@ object FEditor: TFEditor
   object IniPropStorage: TIniPropStorage
     StoredValues = <>
     IniSection = 'Editor'
-    left = 492
-    top = 40
+    Left = 492
+    Top = 40
   end
 end

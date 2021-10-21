@@ -121,7 +121,7 @@ procedure TFChart.FormCreate(Sender: TObject);
 var i: integer;
 begin
   SeriesNameList := TStringList.Create;
-  IniPropStorage.IniFileName := GetIniFineName;
+  IniPropStorage.IniFileName := GetIniFineName(copy(name, 2, MaxInt));
   physTime_zero := 0;
 
   UserChartsCount := 16;
@@ -256,7 +256,7 @@ begin
       FillTreeViewItem(r, i, 'Power', @GetAxisUIPower, sub_nonde, tree);
       //FillTreeViewItem(r, i, 'Mech Power', @GetAxisTWPower, sub_nonde, tree);
       FillTreeViewItem(r, i, 'Pos ref', @GetAxisPosRefDeg, sub_nonde, tree);
-      FillTreeViewItem(r, i, 'Speed ref', @GetAxisSpeedRefDeg, sub_nonde, tree);
+      FillTreeViewItem(r, i, 'Speed ref', @GetAxisSpeedRef, sub_nonde, tree);
       FillTreeViewItem(r, i, 'Motor Speed', @GetAxisMotorSpeed, sub_nonde, tree);
       FillTreeViewItem(r, i, 'Motor Pos', @GetAxisMotorPosDeg, sub_nonde, tree);
     end;

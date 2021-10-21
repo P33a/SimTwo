@@ -8,7 +8,7 @@ uses
   Windows, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, GLScene, GLObjects, {GLMisc,} GLCadencer, ODEImport,
   GLShadowPlane, GLVectorGeometry, GLGeomObjects, ExtCtrls, ComCtrls,
-  GLWindowsFont, keyboard, GLTexture, math, GLSpaceText, Remote,
+  GLWindowsFont, keyboard, GLTexture, math, {GLSpaceText,} Remote,
   GLShadowVolume, GLSkydome, GLGraph, OmniXML, OmniXMLUtils,  ODERobots,
   ProjConfig, GLHUDObjects, Menus, IniPropStorage, GLVectorFileObjects,
   GLFireFX, GlGraphics, OpenGL1x, SimpleParser, GLBitmapFont,
@@ -185,7 +185,7 @@ type
     procedure CreateSolidCylinder(var Solid: TSolid; cmass, posX, posY, posZ: double; c_radius, c_length: double);
     procedure CreateSolidSphere(var Solid: TSolid; bmass, posX, posY, posZ: double; c_radius: double);
     procedure DeleteSolid(Solid: TSolid);
-    procedure LoadSolidMesh(newSolid: TSolid; MeshFile, MeshShadowFile: string; MeshScale: double;
+    procedure LoadSolidMesh(newSolid: TSolid; MeshFile, MeshShadowFile: string; delta: TAffineVector; MeshScale: double;
       MeshCastsShadows: boolean);
 
     procedure exportGLPolygonsText(St: TStringList; tags: TStrings);
@@ -313,6 +313,8 @@ type
     TrailsCount: integer;
     CurrentProject: string;
     frameCount: longword;
+
+    //IniFileLock: integer;
 
     procedure SetTrailCount(NewCount, NodeCount: integer);
     procedure AddTrailNode(T: integer; x, y, z: double);
@@ -1486,7 +1488,8 @@ begin
 
 end;
 }
-procedure TWorld_ODE.LoadSolidMesh(newSolid: TSolid; MeshFile, MeshShadowFile: string; MeshScale: double; MeshCastsShadows: boolean);
+procedure TWorld_ODE.LoadSolidMesh(newSolid: TSolid; MeshFile, MeshShadowFile: string; delta: TAffineVector; MeshScale: double; MeshCastsShadows: boolean);
+var i: integer;
 begin
   // create mesh file
   if MeshFile <> '' then begin
@@ -1505,6 +1508,10 @@ begin
       Scale.x := MeshScale;
       Scale.y := MeshScale;
       Scale.z := MeshScale;
+      if MeshScale <> 0 then ScaleVector(delta, 1 / MeshScale);
+      for i := 0 to MeshObjects.Count -1 do begin
+        MeshObjects[i].Translate(delta);
+      end;
     end;
     PositionSceneObject(newSolid.AltGLObj, newSolid.Geom);
 
@@ -1528,6 +1535,10 @@ begin
       Scale.x := MeshScale;
       Scale.y := MeshScale;
       Scale.z := MeshScale;
+      if MeshScale <> 0 then ScaleVector(delta, 1 / MeshScale);
+      for i := 0 to MeshObjects.Count -1 do begin
+        MeshObjects[i].Translate(delta);
+      end;
     end;
     PositionSceneObject(newSolid.ShadowGlObj, newSolid.Geom);
     with (OdeScene as TGLShadowVolume).Occluders.AddCaster(newSolid.ShadowGlObj) do begin
@@ -1553,6 +1564,7 @@ var XMLSolid, prop: IXMLNode;
     TextureName: string;
     TextureScale: double;
     MeshFile, MeshShadowFile: string;
+    MeshDelta: TAffineVector;
     MeshScale: double;
     MeshCastsShadows: boolean;
     Surf: TdSurfaceParameters;
@@ -1584,6 +1596,9 @@ begin
       MeshFile := '';
       MeshShadowFile := '';
       MeshScale := 1;
+      MeshDelta.X := 0;
+      MeshDelta.Y := 0;
+      MeshDelta.Z := 0;
       MeshCastsShadows := true;
       BuoyantMass := 0;
       BuoyanceX := 0; BuoyanceY := 0; BuoyanceZ := 0;
@@ -1644,6 +1659,9 @@ begin
           MeshFile := GetNodeAttrStr(prop, 'file', MeshFile);
           MeshShadowFile := GetNodeAttrStr(prop, 'shadowfile', MeshShadowFile);
           MeshScale := GetNodeAttrRealParse(prop, 'scale', MeshScale, Parser);
+          MeshDelta.X := GetNodeAttrRealParse(prop, 'dx', MeshDelta.X, Parser);
+          MeshDelta.Y := GetNodeAttrRealParse(prop, 'dy', MeshDelta.Y, Parser);
+          MeshDelta.Z := GetNodeAttrRealParse(prop, 'dz', MeshDelta.Z, Parser);
           MeshCastsShadows := GetNodeAttrBool(prop, 'shadow', MeshCastsShadows);
         end;
         if prop.NodeName = 'drag' then begin
@@ -1737,7 +1755,7 @@ begin
             newSolid.PaintBitmap.Canvas.Brush.Color := clWhite;
             newSolid.PaintBitmap.Canvas.pen.Color := clblack;
             newSolid.PaintBitmap.Canvas.FillRect(0, 0, CanvasWidth, CanvasHeigth);
-            newSolid.PaintBitmap.Canvas.TextOut(0,0,'Hello World!');
+            //newSolid.PaintBitmap.Canvas.TextOut(0,0,'Hello World!');
             //newSolid.PaintBitmap.Canvas.Ellipse(0,0,127,127);
             with (newSolid.CanvasGLObj as TGLPlane) do begin
              position.Z := sizeZ/2;
@@ -1824,7 +1842,7 @@ begin
 
         newSolid.MatterProperties := MatterProps;
 
-        LoadSolidMesh(newSolid, MeshFile, MeshShadowFile, MeshScale, MeshCastsShadows);
+        LoadSolidMesh(newSolid, MeshFile, MeshShadowFile, MeshDelta, MeshScale, MeshCastsShadows);
 
         if Surf.mu >= 0 then begin
           newSolid.ParSurface.mode := $FF;
@@ -2127,7 +2145,7 @@ begin
               SetHingeLimits(newLink, LimitMin, LimitMax);
               if Friction.Fc > 0 then begin
                 dJointSetHingeParam(newLink.joint, dParamVel , 0);
-                dJointSetHingeParam(newLink.joint, dParamFMax, Friction.Fc);
+                dJointSetHingeParam(newLink.joint, 5, Friction.Fc);
               end;
             end;
 
@@ -3101,7 +3119,7 @@ var ShellNode, prop: IXMLNode;
     MatterProps: TMatterProperties;
     Surf: TdSurfaceParameters;
     focalLength: double;
-    decimation: integer;
+    decimation, frameWidth, frameHeight: integer;
     actRemGLCamera: TGLCamera;
     transparency: double;
 begin
@@ -3128,6 +3146,8 @@ begin
 
       focalLength := 50;
       decimation := 4;
+      frameWidth := 320;
+      frameHeight := 240;
       MotherSolidId := '';
       transparency := 1;
       while prop <> nil do begin
@@ -3148,6 +3168,8 @@ begin
         end;
         if prop.NodeName = 'frame' then begin
           decimation := GetNodeAttrInt(prop, 'decimation', decimation);
+          frameWidth := GetNodeAttrInt(prop, 'width', frameWidth);
+          frameHeight := GetNodeAttrInt(prop, 'height', frameHeight);
         end;
         if prop.NodeName = 'size' then begin
           sizeX := GetNodeAttrRealParse(prop, 'x', sizeX, Parser);
@@ -4088,6 +4110,7 @@ begin
   Ode_ERP := 0.4;
   dWorldSetCFM(world, Ode_CFM);
   dWorldSetERP(world, Ode_ERP);
+  //dWorldSetAutoDisableFlag(world, 1);
 
   //dWorldSetAngularDamping(world, 0);
   //dWorldSetLinearDamping(world, 0);
@@ -4096,10 +4119,6 @@ begin
   //if FileExists('ground.jpg') then begin
   //  FViewer.GLMaterialLibrary.AddTextureMaterial('Ground', 'ground.jpg');
   //end;
-
-  //dWorldSetAutoDisableFlag(world, 1);
-  //dWorldSetAngularDampingThreshold(world, 0.01);
-  //dWorldSetAngularDamping(world, 0.1);
 
   LoadSceneFromXML('scene.xml');
 
@@ -4241,10 +4260,11 @@ begin
 
   end;
 
-  IniPropStorage.IniFileName := GetIniFineName;
-  SetProcessAffinityMask(GetCurrentProcess(), 1);
+  IniPropStorage.IniFileName := GetIniFineName(copy(name, 2, MaxInt));
+//  IniFileLock := FileOpen(IniPropStorage.IniFileName, fmShareDenyNone);
+//  SetProcessAffinityMask(GetCurrentProcess(), 1);
 //  GetProcessAffinityMask(
-  SetThreadAffinityMask(GetCurrentThread(), 1);
+//  SetThreadAffinityMask(GetCurrentThread(), 1);
 //  SetThreadAffinityMask(GetCurrentProcessId(), 1);
   QueryPerformanceFrequency(t_delta);
   t_delta := t_delta div 1000;
@@ -4425,7 +4445,7 @@ begin
         if Motor.JRotor > 0 then begin
           ev := Motor.w * Motor.Ki ;
         end else begin
-          ev := w * Motor.GearRatio * Motor.Ki ;
+          ev := w / Motor.GearRatio * Motor.Ki ;
         end;
 
         if Motor.Li <> 0 then begin
@@ -4487,7 +4507,7 @@ begin
       BGearBox2 := 0;
     end;
 }
-    if Motor.JRotor > 0 then begin
+    {if Motor.JRotor > 0 then begin
       tau :=  Motor.JRotor / WorldODE.Ode_dt;
       dtheta := diffangle(Motor.teta, Theta);
 
@@ -4503,10 +4523,6 @@ begin
 
       Td := TK + TB;
 
-      {if abs(Motor.JRotor / Td) < WorldODE.Ode_dt then begin
-        if Td > 0 then Td := 0.5 *Motor.JRotor / WorldODE.Ode_dt
-        else Td := -0.5 *Motor.JRotor / WorldODE.Ode_dt
-      end;}
   //  ebt := exp(-dt*Motor.Ri / Motor.Li);
   //  Motor.Im := ebt * Motor.Im + (1 - ebt) * (Motor.voltage - ev) / Motor.Ri;
 
@@ -4517,9 +4533,8 @@ begin
       T := Td - Friction.Bv * w - Spring.K * (Theta - Spring.ZeroPos);;
     end else begin
       //T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Spring.K * diffangle(Theta, Spring.ZeroPos);
-      T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Spring.K * (Theta - Spring.ZeroPos);
-      //if (abs(w) < 0.05) and (abs(T) < abs(Friction.Fc)) then T := 0;
-    end;
+    end;}
+    T := Motor.Im * Motor.Ki  - Friction.Bv * w - Spring.K * (Theta - Spring.ZeroPos);
   end;
 end;
 
@@ -4724,6 +4739,7 @@ var theta, w, Tq: double;
     RobotBound: double;
 begin
   //GLScene.CurrentGLCamera.Position := GLDummyCamPos.Position;
+  //try
   GLCamera.Position := GLDummyCamPos.Position;
   if WorldODE.ODEEnable then begin
     QueryPerformanceCounter(t_start);
@@ -4731,7 +4747,7 @@ begin
 
     t_last := t_act;
     QueryPerformanceCounter(t_act);
-
+    if not FParams.CBFreeze.Checked then begin
     // while WorldODE.physTime < newtime do begin
     newFixedTime := WorldODE.physTime + GLCadencer.FixedDeltaTime * WorldODE.TimeFactor;
     while WorldODE.physTime < newFixedTime do begin
@@ -4981,6 +4997,7 @@ begin
 
     end;
     //End Physics Loop
+    end;
 
     QueryPerformanceCounter(t_end);
     //FParams.EditDebug.text := format('%.2f (%.2f)[%.2f]',[(t_end - t_start)/t_delta, t_itot/t_delta, (t_act - t_last)/t_delta]);
@@ -5013,6 +5030,14 @@ begin
     //GLSceneViewer.Invalidate;
 
   end;
+
+  //except on E: Exception do begin
+  //  FParams.EditDebug.text := E.Message;
+  //  //FParams.CBFreeze.Checked := true;
+  //  GLCadencer.Mode := cmManual;
+  //  //FParams.CBFreezeClick(sender);
+  //end;
+  //end;
 end;
 
 
@@ -5217,7 +5242,8 @@ begin
     FSceneEdit.LBErrors.Items.AddStrings(WorldODE.XMLErrors);
   end;
 
-  //SetTrailCount(strtointdef(FParams.EditTrailsCount.Text, 8), strtointdef(FParams.EditTrailSize.Text, 200));
+  SetTrailCount(strtointdef(FParams.EditTrailsCount.Text, 8), strtointdef(FParams.EditTrailSize.Text, 200));
+  //SetTrailCount(8, 200);
   FParams.BSetTrailParsClick(Sender);
 
   FParams.ShowParsedScene;
@@ -5349,13 +5375,14 @@ end;
 procedure TFViewer.FormDestroy(Sender: TObject);
 begin
   HUDStrings.Free;
+  //FileClose(IniFileLock);
 end;
 
 procedure TFViewer.SetTrailCount(NewCount, NodeCount: integer);
 var i, OldCount: integer;
     GLLines: TGLLines;
 begin
-  oldCount := GLDTrails.Count;
+  oldCount := GLDTrails.tag;
   if OldCount = NewCount then exit;
   if OldCount > NewCount then begin
     for i := 1 to OldCount - NewCount do begin
@@ -5365,18 +5392,40 @@ begin
   if OldCount < NewCount then begin
     for i := 1 to NewCount - OldCount  do begin
       GLLines := TGLLines.CreateAsChild(GLDTrails);
-      GLLines.LineWidth := 1;
+      GLLines.LineColor.AsWinColor := clRed;
+      GLLines.LineWidth := 2;
       GLLines.NodesAspect := lnaInvisible;
+      GLLines.Options := [loUseNodeColorForLines];
+      //GLLines.Options := [loColorLogicXor];
       GLLines.Tag := NodeCount; //Stores maximum number of nodes
     end;
   end;
+  GLDTrails.tag := NewCount;
 end;
 
 procedure TFViewer.AddTrailNode(T: integer; x, y, z: double);
 var GLLines: TGLLines;
+    GLLinesNode : TGLLinesNode;
+    //i: integer;
 begin
   GLLines := (GLDTrails.Children[T] as TGLLines);
+
+  //if GLLines.Nodes.Count > 0 then begin
+  //  GLLinesNode := TGLLinesNode(GLLines.Nodes[GLLines.Nodes.Count - 1]);
+  //  GLLinesNode.Color.AsWinColor := clred;
+  //end;
+
   GLLines.AddNode(x, y, z);
+
+  //GLLinesNode := TGLLinesNode(GLLines.Nodes[GLLines.Nodes.Count - 1]);
+  //GLLinesNode.Color.AsWinColor := clred;
+
+  //for i := 0 to GLLines.Nodes.Count - 1 do begin
+  //  GLLinesNode := TGLLinesNode(GLLines.Nodes[i]);
+  //  GLLinesNode.Color.AsWinColor := clRed;
+  //end;
+  //GLLines.StructureChanged;
+
   while GLLines.Nodes.Count > GLLines.Tag do GLLines.Nodes.Delete(0);
 end;
 
@@ -5508,7 +5557,8 @@ end;
 
 end.
 
-
+// Pascal script bug
+//https://bugs.freepascal.org/view.php?id=32236
 
 // TODO
 // lembrar o estado fechado de janelas
