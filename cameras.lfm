@@ -27,10 +27,10 @@ object FCameras: TFCameras
     TabOrder = 0
     object TabDefault: TTabSheet
       Caption = 'Default'
-      ClientHeight = 488
+      ClientHeight = 490
       ClientWidth = 641
       object GLSceneViewer: TGLSceneViewer
-        Left = -4
+        Left = 0
         Height = 480
         Top = 4
         Width = 640
@@ -66,7 +66,7 @@ object FCameras: TFCameras
       object ImageCam: TImage
         Left = 0
         Height = 480
-        Top = 0
+        Top = 4
         Width = 640
       end
     end

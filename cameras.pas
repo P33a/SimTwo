@@ -206,6 +206,7 @@ begin
           Stream.Seek(0, soFromBeginning);
           JpegImage.LoadFromStream(Stream);
           ImageCam.Canvas.Draw(0,0, JpegImage);
+          //ImageCam.Refresh;
         end;
         Stream.Free;
         JpegImage.Free;
