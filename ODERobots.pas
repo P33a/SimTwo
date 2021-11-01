@@ -12,7 +12,7 @@ uses
 
 const
   //ODE world constants
-  MAX_CONTACTS = 3;
+  MAX_CONTACTS = 7;
 
   MaxJointSamples = 256;
   MaxKeyVals = 8;
@@ -828,6 +828,7 @@ begin
   if GLObj = nil then exit;
   if A < 1 then GLObj.Material.BlendingMode := bmTransparency;
   GLObj.Material.FrontProperties.Diffuse.SetColor(R, G, B, A);
+  //GLObj.Material.FrontProperties.Ambient.SetColor(0.2 * R, 0.2 * G, 0.2 * B, A);
 end;
 
 
@@ -1188,6 +1189,8 @@ begin
   end else if dJointGetType(ParentLink.joint) = ord(dJointTypeSlider) then begin
     result := dJointGetSliderPositionRate(ParentLink.joint);
   end;
+  exit;
+
   //lambda := 0.9;
   //filt_speed := (1 - speed_lambda)* result + speed_lambda * filt_speed;
   last_pos := cur_pos;

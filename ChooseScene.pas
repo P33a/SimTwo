@@ -107,7 +107,7 @@ end;
 
 procedure TFChooseScene.FormCreate(Sender: TObject);
 begin
-  IniPropStorage.IniFileName := GetIniFineName;
+  IniPropStorage.IniFileName := GetIniFineName(copy(name, 2, MaxInt));
 end;
 
 end.

@@ -1,7 +1,7 @@
 object FSheets: TFSheets
-  Left = 259
+  Left = 587
   Height = 640
-  Top = 150
+  Top = 157
   Width = 870
   Caption = 'Sheets'
   ClientHeight = 620
@@ -17,7 +17,7 @@ object FSheets: TFSheets
   OnResize = FormResize
   OnShow = FormShow
   SessionProperties = 'Top;Left;Width;Height'
-  LCLVersion = '1.8.2.0'
+  LCLVersion = '2.1.0.0'
   object PanelFormula: TPanel
     Left = 0
     Height = 29
@@ -332,8 +332,8 @@ object FSheets: TFSheets
     end
   end
   object MainMenu: TMainMenu
-    left = 272
-    top = 61
+    Left = 272
+    Top = 61
     object MenuFile: TMenuItem
       Caption = '&File'
       object MenuSave: TMenuItem
@@ -349,8 +349,8 @@ object FSheets: TFSheets
     end
   end
   object PopupMenu: TPopupMenu
-    left = 304
-    top = 61
+    Left = 304
+    Top = 61
     object Edit1: TMenuItem
       Caption = '&Edit'
       Visible = False
@@ -433,8 +433,8 @@ object FSheets: TFSheets
       'ColorS=F0FBFF'
       'ColorT=A4A0A0'
     )
-    left = 340
-    top = 61
+    Left = 340
+    Top = 61
   end
   object FontDialog: TFontDialog
     Font.Color = clWindowText
@@ -442,13 +442,13 @@ object FSheets: TFSheets
     Font.Name = 'Tahoma'
     MinFontSize = 0
     MaxFontSize = 0
-    left = 376
-    top = 61
+    Left = 376
+    Top = 61
   end
   object IniPropStorage: TIniPropStorage
     StoredValues = <>
     IniSection = 'Sheets'
-    left = 420
-    top = 61
+    Left = 420
+    Top = 61
   end
 end

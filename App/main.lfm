@@ -1,0 +1,47 @@
+object FMain: TFMain
+  Left = 280
+  Height = 446
+  Top = 186
+  Width = 659
+  Caption = 'LWRsim'
+  ClientHeight = 446
+  ClientWidth = 659
+  KeyPreview = True
+  OnShow = FormShow
+  SessionProperties = 'Top;Left;Width;Height'
+  LCLVersion = '2.0.12.0'
+  object MemoDebug: TMemo
+    Left = 432
+    Height = 154
+    Top = 40
+    Width = 190
+    Lines.Strings = (
+      'MemoDebug'
+    )
+    TabOrder = 0
+  end
+  object MemoDebug1: TMemo
+    Left = 208
+    Height = 154
+    Top = 160
+    Width = 190
+    Lines.Strings = (
+      'MemoDebug'
+    )
+    TabOrder = 1
+  end
+  object UDP: TLUDPComponent
+    Port = 9999
+    OnReceive = UDPReceive
+    Timeout = 0
+    Left = 520
+    Top = 392
+  end
+  object IniPropStorage: TIniPropStorage
+    StoredValues = <>
+    IniFileName = 'config.ini'
+    IniSection = 'Main'
+    Left = 592
+    Top = 392
+  end
+end

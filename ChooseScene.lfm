@@ -13,7 +13,7 @@ object FChooseScene: TFChooseScene
   OnCreate = FormCreate
   OnShow = FormShow
   SessionProperties = 'Top;Left'
-  LCLVersion = '1.8.2.0'
+  LCLVersion = '2.1.0.0'
   object ImageEmpty: TImage
     Left = 216
     Height = 270
@@ -2122,7 +2122,7 @@ object FChooseScene: TFChooseScene
   object IniPropStorage: TIniPropStorage
     StoredValues = <>
     IniSection = 'Choose'
-    left = 331
-    top = 59
+    Left = 331
+    Top = 59
   end
 end

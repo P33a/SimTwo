@@ -15,16 +15,16 @@ object FParams: TFParams
   OnDestroy = FormDestroy
   OnShow = FormShow
   SessionProperties = 'CBAntiAliasing.Checked;CBAxis.Checked;CBEndlessWorld.Checked;CBFog.Checked;CBFreeze.Checked;CBGrid.Checked;CBGroundTexture.Checked;CBHotCPU.Checked;CBIRNoise.Checked;CBModBusInputOverride.Checked;CBModBusOutputOverride.Checked;CBShadows.Checked;CBSkyDome.Checked;CBTags.Checked;CBUDPConnect.Checked;CBVsync.Checked;CBWorldQuickStep.Checked;ComboGroundTextures.ItemIndex;EditDefaultFriction.Text;EditModBusInputOffset.Text;EditModBusOutputOffset.Text;EditModBusPort.Text;EditODE_CFM.Text;EditOde_dt.Text;EditODE_ERP.Text;EditQuickStepIterations.Text;EditRemoteIP.Text;EditRobotSetTeta.Text;EditRobotSetX.Text;EditRobotSetY.Text;EditRobotSetZ.Text;EditScriptPeriod.Text;EditSetCamLookX.Text;EditSetCamLookY.Text;EditSetCamLookZ.Text;EditSetCamX.Text;EditSetCamY.Text;EditSetCamZ.Text;EditTargetFPS.Text;EditTimeSpeed.Text;EditTrailsCount.Text;EditTrailSize.Text;EditUDPPort.Text;EditWindSpeedX.Text;EditWindSpeedY.Text;EditWindSpeedZ.Text;LBSelectedTags.Items;Left;PageControl.ActivePage;PGRobots.TabIndex;RGCamera.ItemIndex;RGControlBlock.ItemIndex;RGGLObjects.ItemIndex;RGSensorGL.ItemIndex;ShapeSelColor.Brush;Top;CBComBaudrate.ItemIndex;CBComPort.ItemIndex'
-  LCLVersion = '1.8.2.0'
+  LCLVersion = '2.1.0.0'
   Scaled = False
   object PageControl: TPageControl
     Left = 0
     Height = 621
     Top = 0
     Width = 273
-    ActivePage = TabGraphics
+    ActivePage = TabIO
     Anchors = [akTop, akLeft, akBottom]
-    TabIndex = 1
+    TabIndex = 4
     TabOrder = 0
     object TabControl: TTabSheet
       Caption = 'Control'
@@ -1116,7 +1116,7 @@ object FParams: TFParams
         Text = '60'
       end
       object BSetFPS: TButton
-        Left = 124
+        Left = 125
         Height = 25
         Top = 2
         Width = 32
@@ -2264,7 +2264,6 @@ object FParams: TFParams
         Top = 124
         Width = 109
         AutoSize = False
-        OnChange = EditRemoteIPChange
         TabOrder = 2
         Text = '127.0.0.1'
       end
@@ -2381,11 +2380,10 @@ object FParams: TFParams
     Parity = NoneParity
     FlowControl = []
     StopBits = sbOne
-    SerialHandle = 0
     Device = 'COM1'
     OnRxData = SerialComRxData
-    left = 224
-    top = 60
+    Left = 224
+    Top = 60
   end
   object ColorDialog: TColorDialog
     Color = clBlack
@@ -2411,29 +2409,28 @@ object FParams: TFParams
       'ColorS=F0FBFF'
       'ColorT=A4A0A0'
     )
-    left = 156
-    top = 160
+    Left = 156
+    Top = 160
   end
   object Timer: TTimer
     Interval = 100
     OnTimer = TimerTimer
-    left = 200
-    top = 360
+    Left = 200
+    Top = 360
   end
   object IniPropStorage: TIniPropStorage
     StoredValues = <>
     IniSection = 'Config'
-    left = 73
-    top = 342
+    Left = 73
+    Top = 342
   end
   object UDPServer_alt: TLUDPComponent
-    Host = '127.0.0.1'
     Port = 9800
     OnReceive = UDPServer_altReceive
     OnError = UDPServer_altError
     Timeout = 0
-    left = 104
-    top = 512
+    Left = 104
+    Top = 512
   end
   object UDPGeneric: TLUDPComponent
     Host = '127.0.0.1'
@@ -2441,8 +2438,8 @@ object FParams: TFParams
     OnReceive = UDPGenericReceive
     OnError = UDPGenericError
     Timeout = 0
-    left = 116
-    top = 576
+    Left = 116
+    Top = 576
   end
   object TCPModBus: TLTCPComponent
     Port = 5502
@@ -2452,7 +2449,7 @@ object FParams: TFParams
     OnAccept = TCPModBusAccept
     Timeout = 0
     ReuseAddress = False
-    left = 136
-    top = 300
+    Left = 136
+    Top = 300
   end
 end

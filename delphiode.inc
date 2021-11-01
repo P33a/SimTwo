@@ -142,9 +142,9 @@
 {$IFDEF FPC}
   {$MODE Delphi}          { use Delphi compatibility mode }
   {$H+}
-  {$PACKRECORDS 4}        // Added for record
+  {$PACKRECORDS c}        // Added for record
   {$MACRO ON}             // Added For OpenGL
-  {$THREADING on}
+  {THREADING on}
   {$DEFINE Delphi}
   {$DEFINE UseAT}
   {$UNDEF USE_STDCALL}

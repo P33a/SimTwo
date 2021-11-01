@@ -1,0 +1,16 @@
+{
+  "TApplication" : {
+    "FMain" : {
+      "FMain_Top" : "105",
+      "FMain_Left" : "553",
+      "FMain_Width" : "972",
+      "FMain_Height" : "894",
+      "EditOvisIP_Text" : "192.168.126.129",
+      "EditDistPol0_Text" : "5",
+      "EditDistPol1_Text" : "-0.017",
+      "EditDistPol2_Text" : "0",
+      "CBSend_Checked" : "0",
+      "CBShow_Checked" : "1"
+    }
+  }
+}

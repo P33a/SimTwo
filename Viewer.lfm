@@ -1,7 +1,7 @@
 object FViewer: TFViewer
-  Left = 392
+  Left = 403
   Height = 524
-  Top = 132
+  Top = 147
   Width = 757
   Caption = 'SimTwo View'
   ClientHeight = 524
@@ -18,14 +18,13 @@ object FViewer: TFViewer
   OnMouseWheel = FormMouseWheel
   OnShow = FormShow
   SessionProperties = 'GLDummyCamPos.Position;Top;Left;Width;Height'
-  LCLVersion = '1.8.2.0'
+  LCLVersion = '2.1.0.0'
   object GLSceneViewer: TGLSceneViewer
     Left = 0
     Height = 524
     Top = 0
     Width = 757
     Camera = GLCamera
-    Buffer.FogEnvironment.FogColor.Red = 0
     Buffer.FogEnvironment.FogColor.Green = 0.49803900718689
     Buffer.FogEnvironment.FogColor.Blue = 1
     Buffer.FogEnvironment.FogColor.Alpha = 1
@@ -35,12 +34,12 @@ object FViewer: TFViewer
     Buffer.FogEnvironment.FogStart = 1
     Buffer.FogEnvironment.FogEnd = 10
     Buffer.BackgroundColor = clBackground
-    Buffer.AmbientColor.Red = 0.300000011920929
-    Buffer.AmbientColor.Green = 0.300000011920929
-    Buffer.AmbientColor.Blue = 0.300000011920929
-    Buffer.AmbientColor.Alpha = 1
+    Buffer.AmbientColor.Red = 0.5
+    Buffer.AmbientColor.Green = 0.5
+    Buffer.AmbientColor.Blue = 0.5
+    Buffer.AmbientColor.Alpha = 0.5
     Buffer.AmbientColor.Color = {
-      9A99993E9A99993E9A99993E0000803F
+      0000003F0000003F0000003F0000003F
     }
     Buffer.ContextOptions = [roDoubleBuffer, roStencilBuffer, roRenderToWindow]
     Buffer.FogEnable = True
@@ -54,10 +53,9 @@ object FViewer: TFViewer
     TabOrder = 0
   end
   object GLScene: TGLScene
-    left = 188
-    top = 292
+    Left = 188
+    Top = 292
     object GLLightSource: TGLLightSource
-      TagFloat = 0
       Ambient.Red = 0.752941012382507
       Ambient.Green = 0.752941012382507
       Ambient.Blue = 0.752941012382507
@@ -70,8 +68,6 @@ object FViewer: TFViewer
       Diffuse.Green = 1
       Diffuse.Blue = 1
       Diffuse.Alpha = 1
-      LinearAttenuation = 0
-      QuadraticAttenuation = 0
       Position.Coordinates = {
         9A99993F666626C00000F0400000803F
       }
@@ -84,43 +80,29 @@ object FViewer: TFViewer
         0000803F0000803F0000803FCDCC4C3E
       }
       SpotCutOff = 180
-      SpotExponent = 0
     end
     object GLXYZGrid: TGLXYZGrid
-      TagFloat = 0
-      PitchAngle = 0
       Position.Coordinates = {
         00000000000000006F12033B0000803F
       }
-      RollAngle = 0
-      TurnAngle = 0
       AntiAliased = True
-      LineColor.Red = 0.699999988079071
-      LineColor.Green = 0.699999988079071
-      LineColor.Blue = 0.699999988079071
+      LineColor.Red = 0.75
+      LineColor.Green = 0.75
+      LineColor.Blue = 0.75
       LineColor.Alpha = 1
       LineColor.Color = {
-        3333333F3333333F3333333F0000803F
+        0000403F0000403F0000403F0000803F
       }
       LineWidth = 2
       XSamplingScale.Min = -5
       XSamplingScale.Max = 5
-      XSamplingScale.Origin = 0
       XSamplingScale.Step = 1
       YSamplingScale.Min = -5
       YSamplingScale.Max = 5
-      YSamplingScale.Origin = 0
       YSamplingScale.Step = 1
-      ZSamplingScale.Min = 0
-      ZSamplingScale.Max = 0
-      ZSamplingScale.Origin = 0
       ZSamplingScale.Step = 0.100000001490116
     end
     object GLDTrails: TGLDummyCube
-      TagFloat = 0
-      PitchAngle = 0
-      RollAngle = 0
-      TurnAngle = 0
       CubeSize = 1
       EdgeColor.Red = 1
       EdgeColor.Green = 1
@@ -128,10 +110,6 @@ object FViewer: TFViewer
       EdgeColor.Alpha = 1
     end
     object GLEarthSkyDome: TGLEarthSkyDome
-      TagFloat = 0
-      PitchAngle = 0
-      RollAngle = 0
-      TurnAngle = 0
       Pickable = False
       Bands = <>
       Stars = <>
@@ -143,52 +121,34 @@ object FViewer: TFViewer
       SunZenithColor.Alpha = 1
       SunDawnColor.Red = 1
       SunDawnColor.Green = 0.5
-      SunDawnColor.Blue = 0
-      SunDawnColor.Alpha = 0
       HazeColor.Red = 0.899999976158142
       HazeColor.Green = 0.949999988079071
       HazeColor.Blue = 1
-      HazeColor.Alpha = 0
       SkyColor.Red = 0.449999988079071
       SkyColor.Green = 0.600000023841858
       SkyColor.Blue = 0.899999976158142
-      SkyColor.Alpha = 0
-      NightColor.Red = 0
-      NightColor.Green = 0
-      NightColor.Blue = 0
-      NightColor.Alpha = 0
-      DeepColor.Red = 0
       DeepColor.Green = 0.200000002980232
       DeepColor.Blue = 0.400000005960464
-      DeepColor.Alpha = 0
       ExtendedOptions = []
       Slices = 48
       Stacks = 12
     end
     object GLDummyCubeAxis: TGLDummyCube
-      TagFloat = 0
-      PitchAngle = 0
       Position.Coordinates = {
         00000000000000006F12833A0000803F
       }
-      RollAngle = 0
-      TurnAngle = 0
       CubeSize = 1
       EdgeColor.Red = 1
       EdgeColor.Green = 1
       EdgeColor.Blue = 1
       EdgeColor.Alpha = 1
       object GLFlatText_X: TGLFlatText
-        TagFloat = 0
-        PitchAngle = 0
         Position.Coordinates = {
           6666663FCDCC4CBD000000000000803F
         }
-        RollAngle = 0
         Scale.Coordinates = {
           6F12833B6F12833BCDCCCC3D00000000
         }
-        TurnAngle = 0
         Text = 'x'
         Alignment = taLeftJustify
         Layout = tlTop
@@ -202,16 +162,12 @@ object FViewer: TFViewer
         Options = []
       end
       object GLFlatText_Y: TGLFlatText
-        TagFloat = 0
-        PitchAngle = 0
         Position.Coordinates = {
           9A9919BE3333733F000000000000803F
         }
-        RollAngle = 0
         Scale.Coordinates = {
           6F12833B6F12833BCDCCCC3D00000000
         }
-        TurnAngle = 0
         Text = 'y'
         Alignment = taLeftJustify
         Layout = tlTop
@@ -225,16 +181,12 @@ object FViewer: TFViewer
         Options = []
       end
       object GLFlatTextOrigin: TGLFlatText
-        TagFloat = 0
-        PitchAngle = 0
         Position.Coordinates = {
           00000000CDCC4CBD000000000000803F
         }
-        RollAngle = 0
         Scale.Coordinates = {
           6F12833B6F12833BCDCCCC3D00000000
         }
-        TurnAngle = 0
         Text = '(0, 0)'
         Alignment = taCenter
         Layout = tlTop
@@ -248,7 +200,6 @@ object FViewer: TFViewer
         Options = []
       end
       object GLPolygonArrowX: TGLPolygon
-        TagFloat = 0
         Material.BackProperties.Ambient.Red = 0.200000002980232
         Material.BackProperties.Ambient.Green = 0.200000002980232
         Material.BackProperties.Ambient.Blue = 0.200000002980232
@@ -257,13 +208,7 @@ object FViewer: TFViewer
         Material.BackProperties.Diffuse.Green = 0.800000011920929
         Material.BackProperties.Diffuse.Blue = 0.800000011920929
         Material.BackProperties.Diffuse.Alpha = 1
-        Material.BackProperties.Emission.Red = 0
-        Material.BackProperties.Emission.Green = 0
-        Material.BackProperties.Emission.Blue = 0
         Material.BackProperties.Emission.Alpha = 1
-        Material.BackProperties.Specular.Red = 0
-        Material.BackProperties.Specular.Green = 0
-        Material.BackProperties.Specular.Blue = 0
         Material.BackProperties.Specular.Alpha = 1
         Material.FrontProperties.Ambient.Red = 0.100000001490116
         Material.FrontProperties.Ambient.Green = 0.100000001490116
@@ -279,23 +224,8 @@ object FViewer: TFViewer
         Material.FrontProperties.Diffuse.Color = {
           CDCC4C3E9A99193FCDCC4C3E0000803F
         }
-        Material.FrontProperties.Emission.Red = 0
-        Material.FrontProperties.Emission.Green = 0
-        Material.FrontProperties.Emission.Blue = 0
         Material.FrontProperties.Emission.Alpha = 1
-        Material.FrontProperties.Specular.Red = 0
-        Material.FrontProperties.Specular.Green = 0
-        Material.FrontProperties.Specular.Blue = 0
         Material.FrontProperties.Specular.Alpha = 1
-        Material.Texture.EnvColor.Red = 0
-        Material.Texture.EnvColor.Green = 0
-        Material.Texture.EnvColor.Blue = 0
-        Material.Texture.EnvColor.Alpha = 0
-        Material.Texture.BorderColor.Red = 0
-        Material.Texture.BorderColor.Green = 0
-        Material.Texture.BorderColor.Blue = 0
-        Material.Texture.BorderColor.Alpha = 0
-        PitchAngle = 0
         Position.Coordinates = {
           48E17A3F0000000017B7D1380000803F
         }
@@ -303,7 +233,6 @@ object FViewer: TFViewer
         Scale.Coordinates = {
           CDCCCC3D0000803F0000803F00000000
         }
-        TurnAngle = 0
         Up.Coordinates = {
           0000803F2EBD3BB30000000000000000
         }
@@ -333,7 +262,6 @@ object FViewer: TFViewer
           end>
       end
       object GLPolygonArrowY: TGLPolygon
-        TagFloat = 0
         Material.BackProperties.Ambient.Red = 0.200000002980232
         Material.BackProperties.Ambient.Green = 0.200000002980232
         Material.BackProperties.Ambient.Blue = 0.200000002980232
@@ -342,13 +270,7 @@ object FViewer: TFViewer
         Material.BackProperties.Diffuse.Green = 0.800000011920929
         Material.BackProperties.Diffuse.Blue = 0.800000011920929
         Material.BackProperties.Diffuse.Alpha = 1
-        Material.BackProperties.Emission.Red = 0
-        Material.BackProperties.Emission.Green = 0
-        Material.BackProperties.Emission.Blue = 0
         Material.BackProperties.Emission.Alpha = 1
-        Material.BackProperties.Specular.Red = 0
-        Material.BackProperties.Specular.Green = 0
-        Material.BackProperties.Specular.Blue = 0
         Material.BackProperties.Specular.Alpha = 1
         Material.FrontProperties.Ambient.Red = 0.100000001490116
         Material.FrontProperties.Ambient.Green = 0.100000001490116
@@ -364,31 +286,14 @@ object FViewer: TFViewer
         Material.FrontProperties.Diffuse.Color = {
           CDCC4C3E9A99193FCDCC4C3E0000803F
         }
-        Material.FrontProperties.Emission.Red = 0
-        Material.FrontProperties.Emission.Green = 0
-        Material.FrontProperties.Emission.Blue = 0
         Material.FrontProperties.Emission.Alpha = 1
-        Material.FrontProperties.Specular.Red = 0
-        Material.FrontProperties.Specular.Green = 0
-        Material.FrontProperties.Specular.Blue = 0
         Material.FrontProperties.Specular.Alpha = 1
-        Material.Texture.EnvColor.Red = 0
-        Material.Texture.EnvColor.Green = 0
-        Material.Texture.EnvColor.Blue = 0
-        Material.Texture.EnvColor.Alpha = 0
-        Material.Texture.BorderColor.Red = 0
-        Material.Texture.BorderColor.Green = 0
-        Material.Texture.BorderColor.Blue = 0
-        Material.Texture.BorderColor.Alpha = 0
-        PitchAngle = 0
         Position.Coordinates = {
           0000000048E17A3F17B7D1380000803F
         }
-        RollAngle = 0
         Scale.Coordinates = {
           CDCCCC3D0000803F0000803F00000000
         }
-        TurnAngle = 0
         Nodes = <        
           item
             Y = 0.150000005960464
@@ -416,23 +321,15 @@ object FViewer: TFViewer
       end
     end
     object ODEScene: TGLDummyCube
-      TagFloat = 0
-      PitchAngle = 0
-      RollAngle = 0
-      TurnAngle = 0
       CubeSize = 1
       EdgeColor.Red = 1
       EdgeColor.Green = 1
       EdgeColor.Blue = 1
       EdgeColor.Alpha = 1
       object GLDummyTargetCam: TGLDummyCube
-        TagFloat = 0
-        PitchAngle = 0
         Position.Coordinates = {
           00000000000000000000803F0000803F
         }
-        RollAngle = 0
-        TurnAngle = 0
         CubeSize = 1
         EdgeColor.Red = 1
         EdgeColor.Green = 1
@@ -440,10 +337,6 @@ object FViewer: TFViewer
         EdgeColor.Alpha = 1
       end
       object GLDummyTargetCamRel: TGLDummyCube
-        TagFloat = 0
-        PitchAngle = 0
-        RollAngle = 0
-        TurnAngle = 0
         CubeSize = 1
         EdgeColor.Red = 1
         EdgeColor.Green = 1
@@ -451,13 +344,9 @@ object FViewer: TFViewer
         EdgeColor.Alpha = 1
       end
       object GLDummyCamPos: TGLDummyCube
-        TagFloat = 0
-        PitchAngle = 0
         Position.Coordinates = {
           0000003FCDCC2CC0CDCC0C400000803F
         }
-        RollAngle = 0
-        TurnAngle = 0
         CubeSize = 1
         EdgeColor.Red = 1
         EdgeColor.Green = 1
@@ -465,13 +354,9 @@ object FViewer: TFViewer
         EdgeColor.Alpha = 1
       end
       object GLDummyCamPosRel: TGLDummyCube
-        TagFloat = 0
-        PitchAngle = 0
         Position.Coordinates = {
           00000000000080BF0000803F0000803F
         }
-        RollAngle = 0
-        TurnAngle = 0
         CubeSize = 1
         EdgeColor.Red = 1
         EdgeColor.Green = 1
@@ -479,28 +364,19 @@ object FViewer: TFViewer
         EdgeColor.Alpha = 1
       end
       object GLShadowVolume: TGLShadowVolume
-        TagFloat = 0
-        PitchAngle = 0
-        RollAngle = 0
-        TurnAngle = 0
         Lights = <        
           item
-            EffectiveRadius = 0
             LightSource = GLLightSource
           end>
         Occluders = <>
         Capping = svcDefault
         Options = [svoCacheSilhouettes, svoScissorClips, svoWorldScissorClip]
         Mode = svmDarkening
-        DarkeningColor.Red = 0
-        DarkeningColor.Green = 0
-        DarkeningColor.Blue = 0
         DarkeningColor.Alpha = 0.300000011920929
         DarkeningColor.Color = {
           0000000000000000000000009A99993E
         }
         object GLPlaneFloor: TGLPlane
-          TagFloat = 0
           Material.BackProperties.Ambient.Red = 0.200000002980232
           Material.BackProperties.Ambient.Green = 0.200000002980232
           Material.BackProperties.Ambient.Blue = 0.200000002980232
@@ -509,32 +385,18 @@ object FViewer: TFViewer
           Material.BackProperties.Diffuse.Green = 0.800000011920929
           Material.BackProperties.Diffuse.Blue = 0.800000011920929
           Material.BackProperties.Diffuse.Alpha = 1
-          Material.BackProperties.Emission.Red = 0
-          Material.BackProperties.Emission.Green = 0
-          Material.BackProperties.Emission.Blue = 0
           Material.BackProperties.Emission.Alpha = 1
-          Material.BackProperties.Specular.Red = 0
-          Material.BackProperties.Specular.Green = 0
-          Material.BackProperties.Specular.Blue = 0
           Material.BackProperties.Specular.Alpha = 1
           Material.FrontProperties.Ambient.Red = 0.200000002980232
           Material.FrontProperties.Ambient.Green = 0.200000002980232
           Material.FrontProperties.Ambient.Blue = 0.200000002980232
           Material.FrontProperties.Ambient.Alpha = 1
-          Material.FrontProperties.Diffuse.Red = 0
           Material.FrontProperties.Diffuse.Green = 0.45100000500679
-          Material.FrontProperties.Diffuse.Blue = 0
           Material.FrontProperties.Diffuse.Alpha = 1
           Material.FrontProperties.Diffuse.Color = {
             0000000079E9E63E000000000000803F
           }
-          Material.FrontProperties.Emission.Red = 0
-          Material.FrontProperties.Emission.Green = 0
-          Material.FrontProperties.Emission.Blue = 0
           Material.FrontProperties.Emission.Alpha = 1
-          Material.FrontProperties.Specular.Red = 0
-          Material.FrontProperties.Specular.Green = 0
-          Material.FrontProperties.Specular.Blue = 0
           Material.FrontProperties.Specular.Alpha = 1
           Material.Texture.Image.Picture.Data = {
             0A544A706567496D6167654D320000FFD8FFE000104A46494600010201004800
@@ -948,26 +810,9 @@ object FViewer: TFViewer
           Material.Texture.MappingTCoordinates.Coordinates = {
             000000000000A0400000000000000000
           }
-          Material.Texture.EnvColor.Red = 0
-          Material.Texture.EnvColor.Green = 0
-          Material.Texture.EnvColor.Blue = 0
-          Material.Texture.EnvColor.Alpha = 0
-          Material.Texture.BorderColor.Red = 0
-          Material.Texture.BorderColor.Green = 0
-          Material.Texture.BorderColor.Blue = 0
-          Material.Texture.BorderColor.Alpha = 0
-          PitchAngle = 0
-          RollAngle = 0
-          TurnAngle = 0
           Height = 24
           Width = 24
-          XOffset = 0
-          YOffset = 0
           object GLLinesXY: TGLLines
-            TagFloat = 0
-            PitchAngle = 0
-            RollAngle = 0
-            TurnAngle = 0
             Visible = False
             LineColor.Red = 0.800000011920929
             LineColor.Green = 0.49803900718689
@@ -977,8 +822,6 @@ object FViewer: TFViewer
               CDCC4C3FF8FEFE3EACC8483E0000803F
             }
             LineWidth = 3
-            NodeColor.Red = 0
-            NodeColor.Green = 0
             NodeColor.Blue = 1
             NodeColor.Alpha = 1
             Nodes = <            
@@ -996,7 +839,6 @@ object FViewer: TFViewer
           end
         end
         object GLCylinder1: TGLCylinder
-          TagFloat = 0
           Material.BackProperties.Ambient.Red = 0.200000002980232
           Material.BackProperties.Ambient.Green = 0.200000002980232
           Material.BackProperties.Ambient.Blue = 0.200000002980232
@@ -1005,13 +847,7 @@ object FViewer: TFViewer
           Material.BackProperties.Diffuse.Green = 0.800000011920929
           Material.BackProperties.Diffuse.Blue = 0.800000011920929
           Material.BackProperties.Diffuse.Alpha = 1
-          Material.BackProperties.Emission.Red = 0
-          Material.BackProperties.Emission.Green = 0
-          Material.BackProperties.Emission.Blue = 0
           Material.BackProperties.Emission.Alpha = 1
-          Material.BackProperties.Specular.Red = 0
-          Material.BackProperties.Specular.Green = 0
-          Material.BackProperties.Specular.Blue = 0
           Material.BackProperties.Specular.Alpha = 1
           Material.FrontProperties.Ambient.Red = 0.200000002980232
           Material.FrontProperties.Ambient.Green = 0.200000002980232
@@ -1021,26 +857,9 @@ object FViewer: TFViewer
           Material.FrontProperties.Diffuse.Green = 0.800000011920929
           Material.FrontProperties.Diffuse.Blue = 0.800000011920929
           Material.FrontProperties.Diffuse.Alpha = 1
-          Material.FrontProperties.Emission.Red = 0
-          Material.FrontProperties.Emission.Green = 0
-          Material.FrontProperties.Emission.Blue = 0
           Material.FrontProperties.Emission.Alpha = 1
-          Material.FrontProperties.Specular.Red = 0
-          Material.FrontProperties.Specular.Green = 0
-          Material.FrontProperties.Specular.Blue = 0
           Material.FrontProperties.Specular.Alpha = 1
-          Material.Texture.EnvColor.Red = 0
-          Material.Texture.EnvColor.Green = 0
-          Material.Texture.EnvColor.Blue = 0
-          Material.Texture.EnvColor.Alpha = 0
-          Material.Texture.BorderColor.Red = 0
-          Material.Texture.BorderColor.Green = 0
-          Material.Texture.BorderColor.Blue = 0
-          Material.Texture.BorderColor.Alpha = 0
           Material.LibMaterialName = 'LibMaterialBumps'
-          PitchAngle = 0
-          RollAngle = 0
-          TurnAngle = 0
           Visible = False
           BottomRadius = 0.5
           Height = 1
@@ -1049,10 +868,6 @@ object FViewer: TFViewer
       end
     end
     object GLDummyCFire: TGLDummyCube
-      TagFloat = 0
-      PitchAngle = 0
-      RollAngle = 0
-      TurnAngle = 0
       CubeSize = 1
       EdgeColor.Red = 1
       EdgeColor.Green = 1
@@ -1064,59 +879,43 @@ object FViewer: TFViewer
       }
     end
     object GLHUDTextObjName: TGLHUDText
-      TagFloat = 0
-      PitchAngle = 0
       Position.Coordinates = {
         0000A04100002041000000000000803F
       }
-      RollAngle = 0
       Scale.Coordinates = {
         0000003F3333333F0000803F00000000
       }
-      TurnAngle = 0
       Text = 'ObjectName'
-      Rotation = 0
       ModulateColor.Red = 1
       ModulateColor.Green = 1
       ModulateColor.Blue = 1
       ModulateColor.Alpha = 1
     end
     object GLHUDTextGeneric: TGLHUDText
-      TagFloat = 0
-      PitchAngle = 0
       Position.Coordinates = {
         0000A04100002042000000000000803F
       }
-      RollAngle = 0
       Scale.Coordinates = {
         0000003F3333333F0000803F00000000
       }
-      TurnAngle = 0
-      Rotation = 0
       ModulateColor.Red = 1
       ModulateColor.Green = 1
       ModulateColor.Blue = 1
       ModulateColor.Alpha = 1
     end
     object GLHUDTextMeasure: TGLHUDText
-      TagFloat = 0
-      PitchAngle = 0
       Position.Coordinates = {
         0000A04100002042000000000000803F
       }
-      RollAngle = 0
       Scale.Coordinates = {
         0000003F3333333F0000803F00000000
       }
-      TurnAngle = 0
-      Rotation = 0
       ModulateColor.Red = 1
       ModulateColor.Green = 1
       ModulateColor.Blue = 1
       ModulateColor.Alpha = 1
     end
     object GLCylinder2: TGLCylinder
-      TagFloat = 0
       Material.BackProperties.Ambient.Red = 0.200000002980232
       Material.BackProperties.Ambient.Green = 0.200000002980232
       Material.BackProperties.Ambient.Blue = 0.200000002980232
@@ -1125,13 +924,7 @@ object FViewer: TFViewer
       Material.BackProperties.Diffuse.Green = 0.800000011920929
       Material.BackProperties.Diffuse.Blue = 0.800000011920929
       Material.BackProperties.Diffuse.Alpha = 1
-      Material.BackProperties.Emission.Red = 0
-      Material.BackProperties.Emission.Green = 0
-      Material.BackProperties.Emission.Blue = 0
       Material.BackProperties.Emission.Alpha = 1
-      Material.BackProperties.Specular.Red = 0
-      Material.BackProperties.Specular.Green = 0
-      Material.BackProperties.Specular.Blue = 0
       Material.BackProperties.Specular.Alpha = 1
       Material.FrontProperties.Ambient.Red = 0.200000002980232
       Material.FrontProperties.Ambient.Green = 0.200000002980232
@@ -1141,32 +934,18 @@ object FViewer: TFViewer
       Material.FrontProperties.Diffuse.Green = 0.800000011920929
       Material.FrontProperties.Diffuse.Blue = 0.800000011920929
       Material.FrontProperties.Diffuse.Alpha = 1
-      Material.FrontProperties.Emission.Red = 0
-      Material.FrontProperties.Emission.Green = 0
-      Material.FrontProperties.Emission.Blue = 0
       Material.FrontProperties.Emission.Alpha = 1
-      Material.FrontProperties.Specular.Red = 0
-      Material.FrontProperties.Specular.Green = 0
-      Material.FrontProperties.Specular.Blue = 0
       Material.FrontProperties.Specular.Alpha = 1
       Material.Texture.EnvColor.Red = 200
-      Material.Texture.EnvColor.Green = 0
-      Material.Texture.EnvColor.Blue = 0
       Material.Texture.EnvColor.Alpha = 200
       Material.Texture.EnvColor.Color = {
         00004843000000000000000000004843
       }
-      Material.Texture.BorderColor.Red = 0
-      Material.Texture.BorderColor.Green = 0
-      Material.Texture.BorderColor.Blue = 0
-      Material.Texture.BorderColor.Alpha = 0
       Material.LibMaterialName = 'LibMaterialFeup'
       Direction.Coordinates = {
         000000000000803F0000000000000000
       }
       PitchAngle = 90
-      RollAngle = 0
-      TurnAngle = 0
       Up.Coordinates = {
         0000000000000000000080BF00000000
       }
@@ -1177,7 +956,6 @@ object FViewer: TFViewer
       Alignment = caTop
     end
     object GLCube1: TGLCube
-      TagFloat = 0
       Material.BackProperties.Ambient.Red = 0.200000002980232
       Material.BackProperties.Ambient.Green = 0.200000002980232
       Material.BackProperties.Ambient.Blue = 0.200000002980232
@@ -1186,13 +964,7 @@ object FViewer: TFViewer
       Material.BackProperties.Diffuse.Green = 0.800000011920929
       Material.BackProperties.Diffuse.Blue = 0.800000011920929
       Material.BackProperties.Diffuse.Alpha = 1
-      Material.BackProperties.Emission.Red = 0
-      Material.BackProperties.Emission.Green = 0
-      Material.BackProperties.Emission.Blue = 0
       Material.BackProperties.Emission.Alpha = 1
-      Material.BackProperties.Specular.Red = 0
-      Material.BackProperties.Specular.Green = 0
-      Material.BackProperties.Specular.Blue = 0
       Material.BackProperties.Specular.Alpha = 1
       Material.FrontProperties.Ambient.Red = 0.200000002980232
       Material.FrontProperties.Ambient.Green = 0.200000002980232
@@ -1202,13 +974,7 @@ object FViewer: TFViewer
       Material.FrontProperties.Diffuse.Green = 0.800000011920929
       Material.FrontProperties.Diffuse.Blue = 0.800000011920929
       Material.FrontProperties.Diffuse.Alpha = 1
-      Material.FrontProperties.Emission.Red = 0
-      Material.FrontProperties.Emission.Green = 0
-      Material.FrontProperties.Emission.Blue = 0
       Material.FrontProperties.Emission.Alpha = 1
-      Material.FrontProperties.Specular.Red = 0
-      Material.FrontProperties.Specular.Green = 0
-      Material.FrontProperties.Specular.Blue = 0
       Material.FrontProperties.Specular.Alpha = 1
       Material.Texture.Image.Picture.Data = {
         0A544A706567496D616765EA190000FFD8FFE000104A46494600010101004800
@@ -1426,20 +1192,9 @@ object FViewer: TFViewer
       Material.Texture.MappingTCoordinates.Coordinates = {
         00000000000000000000803F00000000
       }
-      Material.Texture.EnvColor.Red = 0
-      Material.Texture.EnvColor.Green = 0
-      Material.Texture.EnvColor.Blue = 0
-      Material.Texture.EnvColor.Alpha = 0
-      Material.Texture.BorderColor.Red = 0
-      Material.Texture.BorderColor.Green = 0
-      Material.Texture.BorderColor.Blue = 0
-      Material.Texture.BorderColor.Alpha = 0
-      PitchAngle = 0
       Position.Coordinates = {
         00000000000000000000003F0000803F
       }
-      RollAngle = 0
-      TurnAngle = 0
       Visible = False
       Parts = [cpBottom]
       CubeSize = {
@@ -1447,7 +1202,6 @@ object FViewer: TFViewer
       }
     end
     object GLCone1: TGLCone
-      TagFloat = 0
       Material.BackProperties.Ambient.Red = 0.200000002980232
       Material.BackProperties.Ambient.Green = 0.200000002980232
       Material.BackProperties.Ambient.Blue = 0.200000002980232
@@ -1456,13 +1210,7 @@ object FViewer: TFViewer
       Material.BackProperties.Diffuse.Green = 0.800000011920929
       Material.BackProperties.Diffuse.Blue = 0.800000011920929
       Material.BackProperties.Diffuse.Alpha = 1
-      Material.BackProperties.Emission.Red = 0
-      Material.BackProperties.Emission.Green = 0
-      Material.BackProperties.Emission.Blue = 0
       Material.BackProperties.Emission.Alpha = 1
-      Material.BackProperties.Specular.Red = 0
-      Material.BackProperties.Specular.Green = 0
-      Material.BackProperties.Specular.Blue = 0
       Material.BackProperties.Specular.Alpha = 1
       Material.FrontProperties.Ambient.Red = 0.200000002980232
       Material.FrontProperties.Ambient.Green = 0.200000002980232
@@ -1475,34 +1223,16 @@ object FViewer: TFViewer
       Material.FrontProperties.Diffuse.Color = {
         CDCC4C3FCDCC4C3FCDCC4C3F0000003F
       }
-      Material.FrontProperties.Emission.Red = 0
-      Material.FrontProperties.Emission.Green = 0
-      Material.FrontProperties.Emission.Blue = 0
       Material.FrontProperties.Emission.Alpha = 1
-      Material.FrontProperties.Specular.Red = 0
-      Material.FrontProperties.Specular.Green = 0
-      Material.FrontProperties.Specular.Blue = 0
       Material.FrontProperties.Specular.Alpha = 1
-      Material.Texture.EnvColor.Red = 0
-      Material.Texture.EnvColor.Green = 0
-      Material.Texture.EnvColor.Blue = 0
-      Material.Texture.EnvColor.Alpha = 0
-      Material.Texture.BorderColor.Red = 0
-      Material.Texture.BorderColor.Green = 0
-      Material.Texture.BorderColor.Blue = 0
-      Material.Texture.BorderColor.Alpha = 0
-      PitchAngle = 0
-      RollAngle = 0
       Scale.Coordinates = {
         0000003F0000803F0000803F00000000
       }
-      TurnAngle = 0
       Visible = False
       BottomRadius = 0.5
       Height = 1
     end
     object GLPlaneTex: TGLPlane
-      TagFloat = 0
       Material.BackProperties.Ambient.Red = 0.200000002980232
       Material.BackProperties.Ambient.Green = 0.200000002980232
       Material.BackProperties.Ambient.Blue = 0.200000002980232
@@ -1511,13 +1241,7 @@ object FViewer: TFViewer
       Material.BackProperties.Diffuse.Green = 0.800000011920929
       Material.BackProperties.Diffuse.Blue = 0.800000011920929
       Material.BackProperties.Diffuse.Alpha = 1
-      Material.BackProperties.Emission.Red = 0
-      Material.BackProperties.Emission.Green = 0
-      Material.BackProperties.Emission.Blue = 0
       Material.BackProperties.Emission.Alpha = 1
-      Material.BackProperties.Specular.Red = 0
-      Material.BackProperties.Specular.Green = 0
-      Material.BackProperties.Specular.Blue = 0
       Material.BackProperties.Specular.Alpha = 1
       Material.FrontProperties.Ambient.Red = 0.5
       Material.FrontProperties.Ambient.Green = 0.5
@@ -1533,44 +1257,24 @@ object FViewer: TFViewer
       Material.FrontProperties.Diffuse.Color = {
         0000803F0000803F0000803F0000803F
       }
-      Material.FrontProperties.Emission.Red = 0
-      Material.FrontProperties.Emission.Green = 0
-      Material.FrontProperties.Emission.Blue = 0
       Material.FrontProperties.Emission.Alpha = 1
-      Material.FrontProperties.Specular.Red = 0
-      Material.FrontProperties.Specular.Green = 0
-      Material.FrontProperties.Specular.Blue = 0
       Material.FrontProperties.Specular.Alpha = 1
       Material.Texture.TextureMode = tmModulate
-      Material.Texture.EnvColor.Red = 0
-      Material.Texture.EnvColor.Green = 0
-      Material.Texture.EnvColor.Blue = 0
-      Material.Texture.EnvColor.Alpha = 0
-      Material.Texture.BorderColor.Red = 0
-      Material.Texture.BorderColor.Green = 0
-      Material.Texture.BorderColor.Blue = 0
-      Material.Texture.BorderColor.Alpha = 0
       Material.Texture.Disabled = False
       Direction.Coordinates = {
         00000000000080BF0000000000000000
       }
-      PitchAngle = 0
       Position.Coordinates = {
         00000000000000000000003F0000803F
       }
-      RollAngle = 0
-      TurnAngle = 0
       Up.Coordinates = {
         00000000000000000000803F00000000
       }
       Visible = False
       Height = 1
       Width = 1
-      XOffset = 0
-      YOffset = 0
     end
     object GLPlane1: TGLPlane
-      TagFloat = 0
       Material.BackProperties.Ambient.Red = 0.200000002980232
       Material.BackProperties.Ambient.Green = 0.200000002980232
       Material.BackProperties.Ambient.Blue = 0.200000002980232
@@ -1579,13 +1283,7 @@ object FViewer: TFViewer
       Material.BackProperties.Diffuse.Green = 0.800000011920929
       Material.BackProperties.Diffuse.Blue = 0.800000011920929
       Material.BackProperties.Diffuse.Alpha = 1
-      Material.BackProperties.Emission.Red = 0
-      Material.BackProperties.Emission.Green = 0
-      Material.BackProperties.Emission.Blue = 0
       Material.BackProperties.Emission.Alpha = 1
-      Material.BackProperties.Specular.Red = 0
-      Material.BackProperties.Specular.Green = 0
-      Material.BackProperties.Specular.Blue = 0
       Material.BackProperties.Specular.Alpha = 1
       Material.FrontProperties.Ambient.Red = 0.200000002980232
       Material.FrontProperties.Ambient.Green = 0.200000002980232
@@ -1595,54 +1293,29 @@ object FViewer: TFViewer
       Material.FrontProperties.Diffuse.Green = 0.800000011920929
       Material.FrontProperties.Diffuse.Blue = 0.800000011920929
       Material.FrontProperties.Diffuse.Alpha = 1
-      Material.FrontProperties.Emission.Red = 0
-      Material.FrontProperties.Emission.Green = 0
-      Material.FrontProperties.Emission.Blue = 0
       Material.FrontProperties.Emission.Alpha = 1
-      Material.FrontProperties.Specular.Red = 0
-      Material.FrontProperties.Specular.Green = 0
-      Material.FrontProperties.Specular.Blue = 0
       Material.FrontProperties.Specular.Alpha = 1
-      Material.Texture.EnvColor.Red = 0
-      Material.Texture.EnvColor.Green = 0
-      Material.Texture.EnvColor.Blue = 0
-      Material.Texture.EnvColor.Alpha = 0
-      Material.Texture.BorderColor.Red = 0
-      Material.Texture.BorderColor.Green = 0
-      Material.Texture.BorderColor.Blue = 0
-      Material.Texture.BorderColor.Alpha = 0
       Material.Texture.Disabled = False
       Direction.Coordinates = {
         00000000000080BF0000000000000000
       }
-      PitchAngle = 0
       Position.Coordinates = {
         00000000000040410000003F0000803F
       }
-      RollAngle = 0
-      TurnAngle = 0
       Up.Coordinates = {
         00000000000000000000803F00000000
       }
       Visible = False
       Height = 1
       Width = 1
-      XOffset = 0
-      YOffset = 0
     end
     object GLLineMeasure: TGLLines
-      TagFloat = 0
-      PitchAngle = 0
-      RollAngle = 0
-      TurnAngle = 0
       Visible = False
       AntiAliased = True
       LineColor.Red = 1
       LineColor.Green = 1
       LineColor.Blue = 1
       LineColor.Alpha = 1
-      NodeColor.Red = 0
-      NodeColor.Green = 0
       NodeColor.Blue = 1
       NodeColor.Alpha = 1
       Nodes = <      
@@ -1657,7 +1330,6 @@ object FViewer: TFViewer
       Options = []
     end
     object GLWaterPlane1: TGLWaterPlane
-      TagFloat = 0
       Material.BackProperties.Ambient.Red = 0.200000002980232
       Material.BackProperties.Ambient.Green = 0.200000002980232
       Material.BackProperties.Ambient.Blue = 0.200000002980232
@@ -1666,13 +1338,7 @@ object FViewer: TFViewer
       Material.BackProperties.Diffuse.Green = 0.800000011920929
       Material.BackProperties.Diffuse.Blue = 0.800000011920929
       Material.BackProperties.Diffuse.Alpha = 1
-      Material.BackProperties.Emission.Red = 0
-      Material.BackProperties.Emission.Green = 0
-      Material.BackProperties.Emission.Blue = 0
       Material.BackProperties.Emission.Alpha = 1
-      Material.BackProperties.Specular.Red = 0
-      Material.BackProperties.Specular.Green = 0
-      Material.BackProperties.Specular.Blue = 0
       Material.BackProperties.Specular.Alpha = 1
       Material.FrontProperties.Ambient.Red = 0.200000002980232
       Material.FrontProperties.Ambient.Green = 0.200000002980232
@@ -1685,35 +1351,17 @@ object FViewer: TFViewer
       Material.FrontProperties.Diffuse.Color = {
         CDCC4C3FCDCC4C3FCDCC4C3F0000003F
       }
-      Material.FrontProperties.Emission.Red = 0
-      Material.FrontProperties.Emission.Green = 0
-      Material.FrontProperties.Emission.Blue = 0
       Material.FrontProperties.Emission.Alpha = 1
-      Material.FrontProperties.Specular.Red = 0
-      Material.FrontProperties.Specular.Green = 0
-      Material.FrontProperties.Specular.Blue = 0
-      Material.FrontProperties.Specular.Alpha = 0
       Material.FrontProperties.Specular.Color = {
         00000000000000000000000000000000
       }
       Material.BlendingMode = bmTransparency
-      Material.Texture.EnvColor.Red = 0
-      Material.Texture.EnvColor.Green = 0
-      Material.Texture.EnvColor.Blue = 0
-      Material.Texture.EnvColor.Alpha = 0
-      Material.Texture.BorderColor.Red = 0
-      Material.Texture.BorderColor.Green = 0
-      Material.Texture.BorderColor.Blue = 0
-      Material.Texture.BorderColor.Alpha = 0
       Direction.Coordinates = {
         00000000000080BF0000000000000000
       }
-      PitchAngle = 0
       Position.Coordinates = {
         0000000000000000CDCCCC3D0000803F
       }
-      RollAngle = 0
-      TurnAngle = 0
       Up.Coordinates = {
         00000000000000000000803F00000000
       }
@@ -1727,7 +1375,6 @@ object FViewer: TFViewer
       SimulationFrequency = 100
     end
     object GLDisk1: TGLDisk
-      TagFloat = 0
       Material.BackProperties.Ambient.Red = 0.200000002980232
       Material.BackProperties.Ambient.Green = 0.200000002980232
       Material.BackProperties.Ambient.Blue = 0.200000002980232
@@ -1736,13 +1383,7 @@ object FViewer: TFViewer
       Material.BackProperties.Diffuse.Green = 0.800000011920929
       Material.BackProperties.Diffuse.Blue = 0.800000011920929
       Material.BackProperties.Diffuse.Alpha = 1
-      Material.BackProperties.Emission.Red = 0
-      Material.BackProperties.Emission.Green = 0
-      Material.BackProperties.Emission.Blue = 0
       Material.BackProperties.Emission.Alpha = 1
-      Material.BackProperties.Specular.Red = 0
-      Material.BackProperties.Specular.Green = 0
-      Material.BackProperties.Specular.Blue = 0
       Material.BackProperties.Specular.Alpha = 1
       Material.FrontProperties.Ambient.Red = 0.200000002980232
       Material.FrontProperties.Ambient.Green = 0.200000002980232
@@ -1752,29 +1393,12 @@ object FViewer: TFViewer
       Material.FrontProperties.Diffuse.Green = 0.800000011920929
       Material.FrontProperties.Diffuse.Blue = 0.800000011920929
       Material.FrontProperties.Diffuse.Alpha = 1
-      Material.FrontProperties.Emission.Red = 0
-      Material.FrontProperties.Emission.Green = 0
-      Material.FrontProperties.Emission.Blue = 0
       Material.FrontProperties.Emission.Alpha = 1
-      Material.FrontProperties.Specular.Red = 0
-      Material.FrontProperties.Specular.Green = 0
-      Material.FrontProperties.Specular.Blue = 0
       Material.FrontProperties.Specular.Alpha = 1
-      Material.Texture.EnvColor.Red = 0
-      Material.Texture.EnvColor.Green = 0
-      Material.Texture.EnvColor.Blue = 0
-      Material.Texture.EnvColor.Alpha = 0
-      Material.Texture.BorderColor.Red = 0
-      Material.Texture.BorderColor.Green = 0
-      Material.Texture.BorderColor.Blue = 0
-      Material.Texture.BorderColor.Alpha = 0
       Material.FaceCulling = fcNoCull
-      PitchAngle = 0
       Position.Coordinates = {
         00000000000000000000803F0000803F
       }
-      RollAngle = 0
-      TurnAngle = 0
       Visible = False
       InnerRadius = 0.100000001490116
       OuterRadius = 0.5
@@ -1782,7 +1406,6 @@ object FViewer: TFViewer
       SweepAngle = 15
     end
     object GLCamera: TGLCamera
-      TagFloat = 0
       DepthOfView = 1000000000
       FocalLength = 76.6334686279297
       NearPlaneBias = 0.00999999977648258
@@ -1798,7 +1421,6 @@ object FViewer: TFViewer
       }
     end
     object GLCameraMem: TGLCamera
-      TagFloat = 0
       DepthOfView = 1000000000
       FocalLength = 50
       NearPlaneBias = 0.00100000004749745
@@ -1813,23 +1435,22 @@ object FViewer: TFViewer
   object GLCadencer: TGLCadencer
     Scene = GLScene
     Enabled = False
-    MaxDeltaTime = 0
-    MinDeltaTime = 0
     FixedDeltaTime = 0.0166666666666667
+    Mode = cmApplicationIdle
     SleepLength = 1
     OnProgress = GLCadencerProgress
-    left = 196
-    top = 44
+    Left = 196
+    Top = 44
   end
   object Timer: TTimer
     Enabled = False
     OnTimer = TimerTimer
-    left = 72
-    top = 36
+    Left = 72
+    Top = 36
   end
   object PopupMenu: TPopupMenu
-    left = 344
-    top = 164
+    Left = 344
+    Top = 164
     object MenuConfig: TMenuItem
       Caption = '&Config'
       ShortCut = 16455
@@ -1888,8 +1509,8 @@ object FViewer: TFViewer
     end
   end
   object GLMaterialLibrary3ds: TGLMaterialLibrary
-    left = 204
-    top = 92
+    Left = 204
+    Top = 92
   end
   object GLFireFXManager: TGLFireFXManager
     FireDir.Coordinates = {
@@ -1903,18 +1524,14 @@ object FViewer: TFViewer
     ParticleSize = 0.100000001490116
     InnerColor.Red = 1
     InnerColor.Green = 1
-    InnerColor.Blue = 0
     InnerColor.Alpha = 1
     OuterColor.Red = 1
-    OuterColor.Green = 0
-    OuterColor.Blue = 0
     OuterColor.Alpha = 1
     OuterColor.Color = {
       0000803F00000000000000000000803F
     }
     FireDensity = 1.5
     FireEvaporation = 2
-    FireCrown = 0
     ParticleLife = 1
     FireBurst = 0.00999999977648258
     FireRadius = 0.100000001490116
@@ -1922,20 +1539,20 @@ object FViewer: TFViewer
     Paused = False
     ParticleInterval = 0.0500000007450581
     UseInterval = True
-    left = 196
-    top = 164
+    Left = 196
+    Top = 164
   end
   object TimerCadencer: TTimer
-    Interval = 5
+    Interval = 10
     OnTimer = TimerCadencerTimer
-    left = 76
-    top = 132
+    Left = 76
+    Top = 132
   end
   object IniPropStorage: TIniPropStorage
     StoredValues = <>
     IniSection = 'Viewer'
-    left = 516
-    top = 155
+    Left = 516
+    Top = 155
   end
   object GLWindowsBitmapFont: TGLWindowsBitmapFont
     Font.CharSet = ANSI_CHARSET
@@ -1944,8 +1561,8 @@ object FViewer: TFViewer
     Font.Name = 'Liberation Mono'
     Font.Pitch = fpFixed
     Font.Quality = fqDraft
-    left = 308
-    top = 36
+    Left = 308
+    Top = 36
   end
   object GLBitmapFont: TGLBitmapFont
     GlyphsIntervalX = 0
@@ -1956,7 +1573,7 @@ object FViewer: TFViewer
         StopASCII = #0
         StartGlyphIdx = 0
       end>
-    left = 295
-    top = 124
+    Left = 295
+    Top = 124
   end
 end

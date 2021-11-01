@@ -295,7 +295,6 @@ type
     procedure CBGroundTextureClick(Sender: TObject);
     procedure CBSkyDomeClick(Sender: TObject);
     procedure BEditScriptClick(Sender: TObject);
-    procedure EditRemoteIPChange(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: boolean);
     procedure TCPModBusAccept(aSocket: TLSocket);
     procedure TCPModBusDisconnect(aSocket: TLSocket);
@@ -531,11 +530,6 @@ begin
   FEditor.show;
 end;
 
-procedure TFParams.EditRemoteIPChange(Sender: TObject);
-begin
-  RGControlBlock.ItemIndex := 0;
-end;
-
 procedure TFParams.FormCloseQuery(Sender: TObject; var CanClose: boolean);
 begin
   TCPModBus.Disconnect(true);
@@ -723,7 +717,7 @@ end;
 procedure TFParams.FormCreate(Sender: TObject);
 var i: integer;
 begin
-  IniPropStorage.IniFileName := GetIniFineName;
+  IniPropStorage.IniFileName := GetIniFineName(copy(name, 2, MaxInt));
 
   ModbusData := TModbusData.Create;
   ModbusServer := TModbusServer.Create(ModbusData, ModBusEvent);
@@ -1013,7 +1007,7 @@ end;
 
 procedure TFParams.CBFreezeClick(Sender: TObject);
 begin
-  if FViewer.GLCadencer.Mode = cmApplicationIdle then begin
+  {if FViewer.GLCadencer.Mode = cmApplicationIdle then begin
     FViewer.GLCadencer.Mode := cmManual;
     FViewer.TimerCadencer.Enabled := false;
   end else if FViewer.GLCadencer.Mode = cmManual then begin
@@ -1023,7 +1017,7 @@ begin
     FViewer.GLCadencer.Progress;
     FViewer.GLCadencer.MaxDeltaTime := 0;
     FViewer.TimerCadencer.Enabled := true;
-  end;
+  end;}
 end;
 
 procedure TFParams.BPhysicsSetClick(Sender: TObject);

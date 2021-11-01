@@ -1,0 +1,77 @@
+<?xml version="1.0" ?>
+
+<robot>
+  <defines>
+    <const name='part_height' value='0.06' />
+    <const name='part_width' value='0.09' />  
+    <const name='part_depth' value='0.06' /> 
+    <const name='leg_radius'  value='0.005' />
+    <const name='leg_height' value='leg_radius' />
+    <const name='leg_mu' value='0.02' />
+    <const name='leg_x'  value='part_width/2 - leg_radius' />
+    <const name='leg_y'  value='part_depth/2 - leg_radius' />
+  </defines>
+   
+  <solids>
+    <cuboid>
+      <ID value='part_body'/>
+      <mass value='0.2'/>
+      <size x='part_width' y='part_depth' z='part_height'/>
+      <pos x='0' y='0' z='leg_height + part_height/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='80' g='0' b='0'/>
+    </cuboid>
+  </solids> 
+   
+  <shells>
+    <sphere>
+      <ID value="slide_pad_0"/>
+      <pos x="-leg_x" y="-leg_y" z="-part_height/2"/>
+      <radius value="leg_height"/>
+      <surface mu='leg_mu' softness='0.1'/>
+    </sphere>
+
+    <sphere>
+      <ID value="slide_pad_1"/>
+      <pos x="-leg_x" y="leg_y" z="-part_height/2"/>
+      <radius value="leg_height"/>
+      <surface mu='leg_mu' softness='0.1'/>
+    </sphere>
+
+    <sphere>
+      <ID value="slide_pad_2"/>
+      <pos x="leg_x" y="-leg_y" z="-part_height/2"/>
+      <radius value="leg_height"/>
+      <surface mu='leg_mu' softness='0.1'/>
+    </sphere>
+
+    <sphere>
+      <ID value="slide_pad_0"/>
+      <pos x="leg_x" y="leg_y" z="-part_height/2"/>
+      <radius value="leg_height"/>
+      <surface mu='leg_mu' softness='0.1'/>
+    </sphere>
+
+    <cuboid>
+      <ID value='Plate'/>
+      <mass value='0.01'/>
+      <size x='0.080' y='leg_height' z='0.023'/>
+      <pos x='0' y='-part_depth/2' z='-0.015'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='192' g='192' b='192'/>
+      <ferromagnetic/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='01'/>
+      <size x='0.060' y='leg_height' z='0.023'/>
+      <pos x='0' y='-part_depth/2' z='0.015'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='92' g='92' b='92'/>
+      <rfidtag/>
+    </cuboid>
+
+
+  </shells>   
+  
+</robot>

@@ -16,7 +16,7 @@ object FSceneEdit: TFSceneEdit
   OnCreate = FormCreate
   OnShow = FormShow
   SessionProperties = 'PageControlXML.ActivePage;Top;Left;Width;Height'
-  LCLVersion = '1.8.2.0'
+  LCLVersion = '2.1.0.0'
   Visible = True
   object Splitter: TSplitter
     Cursor = crVSplit
@@ -212,8 +212,8 @@ object FSceneEdit: TFSceneEdit
     end
   end
   object MainMenu: TMainMenu
-    left = 164
-    top = 36
+    Left = 164
+    Top = 36
     object MenuFile: TMenuItem
       Caption = '&File'
       object MenuNew: TMenuItem
@@ -309,41 +309,41 @@ object FSceneEdit: TFSceneEdit
     Enabled = False
     CommentAttri.Background = clNone
     WantBracesParsed = False
-    left = 192
-    top = 36
+    Left = 192
+    Top = 36
   end
   object ReplaceDialog: TReplaceDialog
     Options = [frDown, frHideMatchCase, frReplace, frReplaceAll, frHidePromptOnReplace]
     OnFind = ReplaceDialogAction
     OnReplace = ReplaceDialogAction
-    left = 380
-    top = 36
+    Left = 380
+    Top = 36
   end
   object FindDialog: TFindDialog
     Options = [frDown, frHidePromptOnReplace]
     OnFind = FindDialogFind
-    left = 352
-    top = 36
+    Left = 352
+    Top = 36
   end
   object OpenDialog: TOpenDialog
     Title = 'Load Scene File'
     Filter = 'Scene File|*.xml'
     Options = [ofHideReadOnly, ofNoChangeDir, ofFileMustExist, ofEnableSizing]
-    left = 288
-    top = 36
+    Left = 288
+    Top = 36
   end
   object SaveDialog: TSaveDialog
     Title = 'Save Scene File'
     Filter = 'Scene File|*.xml'
     Options = [ofHideReadOnly, ofNoChangeDir, ofPathMustExist, ofCreatePrompt, ofEnableSizing]
-    left = 316
-    top = 36
+    Left = 316
+    Top = 36
   end
   object IniPropStorage: TIniPropStorage
     StoredValues = <>
     IniSection = 'SceneEditor'
-    left = 515
-    top = 92
+    Left = 515
+    Top = 92
   end
   object ProcessUTF8: TProcessUTF8
     Active = False
@@ -358,7 +358,7 @@ object FSceneEdit: TFSceneEdit
     WindowTop = 0
     WindowWidth = 0
     FillAttribute = 0
-    left = 292
-    top = 191
+    Left = 292
+    Top = 191
   end
 end

@@ -30,7 +30,7 @@ uses
   cameras in 'cameras.pas' {FCameras},
   rlan in 'rlan.pas',
   modbusTCP in 'modbusTCP.pas',
-  sdposeriallaz,
+  //sdposeriallaz,
   tachartlazaruspkg,
   lnetvisual;
 

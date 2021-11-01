@@ -1,0 +1,47 @@
+<?xml version="1.0" ?>
+
+<obstacles> 
+  <defines>
+    <const name='wall_width' value='borderline_x'/>
+    <const name='wall_thickness' value='0.005'/>
+    <const name='wall_height' value='0.150'/>
+  </defines>
+
+  <!-- Walls --> 
+    <!-- Horizontal-->  
+    <!-- top -->  
+    <cuboid>
+      <ID value='top_wall'/>
+      <size x='borderline_x' y='wall_thickness' z='wall_height' />
+      <pos x='0' y='borderline_y/2' z='ground+0.0001'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='250' g='140' b='0'/>
+    </cuboid>
+    <!-- bottom -->  
+    <cuboid>
+      <ID value='bottom_wall'/>
+      <size x='borderline_x' y='wall_thickness' z='wall_height' />
+      <pos x='0' y='-borderline_y/2' z='ground+0.0001'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='250' g='140' b='0'/>
+    </cuboid>
+    
+    <!-- Vertical-->
+    <!-- right -->  
+    <cuboid>
+      <ID value='right_wall'/>
+      <size x='wall_thickness' y='borderline_y' z='wall_height' />
+      <pos x='borderline_x/2' y='0' z='ground+0.0001'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='250' g='140' b='0'/>
+    </cuboid>
+    <!-- left -->
+    <cuboid>
+      <ID value='left_wall'/>
+      <size x='wall_thickness' y='borderline_y' z='wall_height' />
+      <pos x='-borderline_x/2' y='0' z='ground+0.0001'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='250' g='140' b='0'/>
+    </cuboid>
+
+</obstacles>
