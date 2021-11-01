@@ -1,11 +1,11 @@
 object FCameras: TFCameras
-  Left = 1256
-  Height = 598
-  Top = 178
-  Width = 328
+  Left = 1227
+  Height = 638
+  Top = 175
+  Width = 649
   Caption = 'Cameras'
-  ClientHeight = 598
-  ClientWidth = 328
+  ClientHeight = 638
+  ClientWidth = 649
   Color = clBtnFace
   Font.Color = clWindowText
   Font.Height = -11
@@ -15,42 +15,27 @@ object FCameras: TFCameras
   OnDestroy = FormDestroy
   OnShow = FormShow
   SessionProperties = 'CBSendImage.Checked;SBQuality.Position;Top;Left'
-  LCLVersion = '1.8.2.0'
+  LCLVersion = '2.1.0.0'
   object PageControl: TPageControl
     Left = 0
-    Height = 569
+    Height = 516
     Top = 0
-    Width = 328
+    Width = 649
     ActivePage = TabDefault
     Align = alTop
     TabIndex = 0
     TabOrder = 0
     object TabDefault: TTabSheet
       Caption = 'Default'
-      ClientHeight = 543
-      ClientWidth = 320
-      object ImageCam: TImage
-        Left = 0
-        Height = 240
-        Top = 244
-        Width = 320
-      end
-      object Label1: TLabel
-        Left = 176
-        Height = 13
-        Top = 492
-        Width = 34
-        Caption = 'deltaT:'
-        ParentColor = False
-      end
+      ClientHeight = 490
+      ClientWidth = 641
       object GLSceneViewer: TGLSceneViewer
         Left = 0
-        Height = 240
-        Top = 0
-        Width = 320
+        Height = 480
+        Top = 4
+        Width = 640
         Camera = FViewer.GLCameraMem
         PostRender = GLSceneViewerPostRender
-        Buffer.FogEnvironment.FogColor.Red = 0
         Buffer.FogEnvironment.FogColor.Green = 0.49803900718689
         Buffer.FogEnvironment.FogColor.Blue = 1
         Buffer.FogEnvironment.FogColor.Alpha = 1
@@ -69,63 +54,108 @@ object FCameras: TFCameras
         }
         Buffer.ContextOptions = [roDoubleBuffer, roStencilBuffer, roRenderToWindow]
         Buffer.FogEnable = True
-        FieldOfView = 134.760269165039
+        Buffer.AntiAliasing = aa2x
+        FieldOfView = 156.463424682617
         TabOrder = 0
       end
-      object SBQuality: TScrollBar
+    end
+    object TabJPEG: TTabSheet
+      Caption = 'JPEG'
+      ClientHeight = 490
+      ClientWidth = 641
+      object ImageCam: TImage
         Left = 0
-        Height = 16
-        Top = 515
-        Width = 173
-        Min = 1
-        PageSize = 0
-        Position = 1
-        TabOrder = 1
-        OnChange = SBQualityChange
-      end
-      object EditJPGQuality: TEdit
-        Left = 176
-        Height = 21
-        Top = 512
-        Width = 65
-        TabOrder = 2
-      end
-      object EditJPGSize: TEdit
-        Left = 244
-        Height = 21
-        Top = 512
-        Width = 77
-        TabOrder = 3
-      end
-      object CBShowJpeg: TCheckBox
-        Left = 0
-        Height = 19
-        Top = 492
-        Width = 72
-        Caption = 'Show Jpeg'
-        TabOrder = 4
-      end
-      object EditDeltaT: TEdit
-        Left = 216
-        Height = 21
-        Top = 488
-        Width = 105
-        TabOrder = 5
-      end
-      object CBSendImage: TCheckBox
-        Left = 80
-        Height = 19
-        Top = 492
-        Width = 44
-        Caption = 'Send'
-        TabOrder = 6
+        Height = 480
+        Top = 4
+        Width = 640
       end
     end
+  end
+  object RGImageTransport: TRadioGroup
+    Left = 0
+    Height = 45
+    Top = 572
+    Width = 185
+    AutoFill = True
+    Caption = 'Image Transport (Port 9899)'
+    ChildSizing.LeftRightSpacing = 6
+    ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+    ChildSizing.EnlargeVertical = crsHomogenousChildResize
+    ChildSizing.ShrinkHorizontal = crsScaleChilds
+    ChildSizing.ShrinkVertical = crsScaleChilds
+    ChildSizing.Layout = cclLeftToRightThenTopToBottom
+    ChildSizing.ControlsPerLine = 3
+    ClientHeight = 27
+    ClientWidth = 181
+    Columns = 3
+    ItemIndex = 1
+    Items.Strings = (
+      'UDP'
+      'ZMQ'
+      'Script'
+    )
+    TabOrder = 1
+  end
+  object CBShowJpeg: TCheckBox
+    Left = 4
+    Height = 19
+    Top = 520
+    Width = 72
+    Caption = 'Show Jpeg'
+    TabOrder = 2
+  end
+  object CBSendImage: TCheckBox
+    Left = 84
+    Height = 19
+    Top = 520
+    Width = 44
+    Caption = 'Send'
+    TabOrder = 3
+  end
+  object Label1: TLabel
+    Left = 180
+    Height = 13
+    Top = 520
+    Width = 34
+    Caption = 'deltaT:'
+    ParentColor = False
+  end
+  object EditDeltaT: TEdit
+    Left = 220
+    Height = 21
+    Top = 516
+    Width = 105
+    TabOrder = 4
+  end
+  object EditJPGSize: TEdit
+    Left = 248
+    Height = 21
+    Top = 540
+    Width = 77
+    TabOrder = 5
+  end
+  object EditJPGQuality: TEdit
+    Left = 180
+    Height = 21
+    Top = 540
+    Width = 65
+    TabOrder = 6
+  end
+  object SBQuality: TScrollBar
+    Left = 4
+    Height = 16
+    Top = 543
+    Width = 173
+    Min = 1
+    PageSize = 0
+    Position = 1
+    TabOrder = 7
+    OnChange = SBQualityChange
   end
   object IniPropStorage: TIniPropStorage
     StoredValues = <>
     IniSection = 'Cameras'
-    left = 94
-    top = 163
+    Left = 94
+    Top = 163
   end
 end

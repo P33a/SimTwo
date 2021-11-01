@@ -1,0 +1,845 @@
+<?xml version="1.0" ?>
+
+<robot>
+  <defines>
+
+  <!-- Robot Dimensions -->
+    <const name='robot_width' value='0.405'/>
+    <const name='robot_length' value='0.610'/>
+    <const name='robot_height' value='0.05'/>
+    <const name='robot_mass' value='5'/>
+
+  <!-- Links and Joints Constants -->
+    <const name='length_a' value='robot_length/2'/>
+    <const name='length_b' value='robot_width/2'/>
+    <const name='length_link0' value='0.186'/>
+    <const name='length_link1' value='0.168'/>
+    <const name='length_link2' value='0.13'/>
+
+    <const name='width1_link' value='0.03'/>
+    <const name='width2_link' value='0.025'/>
+
+    <const name='mass_link0' value='0.5'/>
+    <const name='mass_link1' value='0.5'/>
+    <const name='mass_link2' value='0.5'/>
+    <const name='mass_joint' value='0.3'/>
+
+    <const name='joint_diameter' value='0.08'/>
+
+    <const name='omni_offset_x' value='0.064'/>
+    <const name='omni_offset_z' value='0.098'/>
+
+  <!-- Wheel Constants -->
+    <const name='wheel_diameter' value='0.1'/>
+
+    <const name='wheel_thickness' value='0.024'/>
+    <const name='wheel_mass' value='0.132'/>
+
+    <const name='omni_wheel_thickness' value='0.019'/>
+    <const name='omni_wheel_mass' value='0.175'/>
+
+    <const name='surface_mu' value='1'/>
+    <const name='surface_mu2' value='0.02'/>
+
+    <const name='x_n' value='1.0'/>
+
+    <const name='ks' value='11.91559736'/>
+
+    <const name='length_add_link2' value='0.071'/>
+    <const name='length_support' value='0.16'/>
+    <const name='thickness_support' value='0.001'/>
+    <const name='cos_50' value='0.64278761'/>
+    <const name='sin_50' value='0.766044443'/>
+  </defines>
+
+
+  <solids>
+
+    <cuboid>
+      <ID value='main_body'/>
+      <mass value='robot_mass'/>
+      <size x='robot_length' y='robot_width' z='robot_height'/>
+      <pos x='0' y='0' z='0'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='10' g='10' b='10'/>
+    </cuboid>
+
+    <!-- Leg 0 -->
+    <cuboid>
+      <ID value='leg0_link2'/>
+      <mass value='mass_link2'/>
+      <size x='width2_link' y='width1_link' z='length_link2'/>
+      <pos x='length_a' y='-length_b' z='-length_link2/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='70' g='70' b='70'/>
+    </cuboid>
+
+    <cylinder>
+      <ID value='leg0_link21'/>
+      <mass value='mass_joint'/>
+      <size x='joint_diameter/2' z='width1_link * 0.9'/>
+      <pos x='length_a' y='-length_b - width1_link' z='-length_link2'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='70' g='70' b='70'/>
+    </cylinder>
+
+    <cuboid>
+      <ID value='leg0_link1'/>
+      <mass value='mass_link1'/>
+      <size x='width2_link' y='width1_link' z='length_link1'/>
+      <pos x='length_a' y='-length_b - 2 * width1_link' z='-length_link2 - length_link1/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='70' g='70' b='70'/>
+    </cuboid>
+
+    <cylinder>
+      <ID value='leg0_link10'/>
+      <mass value='mass_joint'/>
+      <size x='joint_diameter/2' z='width1_link * 0.9'/>
+      <pos x='length_a' y='-length_b - width1_link' z='-length_link2 - length_link1'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='70' g='70' b='70'/>
+    </cylinder>
+
+    <cuboid>
+      <ID value='leg0_link0'/>
+      <mass value='mass_link0'/>
+      <size x='width2_link' y='width1_link' z='length_link0'/>
+      <pos x='length_a' y='-length_b' z='-length_link2 - length_link1 - length_link0/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='70' g='70' b='70'/>
+    </cuboid>
+
+    <cylinder>
+      <ID value='leg0_wheel'/>
+      <mesh file='scooterWheel.STL' shadow='0' dx='-0.053' dy='-0.052' dz='-0.013' scale='0.00105'/>
+      <mass value='wheel_mass'/>
+      <size x='wheel_diameter/2' y='wheel_diameter/2' z='wheel_thickness'/>
+      <pos x='length_a' y='-length_b' z='-length_link2 - length_link1 - length_link0'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+    </cylinder>
+
+    <cylinder>
+      <ID value='leg0_wheel_omni'/>
+      <mesh file='omniN.STL' shadow='0' dx='-0.062' dy='-0.064' dz='-0.1' scale='0.00105'/>
+      <mass value='wheel_mass'/>
+      <size x='wheel_diameter/2' y='wheel_diameter/2' z='wheel_thickness'/>
+      <pos x='length_a - omni_offset_x' y='-length_b' z='omni_offset_z -length_link2 - length_link1 - length_link0'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+      <surface mu='surface_mu' mu2='surface_mu2'/>
+    </cylinder>
+
+    <!-- Leg 1 -->
+    <cuboid>
+      <ID value='leg1_link2'/>
+      <mass value='mass_link2'/>
+      <size x='width2_link' y='width1_link' z='length_link2'/>
+      <pos x='length_a' y='length_b' z='-length_link2/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='70' g='70' b='70'/>
+    </cuboid>
+
+    <cylinder>
+      <ID value='leg1_link21'/>
+      <mass value='mass_joint'/>
+      <size x='joint_diameter/2' z='width1_link * 0.9'/>
+      <pos x='length_a' y='length_b + width1_link' z='-length_link2'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='70' g='70' b='70'/>
+    </cylinder>
+
+    <cuboid>
+      <ID value='leg1_link1'/>
+      <mass value='mass_link1'/>
+      <size x='width2_link' y='width1_link' z='length_link1'/>
+      <pos x='length_a' y='length_b + 2 * width1_link' z='-length_link2 - length_link1/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='70' g='70' b='70'/>
+    </cuboid>
+
+    <cylinder>
+      <ID value='leg1_link10'/>
+      <mass value='mass_joint'/>
+      <size x='joint_diameter/2' z='width1_link * 0.9'/>
+      <pos x='length_a' y='length_b + width1_link' z='-length_link2 - length_link1'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='70' g='70' b='70'/>
+    </cylinder>
+
+    <cuboid>
+      <ID value='leg1_link0'/>
+      <mass value='mass_link0'/>
+      <size x='width2_link' y='width1_link' z='length_link0'/>
+      <pos x='length_a' y='length_b' z='-length_link2 - length_link1 - length_link0/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='70' g='70' b='70'/>
+    </cuboid>
+
+    <cylinder>
+      <ID value='leg1_wheel'/>
+      <mesh file='scooterWheel.STL' shadow='0' dx='-0.053' dy='-0.052' dz='-0.013' scale='0.00105'/>
+      <mass value='wheel_mass'/>
+      <size x='wheel_diameter/2' y='wheel_diameter/2' z='wheel_thickness'/>
+      <pos x='length_a' y='length_b' z='-length_link2 - length_link1 - length_link0'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+    </cylinder>
+
+    <cylinder>
+      <ID value='leg1_wheel_omni'/>
+      <mesh file='omniP.STL' shadow='0' dx='-0.059' dy='-0.056' dz='-0.024' scale='0.00105'/>
+      <mass value='omni_wheel_mass'/>
+      <size x='wheel_diameter/2' y='wheel_diameter/2' z='omni_wheel_thickness'/>
+      <pos x='length_a - omni_offset_x' y='length_b' z='omni_offset_z -length_link2 - length_link1 - length_link0'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+      <surface mu='surface_mu' mu2='surface_mu2'/>
+    </cylinder>
+
+    <!-- Leg 2 -->
+    <cuboid>
+      <ID value='leg2_link2'/>
+      <mass value='mass_link2'/>
+      <size x='width2_link' y='width1_link' z='length_link2'/>
+      <pos x='-length_a' y='length_b' z='-length_link2/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='70' g='70' b='70'/>
+    </cuboid>
+
+    <cylinder>
+      <ID value='leg2_link21'/>
+      <mass value='mass_joint'/>
+      <size x='joint_diameter/2' z='width1_link * 0.9'/>
+      <pos x='-length_a' y='length_b + width1_link' z='-length_link2'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='70' g='70' b='70'/>
+    </cylinder>
+
+    <cuboid>
+      <ID value='leg2_link1'/>
+      <mass value='mass_link1'/>
+      <size x='width2_link' y='width1_link' z='length_link1'/>
+      <pos x='-length_a' y='length_b + 2 * width1_link' z='-length_link2 - length_link1/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='70' g='70' b='70'/>
+    </cuboid>
+
+    <cylinder>
+      <ID value='leg2_link10'/>
+      <mass value='mass_joint'/>
+      <size x='joint_diameter/2' z='width1_link * 0.9'/>
+      <pos x='-length_a' y='length_b + width1_link' z='-length_link2 - length_link1'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='70' g='70' b='70'/>
+    </cylinder>
+
+    <cuboid>
+      <ID value='leg2_link0'/>
+      <mass value='mass_link0'/>
+      <size x='width2_link' y='width1_link' z='length_link0'/>
+      <pos x='-length_a' y='length_b' z='-length_link2 - length_link1 - length_link0/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='70' g='70' b='70'/>
+    </cuboid>
+
+    <cylinder>
+      <ID value='leg2_wheel'/>
+      <mesh file='scooterWheel.STL' shadow='0' dx='-0.053' dy='-0.052' dz='-0.013' scale='0.00105'/>
+      <mass value='wheel_mass'/>
+      <size x='wheel_diameter/2' y='wheel_diameter/2' z='wheel_thickness'/>
+      <pos x='-length_a' y='length_b' z='-length_link2 - length_link1 - length_link0'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+    </cylinder>
+
+    <cylinder>
+      <ID value='leg2_wheel_omni'/>
+      <mesh file='omniP.STL' shadow='0' dx='-0.059' dy='-0.056' dz='-0.024' scale='0.00105'/>
+      <mass value='omni_wheel_mass'/>
+      <size x='wheel_diameter/2' y='wheel_diameter/2' z='omni_wheel_thickness'/>
+      <pos x='-length_a - omni_offset_x' y='length_b' z='omni_offset_z - length_link2 - length_link1 - length_link0'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+      <surface mu='surface_mu' mu2='surface_mu2'/>
+    </cylinder>
+
+    <!-- Leg 3 -->
+    <cuboid>
+      <ID value='leg3_link2'/>
+      <mass value='mass_link2'/>
+      <size x='width2_link' y='width1_link' z='length_link2'/>
+      <pos x='-length_a' y='-length_b' z='-length_link2/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='70' g='70' b='70'/>
+    </cuboid>
+
+    <cylinder>
+      <ID value='leg3_link21'/>
+      <mass value='mass_joint'/>
+      <size x='joint_diameter/2' z='width1_link * 0.9'/>
+      <pos x='-length_a' y='-length_b - width1_link' z='-length_link2'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='70' g='70' b='70'/>
+    </cylinder>
+
+    <cuboid>
+      <ID value='leg3_link1'/>
+      <mass value='mass_link1'/>
+      <size x='width2_link' y='width1_link' z='length_link1'/>
+      <pos x='-length_a' y='-length_b - 2 * width1_link' z='-length_link2 - length_link1/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='70' g='70' b='70'/>
+    </cuboid>
+
+    <cylinder>
+      <ID value='leg3_link10'/>
+      <mass value='mass_joint'/>
+      <size x='joint_diameter/2' z='width1_link * 0.9'/>
+      <pos x='-length_a' y='-length_b - width1_link' z='-length_link2 - length_link1'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='70' g='70' b='70'/>
+    </cylinder>
+
+    <cuboid>
+      <ID value='leg3_link0'/>
+      <mass value='mass_link0'/>
+      <size x='width2_link' y='width1_link' z='length_link0'/>
+      <pos x='-length_a' y='-length_b' z='-length_link2 - length_link1 - length_link0/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='70' g='70' b='70'/>
+    </cuboid>
+
+    <cylinder>
+      <ID value='leg3_wheel'/>
+      <mesh file='scooterWheel.STL' shadow='0' dx='-0.053' dy='-0.052' dz='-0.013' scale='0.00105'/>
+      <mass value='wheel_mass'/>
+      <size x='wheel_diameter/2' y='wheel_diameter/2' z='wheel_thickness'/>
+      <pos x='-length_a' y='-length_b' z='-length_link2 - length_link1 - length_link0'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+    </cylinder>
+
+    <cylinder>
+      <ID value='leg3_wheel_omni'/>
+      <mesh file='omniN.STL' shadow='0' dx='-0.062' dy='-0.064' dz='-0.1' scale='0.00105'/>
+      <mass value='omni_wheel_mass'/>
+      <size x='wheel_diameter/2' y='wheel_diameter/2' z='omni_wheel_thickness'/>
+      <pos x='-length_a - omni_offset_x' y='-length_b' z='omni_offset_z - length_link2 - length_link1 - length_link0'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+      <surface mu='surface_mu' mu2='surface_mu2'/>
+    </cylinder>
+
+  </solids>
+
+
+  <shells>
+
+    <cuboid>
+      <ID value='leg0_link2_extension'/>
+      <solid id='leg0_link2'/>
+      <size x='width2_link' y='width1_link' z='length_add_link2'/>
+      <pos x='0' y='0' z='-length_link2 + length_add_link2/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='70' g='70' b='70'/> 
+      <transparency alpha='0'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='leg0_support_link'/>
+      <solid id='leg0_link10'/>
+      <size x='length_support' y='thickness_support' z='width1_link'/>
+      <pos x='sin_50 * length_support/2' y='-cos_50 * length_support/2 - width2_link/2' z='-width1_link'/>
+      <rot_deg x='0' y='0' z='130'/>
+      <color_rgb r='70' g='70' b='70'/> 
+      <transparency alpha='0'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='leg1_link2_extension'/>
+      <solid id='leg1_link2'/>
+      <size x='width2_link' y='width1_link' z='length_add_link2'/>
+      <pos x='0' y='0' z='-length_link2 + length_add_link2/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='70' g='70' b='70'/> 
+      <transparency alpha='0'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='leg1_support_link'/>
+      <solid id='leg1_link10'/>
+      <size x='length_support' y='thickness_support' z='width1_link'/>
+      <pos x='sin_50 * length_support/2' y='-cos_50 * length_support/2 - width2_link/2' z='width1_link'/>
+      <rot_deg x='0' y='0' z='130'/>
+      <color_rgb r='70' g='70' b='70'/> 
+      <transparency alpha='0'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='leg2_link2_extension'/>
+      <solid id='leg2_link2'/>
+      <size x='width2_link' y='width1_link' z='length_add_link2'/>
+      <pos x='0' y='0' z='-length_link2 + length_add_link2/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='70' g='70' b='70'/>   
+      <transparency alpha='0'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='leg2_support_link'/>
+      <solid id='leg2_link10'/>
+      <size x='length_support' y='thickness_support' z='width1_link'/>
+      <pos x='sin_50 * length_support/2' y='-cos_50 * length_support/2 - width2_link/2' z='width1_link'/>
+      <rot_deg x='0' y='0' z='130'/>
+      <color_rgb r='70' g='70' b='70'/>   
+      <transparency alpha='0'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='leg3_link2_extension'/>
+      <solid id='leg3_link2'/>
+      <size x='width2_link' y='width1_link' z='length_add_link2'/>
+      <pos x='0' y='0' z='-length_link2 + length_add_link2/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='70' g='70' b='70'/> 
+      <transparency alpha='0'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='leg3_support_link'/>
+      <solid id='leg3_link10'/>
+      <size x='length_support' y='thickness_support' z='width1_link'/>
+      <pos x='sin_50 * length_support/2' y='-cos_50 * length_support/2 - width2_link/2' z='-width1_link'/>
+      <rot_deg x='0' y='0' z='130'/>
+      <color_rgb r='70' g='70' b='70'/> 
+      <transparency alpha='0'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='battery_1'/>
+      <solid id='main_body'/>
+      <size x='0.65 * 2 * length_b' y='0.08 * length_a' z='1.05 * robot_height'/>
+      <pos x='0' y='-0.5 * length_a' z='robot_height/2 + (1.05 * robot_height)/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='255' g='255' b='0'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='battery_2'/>
+      <solid id='main_body'/>
+      <size x='0.65 * 2 * length_b' y='0.08 * length_a' z='1.05 * robot_height'/>
+      <pos x='0' y='0.5 * length_a' z='robot_height/2 + (1.05 * robot_height)/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='255' g='255' b='0'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='pc'/>
+      <solid id='main_body'/>
+      <size x='0.1 * 2 * length_b' y='0.1 * 2 * length_a' z='0.15 * robot_height'/>
+      <pos x='0' y='0' z='robot_height/2 + (0.15 * robot_height)/2'/>
+      <rot_deg x='0' y='0' z='90'/>
+      <color_rgb r='0' g='128' b='0'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='leg0_to_omni'/>
+      <solid id='leg0_link0'/>
+      <size x='width2_link - 0.008' y='1.2 * width1_link' z='0.073430239'/>
+      <pos x='-omni_offset_x/2' y='0' z='-length_link0/2 + length_link0/3 + (omni_offset_z - length_link0/3)/2'/>
+      <npos x='length_a - omni_offset_x/2' y='-length_b' z='-length_link2 - length_link1 - length_link0 + length_link0/3 + (omni_offset_z - length_link0/3)/2'/>
+      <rot_deg x='0' y='-60.64224646' z='0'/>
+      <color_rgb r='70' g='70' b='70'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='leg1_to_omni'/>
+      <solid id='leg1_link0'/>
+      <size x='width2_link - 0.008' y='1.2 * width1_link' z='0.073430239'/>
+      <pos x='-omni_offset_x/2' y='0' z='-length_link0/2 + length_link0/3 + (omni_offset_z - length_link0/3)/2'/>
+      <rot_deg x='0' y='-60.64224646' z='0'/>
+      <color_rgb r='70' g='70' b='70'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='leg2_to_omni'/>
+      <solid id='leg2_link0'/>
+      <size x='width2_link - 0.008' y='1.2 * width1_link' z='0.073430239'/>
+      <pos x='-omni_offset_x/2' y='0' z='-length_link0/2 + length_link0/3 + (omni_offset_z - length_link0/3)/2'/>
+      <rot_deg x='0' y='-60.64224646' z='0'/>
+      <color_rgb r='70' g='70' b='70'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='leg3_to_omni'/>
+      <solid id='leg3_link0'/>
+      <size x='width2_link - 0.008' y='1.2 * width1_link' z='0.073430239'/>
+      <pos x='-omni_offset_x/2' y='0' z='-length_link0/2 + length_link0/3 + (omni_offset_z - length_link0/3)/2'/>
+      <rot_deg x='0' y='-60.64224646' z='0'/>
+      <color_rgb r='70' g='70' b='70'/>
+    </cuboid>
+
+  </shells>
+
+
+  <articulations>
+
+    <default>
+      <draw radius='0.01' height='0.1' rgb24='FFFFFF'/>
+      <motor ri='1.7' ki='2.14 * x_n' vmax='12' imax='6.5' active='1'/>
+      <gear ratio='1'/>
+      <friction bv='0.0402' fc='0.1968 / x_n'/>
+      <encoder ppr='3360 * x_n' mean='0' stdev='0'/>
+      <controller mode='pidposition' kp='4' ki='0' kd='3' kf='0.0' active='1' period='10'/>
+      <spring k='0' zeropos='0'/>
+    </default>
+
+    <!-- Leg 0 -->
+    <joint>
+      <ID value='leg0_joint2'/>
+      <connect B1='main_body' B2='leg0_link2'/>
+      <pos x='length_a' y='-length_b' z='0'/>
+      <axis x='0' y='0' z='-1'/>
+      <type value='Hinge'/>
+
+      <motor ki='2.853333333'/>
+      <friction fc='0.2624'/>
+      <encoder ppr='4480'/>
+    </joint>
+
+    <joint>
+      <ID value='leg0_joint1'/>
+      <draw radius='joint_diameter/2' height='width1_link' rgb24='464646'/>
+      <connect B1='leg0_link2' B2='leg0_link21'/>
+      <pos x='length_a' y='-length_b' z='-length_link2'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+
+      <controller active='0'/>
+    </joint>
+
+    <joint>
+      <ID value='leg0_joint1s'/>
+      <draw radius='joint_diameter/2' height='width1_link' rgb24='464646'/>
+      <connect B1='leg0_link21' B2='leg0_link1'/>
+      <pos x='length_a' y='-length_b - 2 * width1_link' z='-length_link2'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+
+      <friction bv='0.477464829' fc='0.01'/>
+      <spring k='ks' zeropos='0'/>
+      <motor active='0'/>
+    </joint>
+
+    <joint>
+      <ID value='leg0_joint0'/>
+      <draw radius='joint_diameter/2' height='width1_link' rgb24='464646'/>
+      <connect B1='leg0_link1' B2='leg0_link10'/>
+      <pos x='length_a' y='-length_b - 2 * width1_link' z='-length_link2 - length_link1'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+
+      <controller active='0'/>
+    </joint>
+
+    <joint>
+      <ID value='leg0_joint0s'/>
+      <draw radius='joint_diameter/2' height='width1_link' rgb24='464646'/>
+      <connect B1='leg0_link10' B2='leg0_link0'/>
+      <pos x='length_a' y='-length_b' z='-length_link2 - length_link1'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+
+      <friction bv='0.477464829' fc='0.01'/>
+      <spring k='ks' zeropos='0'/>
+      <motor active='0'/>
+    </joint>
+
+    <joint>
+      <ID value='leg0_joint_wheel'/>
+      <connect B1='leg0_link0' B2='leg0_wheel'/>
+      <pos x='length_a' y='-length_b' z='-length_link2 - length_link1 - length_link0'/>
+      <axis x='0' y='-1' z='0'/>
+      <type value='Hinge'/>
+      <controller mode='pidspeed' kp='0.2' ki='0.04' kd='0' kf='0.55' active='1' period='10'/>
+
+      <motor ki='0.446342857'/>
+      <friction fc='0.041046857'/>
+      <encoder ppr='700.8'/>
+    </joint>
+
+    <joint>
+      <ID value='leg0_joint_wheel_omni'/>
+      <connect B1='leg0_link0' B2='leg0_wheel_omni'/>
+      <pos x='length_a - omni_offset_x' y='-length_b' z='omni_offset_z - length_link2 - length_link1 - length_link0'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+      <motor active='0'/>
+    </joint>
+
+    <!-- Leg 1 -->
+    <joint>
+      <ID value='leg1_joint2'/>
+      <connect B1='main_body' B2='leg1_link2'/>
+      <pos x='length_a' y='length_b' z='0'/>
+      <axis x='0' y='0' z='-1'/>
+      <type value='Hinge'/>
+
+      <motor ki='2.853333333'/>
+      <friction fc='0.2624'/>
+      <encoder ppr='4480'/>
+    </joint>
+
+    <joint>
+      <ID value='leg1_joint1'/>
+      <draw radius='joint_diameter/2' height='width1_link' rgb24='464646'/>
+      <connect B1='leg1_link2' B2='leg1_link21'/>
+      <pos x='length_a' y='length_b' z='-length_link2'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+
+      <controller active='0'/>
+    </joint>
+
+    <joint>
+      <ID value='leg1_joint1s'/>
+      <draw radius='joint_diameter/2' height='width1_link' rgb24='464646'/>
+      <connect B1='leg1_link21' B2='leg1_link1'/>
+      <pos x='length_a' y='length_b + 2 * width1_link' z='-length_link2'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+
+      <friction bv='0.477464829' fc='0.01'/>
+      <spring k='ks' zeropos='0'/>
+      <motor active='0'/>
+    </joint>
+
+    <joint>
+      <ID value='leg1_joint0'/>
+      <draw radius='joint_diameter/2' height='width1_link' rgb24='464646'/>
+      <connect B1='leg1_link1' B2='leg1_link10'/>
+      <pos x='length_a' y='length_b + 2 * width1_link' z='-length_link2 - length_link1'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+
+      <controller active='0'/>
+    </joint>
+
+    <joint>
+      <ID value='leg1_joint0s'/>
+      <draw radius='joint_diameter/2' height='width1_link' rgb24='464646'/>
+      <connect B1='leg1_link10' B2='leg1_link0'/>
+      <pos x='length_a' y='length_b' z='-length_link2 - length_link1'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+
+      <friction bv='0.477464829' fc='0.01'/>
+      <spring k='ks' zeropos='0'/>
+      <motor active='0'/>
+    </joint>
+
+    <joint>
+      <ID value='leg1_joint_wheel'/>
+      <connect B1='leg1_link0' B2='leg1_wheel'/>
+      <pos x='length_a' y='length_b' z='-length_link2 - length_link1 - length_link0'/>
+      <axis x='0' y='-1' z='0'/>
+      <type value='Hinge'/>
+      <controller mode='pidspeed' kp='0.2' ki='0.04' kd='0' kf='0.55' active='1' period='10'/>
+
+      <motor ki='0.446342857'/>
+      <friction fc='0.041046857'/>
+      <encoder ppr='700.8'/>
+    </joint>
+
+    <joint>
+      <ID value='leg1_joint_wheel_omni'/>
+      <connect B1='leg1_link0' B2='leg1_wheel_omni'/>
+      <pos x='length_a - omni_offset_x' y='length_b' z='omni_offset_z - length_link2 - length_link1 - length_link0'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+      <motor active='0'/>
+    </joint>
+
+    <!-- Leg 2 -->
+    <joint>
+      <ID value='leg2_joint2'/>
+      <connect B1='main_body' B2='leg2_link2'/>
+      <pos x='-length_a' y='length_b' z='0'/>
+      <axis x='0' y='0' z='-1'/>
+      <type value='Hinge'/>
+
+      <motor ki='2.853333333'/>
+      <friction fc='0.2624'/>
+      <encoder ppr='4480'/>
+    </joint>
+
+    <joint>
+      <ID value='leg2_joint1'/>
+      <draw radius='joint_diameter/2' height='width1_link' rgb24='464646'/>
+      <connect B1='leg2_link2' B2='leg2_link21'/>
+      <pos x='-length_a' y='length_b' z='-length_link2'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+
+      <controller active='0'/>
+    </joint>
+
+    <joint>
+      <ID value='leg2_joint1s'/>
+      <draw radius='joint_diameter/2' height='width1_link' rgb24='464646'/>
+      <connect B1='leg2_link21' B2='leg2_link1'/>
+      <pos x='-length_a' y='length_b + 2 * width1_link' z='-length_link2'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+
+      <friction bv='0.477464829' fc='0.01'/>
+      <spring k='ks' zeropos='0'/>
+      <motor active='0'/>
+    </joint>
+
+    <joint>
+      <ID value='leg2_joint0'/>
+      <draw radius='joint_diameter/2' height='width1_link' rgb24='464646'/>
+      <connect B1='leg2_link1' B2='leg2_link10'/>
+      <pos x='-length_a' y='length_b + 2 * width1_link' z='-length_link2 - length_link1'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+
+      <controller active='0'/>
+    </joint>
+
+    <joint>
+      <ID value='leg2_joint0s'/>
+      <draw radius='joint_diameter/2' height='width1_link' rgb24='464646'/>
+      <connect B1='leg2_link10' B2='leg2_link0'/>
+      <pos x='-length_a' y='length_b' z='-length_link2 - length_link1'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+
+      <friction bv='0.477464829' fc='0.01'/>
+      <spring k='ks' zeropos='0'/>
+      <motor active='0'/>
+    </joint>
+
+    <joint>
+      <ID value='leg2_joint_wheel'/>
+      <connect B1='leg2_link0' B2='leg2_wheel'/>
+      <pos x='-length_a' y='length_b' z='-length_link2 - length_link1 - length_link0'/>
+      <axis x='0' y='-1' z='0'/>
+      <type value='Hinge'/>
+      <controller mode='pidspeed' kp='0.2' ki='0.04' kd='0' kf='0.55' active='1' period='10'/>
+
+      <motor ki='0.446342857'/>
+      <friction fc='0.041046857'/>
+      <encoder ppr='700.8'/>
+    </joint>
+
+    <joint>
+      <ID value='leg2_joint_wheel_omni'/>
+      <connect B1='leg2_link0' B2='leg2_wheel_omni'/>
+      <pos x='-length_a - omni_offset_x' y='length_b' z='omni_offset_z - length_link2 - length_link1 - length_link0'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+      <motor active='0'/>
+    </joint>
+
+    <!-- Leg 3 -->
+    <joint>
+      <ID value='leg3_joint2'/>
+      <connect B1='main_body' B2='leg3_link2'/>
+      <pos x='-length_a' y='-length_b' z='0'/>
+      <axis x='0' y='0' z='-1'/>
+      <type value='Hinge'/>
+
+      <motor ki='2.853333333'/>
+      <friction fc='0.2624'/>
+      <encoder ppr='4480'/>
+    </joint>
+
+    <joint>
+      <ID value='leg3_joint1'/>
+      <draw radius='joint_diameter/2' height='width1_link' rgb24='464646'/>
+      <connect B1='leg3_link2' B2='leg3_link21'/>
+      <pos x='-length_a' y='-length_b' z='-length_link2'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+
+      <controller active='0'/>
+    </joint>
+
+    <joint>
+      <ID value='leg3_joint1s'/>
+      <draw radius='joint_diameter/2' height='width1_link' rgb24='464646'/>
+      <connect B1='leg3_link21' B2='leg3_link1'/>
+      <pos x='-length_a' y='-length_b - 2 * width1_link' z='-length_link2'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+
+      <friction bv='0.477464829' fc='0.01'/>
+      <spring k='ks' zeropos='0'/>
+      <motor active='0'/>
+    </joint>
+
+    <joint>
+      <ID value='leg3_joint0'/>
+      <draw radius='joint_diameter/2' height='width1_link' rgb24='464646'/>
+      <connect B1='leg3_link1' B2='leg3_link10'/>
+      <pos x='-length_a' y='-length_b - 2 * width1_link' z='-length_link2 - length_link1'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+
+      <controller active='0'/>
+    </joint>
+
+    <joint>
+      <ID value='leg3_joint0s'/>
+      <draw radius='joint_diameter/2' height='width1_link' rgb24='464646'/>
+      <connect B1='leg3_link10' B2='leg3_link0'/>
+      <pos x='-length_a' y='-length_b' z='-length_link2 - length_link1'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+
+      <friction bv='0.477464829' fc='0.01'/>
+      <spring k='ks' zeropos='0'/>
+      <motor active='0'/>
+    </joint>
+
+    <joint>
+      <ID value='leg3_joint_wheel'/>
+      <connect B1='leg3_link0' B2='leg3_wheel'/>
+      <pos x='-length_a' y='-length_b' z='-length_link2 - length_link1 - length_link0'/>
+      <axis x='0' y='-1' z='0'/>
+      <type value='Hinge'/>
+      <controller mode='pidspeed' kp='0.2' ki='0.04' kd='0' kf='0.55' active='1' period='10'/>
+
+      <motor ki='0.2'/>
+      <friction fc='0.041046857'/>
+      <encoder ppr='700.8'/>
+    </joint>
+
+    <joint>
+      <ID value='leg3_joint_wheel_omni'/>
+      <connect B1='leg3_link0' B2='leg3_wheel_omni'/>
+      <pos x='-length_a - omni_offset_x' y='-length_b' z='omni_offset_z - length_link2 - length_link1 - length_link0'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+      <motor active='0'/>
+    </joint>
+
+    <!-------->
+
+    <njoint>
+      <ID value='body_fix'/>
+      <connect B1='main_body' B2='world'/>
+      <type value='Fixed'/>
+    </njoint>
+
+  </articulations>
+
+</robot>
+
+
+
+

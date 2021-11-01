@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<sheet>
+  <columns>
+    <defaultcol width="50" />
+    <col num="1" width="101" />
+    <col num="2" width="51" />
+    <col num="3" width="69" />
+    <col num="7" width="22" />
+    <col num="8" width="19" />
+    <col num="9" width="76" />
+    <col num="10" width="63" />
+  </columns>
+  <cells>
+    <cell r="2" c="2" text="1" />
+    <cell r="1" c="2" text="1" />
+    <cell r="1" c="1" text="Volts:" />
+    <cell r="2" c="1" text="Pulses" />
+    <cell r="0" c="4" text="4" />
+    <cell r="3" c="1" text="Speed" />
+    <cell r="3" c="2" text="0.013" />
+    <cell r="3" c="3" text="0.011" />
+    <cell r="5" c="1" text="SpeedRef (rad/s)" />
+    <cell r="5" c="2" text="1.5" />
+    <cell r="6" c="1" text="Kc" />
+    <cell r="6" c="2" text="4.53" />
+    <cell r="7" c="1" text="Ti" />
+    <cell r="7" c="2" text="0.267" />
+    <cell r="5" c="3" text="PID" />
+    <cell r="6" c="3" text="[On]" />
+    <cell r="7" c="3" text="[Off]" />
+    <cell r="5" c="4" text="Off" />
+    <cell r="9" c="1" text="Peturb." />
+    <cell r="9" c="3" text="[On]" />
+    <cell r="10" c="3" text="[Off]" />
+    <cell r="9" c="2" text="10" />
+    <cell r="9" c="4" text="Off" />
+    <cell r="12" c="1" text="Int_error" />
+    <cell r="12" c="2" text="0" />
+    <cell r="14" c="1" text="PosRef (rad)" />
+    <cell r="15" c="1" text="Kc" />
+    <cell r="16" c="1" text="Td" />
+    <cell r="18" c="1" text="Pos. (rad)" />
+    <cell r="18" c="2" text="0.1664" />
+    <cell r="15" c="2" text="16.9" />
+    <cell r="16" c="2" text="0.224" />
+    <cell r="14" c="2" text="2" />
+    <cell r="14" c="3" text="[Hermite]" />
+    <cell r="5" c="9" text="[Chart On/Off]" />
+    <cell r="5" c="10" text="[Clear Chart]" />
+    <cell r="4" c="9" text="Chart OFF" />
+    <cell r="14" c="4" text="Off" />
+    <cell r="20" c="1" text="GainFF" />
+    <cell r="20" c="2" text="0.4" />
+    <cell r="1" c="3" text="[ok]" />
+  </cells>
+</sheet>

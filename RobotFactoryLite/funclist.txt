@@ -135,6 +135,10 @@
  function GetSolidLinearVelMat(R: LongInt; i: LongInt): Matrix;
  function GetSolidRotMat(R: LongInt; i: LongInt): Matrix;
  function GetSolidAgularVelMat(R: LongInt; i: LongInt): Matrix;
+ function GetSolidTag(R: LongInt; i: LongInt): string;
+ procedure SetSolidTag(R: LongInt; i: LongInt; newTag: string);
+ function GetShellTag(R: LongInt; i: LongInt): string;
+ procedure SetShellTag(R: LongInt; i: LongInt; newTag: string);
  function GetRobotX(R: LongInt): Double;
  function GetRobotY(R: LongInt): Double;
  function GetRobotTheta(R: LongInt): Double;
@@ -291,6 +295,8 @@
  function Sqr(X: Double): Double;
  function Exp(X: Double): Double;
  function Ln(X: Double): Double;
+ function FloatAsInteger(X: Single): LongInt;
+ function IntegerAsFloat(X: LongInt): Single;
  function DiffAngle(a1: Double; a2: Double): Double;
  function Dist(x: Double; y: Double): Double;
  function Sign(a: Double): Double;

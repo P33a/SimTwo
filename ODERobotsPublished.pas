@@ -4,7 +4,7 @@ unit ODERobotsPublished;
 
 interface
 
-uses Graphics, Types, ODERobots, PathFinder, dynmatrix, GLKeyboard, ODEGL;
+uses Graphics, Types, ODERobots, PathFinder, dynmatrix, GLKeyboard, ODEGL, GLVectorGeometry;
 
 type
   TAxisPoint = record
@@ -1125,8 +1125,8 @@ function GetAxisState(R, i: integer): TAxisState;
 begin
   with WorldODE.Robots[r].Axes[i] do begin
     result.pos := GetPos();
-    //result.vel := GetSpeed();
-    result.vel := filt_speed;
+    result.vel := GetSpeed(WorldODE.Ode_dt);
+    //result.vel := filt_speed;
     result.Im := Motor.Im;
     result.Vm := Motor.voltage;
     result.Torque := TotalTorque;
@@ -1588,7 +1588,8 @@ end;
 
 procedure SetTrailColor(T: integer; Red, Green, Blue: byte);
 begin
-  (FViewer.GLDTrails.Children[T] as TGLLines).linecolor.SetColor(red/255, green/255, blue/255);
+  (FViewer.GLDTrails.Children[T] as TGLLines).NodeColor.SetColor(red/255.0, green/255.0, blue/255.0);
+  (FViewer.GLDTrails.Children[T] as TGLLines).LineColor.SetColor(red/255.0, green/255.0, blue/255.0);
 end;
 
 
@@ -1642,11 +1643,15 @@ end;
 
 procedure MeshThing(ID, MeshFile, MeshShadowFile: string; MeshScale: double; MeshCastsShadows: boolean);
 var idx: integer;
+    delta: TAffineVector;
 begin
   with WorldODE do begin
     idx := Things.IndexFromID(ID);
     if idx < 0 then exit;
-    LoadSolidMesh(Things[idx], MeshFile, MeshShadowFile, MeshScale, MeshCastsShadows);
+    delta.X := 0;
+    delta.Y := 0;
+    delta.Z := 0;
+    LoadSolidMesh(Things[idx], MeshFile, MeshShadowFile, delta, MeshScale, MeshCastsShadows);
     Things[idx].GLObj.Visible := false;
   end;
 end;

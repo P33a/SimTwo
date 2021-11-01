@@ -1,0 +1,159 @@
+<?xml version="1.0" ?>
+<track>
+
+  <defines>
+    <const name='field_length' value='6' />
+    <const name='field_width' value='4' />
+    <const name='circle_radius' value='0.5' />
+    <const name='area_length' value='1' />
+    <const name='area_width' value='2' />
+    <const name='inner_area_length' value='0.5' />
+    <const name='inner_area_width' value='1' />
+    <const name='corner_radius' value='0.5' />
+    <const name='outer_line_width' value='0.1' />
+    <const name='inner_line_width' value='0.05' />
+  </defines>
+
+  <!-- Outer Field Lines -->
+  <line>  <!-- ____ -->
+    <color rgb24='8F8F8F'/>
+    <position x='-field_length/2' y='-field_width/2' z='0' angle='0'/>
+    <size width='outer_line_width' length='field_length'/>
+  </line>
+  <line>  <!-- ~~~~ -->
+    <color rgb24='8F8F8F'/>
+    <position x='-field_length/2' y='field_width/2 - outer_line_width' z='0' angle='0'/>
+    <size width='outer_line_width' length='field_length'/>
+  </line>
+
+  <line> <!-- |____ -->
+    <color rgb24='8F8F8F'/>
+    <position x='-field_length/2 + outer_line_width' y='-field_width/2' z='0' angle='90'/>
+    <size width='outer_line_width' length='field_width'/>
+  </line>
+  <line> <!-- ____| -->
+    <color rgb24='8F8F8F'/>
+    <position x='field_length/2' y='-field_width/2' z='0' angle='90'/>
+    <size width='outer_line_width' length='field_width'/>
+  </line>
+  
+  <!-- Middle Line -->
+  <line>  <!-- __|__ -->
+    <color rgb24='8F8F8F'/>
+    <position x='inner_line_width/2' y='-field_width/2' z='0' angle='90'/>
+    <size width='inner_line_width' length='field_width'/>
+  </line>
+
+  <!-- Central Circle -->
+  <arc>
+    <color rgb24='8F8F8F'/>
+    <center x='0' y='0' z='0'/>
+    <radius inner='circle_radius - inner_line_width' outer='circle_radius'/>
+    <angle_deg start='-90' stop='90' steps='15'/>
+  </arc>
+  <arc>
+    <color rgb24='8F8F8F'/>
+    <center x='0' y='0' z='0'/>
+    <radius inner='circle_radius - inner_line_width' outer='circle_radius'/>
+    <angle_deg start='90' stop='270' steps='15'/>
+  </arc>
+
+  <!-- Our Area -->
+  <line> 
+    <color rgb24='8F8F8F'/>
+    <position x='-field_length/2' y='-area_width/2' z='0' angle='0'/>
+    <size width='inner_line_width' length='area_length'/>
+  </line>
+  <line> 
+    <color rgb24='8F8F8F'/>
+    <position x='-field_length/2' y='area_width/2 - inner_line_width' z='0' angle='0'/>
+    <size width='inner_line_width' length='area_length'/>
+  </line>
+  <line> 
+    <color rgb24='8F8F8F'/>
+    <position x='-field_length/2 + area_length' y='-area_width/2' z='0' angle='90'/>
+    <size width='inner_line_width' length='area_width'/>
+  </line>
+
+
+  <!-- Opponent Area -->
+  <line> 
+    <color rgb24='8F8F8F'/>
+    <position x='field_length/2 - area_length' y='-area_width/2' z='0' angle='0'/>
+    <size width='inner_line_width' length='area_length'/>
+  </line>
+  <line> 
+    <color rgb24='8F8F8F'/>
+    <position x='field_length/2 - area_length' y='area_width/2 - inner_line_width' z='0' angle='0'/>
+    <size width='inner_line_width' length='area_length'/>
+  </line>
+  <line> 
+    <color rgb24='8F8F8F'/>
+    <position x='field_length/2 - area_length' y='area_width/2' z='0' angle='-90'/>
+    <size width='inner_line_width' length='area_width'/>
+  </line>
+
+   <!-- Our Inner Area -->
+  <line> 
+    <color rgb24='8F8F8F'/>
+    <position x='-field_length/2' y='-inner_area_width/2' z='0' angle='0'/>
+    <size width='inner_line_width' length='inner_area_length'/>
+  </line>
+  <line> 
+    <color rgb24='8F8F8F'/>
+    <position x='-field_length/2' y='inner_area_width/2 - inner_line_width' z='0' angle='0'/>
+    <size width='inner_line_width' length='inner_area_length'/>
+  </line>
+  <line> 
+    <color rgb24='8F8F8F'/>
+    <position x='-field_length/2 + inner_area_length' y='-inner_area_width/2' z='0' angle='90'/>
+    <size width='inner_line_width' length='inner_area_width'/>
+  </line>
+
+
+  <!-- Opponent Inner Area -->
+  <line> 
+    <color rgb24='8F8F8F'/>
+    <position x='field_length/2 - inner_area_length' y='-inner_area_width/2' z='0' angle='0'/>
+    <size width='inner_line_width' length='inner_area_length'/>
+  </line>
+  <line> 
+    <color rgb24='8F8F8F'/>
+    <position x='field_length/2 - inner_area_length' y='inner_area_width/2 - inner_line_width' z='0' angle='0'/>
+    <size width='inner_line_width' length='inner_area_length'/>
+  </line>
+  <line> 
+    <color rgb24='8F8F8F'/>
+    <position x='field_length/2 - inner_area_length' y='inner_area_width/2' z='0' angle='-90'/>
+    <size width='inner_line_width' length='inner_area_width'/>
+  </line>
+
+
+  <!-- Corner arcs -->
+  <arc>
+    <color rgb24='8F8F8F'/>
+    <center x='-field_length/2' y='-field_width/2' z='0'/>
+    <radius inner='corner_radius - inner_line_width' outer='corner_radius'/>
+    <angle_deg start='0' stop='90' steps='15'/>
+  </arc>
+  <arc>
+    <color rgb24='8F8F8F'/>
+    <center x='field_length/2' y='-field_width/2' z='0'/>
+    <radius inner='corner_radius - inner_line_width' outer='corner_radius'/>
+    <angle_deg start='90' stop='180' steps='15'/>
+  </arc>
+  <arc>
+    <color rgb24='8F8F8F'/>
+    <center x='field_length/2' y='field_width/2' z='0'/>
+    <radius inner='corner_radius - inner_line_width' outer='corner_radius'/>
+    <angle_deg start='180' stop='270' steps='15'/>
+  </arc>
+  <arc>
+    <color rgb24='8F8F8F'/>
+    <center x='-field_length/2' y='field_width/2' z='0'/>
+    <radius inner='corner_radius - inner_line_width' outer='corner_radius'/>
+    <angle_deg start='270' stop='360' steps='15'/>
+  </arc>
+
+</track>
+

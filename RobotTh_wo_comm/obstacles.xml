@@ -1,0 +1,20 @@
+<?xml version="1.0" ?>
+<obstacles>  
+
+  <cuboid>
+    <ID value='block_1'/>
+    <size x='0.2' y='0.4' z='0.04'/>
+    <pos x='1.5-1' y='0.3' z='0.02'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='139' g='69' b='19'/>
+  </cuboid>
+
+  <cuboid>
+    <ID value='block_2'/>
+    <size x='0.2' y='0.4' z='0.08'/>
+    <pos x='2-1' y='-0.1' z='0.02'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='139' g='69' b='19'/>
+  </cuboid>
+
+</obstacles>
