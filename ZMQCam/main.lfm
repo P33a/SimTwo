@@ -12,7 +12,7 @@ object FMain: TFMain
   OnPaint = FormPaint
   OnShow = FormShow
   SessionProperties = 'EditDistPol0.Text;EditDistPol1.Text;EditDistPol2.Text;EditOvisIP.Text;Height;Left;Top;Width;CBSend.Checked;CBShow.Checked'
-  LCLVersion = '2.1.0.0'
+  LCLVersion = '1.8.2.0'
   object EditPacketCount: TEdit
     Left = 84
     Height = 23

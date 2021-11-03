@@ -16,7 +16,7 @@ object FChart: TFChart
   OnKeyDown = FormKeyDown
   OnShow = FormShow
   SessionProperties = 'EditFileName.Text;EditMaxPoints.Text;Left;PageControl.TabIndex;Top;CBFreeze.Checked;CBZeroCross.Checked'
-  LCLVersion = '2.1.0.0'
+  LCLVersion = '1.8.2.0'
   object PageControl: TPageControl
     Left = 0
     Height = 416

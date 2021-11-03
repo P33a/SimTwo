@@ -18,7 +18,7 @@ object FViewer: TFViewer
   OnMouseWheel = FormMouseWheel
   OnShow = FormShow
   SessionProperties = 'GLDummyCamPos.Position;Top;Left;Width;Height'
-  LCLVersion = '2.1.0.0'
+  LCLVersion = '1.8.2.0'
   object GLSceneViewer: TGLSceneViewer
     Left = 0
     Height = 524

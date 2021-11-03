@@ -17,7 +17,7 @@ object FEditor: TFEditor
   OnShow = FormShow
   PopupMenu = PopupMenuOutput
   SessionProperties = 'Height;Left;SynEditST.Font;Top;Width;PageControlBottom.ActivePage'
-  LCLVersion = '2.1.0.0'
+  LCLVersion = '1.8.2.0'
   object PageControl: TPageControl
     Left = 0
     Height = 472
@@ -853,7 +853,6 @@ object FEditor: TFEditor
     DirectiveAttri.Foreground = clNavy
     CompilerMode = pcmDelphi
     NestedComments = False
-    TypeHelpers = True
     Left = 192
     Top = 36
   end
