@@ -15,7 +15,7 @@ object FCameras: TFCameras
   OnDestroy = FormDestroy
   OnShow = FormShow
   SessionProperties = 'CBSendImage.Checked;SBQuality.Position;Top;Left'
-  LCLVersion = '1.8.2.0'
+  LCLVersion = '2.1.0.0'
   object PageControl: TPageControl
     Left = 0
     Height = 516
@@ -29,6 +29,7 @@ object FCameras: TFCameras
       Caption = 'Default'
       ClientHeight = 490
       ClientWidth = 641
+      
       object GLSceneViewer: TGLSceneViewer
         Left = 0
         Height = 480

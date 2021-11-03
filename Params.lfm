@@ -1,7 +1,7 @@
 object FParams: TFParams
-  Left = 1253
+  Left = 1254
   Height = 679
-  Top = 159
+  Top = 160
   Width = 281
   Caption = 'Config'
   ClientHeight = 679
@@ -15,7 +15,7 @@ object FParams: TFParams
   OnDestroy = FormDestroy
   OnShow = FormShow
   SessionProperties = 'CBAntiAliasing.Checked;CBAxis.Checked;CBEndlessWorld.Checked;CBFog.Checked;CBFreeze.Checked;CBGrid.Checked;CBGroundTexture.Checked;CBHotCPU.Checked;CBIRNoise.Checked;CBModBusInputOverride.Checked;CBModBusOutputOverride.Checked;CBShadows.Checked;CBSkyDome.Checked;CBTags.Checked;CBUDPConnect.Checked;CBVsync.Checked;CBWorldQuickStep.Checked;ComboGroundTextures.ItemIndex;EditDefaultFriction.Text;EditModBusInputOffset.Text;EditModBusOutputOffset.Text;EditModBusPort.Text;EditODE_CFM.Text;EditOde_dt.Text;EditODE_ERP.Text;EditQuickStepIterations.Text;EditRemoteIP.Text;EditRobotSetTeta.Text;EditRobotSetX.Text;EditRobotSetY.Text;EditRobotSetZ.Text;EditScriptPeriod.Text;EditSetCamLookX.Text;EditSetCamLookY.Text;EditSetCamLookZ.Text;EditSetCamX.Text;EditSetCamY.Text;EditSetCamZ.Text;EditTargetFPS.Text;EditTimeSpeed.Text;EditTrailsCount.Text;EditTrailSize.Text;EditUDPPort.Text;EditWindSpeedX.Text;EditWindSpeedY.Text;EditWindSpeedZ.Text;LBSelectedTags.Items;Left;PageControl.ActivePage;PGRobots.TabIndex;RGCamera.ItemIndex;RGControlBlock.ItemIndex;RGGLObjects.ItemIndex;RGSensorGL.ItemIndex;ShapeSelColor.Brush;Top;CBComBaudrate.ItemIndex;CBComPort.ItemIndex'
-  LCLVersion = '1.8.2.0'
+  LCLVersion = '2.0.12.0'
   Scaled = False
   object PageControl: TPageControl
     Left = 0
@@ -1439,6 +1439,7 @@ object FParams: TFParams
         Top = 114
         Width = 111
         ItemHeight = 13
+        OnChange = ComboGroundTexturesChange
         OnClick = ComboGroundTexturesClick
         Style = csDropDownList
         TabOrder = 38

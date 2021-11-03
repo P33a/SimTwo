@@ -113,3 +113,7 @@ EKF_Beacon_Laser_Sol
 MotorModel_Bio
 RobotFactoryLite2021
 cad
+
+.vscode/launch.json
+.vscode/settings.json
+workspace.code-workspace

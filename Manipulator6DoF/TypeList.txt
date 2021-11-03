@@ -1,6 +1,7 @@
 !NotificationVariant
 !OPENARRAYOFCONST
 !OPENARRAYOFDOUBLE
+!OPENARRAYOFRECORD_TPOINT3D
 !OPENARRAYOFS32
 !OPENARRAYOFTOBJECT
 !OPENARRAYOFVARIANT
@@ -104,6 +105,8 @@ TEditCharCase
 TEndDragEvent
 TEOwnerDrawState
 TEShiftState
+TExtents
+TFace
 TFileStream
 TFindItemKind
 TFont
@@ -125,6 +128,7 @@ THandleStream
 THeader
 THelpContext
 THelpEvent
+THistogram
 TIdleEvent
 TIFException
 TImage
@@ -161,6 +165,7 @@ TOwnedCollection
 TOwnerDrawState
 TPage
 TPaintBox
+TPaintVisuals
 TPanel
 TPanelBevel
 TParser
@@ -205,6 +210,7 @@ TStringStream
 TTextLayout
 TTimer
 TTrackButton
+TTriangles
 TUDPBuffer
 TVariantArray
 TVarType

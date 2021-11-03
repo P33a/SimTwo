@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<sheet>
+  <columns>
+    <defaultcol width="50" />
+  </columns>
+  <cells>
+    <cell r="2" c="2" text="0" />
+    <cell r="19" c="0" text="19" />
+    <cell r="1" c="1" text="[reset]" />
+  </cells>
+</sheet>

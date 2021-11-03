@@ -1,0 +1,65 @@
+<?xml version="1.0" ?>
+<robot>
+  <kind value='InvPend'/>
+
+  <solids>
+
+    <cuboid>
+      <ID value='Base'/>
+      <mass value='1'/>
+      <size x='0.2' y='0.1' z='0.04'/>
+      <pos x='0' y='0' z='0.2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='64' g='64' b='64'/>
+    </cuboid>
+
+    <cylinder>
+      <ID value='Pend'/>
+      <mass value='0.1'/>
+      <size x='0.01' z='1'/>
+      <pos x='0' y='0' z='0.22+0.5'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='64' g='64' b='64'/>
+    </cylinder>
+
+  </solids>
+
+  <articulations>
+
+    <default>
+      <draw radius='0.005' height='0.1' rgb24='8F0000'/>
+      <motor ri='1' ki='1.8e-2' vmax='24' imax='5' active='0'/>
+      <gear ratio='16'/>
+      <friction bv='5e-2' fc='3e-5'/>
+      <encoder ppr='1000' mean='0' stdev='0'/>
+      <controller mode='pidposition' kp='100' ki='0' kd='0.02' kf='0.05' active='0' period='10'/>
+      <spring k='0' zeropos='0'/>
+    </default>
+
+    <joint>
+      <ID value='Pivot'/>
+      <pos x='0' y='0' z='0.22'/>
+      <axis x='0' y='1' z='0'/>
+      <connect B1='Base' B2='Pend'/>
+      <!--<limits Min='-90' Max='90'/>-->
+      <limits Min='-15' Max='15'/>
+      <!--<type value='Slider'/>-->
+      <type value='Hinge'/>
+      <desc Eng='Pivot'/>
+    </joint>
+
+    <joint>
+      <ID value='Slider'/>
+      <pos x='0' y='0' z='0.2'/>
+      <axis x='1' y='0' z='0'/>
+      <connect B1='Base' B2='0'/>
+      <limits Min='-1.4' Max='1.4'/>
+      <!--<limits Min='-2.5' Max='2.5'/>-->
+      <type value='Slider'/>
+      <desc Eng='Slider'/>
+    </joint>
+
+  </articulations>
+
+</robot>
+

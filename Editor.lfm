@@ -1,7 +1,7 @@
 object FEditor: TFEditor
-  Left = 644
+  Left = 1136
   Height = 522
-  Top = 308
+  Top = 433
   Width = 775
   Caption = 'Editor'
   ClientHeight = 502
@@ -17,7 +17,7 @@ object FEditor: TFEditor
   OnShow = FormShow
   PopupMenu = PopupMenuOutput
   SessionProperties = 'Height;Left;SynEditST.Font;Top;Width;PageControlBottom.ActivePage'
-  LCLVersion = '1.8.2.0'
+  LCLVersion = '2.0.12.0'
   object PageControl: TPageControl
     Left = 0
     Height = 472

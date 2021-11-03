@@ -8,7 +8,8 @@ uses
   Windows, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, GLScene, GLObjects, {GLMisc,} GLLCLViewer, ODEImport, OpenGL1x,
   GLVectorGeometry, GLGeomObjects, ExtCtrls, ComCtrls, GLTexture, GLGraphics,
-  keyboard, math, GLMaterial;
+  keyboard, math, GLMaterial, GLVectorFileObjects, GLColor,
+  GLVectorLists, GLVectorTypes;
 
 const
   //ODE world constants
@@ -75,7 +76,26 @@ type
   TMatterProperty = (smMetallic, smFerroMagnetic, smRFIDTag);
   TMatterProperties = set of TMatterProperty;
 
+  TPaintMode = (pmPaint, pmHeatmap, pmResult);//pmOriginal
+
   { TSolid }
+  TVertex = record
+    pos: TVector3f;
+    normal: TVector3f;
+    triangles: array of integer;
+    paintMapColor: TVector;
+    paintHeatmapColor: TVector;
+    paintResultColor: TVector;
+  end;
+
+  TTriangle = record
+    vertexs: array [0..2] of ^TVertex;
+    center: TAffineVector;
+    normal: TAffineVector;
+    area: double;
+    neighbors: array of integer;
+    paintThickness: double;
+  end;
 
   TSolid = class
     Body: PdxBody;
@@ -83,6 +103,20 @@ type
     GLObj, AltGLObj, ShadowGlObj, CanvasGLObj, extraGLObj: TGLSceneObject;
     PaintBitmap: TBitmap;
     PaintBitmapCorner: TdVector3;
+    isPaintTarget: bool;
+    initialColor: TVector4f;
+    paintGunMinDist: double;
+    //paintThickness: TDoubleList;
+    //paintHeatmap: TVectorList;
+    //paintmap: TVectorList;
+    paintMode: TPaintMode;
+    avgAreaPerVertex: double;
+    meshVertexs: array of TVertex;
+    meshTriangles: array of TTriangle;
+    paintZBitmap: array of array of double; // Z distance at polar coordinates (i,j)
+    paintZBitmapResolution: integer;
+    paintZBitmapOldTri: array of array of array of integer;
+    paintZBitmapOldQua: array of array of array of double;
     kind: TSolidKind;
     MatterProperties: TMatterProperties;
     BeltSpeed: double;
@@ -121,6 +155,8 @@ type
     procedure SetSurfaceFriction(mu, mu2: double);
     procedure SetSurfacePars(mu, mu2, softness, bounce, bounce_tresh: double);
     procedure UpdateGLCanvas;
+    function CalculateHeatmapColor(paintThickness: double): TColorVector;
+    function FindVertexIndex(Coordinates: TVector3f): integer;
   end;
 
   TSolidList = class(TList)
@@ -345,7 +381,7 @@ type
   end;
 
   TSensorKind = (skGeneric, skIR, skIRSharp, skSonar, skCapacitive, skInductive,
-                 skBeacon, skFloorLine, skRanger2D, skPenTip, skIMU, skSolenoid, skRFID);
+                 skBeacon, skFloorLine, skRanger2D, skIMU, skRFID, skPenTip, skSolenoid, skSprayGun);
 
   TSensor = class
     ID: string;
@@ -358,7 +394,11 @@ type
     Fmax, k1,k2: double;
     Vin: double;
     MaxDist, MinDist, StartAngle, EndAngle: double;
-
+    paintRate: single;
+    paintMaxAngle: single;
+    paintColor: TColorVector;
+    paintOn: boolean;
+    paintOcclusion: boolean;
   private
     function InsideGLPolygonsTaged(x, y: double; GLFloor: TGLBaseSceneObject): boolean;
     procedure FreeMeasures;
@@ -388,7 +428,7 @@ type
 const
   SensorKindStrings: array[TSensorKind] of string =
   ('Generic', 'IR', 'IRSharp', 'Sonar', 'Capacitive', 'Inductive',
-   'Beacon', 'FloorLine', 'Ranger2D', 'PenTip', 'IMU', 'Solenoid', 'RFID');
+   'Beacon', 'FloorLine', 'Ranger2D', 'IMU', 'RFID', 'PenTip', 'Solenoid', 'SprayGun');
 
 type
   TSensorList = class(TList)
@@ -1007,6 +1047,42 @@ begin
   end;
 end;
 
+function TSolid.CalculateHeatmapColor(paintThickness: double): TColorVector;
+var r,g,b:integer;
+    max, min, avg: double;
+begin
+  min := 0;
+  //max := 0.00015*50;
+  max := 30;
+  avg := (max-min)/2;
+  if paintThickness > max then begin
+    result := ConvertRGBColor([255,0,0]);
+  end else begin
+    if paintThickness < avg then begin
+      b := round((0-255)/(avg-min)*paintThickness + 255);
+      g := round(255/(avg-min)*paintThickness);
+      r:=0;
+    end else begin
+      b:=0;
+      g := round((0-255)/(avg-min)*paintThickness - (0-255)/(avg-min)*max);
+      r:= round(255/(max-avg)*paintThickness - 255/(max-avg)*avg);
+    end;
+    result := ConvertRGBColor([r,g,b]);
+  end;
+end;
+
+function TSolid.FindVertexIndex(Coordinates: TVector3f):integer;
+var i: integer;
+begin
+  result := -1;
+  for i:=0 to Length(meshVertexs) do begin
+    if VectorEquals(Coordinates, meshVertexs[i].pos) then begin
+      result := i;
+      break;
+    end;
+  end;
+  if result = -1 then showmessage('vertex not found');
+end;
 
 procedure TSolid.SetSurfacePars(mu, mu2, softness, bounce, bounce_tresh: double);
 begin
@@ -1546,7 +1622,6 @@ begin
 end;
 
 
-
 procedure TSensor.PostProcess;
 var HitSolid: TSolid;
     SensorPos, HitSolidPos: PdVector3;
@@ -1661,21 +1736,6 @@ begin
       end;
     end;
 
-    skSolenoid: begin
-      with Measures[0] do begin
-        dist := Rays[0].Measure.dist;
-        has_measure := true;
-        HitSolid := Rays[0].Measure.HitSolid;
-        value := 0;
-        if (Rays[0].Measure.has_measure) and
-           (HitSolid <> nil) and
-           (smFerroMagnetic in HitSolid.MatterProperties) then begin
-          value := 1
-        end;
-      end;
-    end;
-
-
     skFloorLine: begin
       with Measures[0] do begin
         dist := Rays[0].Measure.dist;
@@ -1701,6 +1761,20 @@ begin
          // if InsideGLPolygonsTaged(Rays[0].Measure.pos[0], Rays[0].Measure.pos[1], HitSolid.AltGLObj) then
          // value := 1
          //end;
+      end;
+    end;
+
+    skRFID: begin
+      with Measures[0] do begin
+        dist := Rays[0].Measure.dist;
+        has_measure := true;
+        HitSolid := Rays[0].Measure.HitSolid;
+        value := 0;
+        if (Rays[0].Measure.has_measure) and
+           (HitSolid <> nil) and
+           (smRFIDTag in HitSolid.MatterProperties) then begin
+          value := StrToIntDef(HitSolid.ID, 0);
+        end;
       end;
     end;
 
@@ -1770,7 +1844,7 @@ begin
       end;
     end;
 
-    skRFID: begin
+    skSolenoid: begin
       with Measures[0] do begin
         dist := Rays[0].Measure.dist;
         has_measure := true;
@@ -1778,11 +1852,15 @@ begin
         value := 0;
         if (Rays[0].Measure.has_measure) and
            (HitSolid <> nil) and
-           (smRFIDTag in HitSolid.MatterProperties) then begin
-          value := StrToIntDef(HitSolid.Tag, 0);
+           (smFerroMagnetic in HitSolid.MatterProperties) then begin
+          value := 1
         end;
       end;
     end;
+
+    skSprayGun: begin
+    end;
+
   end;
 end;
 
