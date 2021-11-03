@@ -26,7 +26,6 @@ backup/
 lib/
 backup/
 
-*.dll
 *.iip
 
 # Application bundle for Mac OS
