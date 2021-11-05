@@ -220,7 +220,7 @@
         <Filename Value="user_charts.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit27>
-      </Unit28>
+      <Unit28>
         <Filename Value="sdpozmq.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="sdpoZMQ"/>
