@@ -1358,7 +1358,7 @@ struct dxHashSpace : public dxSpace {
   procedure dJointGetTransmissionAnchor2(const dJointID: TdJointID; var result: TdVector3); cdecl; external ODEDLL;
   procedure dJointSetTransmissionParam(const dJointID: TdJointID; const parameter: integer; const value: TdReal); cdecl; external ODEDLL;
   function dJointGetTransmissionParam(const dJointID: TdJointID; parameter : integer): TdReal; cdecl; external ODEDLL;
-  procedure dJointSetTransmissionMode(const dJointID: TdJointID; mode : integer): TdReal; cdecl; external ODEDLL;
+  function dJointSetTransmissionMode(const dJointID: TdJointID; mode : integer): TdReal; cdecl; external ODEDLL;
   function dJointGetTransmissionMode(const dJointID: TdJointID): integer; cdecl; external ODEDLL;
   procedure dJointSetTransmissionRatio(const dJointID: TdJointID; const ratio: TdReal); cdecl; external ODEDLL;
   function dJointGetTransmissionRatio(const dJointID: TdJointID): TdReal; cdecl; external ODEDLL;
