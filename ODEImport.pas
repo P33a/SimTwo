@@ -1343,7 +1343,35 @@ struct dxHashSpace : public dxSpace {
   function dJointGetPistonAngle(const dJointID: TdJointID): TdReal; cdecl; external ODEDLL;
   function dJointGetPistonAngleRate(const dJointID: TdJointID): TdReal; cdecl; external ODEDLL;
   function dJointGetPistonRate(const dJointID: TdJointID): TdReal; cdecl; external ODEDLL;
-
+  
+  //Transmission
+  function dJointCreateTransmission(const World: PdxWorld; dJointGroupID : TdJointGroupID): TdJointID; cdecl; external ODEDLL;
+  procedure dJointGetTransmissionContactPoint1(const dJointID: TdJointID; var result: TdVector3); cdecl; external ODEDLL;
+  procedure dJointGetTransmissionContactPoint2(const dJointID: TdJointID; var result: TdVector3); cdecl; external ODEDLL;
+  procedure dJointSetTransmissionAxis1(const dJointID: TdJointID; const x, y, z: TdReal); cdecl; external ODEDLL;
+  procedure dJointGetTransmissionAxis1(const dJointID: TdJointID; var result: TdVector3); cdecl; external ODEDLL;
+  procedure dJointSetTransmissionAxis2(const dJointID: TdJointID; const x, y, z: TdReal); cdecl; external ODEDLL;
+  procedure dJointGetTransmissionAxis2(const dJointID: TdJointID; var result: TdVector3); cdecl; external ODEDLL;
+  procedure dJointSetTransmissionAnchor1(const dJointID: TdJointID; const x, y, z: TdReal); cdecl; external ODEDLL;
+  procedure dJointGetTransmissionAnchor1(const dJointID: TdJointID; var result: TdVector3); cdecl; external ODEDLL;
+  procedure dJointSetTransmissionAnchor2(const dJointID: TdJointID; const x, y, z: TdReal); cdecl; external ODEDLL;
+  procedure dJointGetTransmissionAnchor2(const dJointID: TdJointID; var result: TdVector3); cdecl; external ODEDLL;
+  procedure dJointSetTransmissionParam(const dJointID: TdJointID; const parameter: integer; const value: TdReal); cdecl; external ODEDLL;
+  function dJointGetTransmissionParam(const dJointID: TdJointID; parameter : integer): TdReal; cdecl; external ODEDLL;
+  procedure dJointSetTransmissionMode(const dJointID: TdJointID; mode : integer): TdReal; cdecl; external ODEDLL;
+  function dJointGetTransmissionMode(const dJointID: TdJointID): integer; cdecl; external ODEDLL;
+  procedure dJointSetTransmissionRatio(const dJointID: TdJointID; const ratio: TdReal); cdecl; external ODEDLL;
+  function dJointGetTransmissionRatio(const dJointID: TdJointID): TdReal; cdecl; external ODEDLL;
+  procedure dJointSetTransmissionAxis(const dJointID: TdJointID; const x, y, z: TdReal); cdecl; external ODEDLL;
+  procedure dJointGetTransmissionAxis(const dJointID: TdJointID; var result: TdVector3); cdecl; external ODEDLL;
+  function dJointGetTransmissionAngle1(const dJointID: TdJointID): TdReal; cdecl; external ODEDLL;
+  function dJointGetTransmissionAngle2(const dJointID: TdJointID): TdReal; cdecl; external ODEDLL;
+  function dJointGetTransmissionRadius1(const dJointID: TdJointID): TdReal; cdecl; external ODEDLL;
+  function dJointGetTransmissionRadius2(const dJointID: TdJointID): TdReal; cdecl; external ODEDLL;
+  procedure dJointSetTransmissionRadius1(const dJointID: TdJointID; radius: TdReal); cdecl; external ODEDLL;
+  procedure dJointSetTransmissionRadius2(const dJointID: TdJointID; radius: TdReal); cdecl; external ODEDLL;
+  function dJointGetTransmissionBacklash(const dJointID: TdJointID): TdReal; cdecl; external ODEDLL;
+  procedure dJointSetTransmissionBacklash(const dJointID: TdJointID; backlash: TdReal); cdecl; external ODEDLL;
 
   //----- dGeom -----
   function dCreateGeom (classnum: Integer): PdxGeom; cdecl; external ODEDLL;
