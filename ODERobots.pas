@@ -947,11 +947,12 @@ begin
         W := 0; X := 0; Y := 1; Z := 0;
       end;
       with Texture.MappingTCoordinates do begin
-        W := 0; X := 1; Y := 0; Z := 0;
+        W := 0; X := -1; Y := 0; Z := 0;
       end;
       with TextureOffset do begin
         X := 0.5; Y := 0.5; Z := 0;
       end;
+      //Texture.TextureWrap := twNone;
     end;
     GLObj.Material.TextureEx.Items[0].TextureScale.x := TextureScale;
     GLObj.Material.TextureEx.Items[0].TextureScale.y := TextureScale;

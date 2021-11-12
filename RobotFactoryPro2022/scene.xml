@@ -1,0 +1,114 @@
+<?xml version="1.0" ?>
+<scene>
+  <defines>
+  <!--weight of Shop Floor -->
+    <const name='borderline_x' value='1.682' />
+    <const name='borderline_y' value='1.190' />
+    <const name='ground' value='0.001' />
+    
+    <const name='wharehouse_pos_x' value='0.47' />
+    <const name='wharehouse_pos_y' value='0.54' />
+    
+    <const name='machine_pos_x' value='0.695/2' />
+    <const name='machine_pos_y' value='0.075' />
+    
+    <const name='part_pos_x' value='wharehouse_pos_x' />
+    <const name='part_pos_y' value='wharehouse_pos_y' />
+    <const name='part_pos_z' value='0.0021' />
+    
+    <!--const name='sensor_pos_z' value='0.13' /-->
+  </defines>
+
+  <!-- Track Setup
+  <track file='track.xml'/>  -->
+
+  <obstacle>
+    <ID name='field'/>
+    <pos x='0' y='0' z='0.0'/>
+    <body file='field_pro.xml'/>
+  </obstacle>
+  
+  <!-- Walls Setup -->
+  <!--obstacles file='walls.xml'/-->
+
+  <robot>
+    <ID name='AGV'/>
+    <pos x='-0.725' y='-0.4' z='0.0'/>
+    <rot_deg x='0' y='0' z='90'/>
+    <body file='AGV.xml'/>
+  </robot>
+  
+  <!-- begin incoming whareouse --> 
+  <obstacle>
+    <ID name='incoming_whareouse_'/>
+    <pos x='-wharehouse_pos_x' y='wharehouse_pos_y' z='0'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <body file='wharehouseIn.xml'/>
+  </obstacle>
+  
+  <!-- begin outgoing whareouse --> 
+  <obstacle>
+    <ID name='output_whareouse_'/>
+    <pos x='wharehouse_pos_x' y='-wharehouse_pos_y' z='0'/>
+    <rot_deg x='0' y='0' z='180'/>
+    <body file='wharehouseOut.xml'/>
+  </obstacle>
+  
+  <!-- begin machines -->
+  <!-- machine A -->
+  <obstacle>
+    <ID name='Machines_A_'/>
+    <pos x='-machine_pos_x' y='-machine_pos_y' z='0'/>
+    <rot_deg x='0' y='0' z='-90'/>
+    <body file='machinesA.xml'/>
+  </obstacle>
+
+  <!-- machine B --> 
+  <obstacle>
+    <ID name='Machines_B_'/>
+    <pos x='machine_pos_x' y='machine_pos_y' z='0'/>
+    <rot_deg x='0' y='0' z='-90'/>
+    <body file='machinesB.xml'/>
+  </obstacle>
+
+
+
+
+
+<!-- Parts Setup -->
+  <robot>
+    <ID name='Part1'/>
+    <pos x='-part_pos_x-0.150-0.075+0.005' y='part_pos_y-0.005' z='part_pos_z'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <body file='PartBlue.xml'/>
+  </robot>
+  
+  <robot>
+    <ID name='Part2'/>
+    <pos x='-part_pos_x-0.075+0.005' y='part_pos_y-0.005' z='part_pos_z'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <body file='PartBlue.xml'/>
+  </robot>
+  
+  <robot>
+    <ID name='Part3'/>
+    <pos x='-part_pos_x+0.07' y='part_pos_y-0.005' z='part_pos_z'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <body file='PartBlue.xml'/>
+  </robot>
+  
+  <robot>
+    <ID name='Part4'/>
+    <!--pos x='-part_pos_x+0.150+0.07' y='part_pos_y-0.005' z='part_pos_z'/-->
+    <pos x='-machine_pos_x + 0.045' y='0.0' z='part_pos_z'/>
+    <rot_deg x='0' y='0' z='90'/>
+    <body file='PartBlue.xml'/>
+  </robot>
+
+
+  <!--nosensors file='cell_sensors.xml'/-->
+                   
+  <!--things file='things.xml'/-->
+
+</scene>
+

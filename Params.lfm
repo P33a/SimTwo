@@ -22,9 +22,9 @@ object FParams: TFParams
     Height = 621
     Top = 0
     Width = 273
-    ActivePage = TabIO
+    ActivePage = TabGraphics
     Anchors = [akTop, akLeft, akBottom]
-    TabIndex = 4
+    TabIndex = 1
     TabOrder = 0
     object TabControl: TTabSheet
       Caption = 'Control'

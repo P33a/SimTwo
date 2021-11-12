@@ -1,0 +1,50 @@
+<?xml version="1.0" ?>
+<obstacles>
+   <defines>
+    <const name='base_height' value='0.020' />
+    <const name='cell_width' value='0.180' />  
+    <const name='cell_depth' value='0.120' /> 
+    <const name='wall_height' value='0.120' />
+    <const name='wall_thickness'  value='0.010' />
+  </defines>
+
+  <cuboid>
+    <ID value='base'/>
+    <size x='cell_width' y='cell_depth' z='base_height'/>
+    <pos x='0' y='0' z='base_height/2'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='64' g='64' b='64'/>
+  </cuboid>
+
+  <cuboid>
+    <ID value='right_wall'/>
+    <size x='wall_thickness' y='cell_depth' z='wall_height'/>
+    <pos x='cell_width/2 - wall_thickness/2' y='0' z='base_height + wall_height/2'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='240' g='240' b='240'/>
+  </cuboid>
+
+  <cuboid>
+    <ID value='left_wall'/>
+    <size x='wall_thickness' y='cell_depth' z='wall_height'/>
+    <pos x='-cell_width/2 + wall_thickness/2' y='0' z='base_height + wall_height/2'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='240' g='240' b='240'/>
+  </cuboid>
+
+  <cuboid>
+    <ID value='back_wall'/>
+    <size x='cell_width' y='wall_thickness' z='wall_height'/>
+    <pos x='0' y='cell_depth/2 - wall_thickness/2' z='base_height + wall_height/2'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='255' g='255' b='255'/>
+  </cuboid>
+
+  <cuboid>
+    <ID value='ceiling'/>
+    <size x='cell_width' y='cell_depth' z='wall_thickness'/>
+    <pos x='0' y='0' z='base_height + wall_height + wall_thickness/2'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='128' g='128' b='128'/>
+  </cuboid>
+</obstacles>

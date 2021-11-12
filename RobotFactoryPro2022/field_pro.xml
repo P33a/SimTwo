@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+<obstacles>
+   <defines>
+    <const name='field_height' value='0.001' />
+    
+    <const name='field_x' value='1.680' />
+    <const name='field_y' value='1.18' />
+    
+    <const name='marker_size' value='0.055' />
+    <const name='marker_thickness' value='0.001' />
+   </defines>
+   
+
+  <cuboid>
+    <ID value='field_pro'/>
+    <size x='field_x' y='field_y' z='field_height'/>
+    <pos x='0' y='0' z='field_height/2'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='255' g='255' b='255'/>
+    <texture name='field_pro.jpg' scale='0.595'/>
+  </cuboid>
+
+
+</obstacles>

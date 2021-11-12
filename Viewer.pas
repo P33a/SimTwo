@@ -2754,7 +2754,7 @@ begin
 
         dGeomSetRotation(NewObstacle.Geom, RFinal); // And the orientation
       end;
-      if TextureName <> '' then begin
+      if (TextureName <> '') and (FileExists(TextureName)) then begin
         NewObstacle.SetTexture(TextureName, TextureScale); //'LibMaterialFeup'
       end;
       NewObstacle.SetColor(colorR, colorG, colorB, transparency);

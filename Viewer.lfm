@@ -1,7 +1,7 @@
 object FViewer: TFViewer
   Left = 403
   Height = 524
-  Top = 147
+  Top = 156
   Width = 757
   Caption = 'SimTwo View'
   ClientHeight = 524
@@ -272,19 +272,15 @@ object FViewer: TFViewer
         Material.BackProperties.Diffuse.Alpha = 1
         Material.BackProperties.Emission.Alpha = 1
         Material.BackProperties.Specular.Alpha = 1
-        Material.FrontProperties.Ambient.Red = 0.100000001490116
-        Material.FrontProperties.Ambient.Green = 0.100000001490116
-        Material.FrontProperties.Ambient.Blue = 0.100000001490116
+        Material.FrontProperties.Ambient.Red = 1
         Material.FrontProperties.Ambient.Alpha = 1
         Material.FrontProperties.Ambient.Color = {
-          CDCCCC3DCDCCCC3DCDCCCC3D0000803F
+          0000803F00000000000000000000803F
         }
-        Material.FrontProperties.Diffuse.Red = 0.200000002980232
-        Material.FrontProperties.Diffuse.Green = 0.600000023841858
-        Material.FrontProperties.Diffuse.Blue = 0.200000002980232
+        Material.FrontProperties.Diffuse.Red = 1
         Material.FrontProperties.Diffuse.Alpha = 1
         Material.FrontProperties.Diffuse.Color = {
-          CDCC4C3E9A99193FCDCC4C3E0000803F
+          0000803F00000000000000000000803F
         }
         Material.FrontProperties.Emission.Alpha = 1
         Material.FrontProperties.Specular.Alpha = 1

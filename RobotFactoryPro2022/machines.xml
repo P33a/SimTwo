@@ -1,0 +1,99 @@
+<?xml version="1.0" ?>
+<obstacles>
+   <defines>
+    <const name='base_height' value='0.002' />
+    
+    <const name='cell_x' value='0.15' />
+    <const name='cell_y' value='0.08' />
+    
+    <const name='wall_height' value='0.065' />
+    <const name='wall_thickness'  value='0.02' />    
+    <const name='marker_size' value='0.055' />
+    <const name='marker_thickness' value='0.001' />
+   </defines>
+   
+  <!-- Walls -->
+  <!-- left -->
+
+  <cuboid>
+    <ID value='left_wall'/>
+    <size x='wall_thickness' y='2 * cell_y + wall_thickness' z='wall_height'/>
+    <pos x='1 * cell_x' y='0' z='base_height + wall_height/2'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='30' g='144' b='255'/>
+  </cuboid>
+
+  <cuboid>
+    <ID value='center_wall'/>
+    <size x='wall_thickness' y='2 * cell_y + wall_thickness' z='wall_height'/>
+    <pos x='0' y='0' z='base_height + wall_height/2'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='30' g='144' b='255'/>
+  </cuboid>
+
+
+  <cuboid>
+    <ID value='right_wall'/>
+    <size x='wall_thickness' y='2 * cell_y + wall_thickness' z='wall_height'/>
+    <pos x='-1 * cell_x' y='0' z='base_height + wall_height/2'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='30' g='144' b='255'/>
+  </cuboid>
+
+
+  <!-- back -->
+  <cuboid>
+    <ID value='back_wall'/>
+    <size x='2 * cell_x' y='wall_thickness' z='wall_height'/>
+    <pos x='0' y='0' z='base_height + wall_height/2'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='30' g='144' b='255'/>
+  </cuboid>
+
+  <cuboid>
+    <ID value='back_wall_marker_support'/>
+    <size x='2 * cell_x + wall_thickness' y='wall_thickness' z='wall_height'/>
+    <pos x='0' y='0' z='base_height + 1.5 * wall_height'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <color_rgb r='30' g='144' b='255'/>
+  </cuboid>
+
+  <cuboid>
+    <ID value='back_wall_marker_BR'/>
+    <size x='marker_size' y='marker_size' z='marker_thickness'/>
+    <pos x='cell_x/2' y='wall_thickness/2 + marker_thickness/2' z='base_height + 1.5 * wall_height'/>
+    <rot_deg x='0' y='90' z='0'/>
+    <color_rgb r='255' g='255' b='255'/>
+    <texture name='5x5_1000-50.png' scale='20'/>
+  </cuboid>
+
+  <cuboid>
+    <ID value='back_wall_marker_TR'/>
+    <size x='marker_size' y='marker_size' z='marker_thickness'/>
+    <pos x='cell_x/2 - cell_x' y='wall_thickness/2 + marker_thickness/2' z='base_height + 1.5 * wall_height'/>
+    <rot_deg x='0' y='90' z='0'/>
+    <color_rgb r='255' g='255' b='255'/>
+    <texture name='5x5_1000-50.png' scale='20'/>
+  </cuboid>
+
+  <cuboid>
+    <ID value='back_wall_marker_BL'/>
+    <size x='marker_size' y='marker_size' z='marker_thickness'/>
+    <pos x='cell_x/2' y='-wall_thickness/2 - marker_thickness/2' z='base_height + 1.5 * wall_height'/>
+    <rot_deg x='0' y='90' z='180'/>
+    <color_rgb r='255' g='255' b='255'/>
+    <texture name='5x5_1000-50.png' scale='20'/>
+  </cuboid>
+
+  <cuboid>
+    <ID value='back_wall_marker_TL'/>
+    <size x='marker_size' y='marker_size' z='marker_thickness'/>
+    <pos x='cell_x/2 - cell_x' y='-wall_thickness/2 - marker_thickness/2' z='base_height + 1.5 * wall_height'/>
+    <rot_deg x='0' y='90' z='180'/>
+    <color_rgb r='255' g='255' b='255'/>
+    <texture name='5x5_1000-50.png' scale='20'/>
+  </cuboid>
+
+
+
+</obstacles>
