@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<sheet>
+  <columns>
+    <defaultcol width="50" />
+  </columns>
+  <cells>
+    <cell r="0" c="2" text="2" />
+    <cell r="3" c="5" text="[On]" />
+    <cell r="4" c="5" text="[Off]" />
+    <cell r="2" c="5" text="Chart" backcolor="$40FF00" />
+    <cell r="3" c="1" text="X" />
+    <cell r="4" c="1" text="Y" />
+    <cell r="5" c="1" text="Theta" />
+    <cell r="7" c="1" text="S0" />
+    <cell r="8" c="1" text="S1" />
+    <cell r="9" c="1" text="S2" />
+    <cell r="3" c="2" text="0.319" />
+    <cell r="3" c="3" text="0.09" />
+    <cell r="4" c="2" text="1.3" />
+    <cell r="5" c="2" text="-92.5" />
+    <cell r="2" c="3" text="[Set]" />
+    <cell r="4" c="3" text="0.09" />
+    <cell r="5" c="3" text="90" />
+  </cells>
+</sheet>

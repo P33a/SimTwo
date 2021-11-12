@@ -17,7 +17,7 @@ object FSheets: TFSheets
   OnResize = FormResize
   OnShow = FormShow
   SessionProperties = 'Top;Left;Width;Height'
-  LCLVersion = '2.1.0.0'
+  LCLVersion = '1.8.2.0'
   object PanelFormula: TPanel
     Left = 0
     Height = 29

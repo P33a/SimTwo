@@ -1,0 +1,31 @@
+<?xml version="1.0" ?>
+<robot>
+    <kind value='Camera'/>
+    <defines>
+        <const name='CameraHeight' value='0.5' />
+    </defines>
+    <solids>
+        <cuboid>
+            <ID value='Base'/>
+            <mass value='1'/>
+            <size x='0.2' y='0.2' z='CameraHeight'/>
+            <pos x='0' y='0' z='CameraHeight/2'/>
+            <rot_deg x='0' y='0' z='0'/>
+            <color_rgb r='10' g='10' b='10'/>
+        </cuboid>
+    </solids>
+
+    <shells>
+        <camera>
+            <ID value='camera'/>
+            <size x='0.04' y='0.04' z='0.06'/>
+            <pos x='0' y='0' z='CameraHeight-0.06'/> 
+            <focal length='30'/>
+            <frame decimation='4'/>
+            <rot_deg x='90' y='0' z='0'/>
+            <color_rgb r='50' g='140' b='200'/>
+        </camera>
+    </shells>
+
+</robot>
+

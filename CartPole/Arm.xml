@@ -1,0 +1,43 @@
+<?xml version="1.0" ?>
+<robot>
+  <kind value='Arm'/>
+
+  <solids>
+
+    <cuboid>
+      <ID value='2'/>
+      <mass value='0.1'/>
+      <size x='0.05' y='1' z='0.04'/>
+      <pos x='0' y='0' z='0.5'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='64' g='64' b='64'/>
+    </cuboid>
+
+  </solids>
+
+  <articulations>
+    <default>
+      <draw radius='0.005' height='0.1' rgb24='8F0000'/>
+      <motor ri='1' ki='1.8e-2' vmax='24' imax='5' active='0'/>
+      <gear ratio='254'/>
+      <friction bv='5e-3' fc='3e-2' coulomblimit='1e-2'/>
+      <encoder ppr='1000' mean='0' stdev='0'/>
+      <controller mode='pidposition' kp='100' ki='0' kd='0.02' kf='0.05' active='0' period='10'/>
+      <spring k='0' zeropos='0'/>
+    </default>
+    <joint>
+      <ID value='0'/>
+      <pos x='0' y='-0.1' z='0'/>
+      <axis x='1' y='0' z='0'/>
+      <connect B1='2' B2='0'/>
+      <!--<limits Min='-90' Max='90'/>-->
+      <limits Min='-90' Max='90'/>
+      <!--<type value='Slider'/>-->
+      <type value='Hinge'/>
+      <desc Pt='Estaca'/>
+      <desc Eng='Stake'/>
+    </joint>
+  </articulations>
+
+</robot>
+

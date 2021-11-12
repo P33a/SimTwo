@@ -79,7 +79,7 @@
         <PackageName Value="LCL"/>
       </Item10>
     </RequiredPackages>
-    <Units Count="29">
+    <Units Count="32">
       <Unit0>
         <Filename Value="SimTwo.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -221,9 +221,22 @@
         <IsPartOfProject Value="True"/>
       </Unit27>
       <Unit28>
+        <Filename Value="sdpozmq.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="sdpoZMQ"/>
+      </Unit28>
+      <Unit29>
+        <Filename Value="zmq.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit29>
+      <Unit30>
+        <Filename Value="zmq_utils.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit30>
+      <Unit31>
         <Filename Value="octree.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit28>
+      </Unit31>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -243,20 +256,10 @@
         <SyntaxMode Value="Delphi"/>
       </SyntaxOptions>
     </Parsing>
-    <CodeGeneration>
-      <Optimizations>
-        <OptimizationLevel Value="3"/>
-      </Optimizations>
-    </CodeGeneration>
     <Linking>
       <Debugging>
         <UseExternalDbgSyms Value="True"/>
       </Debugging>
-      <Options>
-        <Win32>
-          <GraphicApplication Value="True"/>
-        </Win32>
-      </Options>
     </Linking>
   </CompilerOptions>
   <Debugging>

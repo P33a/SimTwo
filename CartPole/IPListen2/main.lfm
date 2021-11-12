@@ -1,0 +1,312 @@
+object FMain: TFMain
+  Left = 373
+  Height = 269
+  Top = 149
+  Width = 533
+  ActiveControl = Memo
+  Caption = 'IPControl'
+  ClientHeight = 269
+  ClientWidth = 533
+  OnClose = FormClose
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  OnShow = FormShow
+  SessionProperties = 'CBListen.Checked;CBLoopBack.Checked;EditIP.Text;EditListenPort.Text;EditMess.Text;MemoLoopBack.Lines;EditK1.Text;EditK2.Text;EditK3.Text;EditK4.Text;EditManualControl.Text;RGControl.ItemIndex'
+  LCLVersion = '0.9.28.2'
+  object Label1: TLabel
+    Left = 428
+    Height = 14
+    Top = 8
+    Width = 42
+    Caption = 'Packets:'
+    ParentColor = False
+  end
+  object Label2: TLabel
+    Left = 8
+    Height = 14
+    Top = 119
+    Width = 33
+    Caption = 'Theta:'
+    ParentColor = False
+  end
+  object Label3: TLabel
+    Left = 8
+    Height = 14
+    Top = 143
+    Width = 39
+    Caption = 'Omega:'
+    ParentColor = False
+  end
+  object Label4: TLabel
+    Left = 8
+    Height = 14
+    Top = 167
+    Width = 42
+    Caption = 'Position:'
+    ParentColor = False
+  end
+  object Label5: TLabel
+    Left = 8
+    Height = 14
+    Top = 191
+    Width = 35
+    Caption = 'Speed:'
+    ParentColor = False
+  end
+  object Label6: TLabel
+    Left = 138
+    Height = 14
+    Top = 227
+    Width = 39
+    Caption = 'Manual:'
+    ParentColor = False
+  end
+  object Label7: TLabel
+    Left = 8
+    Height = 14
+    Top = 227
+    Width = 40
+    Caption = 'Control:'
+    ParentColor = False
+  end
+  object Label8: TLabel
+    Left = 160
+    Height = 14
+    Top = 120
+    Width = 17
+    Caption = 'K1:'
+    ParentColor = False
+  end
+  object Label9: TLabel
+    Left = 163
+    Height = 14
+    Top = 68
+    Width = 76
+    Caption = 'State FeedBack'
+    ParentColor = False
+  end
+  object Label10: TLabel
+    Left = 160
+    Height = 14
+    Top = 144
+    Width = 17
+    Caption = 'K2:'
+    ParentColor = False
+  end
+  object Label11: TLabel
+    Left = 160
+    Height = 14
+    Top = 168
+    Width = 17
+    Caption = 'K3:'
+    ParentColor = False
+  end
+  object Label12: TLabel
+    Left = 160
+    Height = 14
+    Top = 192
+    Width = 17
+    Caption = 'K4:'
+    ParentColor = False
+  end
+  object Memo: TMemo
+    Left = 340
+    Height = 208
+    Top = 60
+    Width = 191
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    TabOrder = 0
+  end
+  object BTest: TButton
+    Left = 264
+    Height = 23
+    Top = 32
+    Width = 69
+    Caption = 'Send Test'
+    OnClick = BTestClick
+    TabOrder = 1
+  end
+  object EditIP: TEdit
+    Left = 264
+    Height = 21
+    Top = 4
+    Width = 136
+    TabOrder = 2
+    Text = '127.0.0.1:9808'
+  end
+  object EditMess: TEdit
+    Left = 340
+    Height = 21
+    Top = 32
+    Width = 188
+    TabOrder = 3
+    Text = 'Hello'
+  end
+  object EditListenPort: TEdit
+    Left = 88
+    Height = 21
+    Top = 4
+    Width = 80
+    TabOrder = 4
+    Text = '9810'
+  end
+  object CBListen: TCheckBox
+    Left = 8
+    Height = 17
+    Top = 5
+    Width = 75
+    Caption = 'Listen Port:'
+    OnClick = CBListenClick
+    TabOrder = 5
+  end
+  object CBLoopBack: TCheckBox
+    Left = 188
+    Height = 17
+    Top = 5
+    Width = 69
+    Anchors = [akTop, akRight]
+    Caption = 'LoopBack:'
+    TabOrder = 6
+  end
+  object EditCount: TEdit
+    Left = 476
+    Height = 21
+    Top = 5
+    Width = 55
+    TabOrder = 7
+    Text = '0'
+  end
+  object EditTheta: TEdit
+    Left = 56
+    Height = 21
+    Top = 116
+    Width = 55
+    TabOrder = 8
+    Text = '0'
+  end
+  object RGControl: TRadioGroup
+    Left = 8
+    Height = 81
+    Top = 28
+    Width = 119
+    AutoFill = True
+    Caption = 'Control'
+    ChildSizing.LeftRightSpacing = 6
+    ChildSizing.TopBottomSpacing = 6
+    ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+    ChildSizing.EnlargeVertical = crsHomogenousChildResize
+    ChildSizing.ShrinkHorizontal = crsScaleChilds
+    ChildSizing.ShrinkVertical = crsScaleChilds
+    ChildSizing.Layout = cclTopToBottomThenLeftToRight
+    ChildSizing.ControlsPerLine = 3
+    ClientHeight = 63
+    ClientWidth = 115
+    ColumnLayout = clVerticalThenHorizontal
+    ItemIndex = 0
+    Items.Strings = (
+      'Manual'
+      'State Feedback'
+      'Fuzzy'
+    )
+    TabOrder = 9
+  end
+  object EditW: TEdit
+    Left = 56
+    Height = 21
+    Top = 140
+    Width = 55
+    TabOrder = 10
+    Text = '0'
+  end
+  object EditPosition: TEdit
+    Left = 56
+    Height = 21
+    Top = 164
+    Width = 55
+    TabOrder = 11
+    Text = '0'
+  end
+  object EditV: TEdit
+    Left = 56
+    Height = 21
+    Top = 188
+    Width = 55
+    TabOrder = 12
+    Text = '0'
+  end
+  object EditManualControl: TEdit
+    Left = 184
+    Height = 21
+    Top = 224
+    Width = 55
+    TabOrder = 13
+    Text = '0'
+  end
+  object EditControl: TEdit
+    Left = 56
+    Height = 21
+    Top = 224
+    Width = 55
+    TabOrder = 14
+    Text = '0'
+  end
+  object EditK1: TEdit
+    Left = 184
+    Height = 21
+    Top = 116
+    Width = 55
+    TabOrder = 15
+    Text = '0'
+  end
+  object EditK2: TEdit
+    Left = 184
+    Height = 21
+    Top = 140
+    Width = 55
+    TabOrder = 16
+    Text = '0'
+  end
+  object EditK3: TEdit
+    Left = 184
+    Height = 21
+    Top = 164
+    Width = 55
+    TabOrder = 17
+    Text = '0'
+  end
+  object EditK4: TEdit
+    Left = 184
+    Height = 21
+    Top = 188
+    Width = 55
+    TabOrder = 18
+    Text = '0'
+  end
+  object BSet: TButton
+    Left = 186
+    Height = 23
+    Top = 88
+    Width = 53
+    Caption = 'Set'
+    OnClick = BSetClick
+    TabOrder = 19
+  end
+  object UDP: TLUDPComponent
+    Port = 0
+    OnReceive = UDPReceive
+    Timeout = 0
+    left = 396
+    top = 142
+  end
+  object IniPropStorage: TIniPropStorage
+    StoredValues = <>
+    IniSection = 'Main'
+    left = 396
+    top = 96
+  end
+  object Timer: TTimer
+    OnTimer = TimerTimer
+    left = 396
+    top = 190
+  end
+end

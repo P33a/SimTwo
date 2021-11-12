@@ -29,6 +29,7 @@ object FCameras: TFCameras
       Caption = 'Default'
       ClientHeight = 490
       ClientWidth = 641
+      
       object GLSceneViewer: TGLSceneViewer
         Left = 0
         Height = 480

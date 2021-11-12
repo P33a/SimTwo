@@ -4,7 +4,8 @@ unit ODERobotsPublished;
 
 interface
 
-uses Graphics, Types, ODERobots, PathFinder, dynmatrix, GLKeyboard, ODEGL, GLVectorGeometry;
+uses Graphics, Types, ODERobots, PathFinder, dynmatrix, GLKeyboard, ODEGL,
+  GLVectorFileObjects, GLGeometryBB, GLColor, GLVectorGeometry, GLVectorTypes;
 
 type
   TAxisPoint = record
@@ -69,6 +70,47 @@ type
     alpha: integer;
   end;
 
+  TExtents = record
+    Min: TPoint3D;
+    Max: TPoint3D;
+  end;
+
+  THistogram = record
+    binUpperLimit: array of double; //the first lower limit is 0
+    binHeight: array of integer;
+  end;
+
+  TFaceVertexs = array [0..2] of TPoint3D;
+
+  TFace = record
+    //TODO: solve:
+    //vertices: TFaceVertexs;
+    vertice0: TPoint3D;
+    vertice1: TPoint3D;
+    vertice2: TPoint3D;
+    center: TPoint3D;
+    normal: TPoint3D;
+    area: double;
+    neighbors: array of integer;
+  end;
+
+  TTriangles = array of TFace;
+
+{delete this example:
+  TArrayOfPoints = array of TPoint3D;
+  TVertexs = record
+    V: TArrayOfPoints;
+    //V: array[0..20] of TPoint3D;//Vertices
+    //N: array[0..2000] of TPoint3D;//Normals
+    //C: array[0..2000] of TPoint3D;//Colors
+    count: integer;
+  end;
+}
+
+
+
+  TPaintVisuals = (pmPaint, pmHeatmap, pmResult);
+
 procedure SetFireScale(x, y, z: double);
 procedure SetFirePosition(x, y, z: double);
 procedure StartFire;
@@ -96,6 +138,9 @@ function GetSolidCenterOfMass(R, i: integer): TPoint3D;
 procedure SetSolidPos(R, i: integer; x, y, z: double);
 procedure SetSolidPosMat(R, i: integer; P: Matrix);
 procedure SetSolidRotationMat(R, i: integer; Rot: Matrix);
+
+procedure SetSolidLinearVel(R, i: integer; x, y, z: double);
+procedure SetSolidAngularVel(R, i: integer; x, y, z: double);
 
 function GetSolidPos(R, i: integer): TPoint3D;
 function GetSolidLinearVel(R, i: integer): TPoint3D;
@@ -137,6 +182,24 @@ function GetSolidCanvas(R, i: integer): TCanvas;
 procedure SolidCanvasClear(R, i: integer);
 //function GetSolidBitmap(R, i: integer): TBitmap;
 //procedure SolidCanvasDrawText(R, i: integer; x, y: integer; txt: string);
+
+function GetPaintGunMinDist(i: integer): double;
+function GetPaintTargetExtents(i: integer): TExtents;
+procedure ResetPaintTargetPaint(i: integer);
+procedure SetPaintTargetPaintMode(i:integer; paintMode: TPaintVisuals);
+procedure SetSprayGunOn(i: integer);
+procedure SetSprayGunOff(i: integer);
+function CalculateSprayThicknessHistogram(i: integer; numberOfBins: integer): THistogram;
+function CalculateAvgSprayThickness(i: integer): double;
+function CalculateSDSprayThickness(i: integer): double;
+function CalculatePosAvgSprayThickness(i: integer): double;
+function CalculatePosSDSprayThickness(i: integer): double;
+function CalculatePosMinSprayThickness(i: integer): double;
+function CalculateMinSprayThickness(i: integer): double;
+function CalculateMaxSprayThickness(i: integer): double;
+function CalculateSprayCoverage(i: integer): double;
+function GetPaintTargetTriangles(i: integer): TTriangles;
+procedure SetResultTrianglesColor(i: integer; colors: array of TPoint3D);
 
 procedure SetSolidSurfaceFriction(R, i: integer; mu, mu2: double);
 
@@ -188,6 +251,8 @@ procedure SetThingSurfaceMu(T: integer; mu, mu2: double);
 
 function GetThingSpeed(T: integer): TPoint3D;
 procedure SetThingSpeed(T: integer; vx, vy, vz: double);
+procedure SetThingLinearVel(T: integer; x, y, z: double);
+procedure SetThingAngularVel(T: integer; x, y, z: double);
 function GetThingAngularVel(T: integer): TPoint3D;
 
 procedure ClearThings;
@@ -458,7 +523,7 @@ const
 implementation
 
 uses Math, Viewer, odeimport, utils, Keyboard, GLObjects, SysUtils,
-  Classes;
+  Classes, Dialogs;
 
 function Deg(angle: double): double;
 begin
@@ -697,6 +762,22 @@ begin
   with WorldODE.Robots[R].Solids[i] do begin
     if Body = nil then exit;
     dBodySetPosition(Body, x, y, z);
+  end;
+end;
+
+procedure SetSolidLinearVel(R, i: integer; x, y, z: double);
+begin
+  with WorldODE.Robots[R].Solids[i] do begin
+    if Body = nil then exit;
+    dBodySetLinearVel(Body, x, y, z);
+  end;
+end;
+
+procedure SetSolidAngularVel(R, i: integer; x, y, z: double);
+begin
+  with WorldODE.Robots[R].Solids[i] do begin
+    if Body = nil then exit;
+    dBodySetAngularVel(Body, x, y, z);
   end;
 end;
 
@@ -1091,6 +1172,373 @@ procedure SolidCanvasClear(R, i: integer);
 begin
   with WorldODE.Robots[R].Solids[i].PaintBitmap do begin
     Canvas.FillRect(Rect(0,0, Width, Height) );
+  end;
+end;
+
+function GetPaintGunMinDist(i: integer): double;
+var j,k: integer;
+begin
+  result := -2;
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          result := WorldODE.Things[i].paintGunMinDist;
+       end;
+    end;
+  end;
+end;
+
+function GetPaintTargetExtents(i: integer): TExtents;
+var j,k: integer;
+    aabb: TAABB;
+begin
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          (WorldODE.Things[i].AltGLObj as TGLFreeForm).MeshObjects[0].GetExtents(aabb);
+          aabb.Min := VectorTransform(aabb.Min, (WorldODE.Things[i].AltGLObj as TGLFreeForm).AbsoluteMatrix);
+          aabb.Max := VectorTransform(aabb.Max, (WorldODE.Things[i].AltGLObj as TGLFreeForm).AbsoluteMatrix);
+          result.Max.x := aabb.Max.X;
+          result.Max.y := aabb.Max.Y;
+          result.Max.z := aabb.Max.Z;
+          result.Min.x := aabb.Min.X;
+          result.Min.y := aabb.Min.Y;
+          result.Min.z := aabb.Min.Z;
+       end;
+    end;
+  end;
+end;
+
+procedure ResetPaintTargetPaint(i: integer);
+var j, k, l: integer;
+begin
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          for l:=0 to (WorldODE.Things[i].AltGLObj as TGLFreeForm).MeshObjects[0].Vertices.Count - 1 do begin
+              //WorldODE.Things[i].meshVertexs[l].paintMapColor := ConvertRGBColor([255,255,255]);
+              WorldODE.Things[i].meshVertexs[l].paintMapColor := WorldODE.Things[i].initialColor;
+              WorldODE.Things[i].meshVertexs[l].paintHeatmapColor := WorldODE.Things[j].CalculateHeatmapColor(0);
+          end;
+          for l:=0 to length(WorldODE.Things[i].meshTriangles)-1 do begin
+            WorldODE.Things[i].meshTriangles[l].paintThickness := 0;
+          end;
+       end;
+    end;
+  end;
+end;
+
+procedure SetPaintTargetPaintMode(i:integer; paintMode: TPaintVisuals);
+var j, k, l: integer;
+begin
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          WorldODE.Things[j].paintMode := TPaintMode(paintMode);
+       end;
+    end;
+  end;
+end;
+
+procedure SetSprayGunOn(i: integer);
+var j,k: integer;
+begin
+  k := -1;
+  for j:=0 to WorldODE.Sensors.Count-1 do begin
+    if WorldODE.Sensors[j].kind = skSprayGun then begin
+       k := k+1;
+       if k=i then begin
+         WorldODE.Sensors[j].paintOn := True;
+       end;
+    end;
+  end;
+end;
+
+procedure SetSprayGunOff(i: integer);
+var j,k: integer;
+begin
+  k := -1;
+  for j:=0 to WorldODE.Sensors.Count-1 do begin
+    if WorldODE.Sensors[j].kind = skSprayGun then begin
+       k := k+1;
+       if k=i then begin
+         WorldODE.Sensors[j].paintOn := False;
+       end;
+    end;
+  end;
+end;
+
+function CalculateSprayThicknessHistogram(i: integer; numberOfBins: integer): THistogram;
+var j, k, l: integer;
+    ibin: integer;
+begin
+  setLength(result.binUpperLimit, numberOfBins);
+  setLength(result.binHeight, numberOfBins);
+  for ibin:=0 to numberOfBins-1 do begin
+    //result.binUpperLimit[ibin] := (ibin+1)*CalculateMaxSprayThickness(i)/numberOfBins;
+    result.binUpperLimit[ibin] := (ibin+1)*120/numberOfBins;
+    result.binHeight[ibin] := 0;
+  end;
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          for l:=0 to length(WorldODE.Things[j].meshTriangles)-1 do begin
+             result.binHeight[floor(WorldODE.Things[j].meshTriangles[l].paintThickness/result.binUpperLimit[0])] := 1 + result.binHeight[floor(WorldODE.Things[j].meshTriangles[l].paintThickness/result.binUpperLimit[0])];
+          end;
+       end;
+    end;
+  end;
+end;
+
+function CalculateAvgSprayThickness(i: integer): double;
+var j, k, l: integer;
+    n: integer;
+begin
+  result:=0;
+  n:=0;
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          for l:=0 to length(WorldODE.Things[j].meshTriangles)-1 do begin
+             n:=n+1;
+             result := result + WorldODE.Things[j].meshTriangles[l].paintThickness;
+          end;
+       end;
+    end;
+  end;
+  if n>0 then result := result/n
+  else result := 0;
+end;
+
+function CalculateSDSprayThickness(i: integer): double;
+var j, k, l: integer;
+    n: integer;
+    avg: double;
+begin
+  result:=0;
+  avg := CalculateAvgSprayThickness(i);
+  n:=0;
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          for l:=0 to length(WorldODE.Things[j].meshTriangles)-1 do begin
+             n:=n+1;
+             result := result +((WorldODE.Things[j].meshTriangles[l].paintThickness - avg)*
+                                (WorldODE.Things[j].meshTriangles[l].paintThickness - avg));
+          end;
+       end;
+    end;
+  end;
+  if n>0 then result := sqrt(result/n)
+  else result := 0;
+end;
+
+
+function CalculatePosAvgSprayThickness(i: integer): double;
+var j, k, l: integer;
+    n: integer;
+begin
+  result:=0;
+  n:=0;
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          for l:=0 to length(WorldODE.Things[j].meshTriangles)-1 do begin
+            if WorldODE.Things[j].meshTriangles[l].paintThickness > 0 then begin
+               n:=n+1;
+               result := result + WorldODE.Things[j].meshTriangles[l].paintThickness;
+            end;
+          end;
+       end;
+    end;
+  end;
+  if n>0 then result := result/n
+  else result := 0;
+end;
+
+function CalculatePosSDSprayThickness(i: integer): double;
+var j, k, l: integer;
+    n: integer;
+    avg: double;
+begin
+  result:=0;
+  avg := CalculatePosAvgSprayThickness(i);
+  n:=0;
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          for l:=0 to length(WorldODE.Things[j].meshTriangles)-1 do begin
+            if WorldODE.Things[j].meshTriangles[l].paintThickness>0 then begin
+              n:=n+1;
+              result := result +((WorldODE.Things[j].meshTriangles[l].paintThickness - avg)*
+                                 (WorldODE.Things[j].meshTriangles[l].paintThickness - avg));
+            end;
+          end;
+       end;
+    end;
+  end;
+  if n>0 then result := sqrt(result/n)
+  else result := 0;
+end;
+
+function CalculatePosMinSprayThickness(i: integer): double;
+var j, k, l: integer;
+begin
+  result:=10000;
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          for l:=0 to length(WorldODE.Things[j].meshTriangles)-1 do begin
+            if (WorldODE.Things[j].meshTriangles[l].paintThickness < result) and (WorldODE.Things[j].meshTriangles[l].paintThickness > 0) then begin
+               result := WorldODE.Things[j].meshTriangles[l].paintThickness;
+            end;
+          end;
+       end;
+    end;
+  end;
+end;
+
+function CalculateMinSprayThickness(i: integer): double;
+var j, k, l: integer;
+begin
+  result:=10000;
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          for l:=0 to length(WorldODE.Things[j].meshTriangles)-1 do begin
+            if WorldODE.Things[j].meshTriangles[l].paintThickness < result then begin
+               result := WorldODE.Things[j].meshTriangles[l].paintThickness;
+            end;
+          end;
+       end;
+    end;
+  end;
+end;
+
+function CalculateMaxSprayThickness(i: integer): double;
+var j, k, l: integer;
+begin
+  result:=0;
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          for l:=0 to length(WorldODE.Things[j].meshTriangles)-1 do begin
+            if WorldODE.Things[j].meshTriangles[l].paintThickness > result then begin
+               result := WorldODE.Things[j].meshTriangles[l].paintThickness;
+            end;
+          end;
+       end;
+    end;
+  end;
+end;
+
+function CalculateSprayCoverage(i: integer): double;
+var j, k, l: integer;
+begin
+  result:=0;
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          for l:=0 to length(WorldODE.Things[j].meshTriangles)-1 do begin
+            if WorldODE.Things[j].meshTriangles[l].paintThickness > 0 then begin
+               result := result+1;
+            end;
+          end;
+          result := result/length(WorldODE.Things[j].meshTriangles);
+       end;
+    end;
+  end;
+end;
+
+
+function GetPaintTargetTriangles(i: integer): TTriangles;
+var j, k, l, m: integer;
+begin
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          setLength(result, length(WorldODE.Things[i].meshTriangles));
+          if length(result) > 200000 then begin
+             //showmessage('meshes more than 200000 vertices not supported yet, only the first 2000 will be used');
+             setLength(result, 200000);
+          end;
+          for l:=0 to length(result)-1 do begin
+            result[l].vertice0.X := WorldODE.Things[i].meshTriangles[l].vertexs[0]^.pos.X;
+            result[l].vertice0.Y := WorldODE.Things[i].meshTriangles[l].vertexs[0]^.pos.Y;
+            result[l].vertice0.Z := WorldODE.Things[i].meshTriangles[l].vertexs[0]^.pos.Z;
+            result[l].vertice1.X := WorldODE.Things[i].meshTriangles[l].vertexs[1]^.pos.X;
+            result[l].vertice1.Y := WorldODE.Things[i].meshTriangles[l].vertexs[1]^.pos.Y;
+            result[l].vertice1.Z := WorldODE.Things[i].meshTriangles[l].vertexs[1]^.pos.Z;
+            result[l].vertice2.X := WorldODE.Things[i].meshTriangles[l].vertexs[2]^.pos.X;
+            result[l].vertice2.Y := WorldODE.Things[i].meshTriangles[l].vertexs[2]^.pos.Y;
+            result[l].vertice2.Z := WorldODE.Things[i].meshTriangles[l].vertexs[2]^.pos.Z;
+            result[l].normal.X := WorldODE.Things[i].meshTriangles[l].normal.X;
+            result[l].normal.Y := WorldODE.Things[i].meshTriangles[l].normal.Y;
+            result[l].normal.Z := WorldODE.Things[i].meshTriangles[l].normal.Z;
+            result[l].center.X := WorldODE.Things[i].meshTriangles[l].center.X;
+            result[l].center.Y := WorldODE.Things[i].meshTriangles[l].center.Y;
+            result[l].center.Z := WorldODE.Things[i].meshTriangles[l].center.Z;
+            result[l].area:= WorldODE.Things[i].meshTriangles[l].area;
+            setLength(result[l].neighbors, length(WorldODE.Things[i].meshTriangles[l].neighbors));
+            for m:=0 to length(WorldODE.Things[i].meshTriangles[l].neighbors) - 1 do begin
+              result[l].neighbors[m] := WorldODE.Things[i].meshTriangles[l].neighbors[m];
+            end;
+          end;
+       end;
+    end;
+  end;
+end;
+
+
+procedure SetResultTrianglesColor(i: integer; colors: array of TPoint3D);
+var j, k, l, m: integer;
+begin
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          if (length(colors)) <> length(WorldODE.Things[i].meshTriangles) then begin
+             showmessage('length(colors) <> length(WorldODE.Things[i].meshTriangles)');
+             showmessage(inttostr((length(colors))));
+             showmessage(inttostr(length(WorldODE.Things[i].meshTriangles)));
+          end else begin
+            for l:=0 to length(WorldODE.Things[i].meshTriangles)-1 do begin
+              for m:=0 to 2 do begin
+                WorldODE.Things[i].meshTriangles[l].vertexs[m]^.paintResultColor := ConvertRGBColor([Trunc(colors[l].X), Trunc(colors[l].Y), Trunc(colors[l].Z)]);
+              end;
+            end;
+          end;
+       end;
+    end;
   end;
 end;
 
@@ -1762,6 +2210,22 @@ end;
 procedure SetThingSpeed(T: integer; vx, vy, vz: double);
 begin
   WorldODE.Things[T].SetLinSpeed(vx, vy, vz);
+end;
+
+procedure SetThingLinearVel(T: integer; x, y, z: double);
+begin
+  with WorldODE.Things[T] do begin
+    if Body = nil then exit;
+    dBodySetLinearVel(Body, x, y, z);
+  end;
+end;
+
+procedure SetThingAngularVel(T: integer; x, y, z: double);
+begin
+  with WorldODE.Things[T] do begin
+    if Body = nil then exit;
+    dBodySetAngularVel(Body, x, y, z);
+  end;
 end;
 
 procedure ClearThings;

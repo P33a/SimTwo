@@ -9,7 +9,7 @@ object FMain: TFMain
   KeyPreview = True
   OnShow = FormShow
   SessionProperties = 'Top;Left;Width;Height'
-  LCLVersion = '2.0.12.0'
+  LCLVersion = '1.8.2.0'
   object MemoDebug: TMemo
     Left = 432
     Height = 154
