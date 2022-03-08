@@ -667,13 +667,20 @@ type
     dJointTypePlane2D,
     dJointTypePR,
     dJointTypePU,
-    dJointTypePiston
+    dJointTypePiston,
+    dJointTypeDBall,
+    dJointTypeDHinge,
+    dJointTypeTransmission
     );
 
   TdAngularMotorModeNumbers =
     (dAMotorUser,
      dAMotorEuler);
 
+  TdTransmissioModeNumbers =
+    (dTransmissionParallelAxes,
+     dTransmissionIntersectingAxes,
+     dTransmissionChainDrive);
 
   TdSurfaceParameters = record
     // must always be defined

@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<sheet>
+  <columns>
+    <defaultcol width="50" />
+    <col num="7" width="51" />
+  </columns>
+  <cells>
+    <cell r="2" c="2" text="Serial" />
+    <cell r="2" c="3" text="[Manual]" />
+    <cell r="2" c="1" text="Control:" />
+    <cell r="2" c="4" text="[Serial]" />
+    <cell r="5" c="2" text="0" />
+    <cell r="5" c="0" text="5" />
+    <cell r="6" c="2" text="0" />
+    <cell r="7" c="2" text="63" />
+    <cell r="8" c="2" text="42" />
+    <cell r="9" c="2" text="0" />
+    <cell r="4" c="1" text="Sensors" />
+    <cell r="4" c="2" text="IR" />
+    <cell r="4" c="4" text="-1" />
+    <cell r="4" c="5" text="[Set]" />
+    <cell r="5" c="5" text="[Set]" />
+    <cell r="5" c="6" text="0" />
+    <cell r="4" c="6" text="1" />
+    <cell r="4" c="3" text="State" />
+    <cell r="5" c="3" text="PWM1" />
+    <cell r="6" c="3" text="PWM2" />
+    <cell r="5" c="4" text="0" />
+    <cell r="6" c="4" text="0" />
+    <cell r="12" c="1" text="X" />
+    <cell r="13" c="1" text="Y" />
+    <cell r="14" c="1" text="Theta" />
+    <cell r="11" c="3" text="[Robot]" />
+    <cell r="13" c="3" text="-0.4" />
+    <cell r="14" c="3" text="90" />
+    <cell r="12" c="3" text="-0.725" />
+    <cell r="11" c="4" text="[Part1]" />
+    <cell r="12" c="4" text="-0.725" />
+    <cell r="13" c="4" text="0.595" />
+    <cell r="14" c="4" text="0" />
+    <cell r="8" c="3" text="Vrobot" />
+    <cell r="8" c="4" text=" 0.00" />
+    <cell r="10" c="2" text="0" />
+    <cell r="10" c="1" text="Odo" />
+    <cell r="11" c="5" text="[Part2]" />
+    <cell r="11" c="6" text="[Part3]" />
+    <cell r="11" c="7" text="[Part4]" />
+    <cell r="13" c="5" text="0.595" />
+    <cell r="14" c="5" text="0" />
+    <cell r="13" c="6" text="0.595" />
+    <cell r="14" c="6" text="0" />
+    <cell r="13" c="7" text="0.595" />
+    <cell r="14" c="7" text="0" />
+    <cell r="12" c="5" text="-0.575" />
+    <cell r="12" c="6" text="-0.425" />
+    <cell r="12" c="7" text="-0.275" />
+    <cell r="15" c="4" text="[Type]" />
+    <cell r="15" c="5" text="[Type]" />
+    <cell r="15" c="6" text="[Type]" />
+    <cell r="15" c="7" text="[Type]" />
+    <cell r="11" c="2" text="0" />
+    <cell r="16" c="3" text="163" />
+    <cell r="17" c="3" text="-1" />
+    <cell r="18" c="3" text="9" />
+  </cells>
+</sheet>

@@ -1,17 +1,15 @@
 const
  NumJoints = 6;
- NumScrews = 1;
 
 // Global Variables
 var
-  irobot, iScrew, iB5, iB6, iHead: integer;
+  irobot, iB5, iB6, iHead: integer;
   d1, d2, d3: double;
   
   R01, R12, R23: Matrix;
   R03: Matrix;
 
   JointPos: array[0..NumJoints - 1] of double;
-  ScrewH: array[0..NumScrews - 1] of double;
 
   state: string;
   ReqThetas: matrix;
@@ -66,20 +64,9 @@ begin
   result := R;
 end;
 
-procedure UpdateScrew(index: integer);
-var w: double;
-begin
-  w := GetAxisSpeed(index, 1); // second axis has the head rotation
-  SetRCValue(3, 4, format('%.2g',[w]));
-  if abs(w) > 0.1 then begin
-    ScrewH[index - 1] := ScrewH[index - 1] + w/1000;
-    SetAxisPosRef(index, 0, ScrewH[index - 1]);
-  end;
-
-end;
 
 
-// Pace here the Inverse Kinematics calculations
+// Place here the Inverse Kinematics calculations
 function IK(Xtool, Rtool: matrix; Ltool: double): matrix;
 begin
   result := Mzeros(6, 1);
@@ -124,7 +111,6 @@ var i: integer;
 
     HeadPos, HeadRot: matrix;
 begin
-  UpdateScrew(1);
 
   B5Pos := GetSolidPosMat(iRobot, iB5);
   MatrixToRange(11, 2, B5Pos);
@@ -135,10 +121,6 @@ begin
   B6rot := GetSolidRotMat(iRobot, iB6);
   MatrixToRangeF(16, 4, B6Rot, '%.3f');
 
-  HeadPos := GetSolidPosMat(iScrew, iHead);
-  HeadRot := GetSolidRotMat(iScrew, iHead);
-
-
   // Read joint positions
   for i := 0 to NumJoints -1 do begin
     JointPos[i] := GetAxisPos(irobot, i);
@@ -147,10 +129,6 @@ begin
   // and show
   for i := 0 to NumJoints -1 do begin
     SetRCValue(3 + i, 2, format('%.3g',[Deg(JointPos[i])]));
-  end;
-
-  if RCButtonPressed(2, 4) then begin
-    SetRobotPos(iScrew, 0.4 + (random01()- 0.1) * 0.2, -0.1 + (random01()- 0.1) * 0.2, 0, 0);
   end;
 
   // control equations
@@ -184,21 +162,16 @@ procedure Initialize;
 var i: integer;
 begin
   irobot := 0;
-  iScrew := 1;
 
   iB5 := GetSolidIndex(irobot, 'B5');
   iB6 := GetSolidIndex(irobot, 'B6');
 
-  iHead := GetSolidIndex(iScrew, 'screw_head');
+  //iHead := GetSolidIndex(iScrew, 'screw_head');
 
   SetRCValue(2, 1, 'Joint');
   SetRCValue(2, 2, 'Pos (deg)');
   for i := 0 to NumJoints -1 do begin
     SetRCValue(3 + i, 1, format('%d',[i]));
-  end;
-
-  for i := 0 to NumScrews -1 do begin
-    Screwh[i] := GetAxisPos(1 + i, 0);
   end;
 
   d1 := 0.55;

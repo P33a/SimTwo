@@ -532,13 +532,13 @@ begin
   if not PID.active then exit;
 
   //ek := ref - yk;
-  dek := ek - PID.ek_1;
-  PID.Sek := PID.Sek + ek;
+  dek := (ek - PID.ek_1) / WorldODE.Ode_dt;
+  PID.Sek := PID.Sek + ek * WorldODE.Ode_dt;
   mk := PID.Kp * ek + PID.Ki * PID.Sek + PID.Kd * dek + PID.Kf * ref;
 
   // Anti Windup
   if abs(mk) >= PID.y_sat then begin
-    PID.Sek := PID.Sek - ek;
+    PID.Sek := PID.Sek - ek * WorldODE.Ode_dt;
     mk := max(-PID.y_sat, min(PID.y_sat, mk));
   end;
 
@@ -3165,7 +3165,7 @@ begin
       Y_sat := 24;
       ticks := 0;
       Sek := 0;
-      controlPeriod := 10;
+      controlPeriod := 0.010;
       ControlMode := cmPIDSpeed;
     end;
   end;
@@ -4283,8 +4283,8 @@ begin
 
   space := dQuadTreeSpaceCreate(nil, Center, Extents, 5);}
   contactgroup := dJointGroupCreate(0);
-  //dWorldSetGravity(world, 0, 0, -9.81);
-  dWorldSetGravity(world, 0, 0, 0);
+  dWorldSetGravity(world, 0, 0, -9.81);
+  //dWorldSetGravity(world, 0, 0, 0);
 
   Ode_CFM := 1e-5;
   Ode_ERP := 0.4;
@@ -4714,7 +4714,7 @@ begin
     end else begin
       //T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Spring.K * diffangle(Theta, Spring.ZeroPos);
     end;}
-    T := Motor.Im * Motor.Ki  - Friction.Bv * w - Spring.K * (Theta - Spring.ZeroPos);
+    T := Motor.Im * Motor.Ki * Motor.GearRatio - Friction.Bv * w - Spring.K * (Theta - Spring.ZeroPos);
   end;
 end;
 

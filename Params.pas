@@ -26,6 +26,8 @@ type
     BOpenComPort: TButton;
     CBComPort: TComboBox;
     CBComBaudrate: TComboBox;
+    CBDTR: TCheckBox;
+    CBRTS: TCheckBox;
     IniPropStorage: TIniPropStorage;
     Label65: TLabel;
     TCPModBus: TLTCPComponent;
@@ -286,6 +288,8 @@ type
     procedure BCloseComPortClick(Sender: TObject);
     procedure BOpenComPortClick(Sender: TObject);
     procedure CBComPortDropDown(Sender: TObject);
+    procedure CBDTRChange(Sender: TObject);
+    procedure CBRTSChange(Sender: TObject);
     procedure CBShadowsClick(Sender: TObject);
     procedure CBVsyncClick(Sender: TObject);
     procedure BSetFPSClick(Sender: TObject);
@@ -295,7 +299,6 @@ type
     procedure CBGroundTextureClick(Sender: TObject);
     procedure CBSkyDomeClick(Sender: TObject);
     procedure BEditScriptClick(Sender: TObject);
-    procedure ComboGroundTexturesChange(Sender: TObject);
     procedure EditRemoteIPChange(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: boolean);
     procedure TCPModBusAccept(aSocket: TLSocket);
@@ -500,6 +503,16 @@ begin
   ListComPorts(CBComPort.Items);
 end;
 
+procedure TFParams.CBDTRChange(Sender: TObject);
+begin
+  //SerialCom.SetDTR(CBDTR.Checked);
+end;
+
+procedure TFParams.CBRTSChange(Sender: TObject);
+begin
+  //SerialCom.SetRTS(CBRTS.Checked);
+end;
+
 procedure TFParams.BCloseComPortClick(Sender: TObject);
 begin
   SetComState(false);
@@ -530,11 +543,6 @@ end;
 procedure TFParams.BEditScriptClick(Sender: TObject);
 begin
   FEditor.show;
-end;
-
-procedure TFParams.ComboGroundTexturesChange(Sender: TObject);
-begin
-
 end;
 
 procedure TFParams.EditRemoteIPChange(Sender: TObject);
@@ -590,6 +598,8 @@ begin
 
   s := SerialCom.ReadData;
   if s = '' then exit;
+
+  //FEditor.writeLn(s);
 
   ls := Length(s);
 
@@ -687,8 +697,9 @@ begin
       end;
       SGJoints.Cells[1,i+1] := format('%.2f',[theta]);
 
-      if wp_idx >= 0 then
-        SGJoints.Cells[3,i+1] := format('%.2f',[radtodeg(Axes[i].WayPoints[wp_idx].pos)]);
+      //if wp_idx >= 0 then
+      //  SGJoints.Cells[3,i+1] := format('%.2f',[radtodeg(Axes[i].WayPoints[wp_idx].pos)]);
+      SGJoints.Cells[3, i + 1] := format('%.2f',[Axes[i].Motor.voltage]);
 
       if i+1 = SGJoints.Selection.Top then begin
         EditJointTeta.Text := SGJoints.Cells[1,i+1];

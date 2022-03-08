@@ -6,7 +6,7 @@ interface
 
 uses Forms, SysUtils;
 
-const  crlf=#13+#10;
+const  crlf = #13 + #10;
        FormEditorCaption = 'Code Editor: ';
 
 var SimTwoVersion: string = 'SimTwo 64';

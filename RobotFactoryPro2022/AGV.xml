@@ -75,16 +75,16 @@
   </solids>
 
   <shells>
-
-    <!--
-    <cuboid>
-      <ID value='motors'/>
-      <size x='0.05' y='RobotWidth - 0.02' z='0.02'/>
-      <pos x='-0.01' y='0' z='+ 0.01'/>
-      <rot_deg x='0' y='0' z='0'/>
-      <color_rgb r='200' g='200' b='0'/>
-    </cuboid>
-    -->
+    <camera>
+      <ID value='camera'/>
+      <solid id='BasePlate'/>
+      <size x='0.02' y='0.02' z='0.04'/>
+      <pos x='0.05' y='0' z='0.1'/>
+      <focal length='30'/>
+      <frame decimation='4'/>
+      <rot_deg x='120' y='0' z='90'/>
+      <color_rgb r='50' g='140' b='200'/>
+    </camera>
 
     <cylinder>
       <ID value='Solenoid'/>
@@ -94,15 +94,6 @@
       <color_rgb r='128' g='128' b='128'/>
       <surface mu='0.1'/>
     </cylinder>
-
-
-    <cuboid>
-      <ID value='RFID_reader'/>
-      <size x='0.005' y='0.08' z='0.04'/>
-      <pos x='RobotLength/2 + 0.015' y='0' z='0.04'/>
-      <rot_deg x='0' y='0' z='0'/>
-      <color_rgb r='100' g='100' b='100'/>
-    </cuboid>
 
     <sphere>
       <ID value="slide pad"/>
@@ -223,13 +214,6 @@
       <color_rgb r='0' g='0' b='200'/>
     </IRSharp>
 
-    <RFID>
-      <ID value='RFID'/>
-      <beam length='0.05' initial_width='0.004' final_width='0.004'/>
-      <pos x='RobotLength/2 + 0.01' y='0' z='0.04'/>
-      <rot_deg x='0' y='0' z='0'/>
-      <color_rgb r='0' g='200' b='0'/>
-    </RFID>
 
   </sensors>
   

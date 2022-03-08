@@ -9,7 +9,7 @@ uses
   Dialogs, GLScene, GLObjects, {GLMisc,} GLLCLViewer, ODEImport, OpenGL1x,
   GLVectorGeometry, GLGeomObjects, ExtCtrls, ComCtrls, GLTexture, GLGraphics,
   keyboard, math, GLMaterial, GLVectorFileObjects, GLColor,
-  GLVectorLists, GLVectorTypes;
+  GLVectorLists, GLVectorTypes, GLTextureFormat;
 
 const
   //ODE world constants
@@ -953,6 +953,7 @@ begin
         X := 0.5; Y := 0.5; Z := 0;
       end;
       //Texture.TextureWrap := twNone;
+      Texture.FilteringQuality := tfAnisotropic;
     end;
     GLObj.Material.TextureEx.Items[0].TextureScale.x := TextureScale;
     GLObj.Material.TextureEx.Items[0].TextureScale.y := TextureScale;

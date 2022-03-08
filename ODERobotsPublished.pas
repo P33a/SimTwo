@@ -842,6 +842,9 @@ var v: PdVector3;
 begin
   result := Mzeros(3,1);
 
+  if R < 0 then
+    raise Exception.Create('Invalid Robot Index: ' + IntToStr(R));
+
   with WorldODE.Robots[R].Solids[i] do begin
     if Body = nil then exit;
     v := dBodyGetPosition(Body);

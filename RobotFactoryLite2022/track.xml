@@ -1,0 +1,137 @@
+<?xml version="1.0" ?>
+<track>
+
+  <defines>
+    <const name='track_width' value='0.030' />
+    <const name='horizontal_track' value='1.47876' />
+    <const name='horizontal_distance1_track' value='0.150' />
+    <const name='horizontal_distance2_track' value='0.3725' />
+    <const name='vertical_track' value='horizontal_distance2_track*2' />
+    <const name='vertical_distance1_track' value='horizontal_track/2' />
+    <const name='warehouse_track' value='0.2175' />
+    <const name='warehouse_distance1_track' value='horizontal_distance1_track' />
+  </defines>
+  
+  <!-- paper A0/reference -->
+  <line>
+    <color rgb24='FFFFFF'/>
+    <position x='-borderline_x/2' y='-borderline_y/2' z='ground' angle='0'/>
+    <size width='borderline_y' length='borderline_x'/>
+    <tag value='white'/>
+  </line>
+    
+  <!-- borderlines x,y-->
+  <line>
+    <color rgb24='0000FF'/>
+    <position x='-borderline_x/2' y='borderline_y/2-(track_width/2)' z='2 * ground' angle='0'/>
+    <size width='track_width/2' length='borderline_x'/>
+    <tag value='red'/>
+    <clone_hvflip/>
+  </line>
+  <line>
+    <color rgb24='0000FF'/>
+    <position x='borderline_x/2-(track_width/2)' y='-borderline_y/2' z='2 * ground' angle='0'/>
+    <size width='borderline_y' length='track_width/2'/>
+    <tag value='red'/>
+    <clone_hvflip/>
+  </line>
+
+  <!-- horizontal lines of field -->
+  <!-- center -->
+  <line> 
+    <color rgb24='000000'/>
+    <position x='-horizontal_track/2' y='-track_width/2' z='2 * ground' angle='0'/>
+    <size width='track_width' length='horizontal_track'/>
+    <tag value='black'/>
+    <!--clone_hvflip/-->
+  </line>
+  <!-- middle -->
+  <line> 
+    <color rgb24='000000'/>
+    <position x='0' y='-track_width/2+horizontal_distance1_track' z='2 * ground' angle='0'/>
+    <size width='track_width' length='horizontal_track/2'/>
+    <tag value='black'/>
+    <clone_hvflip/>
+  </line>
+  <!-- outlines -->
+  <line> 
+    <color rgb24='000000'/>
+    <position x='-horizontal_track/2' y='-track_width/2+horizontal_distance2_track' z='2 * ground' angle='0'/>
+    <size width='track_width' length='horizontal_track'/>
+    <tag value='black'/>
+    <clone_hvflip/>
+  </line>
+  
+  <!-- vertical lines of field -->
+  <!-- center --> 
+  <line> 
+    <color rgb24='000000'/>
+    <position x='track_width/2' y='-vertical_track/2' z='2 * ground' angle='90'/>
+    <size width='track_width' length='vertical_track'/>
+    <tag value='black'/>
+    <!--clone_hvflip/-->
+  </line>
+  <!-- outlines -->
+  <line> 
+    <color rgb24='000000'/>
+    <position x='vertical_distance1_track' y='-vertical_track/2' z='2 * ground' angle='90'/>
+    <size width='track_width' length='vertical_track'/>
+    <tag value='black'/>
+    <clone_hvflip/>
+  </line>
+ 
+  <!-- warehouse -->
+  <!-- first line -->
+  <line> 
+    <color rgb24='000000'/>
+    <position x='-horizontal_track/2+track_width' y='vertical_track/2-(track_width/2)' z='2 * ground' angle='90'/>
+    <size width='track_width' length='warehouse_track'/>
+    <tag value='black'/>
+    <clone_hvflip/>
+  </line>
+  <!-- second line -->
+  <line> 
+    <color rgb24='000000'/>
+    <position x='-horizontal_track/2+track_width+warehouse_distance1_track' y='vertical_track/2-(track_width/2)' z='2 * ground' angle='90'/>
+    <size width='track_width' length='warehouse_track'/>
+    <tag value='black'/>
+    <clone_hvflip/>
+  </line>
+  <!-- third line -->
+  <line> 
+    <color rgb24='000000'/>
+    <position x='-horizontal_track/2+track_width+(warehouse_distance1_track*2)' y='vertical_track/2-(track_width/2)' z='2 * ground' angle='90'/>
+    <size width='track_width' length='warehouse_track'/>
+    <tag value='black'/>
+    <clone_hvflip/>
+  </line>
+  <!-- fourth line -->
+  <line> 
+    <color rgb24='000000'/>
+    <position x='-horizontal_track/2+track_width+(warehouse_distance1_track*3)' y='vertical_track/2-(track_width/2)' z='2 * ground' angle='90'/>
+    <size width='track_width' length='warehouse_track'/>
+    <tag value='black'/>
+    <clone_hvflip/>
+  </line>   
+
+  <!--line>
+    <color rgb24='8F8F8F'/>
+    <position x='0' y='0' z='ground' angle='30'/>
+    <size width='track_width' length='2*(track_width)'/>
+    <clone_hvflip/>
+  </line>
+    <polygon>
+    <color rgb24='8F8F8F'/>
+    <vertice x='0' y='0' z='0'/>
+    <vertice x='-0.1' y='-0.4' z='0'/>
+    <vertice x='0.4' y='0.4' z='0'/>
+  </polygon>
+  <arc>
+    <color rgb24='8F8F8F'/>
+    <center x='0' y='0' z='ground'/>
+    <radius inner='1.3' outer='1.4'/>
+    <angle_deg start='0' stop='90' step='5'/>
+  </arc> -->
+  
+</track>
+

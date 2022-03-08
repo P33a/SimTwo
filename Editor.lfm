@@ -1,5 +1,5 @@
 object FEditor: TFEditor
-  Left = 1136
+  Left = 1129
   Height = 522
   Top = 433
   Width = 775
@@ -17,7 +17,7 @@ object FEditor: TFEditor
   OnShow = FormShow
   PopupMenu = PopupMenuOutput
   SessionProperties = 'Height;Left;SynEditST.Font;Top;Width;PageControlBottom.ActivePage'
-  LCLVersion = '2.0.12.0'
+  LCLVersion = '2.1.0.0'
   object PageControl: TPageControl
     Left = 0
     Height = 472
@@ -603,9 +603,9 @@ object FEditor: TFEditor
         Height = 108
         Top = 338
         Width = 765
-        ActivePage = TabErrors
+        ActivePage = TabOutput
         Align = alBottom
-        TabIndex = 1
+        TabIndex = 0
         TabOrder = 1
         TabPosition = tpBottom
         object TabOutput: TTabSheet
@@ -853,6 +853,7 @@ object FEditor: TFEditor
     DirectiveAttri.Foreground = clNavy
     CompilerMode = pcmDelphi
     NestedComments = False
+    TypeHelpers = True
     Left = 192
     Top = 36
   end

@@ -153,7 +153,6 @@ type
     FuncList, InsertList: TStringList;
     TypeList: TStringList;
 
-    procedure writeLn(S: string);
     procedure BuildRegFuncList(Sender: TPSScript);
     function ReadUDPData: string;
     procedure WriteUDPData(ToIP: string; ToPort: integer; s: string);
@@ -181,6 +180,7 @@ type
 
     function ReadComPort: string;
     procedure WriteComPort(s: string);
+    procedure writeLn(S: string);
   end;
 
 type
@@ -299,11 +299,13 @@ end;
 
 procedure TFEditor.writeLn(S: string);
 begin
-  while LBResult.Items.Count > 1000 do begin
+  LBResult.Items.BeginUpdate;
+  while LBResult.Items.Count > 100 do begin
     LBResult.Items.Delete(0);
   end;
   LBResult.Items.Add(S);
   LBResult.ItemIndex := LBResult.Items.Count-1;
+  LBResult.Items.EndUpdate;
 end;
 
 

@@ -15,16 +15,16 @@ object FParams: TFParams
   OnDestroy = FormDestroy
   OnShow = FormShow
   SessionProperties = 'CBAntiAliasing.Checked;CBAxis.Checked;CBEndlessWorld.Checked;CBFog.Checked;CBFreeze.Checked;CBGrid.Checked;CBGroundTexture.Checked;CBHotCPU.Checked;CBIRNoise.Checked;CBModBusInputOverride.Checked;CBModBusOutputOverride.Checked;CBShadows.Checked;CBSkyDome.Checked;CBTags.Checked;CBUDPConnect.Checked;CBVsync.Checked;CBWorldQuickStep.Checked;ComboGroundTextures.ItemIndex;EditDefaultFriction.Text;EditModBusInputOffset.Text;EditModBusOutputOffset.Text;EditModBusPort.Text;EditODE_CFM.Text;EditOde_dt.Text;EditODE_ERP.Text;EditQuickStepIterations.Text;EditRemoteIP.Text;EditRobotSetTeta.Text;EditRobotSetX.Text;EditRobotSetY.Text;EditRobotSetZ.Text;EditScriptPeriod.Text;EditSetCamLookX.Text;EditSetCamLookY.Text;EditSetCamLookZ.Text;EditSetCamX.Text;EditSetCamY.Text;EditSetCamZ.Text;EditTargetFPS.Text;EditTimeSpeed.Text;EditTrailsCount.Text;EditTrailSize.Text;EditUDPPort.Text;EditWindSpeedX.Text;EditWindSpeedY.Text;EditWindSpeedZ.Text;LBSelectedTags.Items;Left;PageControl.ActivePage;PGRobots.TabIndex;RGCamera.ItemIndex;RGControlBlock.ItemIndex;RGGLObjects.ItemIndex;RGSensorGL.ItemIndex;ShapeSelColor.Brush;Top;CBComBaudrate.ItemIndex;CBComPort.ItemIndex'
-  LCLVersion = '2.0.12.0'
+  LCLVersion = '2.1.0.0'
   Scaled = False
   object PageControl: TPageControl
     Left = 0
     Height = 621
     Top = 0
     Width = 273
-    ActivePage = TabGraphics
+    ActivePage = TabIO
     Anchors = [akTop, akLeft, akBottom]
-    TabIndex = 1
+    TabIndex = 4
     TabOrder = 0
     object TabControl: TTabSheet
       Caption = 'Control'
@@ -166,9 +166,9 @@ object FParams: TFParams
         Height = 425
         Top = 168
         Width = 261
-        ActivePage = TabGlobal
+        ActivePage = TabAxis
         Anchors = [akTop, akLeft, akBottom]
-        TabIndex = 0
+        TabIndex = 2
         TabOrder = 4
         object TabGlobal: TTabSheet
           Caption = 'Global'
@@ -1439,7 +1439,6 @@ object FParams: TFParams
         Top = 114
         Width = 111
         ItemHeight = 13
-        OnChange = ComboGroundTexturesChange
         OnClick = ComboGroundTexturesClick
         Style = csDropDownList
         TabOrder = 38
@@ -2213,6 +2212,26 @@ object FParams: TFParams
           Caption = 'Baudrate:'
           ParentColor = False
         end
+        object CBDTR: TCheckBox
+          Left = 168
+          Height = 19
+          Top = 30
+          Width = 40
+          Caption = 'DTR'
+          OnChange = CBDTRChange
+          TabOrder = 6
+          Visible = False
+        end
+        object CBRTS: TCheckBox
+          Left = 216
+          Height = 19
+          Top = 30
+          Width = 39
+          Caption = 'RTS'
+          OnChange = CBRTSChange
+          TabOrder = 7
+          Visible = False
+        end
       end
       object Panel2: TPanel
         Left = 0
@@ -2383,8 +2402,8 @@ object FParams: TFParams
     StopBits = sbOne
     Device = 'COM1'
     OnRxData = SerialComRxData
-    Left = 224
-    Top = 60
+    Left = 208
+    Top = 88
   end
   object ColorDialog: TColorDialog
     Color = clBlack

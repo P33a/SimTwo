@@ -1,0 +1,236 @@
+<?xml version="1.0" ?>
+<robot>
+  <defines>
+
+  <!-- Robot Dimensions -->
+    <const name='RobotWidth' value='0.105'/>
+    <const name='RobotLength' value='0.14'/>
+    <const name='RobotThickness' value='0.003'/>
+    <const name='RobotHeight' value='0.018'/>
+    <const name='RobotMass' value='1'/>
+    <const name='WheelClearance' value='0.015'/>
+
+     
+    <const name='WheelToCenter' value='RobotWidth/2 + WheelClearance'/>
+    <const name='MotorPosX' value='0.0'/>
+    <const name='CenterMotorToFront' value='RobotLength/2 - MotorPosX'/>
+    <const name='CasterToBack' value='0.07'/>
+     
+     
+  <!-- Motor Contants --> 
+    <const name='MotorDiameter' value='0.028'/>
+    <const name='MotorLength' value='0.075'/>
+    <const name='MotorMass' value='0.027'/>
+    
+  <!-- Wheel Contants -->
+    <const name='WheelDiameter' value='0.065'/>
+    <const name='WheelThickness' value='0.006'/>
+    <const name='WheelMass' value='0.05'/>
+
+  <!-- Caster Contants -->
+    <const name='CasterPoleThickness' value='0.016'/>
+    <const name='CasterMass' value='0.02'/>
+    
+    <const name='LineSensorBeamWidth' value='0.006'/>
+    
+  <!--Calculated Measures  -->
+    <const name='BracketHeight' value='RobotHeight-RobotThickness-(WheelDiameter/2+MotorDiameter/2)'/>   
+    <const name='CasterToBase' value='RobotHeight-RobotThickness'/>
+
+  </defines>
+   
+
+  <solids>
+  
+    <cuboid>
+      <ID value='BasePlate'/>
+      <mass value='RobotMass'/>                                        
+      <size x='RobotLength' y='RobotWidth' z='RobotThickness'/>
+      <nopos x='0' y='0' z='RobotHeight-RobotThickness/2'/> 
+      <pos x='0' y='0' z='RobotHeight-RobotThickness/2'/> 
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='200' g='200' b='200'/>
+    </cuboid>
+
+    <cylinder>
+      <ID value='WheelLeft'/>
+      <mass value='WheelMass'/>
+      <size x='WheelDiameter/2' y='WheelDiameter/2' z='WheelThickness'/>
+      <pos x='MotorPosX' y='WheelToCenter' z='WheelDiameter/2'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='200' g='200' b='0'/>
+    </cylinder>
+
+    <cylinder>
+      <ID value='WheelRight'/>
+      <mass value='WheelMass'/>
+      <size x='WheelDiameter/2' y='WheelDiameter/2' z='WheelThickness'/>
+      <pos x='MotorPosX' y='-WheelToCenter' z='WheelDiameter/2'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='200' g='200' b='0'/>
+    </cylinder>
+
+
+  </solids>
+
+  <shells>
+
+    <cuboid>
+      <ID value='motors'/>
+      <size x='0.05' y='RobotWidth - 0.02' z='0.02'/>
+      <pos x='-0.01' y='0' z='+ 0.01'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='200' g='200' b='0'/>
+    </cuboid>
+
+    <cylinder>
+      <ID value='Solenoid'/>
+      <size x='0.015' y='0' z='0.01'/>
+      <pos x='RobotLength/2 + 0.01' y='0' z='0'/>
+      <rot_deg x='0' y='90' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+      <surface mu='0.1'/>
+    </cylinder>
+
+
+    <cuboid>
+      <ID value='RFID_reader'/>
+      <size x='0.005' y='0.08' z='0.04'/>
+      <pos x='RobotLength/2 + 0.015' y='0' z='0.04'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='100' g='100' b='100'/>
+    </cuboid>
+
+    <sphere>
+      <ID value="slide pad"/>
+      <mass value='CasterMass'/>
+      <pos x="-RobotLength/2 + 0.015" y="0.0" z="-CasterPoleThickness/2"/>
+      <radius value="CasterPoleThickness/2"/>
+      <surface mu='0.1' softness='0.1'/>
+    </sphere>
+
+  </shells>
+ 
+  <articulations>
+
+    <default>
+      <ndraw radius='0.005' height='0.1' rgb24='8F8F8F'/>
+      <motor ri='6.1' li='3.4e-3' ki='0.2585' vmax='8.2' imax='3' active='1'/>
+      <gear ratio='1'/>
+      <friction bv='0.0012' fc='0.0169'/>
+      <encoder ppr='3840' mean='0' stdev='0'/>
+      <controller mode='pidspeed' kp='1' ki='0' kd='0' kf='0.05' active='0' period='10'/>
+      <spring k='0' zeropos='0'/>
+    </default>    
+
+    <joint>
+      <ID value='RightAxis'/>
+      <connect B1='WheelRight' B2='BasePlate'/>
+      <pos x='MotorPosX' y='0' z='WheelDiameter/2'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+      <controller active='0'/>
+    </joint>
+
+    <joint>
+      <ID value='LeftAxis'/>
+      <connect B1='WheelLeft' B2='BasePlate'/>
+      <pos x='MotorPosX' y='0' z='WheelDiameter/2'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+      <controller active='0'/>
+    </joint>
+    
+  </articulations>
+
+    
+  <defines>
+    <!-- Sensor "dimensions"  -->
+    <const name='LineSensorOffsetX' value='RobotLength/2'/>
+    <const name='LineSensorYSpace' value='0.016'/>
+  </defines>
+
+
+  <sensors>
+
+     <floorline>
+      <ID value='Line0'/>
+      <beam length='0.3' initial_width='LineSensorBeamWidth' final_width='LineSensorBeamWidth'/>
+      <tag value='black'/>
+      <pos x='LineSensorOffsetX' y='2 * LineSensorYSpace' z='0.01'/>
+      <rot_deg x='0' y='120' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </floorline>
+ 
+    <floorline>
+      <ID value='Line1'/>
+      <beam length='0.3' initial_width='LineSensorBeamWidth' final_width='LineSensorBeamWidth'/>
+      <tag value='black'/>
+      <pos x='LineSensorOffsetX' y='1 * LineSensorYSpace' z='0.01'/>
+      <rot_deg x='0' y='120' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </floorline>
+
+    <floorline>
+      <ID value='Line2'/>
+      <beam length='0.3' initial_width='LineSensorBeamWidth' final_width='LineSensorBeamWidth'/>
+      <tag value='black'/>
+      <pos x='LineSensorOffsetX' y='0' z='0.01'/>
+      <rot_deg x='0' y='120' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </floorline>
+
+    <floorline>
+      <ID value='Line3'/>
+      <beam length='0.3' initial_width='LineSensorBeamWidth' final_width='LineSensorBeamWidth'/>
+      <tag value='black'/>
+      <pos x='LineSensorOffsetX' y='-1 * LineSensorYSpace' z='0.01'/>
+      <rot_deg x='0' y='120' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </floorline>
+
+
+    <floorline>
+      <ID value='Line4'/>
+      <beam length='0.3' initial_width='LineSensorBeamWidth' final_width='LineSensorBeamWidth'/>
+      <tag value='black'/>
+      <pos x='LineSensorOffsetX' y='-2 * LineSensorYSpace' z='0.01'/>
+      <rot_deg x='0' y='120' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </floorline>
+
+    <solenoid>
+      <ID value='solenoid1'/>
+      <beam length='0.02' initial_width='0.011' final_width='0.011'/>
+      <pos x='RobotLength/2 + 0.01' y='0' z='0.0'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <tag value='00'/>
+      <force fmax='10' k2='0.5'/>
+      <color_rgb r='0' g='255' b='0'/>
+    </solenoid>
+
+
+    <IRSharp>
+      <!--<absolute_coords/>-->
+      <ID value='MicroSwitch'/>
+      <beam length='0.01' initial_width='0.004' final_width='0.004'/>
+      <pos x='RobotLength/2 + 0.01' y='-0.0165' z='0.007'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='0' g='0' b='200'/>
+    </IRSharp>
+
+    <RFID>
+      <ID value='RFID'/>
+      <beam length='0.05' initial_width='0.004' final_width='0.004'/>
+      <pos x='RobotLength/2 + 0.01' y='0' z='0.04'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='0' g='200' b='0'/>
+    </RFID>
+
+  </sensors>
+  
+     
+</robot>
+    
+    
+    
